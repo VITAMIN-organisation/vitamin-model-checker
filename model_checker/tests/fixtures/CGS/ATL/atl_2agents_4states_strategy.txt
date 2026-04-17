@@ -1,0 +1,32 @@
+# MODEL: Two-agent strategic coordination model with 4 states (s0-s3)
+
+# PURPOSE: Two-agent coordination and coalition goals.
+
+# LOGIC: ATL
+
+# DESCRIPTION: Two agents coordinate; some goals need cooperation. Includes
+# non-determinism so strategies must work for all environment choices.
+
+Transition
+0 AC,AD BC,BD 0
+0 0 AD,BD AC,BC
+0 0 0 AD,BC
+0 0 0 *
+Unknown_Transition_by
+0 0 0 0
+0 0 0 0
+0 0 0 0
+0 0 0 0
+Name_State
+s0 s1 s2 s3
+Initial_State
+s0
+Atomic_propositions
+p q
+Labelling
+1 0
+0 1
+0 0
+1 1
+Number_of_agents
+2

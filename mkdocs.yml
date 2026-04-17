@@ -1,0 +1,35 @@
+site_name: VITAMIN Model Checker
+site_description: Core library for model checking multi-agent systems
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+
+plugins:
+  - search
+  - autorefs
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: google
+            show_source: true
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - File Formats: file_formats.md
+  - Logic Knowledge Base: logic_knowledge_base.md
+  - Adding a New Logic: adding_a_new_logic.md
+  - API Reference:
+    - Overview: api/overview.md
+    - Root: api/model_checker.md
+    - Algorithms: api/model_checker.algorithms.md
+    - Parsers: api/model_checker.parsers.md

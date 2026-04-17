@@ -1,0 +1,26 @@
+# MODEL: Minimal LTL model with 1 agent and 3 states (s0, s1, s2)
+
+# PURPOSE: Minimal LTL example: one path, reachability and safety.
+
+# LOGIC: LTL
+
+# DESCRIPTION: Three states, one agent. LTL reasons about a single path (linear
+# time). Use for F (eventually), G (always), X (next), U (until).
+
+Transition
+0 1 0
+0 0 1
+1 0 0
+Unknown_Transition_by
+Name_State
+s0 s1 s2
+Initial_State
+s0
+Atomic_propositions
+p q goal
+Labelling
+1 0 0
+0 1 0
+0 0 1
+Number_of_agents
+1

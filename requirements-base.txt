@@ -1,0 +1,63 @@
+# ==============================================================================
+# VITAMIN Model Checker Base Dependencies
+# ==============================================================================
+# Core model checker dependencies + testing and monitoring
+# This file defines the dependencies for the model_checker package
+# Used by FastAPI backend (via workbench/requirements-api.txt)
+
+# Model Checker Core
+automata-lib==6.0.2
+visual-automata==1.1.1
+networkx==2.8.6
+
+# Parsing & Logic
+ply==3.11
+antlr4-python3-runtime==4.8.0
+
+# Data Structures
+binarytree==6.5.1
+anytree==2.8.0
+
+# XML Processing
+lxml>=6.0.2
+defusedxml>=0.7.1
+
+# Data Processing (used by backend)
+# CI and Docker use Python 3.11; numpy 1.26.x supports 3.11
+numpy>=1.26.0,<1.27.0
+
+# Utilities (setuptools required for binarytree: provides pkg_resources at import)
+setuptools>=61.0,<82
+requests>=2.32.5,<3.0.0
+validators==0.22.0
+semver==2.13.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+
+# Monitoring
+prometheus-client==0.14.1
+
+# ==============================================================================
+# Transitive Dependencies (minimal set for backend)
+# ==============================================================================
+# Security updates - updated to latest secure versions
+attrs>=25.4.0
+certifi>=2025.11.12  # Critical: SSL certificate updates
+charset-normalizer>=3.4.4
+click>=8.3.1
+idna>=3.11
+importlib-metadata>=8.7.0
+iteration-utilities>=0.13.0
+packaging>=23.2.0,<26.0.0
+pyparsing>=3.1.0
+python-dateutil>=2.9.0
+six>=1.17.0
+sniffio>=1.3.1
+# Updated to satisfy FastAPI 0.104.1 requirement (typing-extensions>=4.8.0)
+typing_extensions>=4.8.0
+urllib3>=2.2.0  # Security: HTTP library updates
+zipp>=3.20.0
+

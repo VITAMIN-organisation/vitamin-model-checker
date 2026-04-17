@@ -1,0 +1,28 @@
+# MODEL: Simple CTL model with 1 agent and 4 states (s0-s3)
+
+# PURPOSE: Basic CTL with branching-time and path quantifiers E, A.
+
+# LOGIC: CTL
+
+# DESCRIPTION: Four states, non-deterministic transitions. Multiple paths from
+# each state; good for E (exists path) and A (all paths).
+
+Transition
+0 1 0 0
+1 0 1 0
+0 0 0 1
+1 0 0 1
+Unknown_Transition_by
+Name_State
+s0 s1 s2 s3
+Initial_State
+s0
+Atomic_propositions
+p q
+Labelling
+1 0
+0 1
+0 0
+1 1
+Number_of_agents
+1

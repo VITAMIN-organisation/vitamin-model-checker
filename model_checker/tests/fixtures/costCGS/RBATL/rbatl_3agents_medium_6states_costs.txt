@@ -1,0 +1,43 @@
+# MODEL: Three-agent recursive branching-time model with 6 states (s0-s5)
+
+# PURPOSE: Recursive branching-time with cost constraints.
+
+# LOGIC: RBATL
+
+# DESCRIPTION: Three agents; coalitions reason about paths and others'
+# strategies under cost bounds.
+
+Transition
+0 AA^,A^Q,AR^ ^^R AAR 0 0
+0 * 0 0 0 0
+0 0 0 AA^ AAQ ^^Q
+0 0 0 * 0 0
+0 0 0 0 * 0
+0 0 0 0 0 *
+Name_State
+s0 s1 s2 s3 s4 s5
+Initial_State
+s0
+Costs_for_actions
+AA^ s0$1:1;s2$1:1
+AAR s0$2:2
+A^Q s0$2:2
+AR^ s0$3:3
+AAQ s2$2:2
+^^R s0$3:3
+^^Q s2$2:2
+*** s1$2:2
+*** s3$2:2
+*** s4$2:2
+*** s5$2:2
+Atomic_propositions
+r s g h
+Labelling
+0 0 0 0
+1 1 0 0
+0 0 1 0
+1 1 1 0
+1 1 1 1
+0 0 1 1
+Number_of_agents
+3

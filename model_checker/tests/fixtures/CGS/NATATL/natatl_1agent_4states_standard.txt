@@ -1,0 +1,36 @@
+# MODEL: Single-agent model with 4 states (s0-s3)
+
+# PURPOSE: NATATL with one agent (simplest multi-agent case).
+
+# LOGIC: NATATL
+
+# DESCRIPTION: Single-agent model. Use it to compare NATATL `<1>φ` with CTL
+# path quantifiers E and A.
+
+Transition
+I C C I
+C I C C
+C C I C
+C C C I
+Unknown_Transition_by
+0 0 0 0 0 0 0 0
+0 0 t1 0 0 0 0 0
+0 0 0 c 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 t1 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+Name_State
+s0 s1 s2 s3
+Initial_State
+s0
+Atomic_propositions
+a b c d e f g h
+Labelling
+1 0 0 0 0 0 0 1
+0 0 0 0 1 0 0 1
+0 0 1 0 0 0 0 1
+1 0 0 0 0 0 0 1
+Number_of_agents
+1

@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Pytest
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+regression_report.yaml
+.tox/
+.nox/
+
+# Type/lint caches
+.mypy_cache/
+.ruff_cache/
+.pyre/
+
+# Build & Benchmarks
+.benchmarks/
+.benchmarks_backup/
+benchmark_results/
+benchmark_summaries/
+
+# IDE
+.vscode/
+.idea/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Package specifics
+ctl.json.summary.json
+ictl_err.log
+
+# Generated docs
+site/

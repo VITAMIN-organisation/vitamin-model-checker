@@ -1,0 +1,42 @@
+# MODEL: Three-agent recursive strategic model with 6 states (s0-s5)
+
+# PURPOSE: Recursive strategic reasoning with cost constraints.
+
+# LOGIC: RABATL
+
+# DESCRIPTION: Three agents; coalitions reason about other coalitions'
+# strategies under cost bounds. Use for strategic dependencies under
+# resource limits.
+
+Transition
+0 AA^ ^^R AAR 0 0
+0 * 0 0 0 0
+0 0 0 AA^ AAQ ^^Q
+0 0 0 * 0 0
+0 0 0 0 * 0
+0 0 0 0 0 *
+Name_State
+s0 s1 s2 s3 s4 s5
+Initial_State
+s0
+Costs_for_actions_split
+AA^ s0$1,1,1:1,1,1;s2$1,1,1:1,1,1
+AAR s0$0,2,0:0,2,0
+AAQ s2$0,0,2:0,0,2
+^^R s0$1,1,1:1,1,1
+^^Q s2$0,1,1:0,1,1
+*** s1$0,1,0:0,1,0
+*** s3$1,0,1:1,0,1
+*** s4$2,1,0:2,1,0
+*** s5$1,0,1:1,0,1
+Atomic_propositions
+r s g h
+Labelling
+0 0 0 0
+1 1 0 0
+0 0 1 0
+1 1 1 0
+1 1 1 1
+0 0 1 1
+Number_of_agents
+3

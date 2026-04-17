@@ -1,0 +1,12 @@
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+1
+0
+Number_of_agents
+1
+

@@ -1,0 +1,13 @@
+Transition
+III 0
+0 III
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+1
+0
+Number_of_agents
+1
+

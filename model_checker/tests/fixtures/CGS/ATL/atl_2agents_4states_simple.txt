@@ -1,0 +1,32 @@
+# MODEL: Simple two-agent model with 4 states (s0-s3)
+
+# PURPOSE: Basic ATL with two agents and non-deterministic transitions.
+
+# LOGIC: ATL
+
+# DESCRIPTION: Two agents choose actions; state s3 is non-deterministic (several
+# outcomes). Good for learning how coalitions work in ATL.
+
+Transition
+0 AC,AD BC,BD 0
+0 0 AD,BD AC,BC
+0 0 0 AD,BC
+0 0 0 *
+Unknown_Transition_by
+0 0 0 0
+0 0 0 0
+0 0 0 0
+0 0 0 0
+Name_State
+s0 s1 s2 s3
+Initial_State
+s0
+Atomic_propositions
+p q
+Labelling
+1 0
+0 1
+0 0
+1 1
+Number_of_agents
+2

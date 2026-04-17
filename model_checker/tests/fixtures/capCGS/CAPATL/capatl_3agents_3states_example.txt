@@ -1,0 +1,41 @@
+# MODEL: Three-agent capacity-constrained model with 3 states (q0, q1, q2)
+
+# PURPOSE: Shows how capacity limits affect what actions agents can take and
+# what coalitions can achieve.
+
+# LOGIC: CAPATL
+
+# DESCRIPTION: Small three-agent model. Agents have limited capacities;
+# actions require specific capacities. Use it to check properties under
+# capacity constraints.
+
+Transition
+0 A** B**
+AAB,ABA 0 AAA,ABB
+0 0 A**
+Unknown_Transition_by
+0 0 0
+0 0 0
+0 0 0
+Name_State
+q0 q1 q2
+Initial_State
+q0
+Atomic_propositions
+g a
+Labelling
+0 1
+0 1
+1 1
+Capacities
+c cap cop
+Capacities_assignment
+1 0 0
+1 0 0
+0 1 1
+Actions_for_capacities
+c A B
+cap A
+cop B
+Number_of_agents
+3

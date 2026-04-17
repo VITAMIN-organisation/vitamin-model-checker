@@ -1,0 +1,39 @@
+# MODEL: Two-agent cost-constrained model with 6 states (s0-s5)
+
+# PURPOSE: Cost-constrained linear-time properties (OL).
+
+# LOGIC: OL
+
+# DESCRIPTION: Two agents; costs on actions. Traces are verified under cost
+# bounds; properties must hold within those bounds.
+
+Transition
+0 2A 3A 0 0 0
+0 0 2A 1A 0 0
+0 3A 0 1A 4A 0
+0 0 0 0 3A 5A
+0 0 0 4A 0 6A
+0 0 0 0 0 *
+
+Name_State
+s0 s1 s2 s3 s4 s5
+Initial_State
+s0
+Costs_for_actions
+1A s1$2:0
+2A s0$3:0;s2$2:0
+3A s0$2:0;s3$1:0
+4A s2$1:0;s4$3:0
+5A s3$3:0;s4$5:0
+6A s4$6:0
+Atomic_propositions
+r a
+Labelling
+0 0
+1 0
+0 0
+1 0
+0 0
+1 1
+Number_of_agents
+2
