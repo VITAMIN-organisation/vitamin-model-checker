@@ -19,8 +19,8 @@ jobs:
           cache-dependency-path: pyproject.toml
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install -e ".[dev]"
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
       - name: Run unit tests
         run: |
           pytest model_checker/tests/unit/ \
@@ -50,8 +50,28 @@ jobs:
           cache-dependency-path: pyproject.toml
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install -e ".[dev]"
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
       - name: Run integration tests
         run: |
           pytest model_checker/tests/integration/ -v --tb=short -n auto
+
+  docker-tests:
+    name: Docker Build and Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build Docker image (cached)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: false
+          load: true
+          tags: vitamin-model-checker:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Run Docker smoke test
+        run: |
+          docker run --rm vitamin-model-checker:ci python -c "import model_checker; print('ok')"
