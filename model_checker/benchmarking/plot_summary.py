@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 
 def _import_matplotlib():
@@ -18,7 +18,7 @@ def _import_matplotlib():
     return plt
 
 
-def _load_summary(summary_path: Path) -> Dict[str, Any]:
+def _load_summary(summary_path: Path) -> dict[str, Any]:
     if not summary_path.exists():
         raise FileNotFoundError(f"Summary file not found: {summary_path}")
     data = json.loads(summary_path.read_text(encoding="utf-8"))
@@ -28,16 +28,16 @@ def _load_summary(summary_path: Path) -> Dict[str, Any]:
 
 
 def _filter_cases(
-    cases: List[Dict[str, Any]],
+    cases: list[dict[str, Any]],
     layout: str | None,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     if layout is None:
         return cases
     return [case for case in cases if case.get("layout") == layout]
 
 
-def _group_mean(points: List[Tuple[str, float]]) -> Dict[str, float]:
-    grouped: Dict[str, List[float]] = {}
+def _group_mean(points: list[tuple[str, float]]) -> dict[str, float]:
+    grouped: dict[str, list[float]] = {}
     for key, value in points:
         grouped.setdefault(key, []).append(value)
     return {k: (sum(v) / len(v) if v else 0.0) for k, v in grouped.items()}
@@ -45,7 +45,7 @@ def _group_mean(points: List[Tuple[str, float]]) -> Dict[str, float]:
 
 def _plot_logic_runtime_at_state(
     plt: Any,
-    cases: List[Dict[str, Any]],
+    cases: list[dict[str, Any]],
     output_dir: Path,
     fixed_states: int | None,
 ) -> None:
@@ -75,10 +75,12 @@ def _plot_logic_runtime_at_state(
     plt.close(fig)
 
 
-def _plot_scaling_by_logic(plt: Any, cases: List[Dict[str, Any]], output_dir: Path) -> None:
+def _plot_scaling_by_logic(
+    plt: Any, cases: list[dict[str, Any]], output_dir: Path
+) -> None:
     if not cases:
         return
-    by_logic: Dict[str, Dict[int, List[float]]] = {}
+    by_logic: dict[str, dict[int, list[float]]] = {}
     for case in cases:
         logic = str(case["logic"])
         states = int(case["num_states"])
@@ -104,7 +106,7 @@ def _plot_scaling_by_logic(plt: Any, cases: List[Dict[str, Any]], output_dir: Pa
 
 
 def _plot_variability_strip(
-    plt: Any, cases: List[Dict[str, Any]], output_dir: Path
+    plt: Any, cases: list[dict[str, Any]], output_dir: Path
 ) -> None:
     if not cases:
         return
@@ -127,11 +129,11 @@ def _plot_variability_strip(
 
 
 def _plot_shape_runtime_box(
-    plt: Any, cases: List[Dict[str, Any]], output_dir: Path, shape_note: str
+    plt: Any, cases: list[dict[str, Any]], output_dir: Path, shape_note: str
 ) -> None:
     if not cases:
         return
-    by_shape: Dict[str, List[float]] = {}
+    by_shape: dict[str, list[float]] = {}
     for case in cases:
         by_shape.setdefault(str(case["shape"]), []).append(float(case["mean_seconds"]))
 

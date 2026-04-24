@@ -201,4 +201,3 @@ class CapCGS(CGS):
             List of capacity name strings.
         """
         return self.capacities.tolist() if len(self.capacities) > 0 else []
-

@@ -8,7 +8,6 @@ import os
 from typing import Union
 
 from model_checker.discovery import discover_logic_resource
-
 from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS

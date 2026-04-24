@@ -6,7 +6,9 @@ including CTL, ATL, LTL, and their extensions.
 """
 
 from model_checker.api import (
+    CGS,
     CapCGS,
+    CostCGS,
     FormulaParserFactory,
     ModuleManifest,
     check_checker_conformance,
@@ -20,8 +22,6 @@ from model_checker.api import (
     detect_model_type_from_file,
     execute_model_checking_with_parser,
     format_model_checking_result,
-    CostCGS,
-    CGS,
 )
 
 __version__ = "1.0.0"

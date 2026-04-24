@@ -14,7 +14,9 @@ def check_parser_conformance(parser_class: Type[Any]) -> Dict[str, Any]:
     return {"ok": ok, "checks": checks}
 
 
-def check_checker_conformance(module: Any, entry_point: str = "model_checking") -> Dict[str, Any]:
+def check_checker_conformance(
+    module: Any, entry_point: str = "model_checking"
+) -> Dict[str, Any]:
     if not hasattr(module, entry_point):
         return {"ok": False, "error": f"Missing checker entry point: {entry_point}"}
 

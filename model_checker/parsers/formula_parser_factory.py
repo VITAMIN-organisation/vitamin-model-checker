@@ -7,8 +7,11 @@ import logging
 from threading import Lock
 from typing import Any, List
 
-from model_checker.discovery import discover_logic_resource, get_entry_points, is_integrated_logic
-
+from model_checker.discovery import (
+    discover_logic_resource,
+    get_entry_points,
+    is_integrated_logic,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,14 +45,16 @@ class FormulaParserFactory:
                 group="vitamin.parsers",
                 resource_type_label="Parser",
             )
-            
+
             instance = parser_class()
             with FormulaParserFactory._lock:
                 FormulaParserFactory._instances[logic_name] = instance
             return instance
-            
+
         except (ImportError, LookupError) as e:
-            raise ImportError(f"Could not load parser for logic '{logic_name}': {e}")
+            raise ImportError(
+                f"Could not load parser for logic '{logic_name}': {e}"
+            ) from e
 
     @staticmethod
     def parse_formula(logic_name: str, formula: str, **kwargs: Any) -> Any:
@@ -78,17 +83,21 @@ class FormulaParserFactory:
         if parser_names is None:
             # Discover all available parsers via entry points
             eps = get_entry_points("vitamin.parsers")
-            parser_names = list(set(ep.name for ep in eps))
-            
+            parser_names = list({ep.name for ep in eps})
+
             # Also check the formulas directory for integrated logics
             try:
                 from pathlib import Path
+
                 import model_checker.parsers.formulas as formulas_pkg
+
                 pkg_path = Path(formulas_pkg.__file__).parent
                 for item in pkg_path.iterdir():
                     if item.is_dir() and (item / "parser.py").is_file():
                         # Only include if it's either in entry points OR in the integration registry
-                        if item.name not in parser_names and is_integrated_logic(item.name):
+                        if item.name not in parser_names and is_integrated_logic(
+                            item.name
+                        ):
                             parser_names.append(item.name)
             except Exception as e:
                 logger.warning(f"Failed to scan formulas directory during warmup: {e}")

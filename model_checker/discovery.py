@@ -1,9 +1,9 @@
 """Unified logic discovery for the VITAMIN core library."""
 
 import logging
+from importlib.metadata import entry_points
 from pathlib import Path
 from typing import Any, List
-from importlib.metadata import entry_points
 
 logger = logging.getLogger(__name__)
 

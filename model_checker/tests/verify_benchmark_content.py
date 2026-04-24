@@ -1,5 +1,7 @@
-from model_checker.benchmarking.adapters import get_model_content
 import sys
+
+from model_checker.benchmarking.adapters import get_model_content
+
 
 def verify_benchmark_groups():
     # Test cases: (logic_name, expected_group)
@@ -9,7 +11,7 @@ def verify_benchmark_groups():
         ("NatSL", "natATL"),
         ("ATL", "CGS"),
         ("CapATL", "capCGS"),
-        ("RBATL", "costCGS")
+        ("RBATL", "costCGS"),
     ]
 
     print("Verifying Benchmark Groups and Generators:\n")
@@ -52,8 +54,13 @@ def verify_benchmark_groups():
                 else:
                     print(f"FAILED (Wrong generator for {logic})")
                     sys.exit(1)
-            else: # CGS
-                if has_standard_actions and not has_nat_actions and not has_cap and not has_cost:
+            else:  # CGS
+                if (
+                    has_standard_actions
+                    and not has_nat_actions
+                    and not has_cap
+                    and not has_cost
+                ):
                     print("SUCCESS (Verified Standard CGS Generator)")
                 else:
                     print(f"FAILED (Wrong generator for {logic})")
@@ -64,6 +71,7 @@ def verify_benchmark_groups():
             sys.exit(1)
 
     print("\nAll benchmark group verifications passed!")
+
 
 if __name__ == "__main__":
     verify_benchmark_groups()

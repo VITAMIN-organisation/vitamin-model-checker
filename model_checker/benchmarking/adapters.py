@@ -2,7 +2,6 @@
 
 import logging
 
-from model_checker.discovery import discover_logic_resource
 from model_checker.benchmarking.generators import (
     generate_capcgs_linear_chain_model,
     generate_cost_cgs_linear_chain_content,
@@ -10,6 +9,7 @@ from model_checker.benchmarking.generators import (
     generate_linear_chain_model,
     generate_natatl_linear_chain_model,
 )
+from model_checker.discovery import discover_logic_resource
 from model_checker.registries import get_benchmark_group
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def get_model_checker(logic: str):
             resource_type_label="Benchmark logic",
         )
     except (ImportError, LookupError) as e:
-        raise ValueError(f"Unknown logic for benchmark: '{logic}': {e}")
+        raise ValueError(f"Unknown logic for benchmark: '{logic}': {e}") from e
 
 
 def get_model_content(logic: str, layout: str, num_states: int) -> str:

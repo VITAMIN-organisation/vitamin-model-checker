@@ -108,7 +108,9 @@ def validate_coalition_bound_token(
     return coalition_only
 
 
-def validate_natatl_coalition(coalition_str: str, max_coalition: int) -> tuple[str, str]:
+def validate_natatl_coalition(
+    coalition_str: str, max_coalition: int
+) -> tuple[str, str]:
     """Validate NatATL coalition format.
 
     Accepts only canonical capacity syntax: <{1,2}, 5>.

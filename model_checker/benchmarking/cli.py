@@ -19,10 +19,14 @@ def _is_pyperf_worker_process() -> bool:
 def _resolve_output_path(output_path: Path) -> Path | None:
     current = output_path
     while current.exists():
-        choice = input(
-            f"Output file {current} already exists. "
-            "[o]verwrite, [n]ew name, or [c]ancel? "
-        ).strip().lower()
+        choice = (
+            input(
+                f"Output file {current} already exists. "
+                "[o]verwrite, [n]ew name, or [c]ancel? "
+            )
+            .strip()
+            .lower()
+        )
         if choice in {"o", "overwrite"}:
             current.unlink()
             summary_path = Path(f"{current}.summary.json")

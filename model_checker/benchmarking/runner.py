@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-import os
 import json
+import os
 import subprocess
 import sys
 import threading
 import time
 import warnings
 from contextlib import redirect_stdout
-from io import StringIO
 from dataclasses import dataclass
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, Iterable, List
+from typing import Any, Iterable
 
 from model_checker.benchmarking.adapters import (
     get_model_checker,
@@ -81,7 +81,7 @@ def _classify_formula_shape(formula: str) -> str:
     return "other"
 
 
-def _extract_formula_features(formula: str) -> Dict[str, int]:
+def _extract_formula_features(formula: str) -> dict[str, int]:
     cleaned = formula.replace(" ", "").upper()
     paren_depth = 0
     max_paren_depth = 0
@@ -149,12 +149,12 @@ def _extract_metrics(case: BenchmarkCase, benchmark: Any) -> CaseMetrics:
 
 
 def _build_group_row(
-    group_type: str, group_name: str, group_metrics: List[CaseMetrics]
-) -> Dict[str, str]:
+    group_type: str, group_name: str, group_metrics: list[CaseMetrics]
+) -> dict[str, str]:
     mean_runtime = _safe_mean(m.mean_seconds for m in group_metrics)
     mean_cv_percent = _safe_mean(m.cv_ratio for m in group_metrics) * 100.0
     mean_per_state = _safe_mean(m.per_state_seconds for m in group_metrics)
-    row: Dict[str, str] = {
+    row: dict[str, str] = {
         "group": group_type,
         "name": group_name,
         "case_count": str(len(group_metrics)),
@@ -172,18 +172,18 @@ def _build_group_row(
     return row
 
 
-def _print_group_summaries(metrics_list: List[CaseMetrics]) -> None:
+def _print_group_summaries(metrics_list: list[CaseMetrics]) -> None:
     if not metrics_list:
         return
 
-    table_rows: List[Dict[str, str]] = []
-    by_logic: Dict[str, List[CaseMetrics]] = {}
+    table_rows: list[dict[str, str]] = []
+    by_logic: dict[str, list[CaseMetrics]] = {}
     for metrics in metrics_list:
         by_logic.setdefault(metrics.case.logic, []).append(metrics)
     for logic in sorted(by_logic):
         table_rows.append(_build_group_row("logic", logic, by_logic[logic]))
 
-    by_shape: Dict[str, List[CaseMetrics]] = {}
+    by_shape: dict[str, list[CaseMetrics]] = {}
     for metrics in metrics_list:
         by_shape.setdefault(metrics.shape, []).append(metrics)
     for shape in sorted(by_shape):
@@ -213,7 +213,7 @@ def _print_group_summaries(metrics_list: List[CaseMetrics]) -> None:
         )
 
 
-def _write_summary_json(output: str, metrics_list: List[CaseMetrics]) -> None:
+def _write_summary_json(output: str, metrics_list: list[CaseMetrics]) -> None:
     summary_path = Path(f"{output}.summary.json")
     payload = {
         "version": 1,
@@ -359,7 +359,7 @@ def run_benchmarks(
         print(f"[*] Benchmarking {total} cases for: {logic_label}")
 
     benchmarks = []
-    metrics_list: List[CaseMetrics] = []
+    metrics_list: list[CaseMetrics] = []
     avg_case_seconds = 4.0
     with TemporaryDirectory(prefix="model_checker-benchmark-") as temp_dir:
         temp_path = Path(temp_dir)

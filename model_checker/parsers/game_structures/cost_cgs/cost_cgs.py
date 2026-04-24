@@ -83,4 +83,3 @@ class CostCGS(CGS):
             Dict with keys from translate_action_and_state_to_key; values are costs.
         """
         return self.cost_for_action
-
