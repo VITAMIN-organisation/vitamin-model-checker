@@ -1,4 +1,4 @@
-"""Capability-based Concurrent Game Structure (capCGS) parser.
+"""Capability-based Concurrent Game Structure (CapCGS) parser.
 
 Extends CGS with capacity assignments and action capacities; used by CapATL
 and other capacity-based logics.
@@ -12,8 +12,8 @@ from model_checker.parsers.game_structures.cgs import cgs_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 
 
-class capCGS(CGS):
-    """Parser and in-memory representation for a capCGS model file.
+class CapCGS(CGS):
+    """Parser and in-memory representation for a CapCGS model file.
 
     Adds capacity sections (Capacities, Capacities_assignment,
     Actions_for_capacities) on top of the base CGS. Use read_file(path) to load
@@ -22,7 +22,7 @@ class capCGS(CGS):
     """
 
     def __init__(self):
-        """Initialize an empty capCGS; load data with read_file or read_from_model_object."""
+        """Initialize an empty CapCGS; load data with read_file or read_from_model_object."""
         super().__init__()
         self.capacities_assignment = []
         self.action_capacities = []
@@ -36,10 +36,10 @@ class capCGS(CGS):
         self.capacities = np.array([])
 
     def read_file(self, filename: str) -> None:
-        """Read and parse a capCGS model file from disk.
+        """Read and parse a CapCGS model file from disk.
 
         Args:
-            filename: Path to the capCGS model file.
+            filename: Path to the CapCGS model file.
 
         Raises:
             ValueError: If section structure or dimensions are invalid.
@@ -201,3 +201,4 @@ class capCGS(CGS):
             List of capacity name strings.
         """
         return self.capacities.tolist() if len(self.capacities) > 0 else []
+

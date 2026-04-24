@@ -6,17 +6,24 @@ from pydantic import BaseModel, Field
 
 
 class LogicSection(BaseModel):
-    name: str = Field(min_length=1)
+    name: str = Field(
+        min_length=1,
+        pattern=r"^[A-Z][A-Za-z0-9]*(?:_[A-Z][A-Za-z0-9]*)*$",
+        description="Logic identifier in PascalCase (underscores allowed between Pascal segments), e.g. Wallet_ATL.",
+    )
     model_type: str = Field(
         min_length=1,
         pattern=r"^[A-Za-z][A-Za-z0-9_]*$",
-        description="Game-structure family, e.g. CGS, costCGS.",
+        description="Game-structure model type in CamelCase/PascalCase, e.g. costCGS, TimedCGS.",
     )
 
 
 class ParserSection(BaseModel):
     module: str = Field(min_length=1)
-    class_name: str = Field(min_length=1)
+    class_name: str = Field(
+        min_length=1,
+        pattern=r"^[A-Z][A-Za-z0-9]*(?:_[A-Z][A-Za-z0-9]*)*$",
+    )
 
 
 class CheckerSection(BaseModel):
@@ -34,7 +41,11 @@ class GameStructureSection(BaseModel):
             "parsers.game_structures.cgs.cgs."
         ),
     )
-    class_name: str = Field(min_length=1)
+    class_name: str = Field(
+        min_length=1,
+        pattern=r"^[A-Z][A-Za-z0-9]*(?:_[A-Z][A-Za-z0-9]*)*$",
+        description="Python class name in PascalCase (underscores allowed between Pascal segments).",
+    )
     integration_module: Optional[str] = Field(
         default=None,
         description=(

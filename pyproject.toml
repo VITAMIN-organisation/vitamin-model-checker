@@ -84,8 +84,8 @@ RBATL = "model_checker.parsers.formulas.RBATL.parser:RBATLParser"
 
 [project.entry-points."vitamin.models"]
 CGS = "model_checker.parsers.game_structures.cgs.cgs:CGS"
-costCGS = "model_checker.parsers.game_structures.cost_cgs.cost_cgs:costCGS"
-capCGS = "model_checker.parsers.game_structures.cap_cgs.cap_cgs:capCGS"
+costCGS = "model_checker.parsers.game_structures.cost_cgs.cost_cgs:CostCGS"
+capCGS = "model_checker.parsers.game_structures.cap_cgs.cap_cgs:CapCGS"
 
 [project.entry-points."vitamin.benchmarks"]
 ATL = "model_checker.algorithms.explicit.ATL.ATL:model_checking"

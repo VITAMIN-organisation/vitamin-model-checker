@@ -24,9 +24,7 @@ def get_model_checker(logic: str):
         return discover_logic_resource(
             logic_name=logic,
             group="vitamin.benchmarks",
-            fallback_module_template="model_checker.algorithms.explicit.{name}.{name}",
-            fallback_attr="model_checking",
-            resource_type_label="Benchmark logic"
+            resource_type_label="Benchmark logic",
         )
     except (ImportError, LookupError) as e:
         raise ValueError(f"Unknown logic for benchmark: '{logic}': {e}")

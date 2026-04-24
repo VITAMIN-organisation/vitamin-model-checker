@@ -40,9 +40,7 @@ class FormulaParserFactory:
             parser_class = discover_logic_resource(
                 logic_name=logic_name,
                 group="vitamin.parsers",
-                fallback_module_template="model_checker.parsers.formulas.{name}.parser",
-                fallback_attr=f"{logic_name}Parser",
-                resource_type_label="Parser"
+                resource_type_label="Parser",
             )
             
             instance = parser_class()

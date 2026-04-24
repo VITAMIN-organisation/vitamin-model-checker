@@ -1,4 +1,4 @@
-"""Cost-based Concurrent Game Structure (costCGS) parser.
+"""Cost-based Concurrent Game Structure (CostCGS) parser.
 
 Extends CGS with action-state costs; used by OATL, OL and other cost-bounded logics.
 """
@@ -9,8 +9,8 @@ from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs import cost_cgs_parser
 
 
-class costCGS(CGS):
-    """Parser and in-memory representation for a costCGS model file.
+class CostCGS(CGS):
+    """Parser and in-memory representation for a CostCGS model file.
 
     Adds cost sections (e.g. Costs_for_actions, Transition_With_Costs) on top
     of the base CGS. Use read_file(path) to load a file; then use
@@ -20,17 +20,17 @@ class costCGS(CGS):
     # --- Initialization and File Reading ---
 
     def __init__(self):
-        """Create an empty costCGS; load data with read_file or read_from_model_object."""
+        """Create an empty CostCGS; load data with read_file or read_from_model_object."""
         super().__init__()
         self.costs = []
         self.cost_for_action = {}
         self.usesCostsInsteadOfActions = False
 
     def read_file(self, filename: str) -> None:
-        """Load and parse a costCGS model from a file path.
+        """Load and parse a CostCGS model from a file path.
 
         Args:
-            filename: Path to the costCGS model file.
+            filename: Path to the CostCGS model file.
 
         Raises:
             ValueError: If section structure or dimensions are invalid.
@@ -47,7 +47,7 @@ class costCGS(CGS):
         cost_cgs_parser.parse_transitions(lines, self)
 
     def read_from_model_object(self, model: Any) -> None:
-        """Fill this costCGS from an existing model object instead of reading a file.
+        """Fill this CostCGS from an existing model object instead of reading a file.
 
         Args:
             model: Object with transition_matrix, state_names, propositions,
@@ -83,3 +83,4 @@ class costCGS(CGS):
             Dict with keys from translate_action_and_state_to_key; values are costs.
         """
         return self.cost_for_action
+

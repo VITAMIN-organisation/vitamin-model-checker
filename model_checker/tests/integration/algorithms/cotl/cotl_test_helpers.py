@@ -11,9 +11,9 @@ from model_checker.tests.helpers.model_helpers import load_test_model
 
 def load_cotl_parser_from_file(path):
     """Load costCGS parser by reading the file at path (works for any path, e.g. temp)."""
-    from model_checker.parsers.game_structures.cost_cgs.cost_cgs import costCGS
+    from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
 
-    parser = costCGS()
+    parser = CostCGS()
     parser.read_file(str(path))
     return parser
 

@@ -7,7 +7,7 @@ import pytest
 
 from model_checker.models.model_factory import create_model_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
-from model_checker.parsers.game_structures.cost_cgs.cost_cgs import costCGS
+from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
 
 
 def assert_parse_structure(result, expected_structure=None, description=""):
@@ -65,7 +65,7 @@ def load_cgs_from_content(temp_file, content):
 
 def load_costcgs_from_content(temp_file, content):
     """Load costCGS from string content via a temp file."""
-    parser = costCGS()
+    parser = CostCGS()
     file_path = temp_file(content)
     parser.read_file(file_path)
     return parser

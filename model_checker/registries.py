@@ -17,9 +17,7 @@ def get_expected_model_type(logic_type: str) -> Optional[str]:
         metadata = discover_logic_resource(
             logic_name=logic_type,
             group="vitamin.metadata",
-            fallback_module_template="model_checker.parsers.formulas.{name}",
-            fallback_attr="METADATA",
-            resource_type_label="Metadata"
+            resource_type_label="Metadata",
         )
         if isinstance(metadata, dict) and "model_type" in metadata:
             return metadata["model_type"]
@@ -42,9 +40,7 @@ def get_benchmark_group(logic_type: str) -> str:
         metadata = discover_logic_resource(
             logic_name=logic_type,
             group="vitamin.metadata",
-            fallback_module_template="model_checker.parsers.formulas.{name}",
-            fallback_attr="METADATA",
-            resource_type_label="Metadata"
+            resource_type_label="Metadata",
         )
         if isinstance(metadata, dict):
             if "benchmark_group" in metadata:

@@ -4,17 +4,14 @@ Detects game structure type (CGS, costCGS, capCGS) from files and
 instantiates the correct parser.
 """
 
-import logging
 import os
-from typing import Any, Union
+from typing import Union
 
 from model_checker.discovery import discover_logic_resource
 
-logger = logging.getLogger(__name__)
-
-from model_checker.parsers.game_structures.cap_cgs.cap_cgs import capCGS
+from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs.cgs import CGS
-from model_checker.parsers.game_structures.cost_cgs.cost_cgs import costCGS
+from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
 
 
 def detect_model_type_from_file(filename: str) -> str:
@@ -53,22 +50,11 @@ def detect_model_type_from_content(content: str) -> str:
 
 def create_model_parser(
     filename: str, expected_type: str = None
-) -> Union[CGS, costCGS, capCGS]:
+) -> Union[CGS, CostCGS, CapCGS]:
     """Create appropriate model parser instance based on model file content.
 
-    Detects the game structure type and returns the appropriate parser.
-    CGS-compatible formulas can use CGS, costCGS, or capCGS parsers.
-
-    Args:
-        filename: Path to the model file.
-        expected_type: Optional expected model type. If provided, overrides detection.
-
-    Returns:
-        Instance of CGS, costCGS, or capCGS parser.
-
-    Raises:
-        FileNotFoundError: If model file doesn't exist.
-        ValueError: If expected_type doesn't match detected type.
+    Detects the game structure type or uses the expected type to resolve
+    the parser class from registered entry points.
     """
     actual_type = expected_type or detect_model_type_from_file(filename)
 
@@ -76,27 +62,17 @@ def create_model_parser(
         parser_class = discover_logic_resource(
             logic_name=actual_type,
             group="vitamin.models",
-            fallback_module_template="model_checker.parsers.game_structures.{name}.{name}",
-            fallback_attr=actual_type,
-            resource_type_label="Model type"
+            resource_type_label="Model type",
         )
-        return parser_class()
-    except LookupError:
-        if actual_type == "CGS":
-            return CGS()
-        if actual_type == "costCGS":
-            return costCGS()
-        if actual_type == "capCGS":
-            return capCGS()
+    except LookupError as e:
+        raise ImportError(f"Unknown or unsupported model type: '{actual_type}'.") from e
 
-        raise ImportError(f"Unknown model type: '{actual_type}'.")
-    except ImportError as e:
-        raise e
+    return parser_class()
 
 
 def create_model_parser_for_logic(
     filename: str, logic_type: str = None
-) -> Union[CGS, costCGS, capCGS]:
+) -> Union[CGS, CostCGS, CapCGS]:
     """Create appropriate model parser instance based on formula type requirements.
 
     Args:

@@ -1,5 +1,4 @@
-"""Import integrated logic module parsers and alias them for use in the API.
+"""Generated API exports for integrator-managed logics.
 
 AUTOMATICALLY GENERATED - DO NOT EDIT MANUALLY
-This file is managed by the VITAMIN Module Integrator.
 """

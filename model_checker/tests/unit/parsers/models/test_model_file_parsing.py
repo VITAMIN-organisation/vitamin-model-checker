@@ -4,7 +4,7 @@ import warnings
 
 import pytest
 
-from model_checker.parsers.game_structures.cap_cgs.cap_cgs import capCGS
+from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.tests.helpers.model_helpers import (
     build_cgs_model_content,
@@ -219,7 +219,7 @@ class TestExtensionSectionInitialState:
         )
         if not path.exists():
             pytest.skip("capCGS example not found")
-        parser = capCGS()
+        parser = CapCGS()
         parser.read_file(str(path))
         assert parser.initial_state == "q0"
         assert parser.initial_state in parser.states

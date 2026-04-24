@@ -2,16 +2,16 @@
 
 Contains implementations of various model types:
 - CGS: Concurrent Game Structures
-- capCGS: Capability-based CGS
-- costCGS: Cost-based CGS
+- CapCGS: Capability-based CGS
+- CostCGS: Cost-based CGS
 """
 
-from model_checker.parsers.game_structures.cap_cgs.cap_cgs import capCGS
+from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs.cgs import CGS
-from model_checker.parsers.game_structures.cost_cgs.cost_cgs import costCGS
+from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
 
 __all__ = [
     "CGS",
-    "capCGS",
-    "costCGS",
+    "CapCGS",
+    "CostCGS",
 ]
