@@ -24,6 +24,7 @@ plugins:
 
 nav:
   - Home: index.md
+  - Deployment Ports: deployment-ports.md
   - Architecture: architecture.md
   - File Formats: file_formats.md
   - Logic Knowledge Base: logic_knowledge_base.md

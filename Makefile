@@ -2,6 +2,9 @@
 
 .PHONY: help install build clean format lint test test-models benchmark
 
+# ------------------------------
+# Configuration
+# ------------------------------
 PYTHON := python3
 # Directory containing this Makefile (model_checker)
 MKFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
@@ -11,21 +14,34 @@ PROJECT_ROOT := $(MKFILE_DIR)
 help:
 	@echo "VITAMIN Model Checker"
 	@echo ""
+	@echo "  --- Setup ---"
 	@echo "  make install       Install package in development mode"
+	@echo ""
+	@echo "  --- Run & Analyze ---"
 	@echo "  make benchmark     Run benchmark tool (pyperf)"
 	@echo "                     Variables: MODE, LOGIC, OUTPUT, EXPORT_PLOTS, BASELINE, RESULT"
+	@echo ""
+	@echo "  --- Build & Cleanup ---"
 	@echo "  make build         Build distribution package"
 	@echo "  make clean         Remove Python cache and egg-info"
+	@echo ""
+	@echo "  --- Quality ---"
 	@echo "  make format        Format code with black"
 	@echo "  make lint          Lint code with ruff"
 	@echo "  make test          Run unit and integration tests (fast)"
 	@echo "  make test-models   Run comprehensive model tests (slow)"
 
+# ------------------------------
+# Setup
+# ------------------------------
 install:
 	@echo "Installing package..."
 	@cd $(PROJECT_ROOT) && $(PYTHON) -m pip install -e ".[bench]"
 	@echo "Done."
 
+# ------------------------------
+# Run & Analyze
+# ------------------------------
 benchmark:
 	@echo "Running benchmark tool..."
 	@cd $(PROJECT_ROOT) && if [ "$(MODE)" = "compare" ]; then \
@@ -49,6 +65,9 @@ benchmark:
 		$(PYTHON) -m model_checker.benchmarking; \
 	fi
 
+# ------------------------------
+# Build & Cleanup
+# ------------------------------
 build:
 	@echo "Building distribution package..."
 	@cd $(PROJECT_ROOT) && $(PYTHON) -m pip install -q build wheel setuptools 2>/dev/null || true
@@ -63,6 +82,9 @@ clean:
 	@cd $(MKFILE_DIR) && find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 	@echo "Done."
 
+# ------------------------------
+# Quality
+# ------------------------------
 format:
 	@command -v black >/dev/null 2>&1 || { echo "Install black: $(PYTHON) -m pip install black"; exit 1; }
 	@cd $(MKFILE_DIR) && black .

@@ -92,7 +92,7 @@ COTL does not need a new model type; it uses costCGS and is added to `COST_BASED
 - Add at least one parametrized row in `test_model_checking_exact_state_sets` with a formula and the expected state set for that model.
 - Optionally add error cases in `test_model_checking_error_paths`.
 
-**Example files.** Put examples under `workbench/api/examples/`. The workbench discovers examples automatically from this directory. Use the same layout as other logics: `examples/<model_type>/<Logic>/`. For each model file `<name>.txt`, add a `<name>_formula.txt` with at least one formula. Example models do not need to be complete (e.g. some states may have no outgoing transition); the checker does not require transition completeness.
+**Example files.** Put examples under the repo-root `examples/` directory using the same layout as other logics: `examples/<model_type>/<Logic>/`. For each model file `<name>.txt`, add a `<name>_formula.txt` with at least one formula. Example models do not need to be complete (e.g. some states may have no outgoing transition); the checker does not require transition completeness.
 
 ---
 

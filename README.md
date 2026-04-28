@@ -7,10 +7,9 @@ Core Python package implementing VITAMIN logics, models, and verification routin
 - Make
 
 ## Setup (fresh)
-1) From the repo root: `cd model-checker`
-2) Create and activate a virtualenv (recommended):
+1) From the repository root, create and activate a virtualenv (recommended):
    - `python3 -m venv .venv && source .venv/bin/activate`
-3) Install in editable mode with benchmark dependency: `make install`
+2) Install in editable mode with benchmark dependency: `make install`
 
 ## Run and test
 
@@ -36,4 +35,8 @@ Benchmark documentation lives in a single file:
 - Remove caches: `make clean`
 - Format with black (if installed): `make format`
 - Lint with ruff (if installed): `make lint`
+
+## Port profile
+- This repository is a library/CLI and does not expose an HTTP port by default.
+- Cross-project port plan is documented in `docs/deployment-ports.md`.
 
