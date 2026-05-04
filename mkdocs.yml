@@ -24,6 +24,8 @@ plugins:
 
 nav:
   - Home: index.md
+  - VITAMIN Stack: vitamin-stack.md
+  - Contributing: contributing.md
   - Deployment Ports: deployment-ports.md
   - Architecture: architecture.md
   - File Formats: file_formats.md

@@ -7,12 +7,12 @@ formula shapes.
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.11 is recommended for local runs, matching CI and Docker.
 - Package installed in editable mode (`pip install -e ".[bench]"`)
 
 ## Quick start
 
-From the `model_checker/` directory:
+From the repository root:
 
 ```bash
 # Run the full benchmark matrix
@@ -199,8 +199,10 @@ When a benchmark runs, the flow is:
 ## Adding a new benchmark case
 
 1. Open `cases.py` and add a `BenchmarkCase` entry in the right logic group.
-2. If it's a new logic, add the import path to `_CHECKER_REGISTRY` in `adapters.py`
-   and add the logic to one of the model-format sets (`_CGS_LOGICS`, `_NATATL_LOGICS`, etc.).
+2. If it is a built-in logic, add the import path to `_CHECKER_REGISTRY` in
+   `adapters.py` and add the logic to one of the model-format sets
+   (`_CGS_LOGICS`, `_NATATL_LOGICS`, etc.). If the logic came from a VMI bundle,
+   make sure the integrated callable is importable from this package first.
 3. If the logic needs a different model layout, add a generator to `generators.py` and
    wire it into `get_model_content()` in `adapters.py`.
 4. Smoke-test it:

@@ -1,18 +1,21 @@
 # Deployment Ports
 
-Use this page as the port contract for the model-checker project.
+`vitamin-model-checker` is a Python library and CLI package. It does not bind a
+network port by default.
 
-## Default behavior
+## Cross-Project Port Contract
 
-The model-checker is a Python library and CLI package. It does not bind a network port by default.
+| Project | Default port | Notes |
+|---|---:|---|
+| `vitamin-workbench` | `80` | User-facing web/API application, usually behind a reverse proxy. |
+| `vitamin-module-integrator` | `8081` | Developer tool for bundle validation and integration. |
+| `vitamin-model-checker` | none | Imported as a Python dependency or mounted into another service. |
 
-## Cross-project deployment contract
+## Local Development
 
-- `vitamin-workbench` serves users on port `80` (public via reverse proxy)
-- `vitamin-module-integrator` serves developers on port `8081`
-- `vitamin-model-checker` stays internal (imported as a dependency or mounted into another service)
+Running tests, benchmarks, or scripts in this repository does not require a
+reserved HTTP port.
 
-## Local development note
-
-If you run standalone scripts or tests in this repository, no HTTP port allocation is required.
-Only allocate a port if you explicitly add a wrapper service around this library.
+Only allocate a port if you intentionally wrap this package in a service. If
+you do that, document the wrapper in the owning project rather than treating it
+as part of the core model-checker library.

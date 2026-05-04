@@ -1,6 +1,7 @@
 # Tests overview
 
-This document explains how the test suite is organised, how to reuse the common helpers, and how to run only the pieces you care about.
+This document explains how the test suite is organized, how to reuse the common
+helpers, and how to run only the pieces you care about.
 
 ## Directory layout
 
@@ -195,8 +196,8 @@ These tests are meant to catch regressions (for example, a change that makes
 
 ## Benchmarks
 
-Benchmarks are no longer part of the pytest test suite.
-Use the benchmark tool in `model_checker/benchmarking/README.md`.
+Benchmarks are not part of the pytest suite. Use the benchmark tool in
+`model_checker/benchmarking/README.md` when you need timing data.
 
 ## Markers and how to run tests
 
@@ -228,3 +229,8 @@ Typical commands:
   `pytest model_checker/tests/e2e/`
 - filter by marker, for example integration only:
   `pytest model_checker/tests/ -m integration`
+
+When VMI integrates a logic bundle into this repository, run the relevant
+integration tests here after the VMI post-integration verification has passed.
+VMI proves the bundle can be installed and imported; this suite protects the
+core package behavior over time.

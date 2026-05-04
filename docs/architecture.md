@@ -1,165 +1,187 @@
-# VITAMIN Model Checker Architecture
+# Architecture
 
-This document describes the structure of the `model_checker` package and how to
-extend it.
+This page explains how the `model_checker` package is organized and where to
+make changes safely. It focuses on the library itself. For the wider project
+relationship with VMI and Workbench, see [VITAMIN Stack](vitamin-stack.md).
 
-## Overview
+## Runtime Shape
 
-The architecture separates parsing from verification. Parsers convert input
-(files/strings) into in-memory structures. Algorithms run the verification
-logic. The engine connects these components. This design allows new logics or
-model types to be added without changing existing code.
+The package separates model parsing, formula parsing, and verification
+algorithms. The engine layer connects them and keeps the public call shape
+consistent.
 
-The system uses **explicit state model checking**: the full state space is built
-in memory and traversed directly. This approach is simple and enables
-straightforward witness/counterexample generation, though it uses more memory.
+```mermaid
+flowchart LR
+    caller["Python caller<br/>or host app"]
+    runner["engine/runner.py"]
+    modelFactory["Model parser factory"]
+    formulaFactory["Formula parser factory"]
+    modelParser["Game-structure parser"]
+    formulaParser["Formula parser"]
+    algorithm["Explicit algorithm"]
+    result["Result dict"]
 
-## System Components
+    caller --> runner
+    runner --> modelFactory --> modelParser
+    runner --> formulaFactory --> formulaParser
+    modelParser --> algorithm
+    formulaParser --> algorithm
+    algorithm --> result
+```
+
+The algorithms are explicit-state algorithms. They work over an in-memory model
+and traverse the state space directly. That keeps the implementation readable
+and makes traces easier to build, but large models can use a lot of memory.
+
+## Package Layers
+
+```text
+model_checker/
+├── algorithms/explicit/        # per-logic checking algorithms
+├── benchmarking/               # pyperf benchmark CLI and cases
+├── engine/                     # shared runner and execution helpers
+├── parsers/
+│   ├── formulas/               # per-logic formula parsers
+│   └── game_structures/        # CGS, costCGS, capCGS parsers
+├── shared/                     # trace/result helpers
+├── tests/                      # unit, integration, e2e, performance tests
+└── utils/                      # error handling and shared utilities
+```
 
 ### Parser Layer
 
-The parser layer has two independent subsystems:
+Model parsers read `.txt` model files and build in-memory game structures.
+Current built-in model types are:
 
-**1. Model Parsers** (`parsers/game_structures/`)
--   Read model files and create in-memory objects.
--   Supported types: `CGS` (standard), `costCGS` (with costs), `capCGS` (with
-    capacities).
--   **Model Factory**: Always use `create_model_parser_for_logic` (in
-    `models.model_factory`) to instantiate model parsers based on the target
-    logic's requirements.
+- `CGS`
+- `costCGS`
+- `capCGS`
 
-**2. Logic Parsers** (`parsers/formulas/`)
--   Parse temporal logic formulas into structured trees.
--   One parser per logic (CTL, ATL, LTL, etc.).
--   Built with PLY (Python Lex-Yacc).
--   Parsers are independent and thread-safe.
--   **Factory Pattern**: Always use `FormulaParserFactory` to create parsers.
+Formula parsers live under `parsers/formulas/<Logic>/` and parse formulas into
+trees used by the algorithms. Most are built with PLY.
 
-### Algorithm Layer
+Callers should go through the factories instead of instantiating parsers
+directly:
 
-Algorithms reside in `algorithms/explicit/`, organized by logic. Each algorithm
-follows this flow:
-
-1.  Instantiate the logic parser via `FormulaParserFactory`.
-2.  Parse the formula into a tree.
-3.  Recursively evaluate the tree against the model.
-4.  Return the set of states satisfying the formula.
-
-**Trace Generation:** Logic like CTL supports trace generation
-(witnesses/counterexamples) using `solver_with_trace.py`. Trace data structures
-are defined in `shared/verification_result.py`.
+- `FormulaParserFactory`
+- `create_model_parser_for_logic`
 
 ### Engine Layer
 
-The engine (`engine/runner.py`) is the entry point. It handles:
--   Input validation.
--   Parser creation (via factories).
--   File reading.
--   Error normalization.
--   Delegation to the specific algorithm.
+`engine/runner.py` handles the common work around each model-checking call:
 
-### Utilities Layer
+- validate input,
+- choose the correct model parser,
+- read the model file,
+- call the logic algorithm,
+- normalize errors.
 
--   **Error Handling** (`utils/error_handler.py`): Returns structured error
-    dictionaries (syntax, semantic, model, system).
--   **Trace Utils** (`shared/trace_utils.py`): Reconstructs paths from
-    predecessor maps (BFS).
--   **Verification Result** (`shared/verification_result.py`): Defines
-    `StateTrace`, `StrategyTrace`, and `VerificationResult`.
+Logic modules expose the public shape:
 
-## Data Flow
-
-```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#e1f5ff','primaryTextColor':'#000','primaryBorderColor':'#0066cc','lineColor':'#0066cc','secondaryColor':'#f0f0f0','tertiaryColor':'#ffffff'}}}%%
-flowchart TD
-    Input["User Input<br/>formula + model file"] --> Engine["Engine Runner<br/>engine/runner.py"]
-    Engine --> Factory["Factories"]
-    Factory --> ModelParser["Model Parser"]
-    Factory --> LogicParser["Logic Parser"]
-    ModelParser --> Model["In-Memory Model"]
-    LogicParser --> FormulaTree["Formula Tree"]
-    Engine --> Algorithm["Algorithm"]
-    Model --> Algorithm
-    FormulaTree --> Algorithm
-    Algorithm --> Result["Result<br/>States + Trace"]
-    Algorithm --> Error["Error Response"]
+```python
+model_checking(formula: str, filename: str) -> dict
 ```
 
-## Trace Generation Flow
+Inside that function, use `execute_model_checking_with_parser(...)` so the
+shared validation and error handling stay consistent.
 
-When enabled, the algorithm tracks predecessors during evaluation:
+### Algorithm Layer
+
+Each logic has a module under `algorithms/explicit/<Logic>/`. Algorithms should
+receive the parsed model object from the runner, parse the formula with the
+right parser, evaluate the formula tree, and return a standard result dict.
+
+Use shared helpers where possible:
+
+- `format_model_checking_result`
+- `verify_initial_state`
+- `model_checker.utils.error_handler`
+- trace helpers under `model_checker/shared/`
+
+## Entry Points
+
+`pyproject.toml` advertises built-in logic components through Python entry
+points:
+
+| Entry-point group | Purpose |
+|---|---|
+| `vitamin.parsers` | Logic name to formula parser class. |
+| `vitamin.models` | Model type to game-structure parser class. |
+| `vitamin.benchmarks` | Logic name to benchmark/model-checking callable. |
+| `vitamin.metadata` | Logic name to metadata exposed by parser packages. |
+
+VMI uses the same pattern when it integrates a logic bundle into this repo. That
+is why new logic docs talk about entry points instead of runtime monkey-patching.
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#e1f5ff','primaryTextColor':'#000','primaryBorderColor':'#0066cc','lineColor':'#0066cc','secondaryColor':'#f0f0f0','tertiaryColor':'#ffffff'}}}%%
-flowchart TD
-    A["Algorithm Evaluation"] --> B["Track Predecessors"]
-    B --> C["Fixpoint Computation"]
-    C --> D["Predecessor Map"]
-    D --> E{"Satisfied?"}
-    E -->|Yes| F["Reconstruct Witness"]
-    E -->|No| G["Reconstruct Counterexample"]
-    F --> H["StateTrace Object"]
-    G --> H
-    H --> I["VerificationResult"]
+flowchart TB
+    pyproject["pyproject.toml entry points"]
+    parserGroup["vitamin.parsers"]
+    modelGroup["vitamin.models"]
+    benchmarkGroup["vitamin.benchmarks"]
+    metadataGroup["vitamin.metadata"]
+    factory["Factories and registries"]
+    runtime["Runtime model checking"]
+
+    pyproject --> parserGroup --> factory
+    pyproject --> modelGroup --> factory
+    pyproject --> benchmarkGroup
+    pyproject --> metadataGroup
+    factory --> runtime
 ```
 
-1.  **Track**: Algorithm records predecessors during fixpoint computation.
-2.  **Evaluate**: Determine satisfaction at the initial state.
-3.  **Reconstruct**: Build the path (witness or counterexample) using the
-    predecessor map.
-4.  **Result**: Return `VerificationResult` containing the trace.
+## Trace Flow
 
-## Extensibility
+Some logics can return witness or counterexample traces. CTL has the most
+complete trace coverage today.
 
-A step-by-step guide for adding a new logic (formula parser, algorithm, API
-config, tests, examples) is in [adding_a_new_logic](adding_a_new_logic.md). It
-describes the current structure and the required result contract so new logics
-work with the API and tests consistently.
+```mermaid
+flowchart TD
+    evaluate["Algorithm evaluates formula"]
+    predecessors["Track predecessors"]
+    fixpoint["Run fixpoint or search"]
+    satisfied["Check initial state"]
+    witness["Build witness"]
+    counterexample["Build counterexample"]
+    trace["VerificationResult / trace data"]
 
-### Adding a New Logic (summary)
+    evaluate --> predecessors --> fixpoint --> satisfied
+    satisfied --> witness --> trace
+    satisfied --> counterexample --> trace
+```
 
-1.  Create a parser class in `parsers/formulas/<LogicName>/parser.py` inheriting
-    `BaseLogicParser`.
-2.  Register it in `parsers/formula_parser_factory.py`.
-3.  Implement the algorithm in `algorithms/explicit/<LogicName>/` with
-    `model_checking(formula, filename)` and the standard return dict; use
-    `engine.runner.execute_model_checking_with_parser` and shared result
-    helpers.
-4.  Register the logic in the API: `LogicType`,
-    `workbench/api/prompts/logic_config.yaml`,
-    `workbench/api/services/model_checking/utils/logic_config.py`, and
-    `models/model_factory.py` (model type mapping).
-5.  Add integration tests and example model + formula files.
+Trace helpers live in `model_checker/shared/`. Keep trace construction in shared
+helpers when several logics can reuse the same path reconstruction behavior.
 
-### Adding a New Model Type
+## Adding Logic
 
-1.  Create a parser in `parsers/game_structures/<ModelType>/`.
-2.  Update `parsers/model_parser_factory.py` to detect and create the new type.
+The recommended path for adding a new logic is:
 
-## Testing
+1. Build a VMI bundle.
+2. Validate it with `vitamin-module-integrator`.
+3. Let VMI integrate files and entry points into this repository.
+4. Run this repository's tests and benchmarks where relevant.
 
-Testing is stratified:
--   **Unit Tests**: Parsers (parsing only) and Algorithms (logic only).
--   **Integration Tests**: End-to-end file processing.
--   **Correctness**: Verification against known-good results.
+Maintainers can still add or change built-in logic manually. See
+[Adding a New Logic](adding_a_new_logic.md) for both workflows.
 
-## Performance
+## Testing And Performance
 
--   **Time**: Logic-dependent (CTL: Polynomial, ATL: Exponential in coalition
-    size).
--   **Memory**: Linear in state space size (explicit state).
--   **Timeout**: Default 30s (configurable).
+Tests live under `model_checker/tests/`:
 
-## Concurrency
+- `unit/` for small parser/helper/algorithm pieces,
+- `integration/` for real model files and public API behavior,
+- `e2e/` for full user-like workflows,
+- `performance/` for time-bound regression checks.
 
--   **Thread Safety**: Parsers are independent instances.
--   **Parallelism**: Multiple invocations from host applications can run
-    concurrently. Individual runs are single-threaded.
+Benchmarks live under `model_checker/benchmarking/` and use `pyperf`. Use them
+when an algorithm change may affect runtime, not as a replacement for
+correctness tests.
 
-## Limitations
+## Known Limits
 
--   **Memory**: Large models may exceed memory limits due to explicit state
-    representation.
--   **Symbolic**: No support for symbolic model checking yet.
--   **Trace**: Full support for CTL; other logics vary.
-
+- The current algorithms are explicit-state and can be memory-heavy.
+- Symbolic model checking is not part of this package today.
+- Trace support varies by logic.
+- Workbench HTTP behavior lives in the sibling `vitamin-workbench` project, not
+  in this repository.
