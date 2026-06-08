@@ -1,0 +1,84 @@
+{
+  "logic_name": "ICTL",
+  "model_type": "CGS",
+  "job_id": "2034a9e1-7f93-412d-b611-5841f3a29629",
+  "manifest_name": "ICTL",
+  "bundle_logic_name": "ICTL",
+  "content_hash": "45cc685e9afd1fe1b443c0f43e469edac8b7ea22bbd234bd1d67c3f58a65dcf4",
+  "manifest": {
+    "schema_version": "1",
+    "name": "ICTL",
+    "version": "1.0.0",
+    "author": "Integration Team",
+    "description": "Intuitionistic CTL Model Checking",
+    "logic": {
+      "name": "ICTL",
+      "model_type": "CGS"
+    },
+    "parser": {
+      "module": "parsers.formulas.ICTL.parser",
+      "class_name": "ICTLParser"
+    },
+    "checker": {
+      "module": "algorithms.explicit.ICTL.ICTL",
+      "entry_point": "model_checking"
+    },
+    "game_structure": null,
+    "examples": [
+      {
+        "model": "examples/ictl_example.txt",
+        "formula": "EX a",
+        "expected_result": null
+      }
+    ],
+    "tests": [
+      {
+        "path": "tests/test_ictl.py"
+      }
+    ],
+    "extra_paths": [],
+    "dependencies": []
+  },
+  "last_report": {
+    "job_id": "2034a9e1-7f93-412d-b611-5841f3a29629",
+    "logic_name": "ICTL",
+    "files_created": [
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/ICTL/parser.py",
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/ICTL/ictl_ply_parser.py",
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/ICTL/__init__.py",
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/ICTL/generated/.gitkeep",
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/ICTL/generated/__init__.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/ICTL/ictl_model_checking.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/ICTL/util/process_input.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/ICTL/util/__init__.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/ICTL/ICTL.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/ICTL/__init__.py"
+    ],
+    "files_modified": [],
+    "registries_patched": [
+      "/home/quyen/vitamin-model-checker/pyproject.toml",
+      "/home/quyen/vitamin-model-checker/model_checker/api_integrated.py"
+    ],
+    "test_summary": {
+      "ok": true,
+      "stages": {
+        "user_tests": {
+          "ok": true,
+          "stdout": "....                                                                     [100%]\n=============================== warnings summary ===============================\n../../../../../.pyenv/versions/3.12.7/lib/python3.12/site-packages/binarytree/__init__.py:30\n  /home/quyen/.pyenv/versions/3.12.7/lib/python3.12/site-packages/binarytree/__init__.py:30: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n    from pkg_resources import get_distribution\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n4 passed, 1 warning in 0.33s\n",
+          "stderr": ""
+        },
+        "generated_wrapper_staging": {
+          "ok": true
+        }
+      }
+    },
+    "api_updates": [
+      "/home/quyen/vitamin-model-checker/model_checker/api_integrated.py"
+    ],
+    "usage_example": {
+      "import": "# Import the newly integrated logic checker\nfrom model_checker.algorithms.explicit.ICTL.ICTL import model_checking",
+      "call": "# Run model checking for ICTL\nresult = model_checking(\n    formula=\"EX a\",\n    model_path=\"examples/ictl_example.txt\"\n)\n\nprint(f\"Verification result: {result}\")"
+    },
+    "warnings": []
+  }
+}

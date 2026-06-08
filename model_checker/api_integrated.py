@@ -8,3 +8,5 @@ from model_checker.algorithms.explicit.TOL.TOL import model_checking as TOL_mode
 from model_checker.parsers.formulas.TOL.parser_wrapper import TOLParserWrapper as TOLParser
 from model_checker.algorithms.explicit.TCTL.TCTL import model_checking as TCTL_model_checking
 from model_checker.parsers.formulas.TCTL.parser import TCTLParser as TCTLParser
+from model_checker.algorithms.explicit.ICTL.ICTL import model_checking as ICTL_model_checking
+from model_checker.parsers.formulas.ICTL.parser import ICTLParser as ICTLParser
