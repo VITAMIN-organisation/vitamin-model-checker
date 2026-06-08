@@ -2,3 +2,5 @@
 
 AUTOMATICALLY GENERATED - DO NOT EDIT MANUALLY
 """
+from model_checker.algorithms.explicit.Wallet_ATL.Wallet_ATL import model_checking as Wallet_ATL_model_checking
+from model_checker.parsers.formulas.Wallet_ATL.parser_wrapper import Wallet_ATLParserWrapper as Wallet_ATLParser
