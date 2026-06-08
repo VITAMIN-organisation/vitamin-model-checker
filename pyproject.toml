@@ -31,6 +31,7 @@ dependencies = [
     "validators==0.22.0",
     "semver==2.13.0",
     "prometheus-client==0.14.1",
+    "tqdm>=4.66.0",
 ]
 
 [project.optional-dependencies]
