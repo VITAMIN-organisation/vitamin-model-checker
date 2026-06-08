@@ -85,6 +85,7 @@ Wallet_ATL = "model_checker.parsers.formulas.Wallet_ATL.parser:Wallet_ATLParser"
 TOL = "model_checker.parsers.formulas.TOL.parser:TOLParser"
 TCTL = "model_checker.parsers.formulas.TCTL.parser:TCTLParser"
 ICTL = "model_checker.parsers.formulas.ICTL.parser:ICTLParser"
+IATL = "model_checker.parsers.formulas.IATL.parser:IATLParser"
 
 [project.entry-points."vitamin.models"]
 CGS = "model_checker.parsers.game_structures.cgs.cgs:CGS"
@@ -113,6 +114,7 @@ Wallet_ATL = "model_checker.algorithms.explicit.Wallet_ATL.Wallet_ATL:model_chec
 TOL = "model_checker.algorithms.explicit.TOL.TOL:model_checking"
 TCTL = "model_checker.algorithms.explicit.TCTL.TCTL:model_checking"
 ICTL = "model_checker.algorithms.explicit.ICTL.ICTL:model_checking"
+IATL = "model_checker.algorithms.explicit.IATL.IATL:model_checking"
 
 [project.entry-points."vitamin.metadata"]
 ATL = "model_checker.parsers.formulas.ATL:METADATA"
@@ -131,6 +133,7 @@ Wallet_ATL = "model_checker.parsers.formulas.Wallet_ATL:METADATA"
 TOL = "model_checker.parsers.formulas.TOL:METADATA"
 TCTL = "model_checker.parsers.formulas.TCTL:METADATA"
 ICTL = "model_checker.parsers.formulas.ICTL:METADATA"
+IATL = "model_checker.parsers.formulas.IATL:METADATA"
 
 [tool.pytest.ini_options]
 testpaths = ["model_checker/tests/unit", "model_checker/tests/integration", "model_checker/tests/e2e"]

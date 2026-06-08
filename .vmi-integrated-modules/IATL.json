@@ -1,0 +1,84 @@
+{
+  "logic_name": "IATL",
+  "model_type": "CGS",
+  "job_id": "df97dae2-ed32-4ca5-b468-e0e97e13d70c",
+  "manifest_name": "IATL",
+  "bundle_logic_name": "IATL",
+  "content_hash": "c41b0503a8c5041bae10c148ddafe32302b55feddbf3cd230b8104e2f2754ac3",
+  "manifest": {
+    "schema_version": "1",
+    "name": "IATL",
+    "version": "1.0.0",
+    "author": "Quyen",
+    "description": "Intuitionistic ATL Model Checking",
+    "logic": {
+      "name": "IATL",
+      "model_type": "CGS"
+    },
+    "parser": {
+      "module": "parsers.formulas.IATL.parser",
+      "class_name": "IATLParser"
+    },
+    "checker": {
+      "module": "algorithms.explicit.IATL.IATL",
+      "entry_point": "model_checking"
+    },
+    "game_structure": null,
+    "examples": [
+      {
+        "model": "examples/iatl_example.txt",
+        "formula": "<1>G a",
+        "expected_result": null
+      }
+    ],
+    "tests": [
+      {
+        "path": "tests/test_iatl.py"
+      }
+    ],
+    "extra_paths": [],
+    "dependencies": []
+  },
+  "last_report": {
+    "job_id": "df97dae2-ed32-4ca5-b468-e0e97e13d70c",
+    "logic_name": "IATL",
+    "files_created": [
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/IATL/parser.py",
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/IATL/iatl_ply_parser.py",
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/IATL/__init__.py",
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/IATL/generated/.gitkeep",
+      "/home/quyen/vitamin-model-checker/model_checker/parsers/formulas/IATL/generated/__init__.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/IATL/util/process_input.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/IATL/util/__init__.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/IATL/IATL.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/IATL/__init__.py",
+      "/home/quyen/vitamin-model-checker/model_checker/algorithms/explicit/IATL/iatl_model_checking.py"
+    ],
+    "files_modified": [],
+    "registries_patched": [
+      "/home/quyen/vitamin-model-checker/pyproject.toml",
+      "/home/quyen/vitamin-model-checker/model_checker/api_integrated.py"
+    ],
+    "test_summary": {
+      "ok": true,
+      "stages": {
+        "user_tests": {
+          "ok": true,
+          "stdout": "....                                                                     [100%]\n=============================== warnings summary ===============================\n../../../../../.pyenv/versions/3.12.7/lib/python3.12/site-packages/binarytree/__init__.py:30\n  /home/quyen/.pyenv/versions/3.12.7/lib/python3.12/site-packages/binarytree/__init__.py:30: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.\n    from pkg_resources import get_distribution\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n4 passed, 1 warning in 0.45s\n",
+          "stderr": ""
+        },
+        "generated_wrapper_staging": {
+          "ok": true
+        }
+      }
+    },
+    "api_updates": [
+      "/home/quyen/vitamin-model-checker/model_checker/api_integrated.py"
+    ],
+    "usage_example": {
+      "import": "# Import the newly integrated logic checker\nfrom model_checker.algorithms.explicit.IATL.IATL import model_checking",
+      "call": "# Run model checking for IATL\nresult = model_checking(\n    formula=\"<1>G a\",\n    model_path=\"examples/iatl_example.txt\"\n)\n\nprint(f\"Verification result: {result}\")"
+    },
+    "warnings": []
+  }
+}
