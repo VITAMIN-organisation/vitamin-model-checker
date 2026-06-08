@@ -12,6 +12,7 @@ formats, logic implementations, tests, or benchmarks.
 | Add or integrate a new logic | [Adding a New Logic](adding_a_new_logic.md) |
 | Understand model and formula files | [File Formats](file_formats.md) |
 | See how this repo fits with VMI and Workbench | [VITAMIN Stack](vitamin-stack.md) |
+| Look up formula syntax for a logic | [Logic Knowledge Base](logic_knowledge_base.md) |
 | Contribute to this repository | [Contributing](contributing.md) |
 | Browse Python package docs | [API Overview](api/overview.md) |
 | Check deployment ports | [Deployment Ports](deployment-ports.md) |

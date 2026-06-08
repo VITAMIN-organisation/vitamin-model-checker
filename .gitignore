@@ -50,6 +50,10 @@ benchmark_summaries/
 venv/
 ENV/
 
+# VMI integration artifacts (written by vitamin-module-integrator)
+.vmi-integrated-modules/
+.vmi-snapshots/
+
 # Package specifics
 ctl.json.summary.json
 ictl_err.log

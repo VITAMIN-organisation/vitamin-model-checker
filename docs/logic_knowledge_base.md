@@ -24,8 +24,13 @@ This document provides a comprehensive knowledge base for all temporal logics im
 9.  [RBATL / RABATL - Resource-Bounded ATL](#rbatl--rabatl---resource-bounded-atl)
 10. [CapATL - Capacity ATL](#capatl---capacity-atl)
 11. [COTL - Coalitional Optimal Temporal Logic](#cotl---coalitional-optimal-temporal-logic)
-12. [Atomic Proposition Policy](#atomic-proposition-policy)
-13. [Model Syntax](#model-syntax)
+12. [Wallet_ATL - Wallet ATL](#wallet_atl---wallet-atl)
+13. [ICTL - Intuitionistic CTL](#ictl---intuitionistic-ctl)
+14. [IATL - Intuitionistic ATL](#iatl---intuitionistic-atl)
+15. [TCTL - Timed CTL](#tctl---timed-ctl)
+16. [TOL - Timed Obligation Logic](#tol---timed-obligation-logic)
+17. [Atomic Proposition Policy](#atomic-proposition-policy)
+18. [Model Syntax](#model-syntax)
 
 ---
 
@@ -645,10 +650,11 @@ Capacity ATL (CapATL) is designed for models with explicit capacity constraints 
 
 ## Model Syntax
 
-VITAMIN supports three types of model formats, which are automatically detected based on the sections present in the file.
+VITAMIN supports five model formats. The parser picks the type from the
+sections present in the file.
 
 ### CGS (Concurrent Game Structure)
-The base model for CTL, LTL, ATL, NatATL, and NatSL.
+The base model for CTL, LTL, ATL, NatATL, NatSL, ICTL, and IATL.
 
 **File Sections:**
 1.  **Transition**: Matrix (States x States) containing joint action strings (e.g., `AC,AD`). Use `*` for wildcards and `0` for no transition.
@@ -672,6 +678,17 @@ Used for CapATL.
 - **Section**: `Capacities` (list of capacity names).
 - **Section**: `Capacities_assignment` (mapping matrix: Agents x Capacities).
 - **Section**: `Actions_for_capacities` (maps resources directly to actions that consume/replenish them).
+
+### WalletCGS (CGS with Wallets)
+Used for Wallet_ATL.
+- **Section**: `Wallets` - one line per state, `state: balance1 balance2 ...`.
+- Extends standard CGS sections. Actions can encode wallet operations (for example `D20`, `B50`).
+
+### timedCGS (Timed costCGS)
+Used for TOL and TCTL. Includes all costCGS sections plus:
+- **Section**: `Clocks` - clock variable names.
+- **Section**: `Clock_constraints` - bounds and resets on transitions.
+- **Section**: `Invariants` - clock invariants per state.
 
 ---
 
@@ -717,6 +734,106 @@ Coalitional Optimal Temporal Logic (COTL) is designed for reasoning about optima
 
 ---
 
+<a id="wallet_atl---wallet-atl"></a>
+## Wallet_ATL - Wallet ATL
+
+ATL with wallet-aware coalitions over `WalletCGS` models.
+
+**Coalition syntax:** `<<agents[:wallet constraints]>>` followed by a temporal formula.
+
+**Examples:**
+```text
+<<1>>X auction_active
+<<1,2:wallet(1, >= 50)>>G funded
+```
+
+**Temporal operators:** `X`, `F`, `G`, `U`.
+
+**Model type:** `WalletCGS`. See [Wallet_ATL usage](Wallet_ATL/usage.md).
+
+---
+
+<a id="ictl---intuitionistic-ctl"></a>
+## ICTL - Intuitionistic CTL
+
+Branching-time logic with intuitionistic path quantifiers over standard CGS models.
+
+**Quantifiers:** `E` / `exist`, `A` / `forall` (same tokens as CTL).
+
+**Temporal operators:** `X`, `F`, `G`, `U`, `R`.
+
+**Examples:**
+```text
+EX a
+AG (p -> EF q)
+```
+
+**Model type:** `CGS`.
+
+---
+
+<a id="iatl---intuitionistic-atl"></a>
+## IATL - Intuitionistic ATL
+
+Coalition logic with intuitionistic existential and universal coalitions.
+
+**Coalition syntax:**
+- Existential: `<1,2>` (angle brackets)
+- Universal: `[1,2]` (square brackets)
+
+**Examples:**
+```text
+<1>G a
+[1,2]F goal
+<1,2>U safe
+```
+
+**Temporal operators:** `X`, `F`, `G`, `U`, `R`.
+
+**Model type:** `CGS`.
+
+---
+
+<a id="tctl---timed-ctl"></a>
+## TCTL - Timed CTL
+
+Timed extension of CTL over `timedCGS` models with clock constraints.
+
+**Quantifiers:** `A`, `E` with `X`, `F`, `G`, `U`.
+
+**Clock constraints:** attach bounds to propositions, for example `x <= 5` or `t: formula`.
+
+**Examples:**
+```text
+AG a
+EF crossing
+AG (x <= 10 -> safe)
+```
+
+**Model type:** `timedCGS`.
+
+---
+
+<a id="tol---timed-obligation-logic"></a>
+## TOL - Timed Obligation Logic
+
+Linear-style timed logic with demonic cost prefixes over `timedCGS` models.
+
+**Demonic prefix:** `{Jk}` where `k` is a positive integer cost bound.
+
+**Examples:**
+```text
+{J5}F a
+{J10}G safe
+{J3}(p U q)
+```
+
+**Temporal operators:** `X`, `F`, `G`, `U`, `R`, `W`.
+
+**Model type:** `timedCGS`. Shares the `timed_cgs` parser with TCTL.
+
+---
+
 <a id="atomic-proposition-policy"></a>
 ## Atomic Proposition Policy
 
@@ -724,7 +841,7 @@ Atomic identifiers for propositions and variables must avoid clashing with reser
 
 **Naming Conventions:**
 - **Standard**: `[a-z][a-z0-9_]*`
-    - Logic: CTL, LTL, ATL, NatATL, OATL, OL, RBATL, CapATL, COTL.
+    - Logic: CTL, LTL, ATL, NatATL, OATL, OL, RBATL, CapATL, COTL, ICTL, IATL, Wallet_ATL, TCTL, TOL.
     - Rule: Lowercase start, then alphanumerics or underscores.
 - **Extended (NatSL)**: `[A-Za-z_][A-Za-z0-9_]*`
     - Logic: NatSL.
@@ -751,6 +868,11 @@ Atomic identifiers for propositions and variables must avoid clashing with reser
 | **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U`, `R`, `W` | `<1><10,5>` (Vectors) | costCGS |
 | **CapATL** | Branching | `<A,k>X`, `F`, `G`, `U`, `R`, `Ki`, `i is p` | `<{1,2}, k>` | capCGS |
 | **COTL** | Branching | `<J><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><k>` (Optimal) | costCGS |
+| **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
+| **ICTL** | Branching | `EX`, `AX`, `EF`, `AG`, `EU` | `E`, `A` | CGS |
+| **IATL** | Branching | `<A>X`, `F`, `G`, `U` | `<1>` exist, `[1]` forall | CGS |
+| **TCTL** | Branching | `AX`, `EF`, `AG`, clock bounds | `A`, `E` + clocks | timedCGS |
+| **TOL** | Linear | `{Jk}X`, `F`, `G`, `U` | `{J5}` demonic bound | timedCGS |
 
 
 ---

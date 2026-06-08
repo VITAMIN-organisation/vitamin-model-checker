@@ -42,7 +42,7 @@ model_checker/
 ├── engine/                     # shared runner and execution helpers
 ├── parsers/
 │   ├── formulas/               # per-logic formula parsers
-│   └── game_structures/        # CGS, costCGS, capCGS parsers
+│   └── game_structures/        # CGS, costCGS, capCGS, WalletCGS, timedCGS parsers
 ├── shared/                     # trace/result helpers
 ├── tests/                      # unit, integration, e2e, performance tests
 └── utils/                      # error handling and shared utilities
@@ -53,9 +53,15 @@ model_checker/
 Model parsers read `.txt` model files and build in-memory game structures.
 Current built-in model types are:
 
-- `CGS`
-- `costCGS`
-- `capCGS`
+- `CGS` - standard concurrent game structures
+- `costCGS` - CGS with action/transition costs
+- `capCGS` - CGS with agent capacities
+- `WalletCGS` - CGS with per-agent wallet balances (Wallet_ATL)
+- `timedCGS` - costCGS extended with clocks and zone constraints (TOL, TCTL)
+
+The checker ships 20 logics. Recent additions integrated via VMI: `Wallet_ATL`,
+`TOL`, `TCTL`, `ICTL`, and `IATL`. See
+[Logic Knowledge Base](logic_knowledge_base.md) for syntax details.
 
 Formula parsers live under `parsers/formulas/<Logic>/` and parse formulas into
 trees used by the algorithms. Most are built with PLY.

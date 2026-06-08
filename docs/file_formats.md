@@ -20,9 +20,11 @@ cotl_model.txt
 
 | Model type | Used by | What it adds |
 |---|---|---|
-| `CGS` | ATL, CTL, LTL, NatATL, NatSL | Standard concurrent game structure. |
+| `CGS` | ATL, CTL, LTL, NatATL, NatSL, ICTL, IATL | Standard concurrent game structure. |
 | `costCGS` | OATL, OL, RBATL, RABATL, COTL | Cost/resource information for actions and transitions. |
 | `capCGS` | CapATL | Capability declarations and assignments. |
+| `WalletCGS` | Wallet_ATL | Per-state wallet balances for each agent. |
+| `timedCGS` | TOL, TCTL | Clocks, clock constraints, and invariants on top of costCGS. |
 
 ## CGS Sections
 
@@ -112,6 +114,31 @@ AA s0$1,2:3,4
 
 Use this format for CapATL-style capability reasoning.
 
+## WalletCGS Sections
+
+`WalletCGS` extends CGS with a `Wallets` section. Each line maps a state to
+one balance per agent:
+
+```text
+Wallets
+s0: 100 50
+s1: 80 60
+```
+
+Use this format for Wallet_ATL models. Action strings can include wallet-aware
+codes such as `D20` (deposit) or `B50` (bid).
+
+## timedCGS Sections
+
+`timedCGS` extends costCGS with three timed sections:
+
+- `Clocks` - clock names used in the model,
+- `Clock_constraints` - per-transition clock resets and bounds,
+- `Invariants` - clock invariants per state.
+
+TOL and TCTL share this model type. Integrate TOL before TCTL if both land in
+the same branch, so `timed_cgs` is present once.
+
 ## Formula Files
 
 Formula files usually sit next to their model file and use the
@@ -151,6 +178,11 @@ The first formula is treated as the primary formula by tools that need one.
 | RABATL | `<1><2,2> F p` | costCGS |
 | COTL | `<1,2><5> G p` | costCGS |
 | CapATL | `<{1}, 3> F (K1 p)` | capCGS |
+| Wallet_ATL | `<<1>>X auction_active` | WalletCGS |
+| ICTL | `EX a` or `AG (p -> EF q)` | CGS |
+| IATL | `<1>G a` or `[1,2]F goal` | CGS |
+| TCTL | `AG a` or `EF crossing` | timedCGS |
+| TOL | `{J5}F a` | timedCGS |
 
 Common boolean operators:
 

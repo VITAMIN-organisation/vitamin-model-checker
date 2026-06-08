@@ -30,6 +30,7 @@ nav:
   - Architecture: architecture.md
   - File Formats: file_formats.md
   - Logic Knowledge Base: logic_knowledge_base.md
+  - Wallet ATL: Wallet_ATL/usage.md
   - Adding a New Logic: adding_a_new_logic.md
   - API Reference:
     - Overview: api/overview.md
