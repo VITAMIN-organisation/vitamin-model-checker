@@ -83,6 +83,7 @@ RABATL = "model_checker.parsers.formulas.RABATL.parser:RABATLParser"
 RBATL = "model_checker.parsers.formulas.RBATL.parser:RBATLParser"
 Wallet_ATL = "model_checker.parsers.formulas.Wallet_ATL.parser:Wallet_ATLParser"
 TOL = "model_checker.parsers.formulas.TOL.parser:TOLParser"
+TCTL = "model_checker.parsers.formulas.TCTL.parser:TCTLParser"
 
 [project.entry-points."vitamin.models"]
 CGS = "model_checker.parsers.game_structures.cgs.cgs:CGS"
@@ -109,6 +110,7 @@ RABATL = "model_checker.algorithms.explicit.RABATL.RABATL:model_checking"
 RBATL = "model_checker.algorithms.explicit.RBATL.RBATL:model_checking"
 Wallet_ATL = "model_checker.algorithms.explicit.Wallet_ATL.Wallet_ATL:model_checking"
 TOL = "model_checker.algorithms.explicit.TOL.TOL:model_checking"
+TCTL = "model_checker.algorithms.explicit.TCTL.TCTL:model_checking"
 
 [project.entry-points."vitamin.metadata"]
 ATL = "model_checker.parsers.formulas.ATL:METADATA"
@@ -125,6 +127,7 @@ RABATL = "model_checker.parsers.formulas.RABATL:METADATA"
 RBATL = "model_checker.parsers.formulas.RBATL:METADATA"
 Wallet_ATL = "model_checker.parsers.formulas.Wallet_ATL:METADATA"
 TOL = "model_checker.parsers.formulas.TOL:METADATA"
+TCTL = "model_checker.parsers.formulas.TCTL:METADATA"
 
 [tool.pytest.ini_options]
 testpaths = ["model_checker/tests/unit", "model_checker/tests/integration", "model_checker/tests/e2e"]
