@@ -82,12 +82,14 @@ OL = "model_checker.parsers.formulas.OL.parser:OLParser"
 RABATL = "model_checker.parsers.formulas.RABATL.parser:RABATLParser"
 RBATL = "model_checker.parsers.formulas.RBATL.parser:RBATLParser"
 Wallet_ATL = "model_checker.parsers.formulas.Wallet_ATL.parser:Wallet_ATLParser"
+TOL = "model_checker.parsers.formulas.TOL.parser:TOLParser"
 
 [project.entry-points."vitamin.models"]
 CGS = "model_checker.parsers.game_structures.cgs.cgs:CGS"
 costCGS = "model_checker.parsers.game_structures.cost_cgs.cost_cgs:CostCGS"
 capCGS = "model_checker.parsers.game_structures.cap_cgs.cap_cgs:CapCGS"
 WalletCGS = "model_checker.parsers.game_structures.wallet_cgs.wallet_cgs:WalletCGS"
+timedCGS = "model_checker.parsers.game_structures.timed_cgs.timed_cgs:TimedCGS"
 
 [project.entry-points."vitamin.benchmarks"]
 ATL = "model_checker.algorithms.explicit.ATL.ATL:model_checking"
@@ -106,6 +108,7 @@ OL = "model_checker.algorithms.explicit.OL.OL:model_checking"
 RABATL = "model_checker.algorithms.explicit.RABATL.RABATL:model_checking"
 RBATL = "model_checker.algorithms.explicit.RBATL.RBATL:model_checking"
 Wallet_ATL = "model_checker.algorithms.explicit.Wallet_ATL.Wallet_ATL:model_checking"
+TOL = "model_checker.algorithms.explicit.TOL.TOL:model_checking"
 
 [project.entry-points."vitamin.metadata"]
 ATL = "model_checker.parsers.formulas.ATL:METADATA"
@@ -121,6 +124,7 @@ OL = "model_checker.parsers.formulas.OL:METADATA"
 RABATL = "model_checker.parsers.formulas.RABATL:METADATA"
 RBATL = "model_checker.parsers.formulas.RBATL:METADATA"
 Wallet_ATL = "model_checker.parsers.formulas.Wallet_ATL:METADATA"
+TOL = "model_checker.parsers.formulas.TOL:METADATA"
 
 [tool.pytest.ini_options]
 testpaths = ["model_checker/tests/unit", "model_checker/tests/integration", "model_checker/tests/e2e"]
