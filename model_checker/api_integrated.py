@@ -10,3 +10,5 @@ from model_checker.algorithms.explicit.TCTL.TCTL import model_checking as TCTL_m
 from model_checker.parsers.formulas.TCTL.parser import TCTLParser as TCTLParser
 from model_checker.algorithms.explicit.ICTL.ICTL import model_checking as ICTL_model_checking
 from model_checker.parsers.formulas.ICTL.parser import ICTLParser as ICTLParser
+from model_checker.algorithms.explicit.IATL.IATL import model_checking as IATL_model_checking
+from model_checker.parsers.formulas.IATL.parser import IATLParser as IATLParser
