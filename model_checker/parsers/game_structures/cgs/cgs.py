@@ -9,7 +9,6 @@ from typing import Optional
 import numpy as np
 
 from model_checker.parsers.game_structures.cgs import (
-    cgs_actions,
     cgs_parser,
     cgs_utils,
     cgs_validation,
@@ -77,10 +76,6 @@ class CGS:
         self._cached_reverse_index = None
         self._cached_reverse_index_graph_id = None
 
-    def _get_num_states(self):
-        """Number of states (0 if empty). Used internally for validation."""
-        return cgs_validation.get_num_states(self.states)
-
     # --- Cached Properties for Performance ---
 
     @property
@@ -105,16 +100,6 @@ class CGS:
         self._state_to_index = None
         self._action_list_cache = {}
 
-    # --- State Accessors ---
-
-    def get_states(self):
-        """Return the array of state names."""
-        return self.states
-
-    def get_initial_state(self):
-        """Return the name of the initial state."""
-        return self.initial_state
-
     def get_index_by_state_name(self, state):
         """Return the index of the state with the given name. Raises IndexError if not found."""
         state_str = str(state)
@@ -124,7 +109,13 @@ class CGS:
 
     def get_state_name_by_index(self, index):
         """Return the state name at the given index. Raises IndexError if index is out of range."""
-        return cgs_utils.get_state_name_by_index(self.states, index)
+        if index < 0:
+            raise IndexError(f"State index must be non-negative, got {index}")
+        if index >= len(self.states):
+            raise IndexError(
+                f"State index {index} is out of bounds for {len(self.states)} states"
+            )
+        return self.states[index]
 
     # --- Agent and Coalition Methods ---
 
@@ -138,52 +129,6 @@ class CGS:
             )
         return self.number_of_agents
 
-    def get_agents_from_coalition(self, coalition):
-        """Parse a comma-separated coalition string (e.g. "1,2,3") into a set of agent ids."""
-        return cgs_actions.get_agents_from_coalition(coalition)
-
-    # --- Action Methods ---
-
-    def get_actions(self, agents):
-        """Return a dict of agent name -> list of actions for the given 1-based agent numbers.
-
-        Actions are read from the transition matrix as per-agent action tokens (strings).
-
-        Supported cell formats in the Transition matrix:
-        - Compact character format (recommended, used in examples):
-          each non-zero cell is a string like "AC,AD". Joint choices are
-          comma-separated; within each joint, the first character is the action
-          of agent 1, the second character is the action of agent 2, and so on.
-        - Explicit token format (optional): each non-zero cell uses "|" between
-          per-agent tokens, for example "IDLE|MOVE,ATTACK|BLOCK" for 2 agents.
-
-        The helper always decodes cells into per-agent tokens; both "I" and
-        "IDLE" are accepted as idle actions and normalized internally.
-
-        Raises ValueError if any agent number is out of range.
-        """
-        num_agents = self.get_number_of_agents()
-        cgs_actions.validate_agent_numbers(agents, num_agents)
-        return cgs_actions.extract_actions_for_agents(self.graph, agents)
-
-    def get_coalition_action(self, actions, agents):
-        """Return the coalition’s action strings for the given set of actions and agent list."""
-        formatted_agents = cgs_actions.format_agents(agents)
-        return cgs_actions.get_coalition_actions(
-            set(actions), formatted_agents, self.get_number_of_agents()
-        )
-
-    def get_base_action(self, action, agents):
-        """Same as get_coalition_action for a single action; returns the one resulting string."""
-        return self.get_coalition_action({action}, agents).pop()
-
-    def get_opponent_moves(self, actions, agents):
-        """Return the moves that are not from the given coalition (opponents’ part of the action)."""
-        formatted_agents = cgs_actions.format_agents(agents)
-        return cgs_actions.get_opponent_actions(
-            set(actions), formatted_agents, self.get_number_of_agents()
-        )
-
     def build_action_list(self, action_string):
         """Turn an action string (e.g. with '*' or commas) into a list of action strings; result is cached."""
         if action_string in self._action_list_cache:
@@ -191,24 +136,6 @@ class CGS:
         result = cgs_utils.build_action_list(action_string, self.get_number_of_agents())
         self._action_list_cache[action_string] = result
         return result
-
-    def translate_action_and_state_to_key(self, action_string, state):
-        """Build a single key string from an action string and a state name."""
-        return cgs_utils.translate_action_and_state_to_key(action_string, state)
-
-    # --- Atomic Propositions and Labelling ---
-
-    def get_atomic_prop(self):
-        """Return the array of atomic proposition names."""
-        return self.atomic_propositions
-
-    def get_atom_index(self, element):
-        """Return the index of the given atomic proposition, or None if it is not in the model."""
-        return cgs_utils.get_atom_index(self.atomic_propositions, element)
-
-    def get_matrix_proposition(self):
-        """Return the labelling matrix (which state has which propositions)."""
-        return self.matrix_prop
 
     # --- Graph and Edge Methods ---
 
@@ -234,24 +161,10 @@ class CGS:
             self._cached_reverse_index_graph_id = current_graph_id
         return self._cached_reverse_index
 
-    @property
-    def transition_matrix(self):
-        """The transition matrix (graph) of the model."""
-        return self.graph
-
-    # --- NatATL-Specific Methods ---
-
-    def get_label(self, index):
-        """Return the NatATL-style label for a state index (e.g. s0, s1)."""
-        return f"s{index}"
-
     def create_label_matrix(self, graph):
         """Build a label matrix from the given graph for NatATL (labels like s0, s1; non-string cells become None)."""
         return [
-            [
-                self.get_label(i) if isinstance(elem, str) and elem != "*" else None
-                for j, elem in enumerate(row)
-            ]
+            [f"s{i}" if isinstance(elem, str) and elem != "*" else None for elem in row]
             for i, row in enumerate(graph)
         ]
 

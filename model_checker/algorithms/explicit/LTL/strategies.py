@@ -1,11 +1,4 @@
-"""Strategy generation for the LTL model checker.
-
-Used when checking LTL under game-theoretic solution concepts (e.g. Nash
-equilibria). Builds guarded strategies (conditions plus actions), loads
-models and formulas via CGS, and delegates condition/negation generation to
-the shared strategies_base module. Also provides deviation enumeration for
-Nash checks and single-strategy helpers.
-"""
+"""Strategy generation and model setup for LTL with game-theoretic solution concepts."""
 
 import itertools
 import logging
@@ -13,41 +6,9 @@ from typing import Dict, Generator, List, Optional, Tuple, Union
 
 from model_checker.algorithms.explicit.shared import strategies_base
 from model_checker.parsers.formulas.LTL.ltl_to_ctl import ltl_to_ctl
-from model_checker.parsers.game_structures.cgs import CGS, cgs_validation
+from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
 
 logger = logging.getLogger(__name__)
-
-
-def generate_conditions(P, C, k):
-    """Bridge for parameter naming compatibility."""
-    return strategies_base.generate_conditions(P, C, k)
-
-
-def generate_negated(input_list, max_k):
-    """Bridge for parameter naming compatibility."""
-    return strategies_base.generate_negated_conditions(input_list, max_k)
-
-
-def generate_cartesian_products(actions_list, conditions):
-    """Bridge for parameter naming compatibility."""
-    return strategies_base.generate_cartesian_products(actions_list, conditions)
-
-
-def generate_guarded_action_pairs(k, agent_actions, actions_list, atomic_propositions):
-    """Bridge for parameter naming compatibility."""
-    return strategies_base.generate_guarded_action_pairs(
-        k, agent_actions, actions_list, atomic_propositions
-    )
-
-
-def is_duplicate(existing_dictionaries, new_dictionary):
-    """Bridge for parameter naming compatibility."""
-    return strategies_base.is_duplicate(existing_dictionaries, new_dictionary)
-
-
-def agent_combinations(new_combinations):
-    """Bridge for parameter naming compatibility."""
-    return strategies_base.agent_combinations(new_combinations)
 
 
 def generate_strategies(
@@ -56,22 +17,7 @@ def generate_strategies(
     agents: List[int],
     found_solution: Union[bool, List[bool]],
 ) -> Generator[List[Dict], None, None]:
-    """Enumerate collective strategies lazily with optional early termination.
-
-    Builds per-agent strategy lists from cartesian_products, then yields
-    each full combination via depth-first search. If ``found_solution`` is a
-    list (shared mutable), stops as soon as its first element is true.
-    Only combinations whose total condition complexity equals k are kept.
-
-    Args:
-        cartesian_products: Dict mapping agent keys to (condition, action) pairs.
-        k: Required total complexity for a valid strategy.
-        agents: Agent indices (length must match cartesian_products).
-        found_solution: Boolean or single-element list; list enables early stop.
-
-    Returns:
-        Generator yielding lists of strategy dicts, one per agent (each has ``condition_action_pairs``).
-    """
+    """Yield strategy profiles at complexity k; stop early when found_solution is set."""
     strategies = [[] for _ in range(len(agents))]
 
     def search_solution(strategies, current_strategy, depth):
@@ -118,7 +64,9 @@ def generate_strategies(
                     )
                     if total_complexity == k:
                         new_strategy = {"condition_action_pairs": list(combination)}
-                        if not is_duplicate(agent_strategies, new_strategy):
+                        if not strategies_base.is_duplicate(
+                            agent_strategies, new_strategy
+                        ):
                             agent_strategies.append(new_strategy)
 
             strategies[index] = agent_strategies
@@ -129,24 +77,7 @@ def generate_strategies(
 def initialize(
     model_path: str, formula: str, k: int, agents: List[int]
 ) -> Tuple[Dict[str, List[str]], List[List[str]], List[str], str, List[int], CGS, int]:
-    """Load CGS from file, convert LTL to CTL, and extract actions and propositions.
-
-    Validates Nat idle requirements (Idle errors are ignored). Returns
-    everything needed for strategy generation and model checking.
-
-    Args:
-        model_path: Path to the CGS model file.
-        formula: LTL formula string.
-        k: Complexity bound (logged only).
-        agents: Agent indices to get actions for.
-
-    Returns:
-        Tuple of (agent_actions, actions_list, atomic_propositions, CTLformula,
-        agents, cgs, num_agents). The cgs instance has filename set for pruning.
-
-    Raises:
-        FileNotFoundError: If model_path is not a file.
-    """
+    """Load the model, convert LTL to CTL, and collect actions and propositions."""
     import os
 
     cgs = CGS()
@@ -172,13 +103,14 @@ def initialize(
 
     logger.debug("Complexity Bound: %d", k)
 
-    actions_per_agent = cgs.get_actions(agents)
+    cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
+    actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
     logger.debug("Actions picked by each agent: %s", actions_per_agent)
     agent_actions = {}
     for i, key in enumerate(actions_per_agent.keys()):
         agent_actions[f"actions_agent{agents[i]}"] = actions_per_agent[key]
     actions_list = list(agent_actions.values())
-    atomic_propositions = cgs.get_atomic_prop()
+    atomic_propositions = cgs.atomic_propositions
     logger.debug("Atomic propositions: %s", atomic_propositions)
 
     return (
@@ -201,10 +133,12 @@ def generate_deviations_for_agent(
     import itertools
 
     C = ["and", "or"]
-    conditions = list(generate_conditions(atomic_propositions, C, k))
+    conditions = list(strategies_base.generate_conditions(atomic_propositions, C, k))
     all_candidates = []
     for condition in conditions:
-        neg_conditions = list(generate_negated([condition], k))
+        neg_conditions = list(
+            strategies_base.generate_negated_conditions([condition], k)
+        )
         all_conditions = [condition] + neg_conditions
         for cond in all_conditions:
             for action in agent_actions_for_agent:
@@ -235,23 +169,9 @@ def generate_single_strategy(
     actions_list: List[List[str]],
     atomic_propositions: List[str],
 ) -> Optional[List[Dict]]:
-    """Return the first collective strategy for selected_agents with total complexity k.
-
-    Builds guarded action pairs, then runs the strategy generator and
-    returns the first yielded strategy, or None if there are none.
-
-    Args:
-        selected_agents: Agent indices.
-        k: Target total complexity.
-        agent_actions: Per-agent action sets.
-        actions_list: List of action lists per agent.
-        atomic_propositions: Model propositions.
-
-    Returns:
-        One list of strategy dicts (one per agent), or None.
-    """
+    """Return the first strategy profile at complexity k, or None."""
     found_solution = False
-    cartesian_products = generate_guarded_action_pairs(
+    cartesian_products = strategies_base.generate_guarded_action_pairs(
         k, agent_actions, actions_list, atomic_propositions
     )
     strategy_generator = generate_strategies(
@@ -269,24 +189,12 @@ def generate_single_strategy_random(
     agent_actions: Dict[str, List[str]],
     atomic_propositions: List[str],
 ) -> Optional[List[Dict]]:
-    """Build one collective strategy by taking the first (condition, action) per agent.
+    """Build one strategy from the first (condition, action) per agent at complexity k.
 
-    For each agent, takes the first pair from the sorted guarded-action list
-    (deterministic). Returns a strategy only if the sum of condition
-    complexities equals k (complexity = token count + 1 if ``"!"`` in condition).
-    Tries up to 100 times; if no valid strategy is found, returns None.
-
-    Args:
-        selected_agents: Agent indices.
-        k: Target total complexity.
-        agent_actions: Per-agent action sets (keys e.g. ``"agent{i}"``).
-        atomic_propositions: Proposition names for condition generation.
-
-    Returns:
-        List of one strategy dict per agent (each with one pair), or None.
+    Returns None after 100 failed attempts.
     """
     actions_list = [agent_actions.get(f"agent{agent}", []) for agent in selected_agents]
-    cartesian_products = generate_guarded_action_pairs(
+    cartesian_products = strategies_base.generate_guarded_action_pairs(
         k, agent_actions, actions_list, atomic_propositions
     )
     attempts = 100

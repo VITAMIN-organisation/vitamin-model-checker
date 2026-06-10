@@ -1,5 +1,4 @@
 import sys
-import time
 
 import numpy as np
 from tqdm import tqdm
@@ -240,10 +239,10 @@ def check_conditions_hold(data):
             "Labeling function not " "respected for" " preorder."
         )
 
-    except AssertionError as e:
+    except AssertionError:
         sys.exit(1)
 
-    except Exception as e:
+    except Exception:
         sys.exit(1)
 
 
@@ -308,7 +307,7 @@ def handle_number_agents(line, data):
 
 
 def read_file(filename):
-    with open(filename, "r") as f:
+    with open(filename) as f:
         lines = f.readlines()
 
     data = {
@@ -348,7 +347,7 @@ def read_file(filename):
     data["atomic_propositions"] = np.array(data["atomic_propositions"])
     data["matrix_prop"] = np.array(data["matrix_prop"], dtype=int)
     data["preorder"] = np.array(data["preorder"], dtype=int)
-    data["agents"] = np.array([i for i in range(data["number_of_agents"])])
+    data["agents"] = np.array(list(range(data["number_of_agents"])))
     data["actions"] = get_actions(data["graph"], data["agents"])
     check_conditions_hold(data)
     return data

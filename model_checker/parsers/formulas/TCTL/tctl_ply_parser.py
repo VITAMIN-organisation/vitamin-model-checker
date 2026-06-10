@@ -1,10 +1,12 @@
-import unicodedata
 import sys
+import unicodedata
+
 import ply.lex as lex
 import ply.yacc as yacc
 
 _LEXER_HAS_ERROR = False
 _PARSER_HAS_ERROR = False
+
 
 class Expr:
     def __init__(self):
@@ -218,7 +220,9 @@ def do_parsingTCTL(formula):
 
         # Create fresh local lexer/parser
         local_lexer = lex.lex(module=sys.modules[__name__])
-        local_parser = yacc.yacc(module=sys.modules[__name__], write_tables=False, debug=False)
+        local_parser = yacc.yacc(
+            module=sys.modules[__name__], write_tables=False, debug=False
+        )
         result = local_parser.parse(s, lexer=local_lexer)
         if _PARSER_HAS_ERROR or _LEXER_HAS_ERROR:
             return None

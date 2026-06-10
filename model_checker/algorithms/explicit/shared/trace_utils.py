@@ -1,9 +1,4 @@
-"""
-Trace reconstruction utilities for witness and counterexample generation.
-
-This module provides functions to reconstruct traces (paths) through the state
-space based on predecessor information collected during model checking.
-"""
+"""Build witness and counterexample paths from predecessor maps."""
 
 from collections import deque
 from typing import Dict, List, Optional, Set, Tuple
@@ -17,21 +12,7 @@ def reconstruct_trace_from_predecessors(
     predecessors: Dict[str, str],
     max_length: int = 100,
 ) -> Optional[List[str]]:
-    """
-    Reconstruct a trace from initial state to one of the target states.
-
-    Uses backward search from a target state to the initial state using
-    the predecessors map, then reverses the path.
-
-    Args:
-        initial_state: Starting state name
-        target_states: Set of goal state names
-        predecessors: Map from state to its predecessor (state -> predecessor)
-        max_length: Maximum trace length to prevent infinite loops
-
-    Returns:
-        List of state names forming the path, or None if no path exists
-    """
+    """Walk backward from a target state to the initial state using predecessors."""
     if not target_states:
         return None
 
@@ -68,21 +49,7 @@ def reconstruct_trace_bfs(
     target_states: Set[str],
     max_length: int = 100,
 ) -> Optional[List[str]]:
-    """
-    Reconstruct a trace using BFS from initial state to target states.
-
-    This is an alternative to using pre-computed predecessors. It performs
-    BFS from the initial state to find the shortest path to any target.
-
-    Args:
-        edges: List of (source, target) state transitions
-        initial_state: Starting state name
-        target_states: Set of goal state names
-        max_length: Maximum trace length to prevent infinite loops
-
-    Returns:
-        List of state names forming the shortest path, or None if no path exists
-    """
+    """Shortest path from the initial state to any target, using forward BFS."""
     if not target_states:
         return None
 
@@ -126,40 +93,14 @@ def reconstruct_counterexample_trace(
     violating_states: Set[str],
     max_length: int = 100,
 ) -> Optional[List[str]]:
-    """
-    Reconstruct a counterexample trace to a property violation.
-
-    Finds a path from the initial state to a state where the property
-    is violated. This is used for negative results (formula doesn't hold).
-
-    Args:
-        edges: List of (source, target) state transitions
-        initial_state: Starting state name
-        violating_states: Set of states where property is violated
-        max_length: Maximum trace length
-
-    Returns:
-        List of state names showing path to violation, or None if unreachable
-    """
+    """Path from the initial state to a state where the property fails."""
     return reconstruct_trace_bfs(edges, initial_state, violating_states, max_length)
 
 
 def build_predecessor_map_bfs(
     edges: List[Tuple[str, str]], target_states: Set[str]
 ) -> Dict[str, str]:
-    """
-    Build a predecessor map using backward BFS from target states.
-
-    For each state reachable from target states (going backward),
-    records one predecessor that leads toward a target.
-
-    Args:
-        edges: List of (source, target) state transitions
-        target_states: Set of goal state names
-
-    Returns:
-        Dictionary mapping each reachable state to a predecessor
-    """
+    """Map each state to one predecessor, searching backward from targets."""
     # Build reverse adjacency list for backward search
     reverse_adj: Dict[str, List[str]] = {}
     for source, target in edges:
@@ -190,19 +131,7 @@ def build_predecessor_map_bfs(
 def build_predecessor_map_forward(
     edges: List[Tuple[str, str]], initial_state: str
 ) -> Dict[str, str]:
-    """
-    Build a predecessor map using forward BFS from initial state.
-
-    For each state reachable from the initial state,
-    records the predecessor from which it was first reached.
-
-    Args:
-        edges: List of (source, target) state transitions
-        initial_state: Starting state name
-
-    Returns:
-        Dictionary mapping each reachable state to its predecessor
-    """
+    """Map each reachable state to the predecessor found by forward BFS."""
     # Build forward adjacency list
     adjacency: Dict[str, List[str]] = {}
     for source, target in edges:
@@ -237,21 +166,7 @@ def extract_shortest_trace(
     edges: List[Tuple[str, str]],
     max_length: int = 100,
 ) -> Optional[List[str]]:
-    """
-    Extract the shortest trace from initial state to any target state.
-
-    Convenience function that handles the complete trace extraction process.
-
-    Args:
-        initial_state: Starting state name
-        target_states: Set of goal state names
-        all_states: Set of all valid state names (for validation)
-        edges: List of (source, target) state transitions
-        max_length: Maximum trace length
-
-    Returns:
-        List of state names forming the shortest path, or None if no path exists
-    """
+    """Shortest path to a valid target state, or None if there is no path."""
     # Validate inputs
     if initial_state not in all_states:
         return None
@@ -271,17 +186,7 @@ def extract_shortest_trace(
 def format_trace_with_properties(
     trace: List[str], cgs: CGSProtocol, highlight_props: Optional[List[str]] = None
 ) -> str:
-    """
-    Format a trace with atomic propositions that hold at each state.
-
-    Args:
-        trace: List of state names
-        cgs: CGS model instance
-        highlight_props: Optional list of propositions to highlight
-
-    Returns:
-        Formatted string showing trace with properties
-    """
+    """Format a path as ``state [props] -> ...``."""
     if not trace:
         return "(empty trace)"
 
@@ -305,23 +210,14 @@ def format_trace_with_properties(
 
 
 def _get_props_at_state(cgs, state: str) -> List[str]:
-    """
-    Get list of atomic propositions that hold at a given state.
-
-    Args:
-        cgs: CGS model instance
-        state: State name
-
-    Returns:
-        List of proposition names that hold at the state
-    """
+    """Return proposition names that hold in the given state."""
     try:
         state_idx = cgs.get_index_by_state_name(state)
         props = []
 
         if hasattr(cgs, "matrix_prop") and cgs.matrix_prop:
             prop_row = cgs.matrix_prop[state_idx]
-            atomic_props = cgs.get_atomic_prop()
+            atomic_props = cgs.atomic_propositions
 
             for prop_idx, value in enumerate(prop_row):
                 if value == 1 and prop_idx < len(atomic_props):

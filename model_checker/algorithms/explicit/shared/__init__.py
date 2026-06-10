@@ -1,11 +1,7 @@
-"""
-Shared utilities for model checking algorithms.
-
-This module exports common functions used across multiple logic implementations
-to avoid code duplication and ensure consistent behavior.
-"""
+"""Shared helpers re-exported for model checking algorithms."""
 
 from model_checker.algorithms.explicit.shared.atom_utils import (
+    build_resolved_formula_tree,
     resolve_atom,
     resolve_atom_with_constants,
 )
@@ -16,13 +12,8 @@ from model_checker.algorithms.explicit.shared.result_utils import (
     verify_initial_state,
 )
 from model_checker.algorithms.explicit.shared.state_utils import (
-    normalize_state_set,
+    state_indices_to_names,
     state_names_to_indices,
-    state_set_to_str,
-    states_difference,
-    states_intersection,
-    states_union,
-    value_for_cache_key,
 )
 from model_checker.algorithms.explicit.shared.trace_utils import (
     build_predecessor_map_bfs,
@@ -41,14 +32,10 @@ from model_checker.algorithms.explicit.shared.verification_result import (
 
 __all__ = [
     # State utilities
-    "normalize_state_set",
-    "value_for_cache_key",
     "state_names_to_indices",
-    "state_set_to_str",
-    "states_intersection",
-    "states_union",
-    "states_difference",
+    "state_indices_to_names",
     # Atom utilities
+    "build_resolved_formula_tree",
     "resolve_atom",
     "resolve_atom_with_constants",
     # Result utilities

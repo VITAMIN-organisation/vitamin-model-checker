@@ -16,7 +16,7 @@ class TimedCGS(CostCGS):
         First the file is parsed ignoring every timed section.
         Then, we parse the timed aspects.
         """
-        with open(filename, "r") as f:
+        with open(filename) as f:
             lines = f.readlines()
 
         timed_sections = {"Clocks", "Clock_constraints", "Invariants"}
@@ -72,23 +72,23 @@ class TimedCGS(CostCGS):
             elif line == "Invariants":
                 current_section = Sections.INVARIANTS
             else:
-                match current_section.name:
-                    case Sections.CLOCKS.name:
-                        self.clocks = line.strip().split()
-                        self.clock_constraints_dict = {
-                            clock: [] for clock in self.clocks
-                        }
-                        self.clocks_dict = {
-                            value: index for index, value in enumerate(self.clocks)
-                        }
-                    case Sections.CLOCK_CONSTRAINTS.name:
-                        values = line.strip().split()
-                        self._parse_clock_constraints(values, row_index)
-                        row_index += 1
-                    case Sections.INVARIANTS.name:
-                        values = line.strip().split()
-                        self._parse_invariants(values, row_index)
-                        row_index += 1
+                section_name = current_section.name
+                if section_name == Sections.CLOCKS.name:
+                    self.clocks = line.strip().split()
+                    self.clock_constraints_dict = {
+                        clock: [] for clock in self.clocks
+                    }
+                    self.clocks_dict = {
+                        value: index for index, value in enumerate(self.clocks)
+                    }
+                elif section_name == Sections.CLOCK_CONSTRAINTS.name:
+                    values = line.strip().split()
+                    self._parse_clock_constraints(values, row_index)
+                    row_index += 1
+                elif section_name == Sections.INVARIANTS.name:
+                    values = line.strip().split()
+                    self._parse_invariants(values, row_index)
+                    row_index += 1
 
     def get_clocks(self):
         return self.clocks
@@ -125,7 +125,7 @@ class TimedCGS(CostCGS):
         invariants_arr: A 2d array indexed by location, where each element in the array is a list of
         invariants for the ith location of the form ['x', 2] to signal x<=2 for ith-location.
         """
-        for index, value in enumerate(line):
+        for _index, value in enumerate(line):
             invariants = value.split(",")
             for invariant in invariants:
                 if matched := re.match(r"(\w+)(?:<=|<)(\d+)", invariant):

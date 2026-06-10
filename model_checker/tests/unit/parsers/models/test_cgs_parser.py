@@ -83,6 +83,20 @@ class TestParseCgsFile:
         assert len(instance.matrix_prop) == 2
         assert instance.actions is not None
 
+    def test_invalid_atomic_proposition_name_raises(self):
+        lines = _minimal_cgs_lines()
+        for i, line in enumerate(lines):
+            if line == "p":
+                lines[i] = "A_w"
+                break
+
+        instance = CGS()
+        with pytest.raises(
+            ValueError,
+            match=r"Atomic proposition 'A_w' is invalid",
+        ):
+            cgs_parser.parse_cgs_file(lines, instance)
+
     def test_invalid_number_of_agents_raises(self):
         lines = _minimal_cgs_lines()
         for i, line in enumerate(lines):

@@ -81,7 +81,7 @@ def solve_natatl_recall(
         # Build tree once per complexity level and deepcopy for each strategy.
         # Pruning modifies the tree in-place, so we need a fresh copy per verification.
         if i == 1:
-            states = model_parser.get_states()
+            states = model_parser.states
             base_tree = build_tree_from_CGS(model_parser, states, height)
 
         # Generate regex conditions for this complexity level

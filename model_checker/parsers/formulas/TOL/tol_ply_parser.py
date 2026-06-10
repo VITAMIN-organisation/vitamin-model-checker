@@ -8,6 +8,7 @@ import ply.yacc as yacc
 _LEXER_HAS_ERROR = False
 _PARSER_HAS_ERROR = False
 
+
 class Expr:
     def __init__(self):
         self.satisfying_states = set()
@@ -192,7 +193,9 @@ def p_expression_ternary(p):
     try:
         int(demonic_cost)
     except ValueError:
-        raise DemonicValueError(f"Provided cost ({demonic_cost}) is not an int.")
+        raise DemonicValueError(
+            f"Provided cost ({demonic_cost}) is not an int."
+        ) from None
     p[0] = DemonicBinary(p[1], p[3], p[2], p[4])
 
 
@@ -204,7 +207,9 @@ def p_expression_unary(p):
     try:
         int(demonic_cost)
     except ValueError:
-        raise DemonicValueError(f"Provided cost ({demonic_cost}) is not an int.")
+        raise DemonicValueError(
+            f"Provided cost ({demonic_cost}) is not an int."
+        ) from None
     p[0] = DemonicOp(p[1], p[2], p[3])
 
 
@@ -261,10 +266,12 @@ def do_parsing(formula):
             s = " ".join(s.strip().split())
         else:
             s = formula
-        
+
         # Create fresh local lexer/parser
         local_lexer = lex.lex(module=sys.modules[__name__])
-        local_parser = yacc.yacc(module=sys.modules[__name__], write_tables=False, debug=False)
+        local_parser = yacc.yacc(
+            module=sys.modules[__name__], write_tables=False, debug=False
+        )
         result = local_parser.parse(s, lexer=local_lexer)
         if _PARSER_HAS_ERROR or _LEXER_HAS_ERROR:
             return None

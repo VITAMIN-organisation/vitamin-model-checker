@@ -1,11 +1,4 @@
-"""
-Combined ATL and NatATL Verification Pipeline.
-
-This module provides a heuristic optimization to speed up verification:
-1. First, check the formula as standard ATL (ignoring complexity bounds).
-2. If ATL is satisfied, attempt NatATL verification to find a bounded strategy.
-3. If ATL fails, NatATL must also fail (since NatATL <= ATL), so return early.
-"""
+"""ATL pre-check before NatATL memoryless verification."""
 
 import logging
 import os
@@ -35,16 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 def preprocess_and_verify(model_path: str, formula: str) -> Dict[str, Any]:
-    """
-    Run ATL pre-check followed by NatATL verification if promising.
-
-    Args:
-        model_path: Path to model file
-        formula: NatATL formula string
-
-    Returns:
-        Verification result dictionary
-    """
+    """Run ATL first; if it passes, run full NatATL memoryless checking."""
     start_time = time.time()
 
     if not os.path.isfile(model_path):
@@ -89,14 +73,7 @@ def preprocess_and_verify(model_path: str, formula: str) -> Dict[str, Any]:
 
 
 def process_data(cgs: CGSProtocol, model_path: str, formula: str) -> Dict[str, Any]:
-    """
-    Execute NatATL verification loop.
-
-    Args:
-        cgs: CGS Object for pre-check
-        model_path: Path to model file
-        formula: NatATL formula string
-    """
+    """Run NatATL memoryless strategy search on a loaded model."""
     # Pass the existing CGS object to avoid re-reading the model file
     (
         k,

@@ -5,8 +5,6 @@ This module contains handler functions for all OATL operators, both unary
 (NOT, <Jn>X, <Jn>F, <Jn>G) and binary (OR, AND, IMPLIES, <Jn>U).
 """
 
-from typing import Tuple
-
 from model_checker.algorithms.explicit.OATL.preimage import (
     D,
     cross,
@@ -14,21 +12,14 @@ from model_checker.algorithms.explicit.OATL.preimage import (
     has_affordable_action,
     min_action_cost,
 )
-from model_checker.algorithms.explicit.shared import state_set_to_str
+from model_checker.algorithms.explicit.shared.cost_utils import (
+    extract_coalition_and_cost,
+)
 from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
     least_fixpoint,
 )
 from model_checker.engine.runner import parse_state_set_literal
-
-
-def extract_coalition_and_cost(formula_node_value: str) -> Tuple[str, int]:
-    """Extract coalition and cost from operator: <Jn>Op."""
-    parts = formula_node_value[1:].split(">")
-    coalition = parts[0]
-    cost = int(parts[1][1:])
-    return coalition, cost
-
 
 # ---------------------------------------------------------
 # UNARY OPERATOR HANDLERS (NOT in shared.boolean_operators)
@@ -44,14 +35,14 @@ def handle_coalition_globally(cgs, node):
         return target & cross(cgs, n, coalition, p)
 
     result = greatest_fixpoint(cgs.all_states_set.copy(), update)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 def handle_coalition_next(cgs, node):
     """Handle <Jn>X operator: coalition can force next state within cost bound."""
     coalition, n = extract_coalition_and_cost(node.value)
     target = parse_state_set_literal(node.left.value)
-    node.value = state_set_to_str(cross(cgs, n, coalition, target))
+    node.value = str(tuple(sorted({str(s) for s in cross(cgs, n, coalition, target)})))
 
 
 def handle_coalition_eventually(cgs, node):
@@ -95,7 +86,7 @@ def handle_coalition_eventually(cgs, node):
         frontier = new_states
         result.update(frontier)
 
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 # ---------------------------------------------------------
@@ -113,4 +104,4 @@ def handle_coalition_until(cgs, node):
         return p | (states1 & cross(cgs, n, coalition, p, early_stop=p))
 
     result = least_fixpoint(states2, update_with_skip)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))

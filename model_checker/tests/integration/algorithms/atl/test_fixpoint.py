@@ -33,7 +33,7 @@ def compute_atl_f_fixpoint_iterations(cgs, coalition, target_states):
 def compute_atl_g_fixpoint_iterations(cgs, coalition, target_states):
     """Compute <A>G fixpoint (greatest fixpoint) with iteration tracking."""
     cache = build_transition_cache(cgs, coalition)
-    all_states = set(cgs.get_states())
+    all_states = set(cgs.states)
     T = all_states.copy()
     iterations = [T.copy()]
 
@@ -49,8 +49,8 @@ def compute_atl_g_fixpoint_iterations(cgs, coalition, target_states):
 
 def _states_where_prop_holds(cgs, prop):
     """Return set of state names where proposition prop holds."""
-    matrix = cgs.get_matrix_proposition()
-    ap = cgs.get_atomic_prop()
+    matrix = cgs.matrix_prop
+    ap = cgs.atomic_propositions
     if ap is None:
         return set()
     try:

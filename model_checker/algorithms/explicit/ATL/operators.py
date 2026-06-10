@@ -6,7 +6,6 @@ This module contains handler functions for all ATL operators, both unary
 """
 
 from model_checker.algorithms.explicit.ATL.preimage import pre
-from model_checker.algorithms.explicit.shared import state_set_to_str
 from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
     least_fixpoint,
@@ -30,14 +29,16 @@ def handle_coalition_globally(cgs, node, transition_cache):
         return pre(cgs, coalition, p, transition_cache) & states
 
     result = greatest_fixpoint(cgs.all_states_set.copy(), update)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 def handle_coalition_next(cgs, node, transition_cache):
     """Handle <A>X operator: coalition can force next state to satisfy phi."""
     coalition = node.value[1:-2]
     states = parse_state_set_literal(node.left.value)
-    node.value = state_set_to_str(pre(cgs, coalition, states, transition_cache))
+    node.value = str(
+        tuple(sorted({str(s) for s in pre(cgs, coalition, states, transition_cache)}))
+    )
 
 
 def handle_coalition_eventually(cgs, node, transition_cache):
@@ -50,7 +51,7 @@ def handle_coalition_eventually(cgs, node, transition_cache):
         return p | pre(cgs, coalition, p, transition_cache, early_stop=p_indices)
 
     result = least_fixpoint(states, update_with_skip)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 # ---------------------------------------------------------
@@ -71,4 +72,4 @@ def handle_coalition_until(cgs, node, transition_cache):
         )
 
     result = least_fixpoint(states2, update_with_skip)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))

@@ -9,6 +9,7 @@ import re
 from typing import List
 
 from model_checker.parsers.game_structures.cgs import CGS
+from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 
 
 def is_regex_or_boolean_formula(pattern: str) -> str:
@@ -72,7 +73,7 @@ def check_prop_holds_in_label_row(cgs: CGS, prop: str, prop_matrix: List[int]) -
         elif prop_str.startswith("!"):
             return not eval_prop(prop_str[1:].strip())
         else:
-            index = cgs.get_atom_index(prop_str)
+            index = proposition_index(cgs.atomic_propositions, prop_str)
             if index is None:
                 return False
             if index >= len(prop_matrix):

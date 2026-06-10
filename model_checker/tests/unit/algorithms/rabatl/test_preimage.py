@@ -16,7 +16,7 @@ class TestRABATLPreImage:
         cgs = load_test_model(
             test_data_dir, "costCGS/RABATL/rabatl_3agents_medium_6states_costs.txt"
         )
-        all_states = set(cgs.get_states())
+        all_states = set(cgs.states)
         result = pre(cgs, "1", {"s1"}, [10, 10, 10])
         assert isinstance(result, set)
         assert all(isinstance(s, str) for s in result)

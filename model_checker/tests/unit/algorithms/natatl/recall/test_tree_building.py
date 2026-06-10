@@ -25,7 +25,7 @@ class TestBuildTreeFromCGS:
             prop_names=["p"],
         )
         cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.get_states()
+        states = cgs.states
 
         tree = build_tree_from_CGS(cgs, states, height=2)
 
@@ -44,7 +44,7 @@ class TestBuildTreeFromCGS:
             prop_names=["p"],
         )
         cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.get_states()
+        states = cgs.states
 
         tree = build_tree_from_CGS(cgs, states, height=3)
 
@@ -65,7 +65,7 @@ class TestBuildTreeFromCGS:
             prop_names=["p"],
         )
         cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.get_states()
+        states = cgs.states
 
         tree = build_tree_from_CGS(cgs, states, height=2)
 
@@ -85,7 +85,7 @@ class TestBuildTreeFromCGS:
             prop_names=["p"],
         )
         cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.get_states()
+        states = cgs.states
 
         tree = build_tree_from_CGS(cgs, states, height=2)
 
@@ -105,7 +105,7 @@ class TestBuildTreeFromCGS:
             prop_names=["p"],
         )
         cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.get_states()
+        states = cgs.states
 
         tree = build_tree_from_CGS(cgs, states, height=2)
 
@@ -123,7 +123,7 @@ class TestBuildTreeFromCGS:
             prop_names=["p"],
         )
         cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.get_states()
+        states = cgs.states
 
         tree = build_tree_from_CGS(cgs, states, height=2)
 
@@ -151,7 +151,7 @@ class TestTreeToInitialCGS:
         root.add_child(child, action=["a"])
 
         states = ["s0", "s1"]
-        matrix = tree_to_initial_CGS(root, states, num_agents=1, max_depth=2)
+        matrix = tree_to_initial_CGS(root, states, max_depth=2)
 
         assert len(matrix) == 2
         assert len(matrix[0]) == 2
@@ -177,7 +177,7 @@ class TestTreeToInitialCGS:
         root.add_child(child2, action=["b"])
 
         states = ["s0", "s1", "s2"]
-        matrix = tree_to_initial_CGS(root, states, num_agents=1, max_depth=2)
+        matrix = tree_to_initial_CGS(root, states, max_depth=2)
 
         assert len(matrix) == 3
         assert matrix[0][1] == "['a']"
@@ -202,7 +202,7 @@ class TestTreeToInitialCGS:
         child.add_child(grandchild, action=["b"])
 
         states = ["s0", "s1", "s2"]
-        matrix = tree_to_initial_CGS(root, states, num_agents=1, max_depth=1)
+        matrix = tree_to_initial_CGS(root, states, max_depth=1)
 
         assert len(matrix) == 3
         assert matrix[0][1] == "['a']"
@@ -221,7 +221,7 @@ class TestTreeToInitialCGS:
 
         root = Node("s0", cgs)
         states = ["s0"]
-        matrix = tree_to_initial_CGS(root, states, num_agents=1, max_depth=1)
+        matrix = tree_to_initial_CGS(root, states, max_depth=1)
 
         assert len(matrix) == 1
         assert matrix[0][0] == "0"

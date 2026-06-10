@@ -10,11 +10,9 @@ from model_checker.parsers.game_structures.cgs import cgs_parser
 
 
 def parse_cost_sections(lines: List[str], instance: Any) -> None:
-    """Parse cost sections and set usesCostsInsteadOfActions if Transition_With_Costs is seen.
+    """Read cost sections into instance.cost_for_action.
 
-    Args:
-        lines: List of file lines (list of str).
-        instance: costCGS instance to fill (cost_for_action, usesCostsInsteadOfActions).
+    Sets usesCostsInsteadOfActions when Transition_With_Costs appears.
     """
     current_section = None
 
@@ -25,11 +23,11 @@ def parse_cost_sections(lines: List[str], instance: Any) -> None:
 
     def process_costs_for_actions(line):
         if line:
-            parse_costs_for_actions(line, instance)
+            parse_cost_line(line, instance, parse_split=False)
 
     def process_costs_for_actions_split(line):
         if line:
-            parse_costs_for_actions_split(line, instance)
+            parse_cost_line(line, instance, parse_split=True)
 
     section_processors = {
         "Costs_for_actions": process_costs_for_actions,
@@ -53,35 +51,8 @@ def parse_cost_sections(lines: List[str], instance: Any) -> None:
             section_processors[current_section](line)
 
 
-def parse_costs_for_actions(line: str, instance: Any) -> None:
-    """Parse one line from Costs_for_actions (single cost list per action-state).
-
-    Args:
-        line: One line of the Costs_for_actions section (str).
-        instance: costCGS instance; cost_for_action is updated.
-    """
-    parse_cost_line(line, instance, parse_split=False)
-
-
-def parse_costs_for_actions_split(line: str, instance: Any) -> None:
-    """Parse one line from Costs_for_actions_split (nested cost lists per action-state).
-
-    Args:
-        line: One line of the Costs_for_actions_split section (str).
-        instance: costCGS instance; cost_for_action is updated.
-    """
-    parse_cost_line(line, instance, parse_split=True)
-
-
 def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None:
-    """Parse one cost line: action, state(s) and cost(s).
-
-    Args:
-        line: One cost line (str); format "action state$cost[:cost...]" with
-            optional further state$cost groups separated by semicolons.
-        instance: costCGS instance; cost_for_action is updated.
-        parse_split: If True, costs are parsed as nested lists (e.g. [[1,2],[3]]).
-    """
+    """Parse one line: action state$cost[:cost...] with optional ;-separated groups."""
     values = line.strip().split()
     if len(values) < 2:
         raise ValueError(
@@ -114,19 +85,12 @@ def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None
         except ValueError as exc:
             raise ValueError(f"Invalid cost value in line '{line}': {exc}") from exc
 
-        key = instance.translate_action_and_state_to_key(action_name, state)
+        key = f"{action_name};{state}"
         instance.cost_for_action.update({key: costs})
 
 
 def parse_common_sections(lines: List[str], instance: Any) -> None:
-    """Fill states, labelling, initial_state, number_of_agents via base CGS parser.
-
-    Skips Transition and cost sections. Call after parse_cost_sections.
-
-    Args:
-        lines: List of file lines (list of str).
-        instance: costCGS instance to fill.
-    """
+    """Load states, labels, and agents via the base CGS parser (no transition rows)."""
     sections_to_skip = {
         "Transition",
         "Transition_With_Costs",
@@ -140,17 +104,7 @@ def parse_common_sections(lines: List[str], instance: Any) -> None:
 
 
 def extract_transition_rows(lines: List[str], instance: Any) -> List[Any]:
-    """Collect transition rows from Transition or Transition_With_Costs.
-
-    Sets instance.usesCostsInsteadOfActions if Transition_With_Costs is seen.
-
-    Args:
-        lines: List of file lines (list of str).
-        instance: costCGS instance; usesCostsInsteadOfActions may be set.
-
-    Returns:
-        List of rows (each row is a list of str or cost values).
-    """
+    """Collect rows from Transition or Transition_With_Costs."""
     current_section = None
     rows_graph = []
 
@@ -175,15 +129,7 @@ def extract_transition_rows(lines: List[str], instance: Any) -> List[Any]:
 
 
 def parse_transitions(lines: List[str], instance: Any) -> None:
-    """Build instance.graph from transition rows.
-
-    Uses costs or actions depending on instance.usesCostsInsteadOfActions.
-    Call after parse_cost_sections and parse_common_sections.
-
-    Args:
-        lines: List of file lines (list of str).
-        instance: costCGS instance; graph and optionally actions are filled.
-    """
+    """Build instance.graph from transition rows (costs or actions)."""
     rows_graph = extract_transition_rows(lines, instance)
     if not rows_graph:
         return
@@ -201,18 +147,10 @@ def parse_transitions(lines: List[str], instance: Any) -> None:
 def process_transition_row_with_costs(
     row: List[Any], actions: List[Any], instance: Any
 ) -> List[Any]:
-    """Turn a raw transition row into a processed row.
+    """Process one transition row.
 
-    If instance.usesCostsInsteadOfActions, cells become 0 or str; otherwise
-    uses base CGS row processing and appends to actions.
-
-    Args:
-        row: One transition row (list of str).
-        actions: List to append action strings to (when not using costs).
-        instance: costCGS instance (usesCostsInsteadOfActions).
-
-    Returns:
-        Processed row (list of int or str).
+    With Transition_With_Costs, cells are 0 or a cost string; otherwise parse
+    as standard CGS actions and collect names in actions.
     """
     if instance.usesCostsInsteadOfActions:
         return [0 if item == "0" else str(item) for item in row]

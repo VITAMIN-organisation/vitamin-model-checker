@@ -1,11 +1,4 @@
-"""
-Formula tree solver for CTL model checking.
-
-Provides solve_tree (bottom-up evaluation only) and solve_tree_with_trace
-(optional witness/counterexample generation) as two entry points. The trace
-entry point consolidates all operator dispatch; solve_tree delegates to it
-with generate_trace=False.
-"""
+"""Formula tree solver for CTL model checking."""
 
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -32,17 +25,12 @@ from model_checker.algorithms.explicit.CTL.operators_with_trace import (
 from model_checker.algorithms.explicit.shared import (
     StateTrace,
     extract_shortest_trace,
-    normalize_state_set,
 )
 from model_checker.engine.runner import parse_state_set_literal
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS
-
-
-def _get_parser():
-    return FormulaParserFactory.get_parser_instance("CTL")
 
 
 _UNARY = {
@@ -128,23 +116,7 @@ def _dispatch(
 def solve_tree_with_trace(
     cgs: "CGS", node: Any, generate_trace: bool = True
 ) -> Optional[OperatorWithTrace]:
-    """
-    Recursively solve the formula tree with optional trace generation.
-
-    Formula is parsed into a binary tree; leaf nodes contain atomic propositions
-    (resolved to state sets). Internal nodes apply CTL operators. When
-    generate_trace is True, temporal operators that support it return
-    OperatorWithTrace for witness/counterexample construction.
-
-    Args:
-        cgs: The CGS model instance
-        node: Current tree node to evaluate
-        generate_trace: If True, generate witness/counterexample traces
-
-    Returns:
-        OperatorWithTrace for the root temporal operator when generate_trace
-        is True, otherwise None
-    """
+    """Evaluate the formula tree bottom-up, optionally recording trace data."""
     if node.left is not None:
         solve_tree_with_trace(cgs, node.left, generate_trace)
     if node.right is not None:
@@ -153,33 +125,19 @@ def solve_tree_with_trace(
     operator_trace = None
     val = node.value
 
-    # Get cached edges for trace generation to assume consistency and performance
     cached_edges = cgs.get_edges()
+    parser = FormulaParserFactory.get_parser_instance("CTL")
 
     if node.right is None:
-        key = _ctl_unary_key(_get_parser(), val)
+        key = _ctl_unary_key(parser, val)
         operator_trace = _dispatch(key, _UNARY, cgs, node, generate_trace, cached_edges)
     elif node.left is not None and node.right is not None:
-        key = _ctl_binary_key(_get_parser(), val)
+        key = _ctl_binary_key(parser, val)
         operator_trace = _dispatch(
             key, _BINARY, cgs, node, generate_trace, cached_edges
         )
 
     return operator_trace
-
-
-def solve_tree(cgs: "CGS", node: Any) -> None:
-    """
-    Recursively solve the formula tree using bottom-up evaluation.
-
-    Delegates to solve_tree_with_trace with generate_trace=False. Each node's
-    value becomes the set of states where that subformula holds.
-
-    Args:
-        cgs: The CGS model instance
-        node: Current tree node to evaluate
-    """
-    solve_tree_with_trace(cgs, node, generate_trace=False)
 
 
 def extract_trace_for_result(
@@ -189,23 +147,11 @@ def extract_trace_for_result(
     operator_trace: Optional[OperatorWithTrace],
     is_satisfied: bool,
 ) -> Optional[StateTrace]:
-    """
-    Extract a concrete trace from the verification result.
-
-    Args:
-        cgs: The CGS model instance
-        result_states_str: String representation of result states
-        initial_state: Name of the initial state
-        operator_trace: OperatorWithTrace from the main operator, or None
-        is_satisfied: Whether the formula holds at the initial state
-
-    Returns:
-        StateTrace (witness or counterexample) or None if none can be built
-    """
+    """Build a witness or counterexample trace from the verification result."""
     if operator_trace is None:
         return None
 
-    result_states = normalize_state_set(parse_state_set_literal(result_states_str))
+    result_states = {str(s) for s in parse_state_set_literal(result_states_str)}
 
     if is_satisfied:
         trace_type = "witness"

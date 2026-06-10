@@ -36,9 +36,9 @@ def check_checker_conformance(
 
 def check_model_compatibility(model_parser: Any) -> Dict[str, Any]:
     required = (
-        "get_states",
-        "get_initial_state",
-        "get_graph",
+        "states",
+        "initial_state",
+        "graph",
     )
     checks = {name: hasattr(model_parser, name) for name in required}
     return {"ok": all(checks.values()), "checks": checks}

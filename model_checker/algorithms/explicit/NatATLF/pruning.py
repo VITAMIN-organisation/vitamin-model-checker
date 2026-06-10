@@ -15,7 +15,7 @@ from model_checker.algorithms.explicit.NatATL.Memoryless.matrix_utils import (
     modify_matrix,
 )
 from model_checker.engine.runner import parse_state_set_literal
-from model_checker.parsers.game_structures.cgs import CGS, cgs_validation
+from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +35,12 @@ def process_transition_matrix_data(
     Returns:
         Pruned transition matrix with only strategy-compliant transitions
     """
-    graph = cgs.transition_matrix
+    graph = cgs.graph
     label_matrix = cgs.create_label_matrix(graph)
     logger.debug("Initial transition matrix: %s", graph)
 
-    actions_per_agent = cgs.get_actions(agents)
+    cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
+    actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
     agent_actions = {}
     for _i, agent_key in enumerate(actions_per_agent.keys()):
         agent_actions[f"actions_{agent_key}"] = actions_per_agent[agent_key]
@@ -68,7 +69,7 @@ def process_transition_matrix_data(
                     temp = state_sets
                     state_sets = state_set - temp
                 else:
-                    state_sets = set(cgs.get_states())
+                    state_sets = set(cgs.states)
                     action = "I"
                 graph = modify_matrix(
                     graph, label_matrix, state_sets, action, strategy_index, agents
@@ -82,7 +83,7 @@ def process_transition_matrix_data(
                 if state_set:
                     state_sets = state_set
                 else:
-                    state_sets = set(cgs.get_states())
+                    state_sets = set(cgs.states)
                     action = "I"
                 graph = modify_matrix(
                     graph, label_matrix, state_sets, action, strategy_index, agents

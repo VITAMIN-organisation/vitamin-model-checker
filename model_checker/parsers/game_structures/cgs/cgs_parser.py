@@ -7,6 +7,10 @@ import warnings
 
 import numpy as np
 
+from model_checker.parsers.game_structures.cgs.cgs_utils import (
+    validate_atomic_proposition_name,
+)
+
 # --- Constants ---
 
 SECTION_HEADERS = frozenset(
@@ -306,6 +310,7 @@ def _apply_atomic_propositions(instance, atomic_propositions_list):
     seen = set()
     unique = []
     for prop in atomic_propositions_list:
+        validate_atomic_proposition_name(prop)
         if prop not in seen:
             seen.add(prop)
             unique.append(prop)

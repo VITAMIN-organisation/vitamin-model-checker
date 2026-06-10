@@ -1,16 +1,13 @@
-"""Shared utilities for model checker interfaces.
-
-This module provides common boilerplate reduction for explicit model checking interfaces,
-handling validation, parser creation, file reading, and error handling consistently.
-"""
+"""Shared helpers for explicit model checking entry points."""
 
 import ast
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 
 from model_checker.models.model_factory import (
     create_model_parser_for_logic,
 )
 from model_checker.parsers.game_structures.cgs import CGSProtocol
+from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.utils.error_handler import (
     create_model_error,
     create_semantic_error,
@@ -27,37 +24,7 @@ def execute_model_checking_with_parser(
     core_checking_func: Callable[[Any, str], Dict[str, Any]],
     pre_validation_func: Optional[Callable[[Any], Optional[Dict[str, Any]]]] = None,
 ) -> Dict[str, Any]:
-    """
-    Shared wrapper for model checking execution that handles common boilerplate.
-
-    This function handles:
-    - Input validation (formula and filename)
-    - Parser creation using the factory
-    - File reading
-    - Error handling (FileNotFoundError, ValueError, Exception)
-    - Delegates core checking logic to the provided function
-
-    Args:
-        formula: Formula string to check
-        filename: Path to model file
-        logic_type: Logic type identifier (e.g., "ATL", "CTL", "OATL")
-        core_checking_func: Function that performs the actual model checking.
-            Signature: (parser, formula) -> Dict[str, Any]
-            This function should handle:
-            - Formula parsing
-            - Tree building
-            - Tree solving
-            - Result construction
-            It should return early with error dictionaries for syntax/semantic errors.
-        pre_validation_func: Optional function to validate the model after reading.
-            Signature: (parser) -> Optional[Dict[str, Any]]
-            If it returns a dict, that dict is returned as an error response.
-            If it returns None, execution continues.
-
-    Returns:
-        Dictionary with keys: "res" (result string), "initial_state" (verification
-        string), and optionally "error" (structured error information).
-    """
+    """Validate input, load the model, and run core_checking_func(parser, formula)."""
     # Input validation
     if not formula or not formula.strip():
         return create_validation_error("Formula not entered")
@@ -112,19 +79,62 @@ def execute_model_checking_with_parser(
         return create_system_error(f"Error during model checking: {str(e)}")
 
 
+def bind_model_checking(
+    logic_type: str,
+    core_checking_func: Callable[[Any, str], Dict[str, Any]],
+    pre_validation_func: Optional[Callable[[Any], Optional[Dict[str, Any]]]] = None,
+) -> Callable[[str, str], Dict[str, Any]]:
+    """Return a model_checking entry point for the given logic and core checker."""
+
+    def model_checking(formula: str, filename: str) -> Dict[str, Any]:
+        return execute_model_checking_with_parser(
+            formula,
+            filename,
+            logic_type,
+            core_checking_func,
+            pre_validation_func,
+        )
+
+    return model_checking
+
+
+def bind_resource_bounded_model_checking(
+    logic_type: str,
+    core_checking_func: Callable[[Any, str], Dict[str, Any]],
+    pre_validation_func: Optional[Callable[[Any], Optional[Dict[str, Any]]]] = None,
+) -> Callable[[str, str], Dict[str, Any]]:
+    """Return a model_checking entry point that prefilters with unbounded ATL."""
+
+    full_checking = bind_model_checking(
+        logic_type, core_checking_func, pre_validation_func
+    )
+
+    def model_checking(formula: str, filename: str) -> Dict[str, Any]:
+        from model_checker.algorithms.explicit.ATL import (
+            model_checking as atl_model_checking,
+        )
+        from model_checker.algorithms.explicit.shared.resource_bounded_to_atl import (
+            resource_bounded_atl_to_atl,
+        )
+
+        atl_result = atl_model_checking(resource_bounded_atl_to_atl(formula), filename)
+        if "error" in atl_result:
+            return atl_result
+        if str(atl_result.get("initial_state", "")).endswith(": False"):
+            return atl_result
+
+        return full_checking(formula, filename)
+
+    return model_checking
+
+
 # -----------------------------
 # Shared parsing/helper utilities
 # -----------------------------
 
 
 def parse_state_set_literal(value: Optional[Union[str, Set[str]]]) -> Set[str]:
-    """
-    Return a set of state names from a node value that may be already a set or a string.
-
-    If value is already a set, returns a copy so callers can mutate safely.
-    If value is a string (e.g. from tree nodes), parses it with ast.literal_eval.
-    Returns an empty set for None, empty string, or invalid inputs.
-    """
+    """Parse a state set from a set, tuple string, or tree node value."""
     if value is None or value == "":
         return set()
     if isinstance(value, set):
@@ -145,10 +155,7 @@ def parse_state_set_literal(value: Optional[Union[str, Set[str]]]) -> Set[str]:
 
 
 def parse_tuple_list_literal(value: str) -> List[Tuple[str, float]]:
-    """
-    Safely parse a string representing a list of (state, value) tuples into a list.
-    Non-decodable inputs yield an empty list rather than raising.
-    """
+    """Parse a list of (state, value) pairs from a string; return [] on failure."""
     if value in ("[]", None, ""):
         return []
     try:
@@ -165,19 +172,9 @@ def parse_tuple_list_literal(value: str) -> List[Tuple[str, float]]:
     return []
 
 
-def indices_to_state_names(cgs: CGSProtocol, indices: Iterable[int]) -> Set[str]:
-    """
-    Convert iterable of state indices into the corresponding state names for the given CGS.
-    """
-    return {str(cgs.get_state_name_by_index(idx)) for idx in indices}
-
-
 def states_where_prop_holds(cgs: CGSProtocol, prop: str) -> Optional[Set[str]]:
-    """
-    Return the set of state names where the given proposition holds.
-    Returns None if the proposition is unknown in the CGS.
-    """
-    idx = cgs.get_atom_index(prop)
+    """Return states where prop holds, or None if the proposition is unknown."""
+    idx = proposition_index(cgs.atomic_propositions, prop)
     if idx is None:
         return None
 
@@ -190,10 +187,7 @@ def states_where_prop_holds(cgs: CGSProtocol, prop: str) -> Optional[Set[str]]:
 
 
 def build_formula_tree(tpl: Any, atom_resolver: Callable[[Any], Optional[str]]):
-    """
-    Build a binary tree (binarytree.Node) from a parsed formula tuple, resolving atoms
-    through the provided callback that returns the leaf node value or None on failure.
-    """
+    """Build a formula tree from a parsed tuple; atom_resolver fills leaf values."""
     from binarytree import Node
 
     if isinstance(tpl, tuple):

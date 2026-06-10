@@ -7,7 +7,6 @@ from model_checker.algorithms.explicit.ATL.preimage import (
     build_transition_cache,
     pre,
 )
-from model_checker.algorithms.explicit.shared import normalize_state_set
 
 WalletConstraint = Tuple[int, Tuple[str, int]]
 
@@ -71,11 +70,11 @@ def apply_wallet_constraints(
     states: Iterable[Any],
 ) -> Set[str]:
     """Filter states that satisfy all coalition wallet constraints."""
-    normalized_states = normalize_state_set(states)
+    normalized_states = {str(s) for s in states}
     if not normalized_states or not constraints:
         return normalized_states
 
-    constraint_map = {agent: condition for agent, condition in constraints}
+    constraint_map = dict(constraints)
     filtered_states: Set[str] = set()
 
     for state in normalized_states:

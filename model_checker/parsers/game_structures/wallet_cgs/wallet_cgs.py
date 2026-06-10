@@ -1,7 +1,5 @@
 import re
 
-import numpy as np
-
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 
 
@@ -32,7 +30,7 @@ class WalletCGS(CGS):
         """Read and parse the WATL model file"""
         super().read_file(filename)
 
-        with open(filename, "r") as f:
+        with open(filename) as f:
             lines = f.readlines()
 
         current_section = None
@@ -98,7 +96,7 @@ class WalletCGS(CGS):
         if str(action_string).isdigit():
             return True, "Contract action - always feasible"
 
-        wallet = self.get_wallet(state)[agent - 1]
+        wallet = self.wallets.get(state, (0,) * self.get_number_of_agents())[agent - 1]
 
         # CONSUMPTION ACTIONS (Act↓): Require sufficient wallet balance
         if is_consumption:
@@ -151,7 +149,9 @@ class WalletCGS(CGS):
         num_agents = self.get_number_of_agents()
         if num_agents >= 1:
             contract_index = num_agents - 1
-            return self.get_wallet(state)[contract_index]
+            return self.wallets.get(state, (0,) * self.get_number_of_agents())[
+                contract_index
+            ]
         return 0
 
     def get_valid_actions(self, state, agent, wallet_constraint=None):
@@ -234,7 +234,7 @@ class WalletCGS(CGS):
 
     def check_wallet_constraint(self, state, agent, constraint):
         """Check if wallet satisfies a constraint"""
-        wallets = self.get_wallet(state)
+        wallets = self.wallets.get(state, (0,) * self.get_number_of_agents())
         agent_index = agent - 1
 
         if agent_index < 0 or agent_index >= len(wallets):
@@ -256,27 +256,21 @@ class WalletCGS(CGS):
         else:
             raise ValueError(f"Unsupported operator: {op}")
 
-    def get_wallet(self, state):
-        """Get wallet tuple for a state"""
-        return self.wallets.get(state, (0,) * self.get_number_of_agents())
-
     def get_atom_index(self, element):
-        """Returns the index of the given atom in the array of atomic propositions"""
-        array = self.get_atomic_prop()
+        """Returns the index of the given atom in the array of atomic propositions."""
+        from model_checker.parsers.game_structures.cgs.cgs_utils import (
+            proposition_index,
+        )
 
         if isinstance(element, (list, tuple)):
             element = " ".join(map(str, element))
-
-        try:
-            index = np.where(array == element)[0][0]
-            return index
-        except IndexError:
-            return None
-        return None
+        return proposition_index(self.atomic_propositions, element)
 
     def simulate_transition(self, current_state, actions):
         """Simulate a transition and return the new wallet state"""
-        current_wallets = list(self.get_wallet(current_state))
+        current_wallets = list(
+            self.wallets.get(current_state, (0,) * self.get_number_of_agents())
+        )
         total_agents = self.get_number_of_agents()
 
         for agent, action_str in actions.items():

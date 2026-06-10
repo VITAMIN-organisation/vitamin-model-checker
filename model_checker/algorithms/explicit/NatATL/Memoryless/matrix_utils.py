@@ -1,9 +1,4 @@
-"""
-Matrix manipulation utilities for NatATL Memoryless pruning.
-
-This module provides low-level functions for modifying transition matrices
-to enforce strategy constraints.
-"""
+"""Transition matrix updates for NatATL memoryless strategy pruning."""
 
 import logging
 from typing import List, Set
@@ -19,24 +14,7 @@ def modify_matrix(
     agent_index: int,
     agents: List[int],
 ) -> List[List]:
-    """
-    Modify transition matrix to enforce a single agent's action in specified states.
-
-    For each transition starting from a state in the given set, removes any
-    action tuples where the specified agent's action doesn't match the required
-    action. This implements the strategy restriction for one agent.
-
-    Args:
-        graph: Current transition matrix (list of lists)
-        label_matrix: Matrix mapping positions to state labels
-        states: Set of state names where the action should be enforced
-        action: The action token the agent must perform (or idle)
-        agent_index: 1-based index of the agent in the strategy data
-        agents: List of actual global agent numbers involved in the coalition
-
-    Returns:
-        Modified copy of the transition matrix
-    """
+    """Keep only transitions where one agent plays action in the given states."""
     new_graph = [row.copy() for row in graph]
 
     # agents[agent_index-1] gives the actual agent number

@@ -3,39 +3,48 @@
 from typing import Dict, List, Optional, Set, Tuple
 
 from model_checker.algorithms.explicit.shared.bit_vector import (
+    BIT_VECTOR_THRESHOLD,
     BitVectorStateSet,
-    should_use_bit_vectors,
 )
 from model_checker.algorithms.explicit.shared.state_utils import (
     state_names_to_indices,
 )
-from model_checker.parsers.game_structures.cgs import CGSProtocol
+from model_checker.parsers.game_structures.cgs import CGSProtocol, cgs_actions
 
 
 def build_transition_cache(
     cgs: CGSProtocol, coalition: Optional[str] = None
 ) -> Dict[int, List[Tuple]]:
-    """Build per-state transition cache for pre-image.
-
-    Args:
-        cgs: CGS model.
-        coalition: Optional coalition string; if set, cache stores (coalition_action, opponent_action, next_state), else (profile, next_state).
-
-    Returns:
-        Dict from state index to list of transition tuples.
-    """
+    """Cache outgoing transitions per state for faster pre-image computation."""
     cache = {}
     graph = cgs.graph
-    agents = cgs.get_agents_from_coalition(coalition) if coalition else None
+    agents = cgs_actions.get_agents_from_coalition(coalition) if coalition else None
+    formatted_agents = cgs_actions.format_agents(agents) if agents else None
+    num_agents = cgs.get_number_of_agents()
 
     for q in range(len(graph)):
         moves = []
         for j, mask in enumerate(graph[q]):
             if mask != 0:
                 for prof in cgs.build_action_list(mask):
-                    if agents:
-                        mA = tuple(sorted(cgs.get_coalition_action({prof}, agents)))
-                        mo = tuple(sorted(cgs.get_opponent_moves({prof}, agents)))
+                    if formatted_agents is not None:
+                        mA = tuple(
+                            sorted(
+                                cgs_actions.get_coalition_actions(
+                                    {prof}, formatted_agents, num_agents
+                                )
+                            )
+                        )
+                        mo = tuple(
+                            sorted(
+                                cgs_actions._process_actions_for_agents(
+                                    {prof},
+                                    formatted_agents,
+                                    num_agents,
+                                    include_agents=False,
+                                )
+                            )
+                        )
                         moves.append((mA, mo, j))
                     else:
                         moves.append((prof, j))
@@ -51,11 +60,7 @@ def _group_moves_by_coalition_for_state(
     transition_cache: Optional[Dict[int, List[Tuple]]],
     has_coalition_cache: bool,
 ) -> Dict[Tuple, List[Tuple]]:
-    """Group outgoing transitions by coalition move for one state.
-
-    Returns:
-        Map from coalition move to list of (opponent_move, next_state_index).
-    """
+    """Group outgoing transitions at one state by coalition move."""
     moves_by_coalition: Dict[Tuple, List[Tuple]] = {}
 
     if has_coalition_cache and transition_cache is not None:
@@ -72,11 +77,21 @@ def _group_moves_by_coalition_for_state(
                 for prof in cgs.build_action_list(mask):
                     joint_moves.append((prof, next_index))
 
+    formatted_agents = cgs_actions.format_agents(coalition_agents)
+    num_agents = cgs.get_number_of_agents()
     for prof, next_index in joint_moves:
         coalition_move = tuple(
-            sorted(cgs.get_coalition_action({prof}, coalition_agents))
+            sorted(
+                cgs_actions.get_coalition_actions({prof}, formatted_agents, num_agents)
+            )
         )
-        opponent_move = tuple(sorted(cgs.get_opponent_moves({prof}, coalition_agents)))
+        opponent_move = tuple(
+            sorted(
+                cgs_actions._process_actions_for_agents(
+                    {prof}, formatted_agents, num_agents, include_agents=False
+                )
+            )
+        )
         moves_by_coalition.setdefault(coalition_move, []).append(
             (opponent_move, next_index)
         )
@@ -116,25 +131,14 @@ def pre(
     transition_cache: Optional[Dict] = None,
     early_stop: Optional[Set[int]] = None,
 ) -> Set[str]:
-    """Pre-image Pre_A(T): states from which coalition can force one step into state_set.
-
-    Args:
-        cgs: CGS model.
-        coalition: Coalition string (e.g. ``'1,2'``).
-        state_set: Target state names.
-        transition_cache: Optional pre-built cache from ``build_transition_cache``.
-        early_stop: Optional state indices to include without recomputing.
-
-    Returns:
-        Set of state names in the pre-image.
-    """
+    """States where coalition can reach state_set in one step."""
     T_idx = state_names_to_indices(cgs, state_set)
-    A = cgs.get_agents_from_coalition(coalition)
+    A = cgs_actions.get_agents_from_coalition(coalition)
 
     graph = cgs.graph
     num_states = len(graph)
     result = set()
-    use_bit_vector = should_use_bit_vectors(num_states)
+    use_bit_vector = num_states >= BIT_VECTOR_THRESHOLD
     if use_bit_vector:
         T_bits = BitVectorStateSet(num_states, T_idx)
 

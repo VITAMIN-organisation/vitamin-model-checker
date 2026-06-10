@@ -169,7 +169,7 @@ def pruning(
 
         if pruning_flag == 0:
             pruning_flag = idle_pruning(
-                cgs, tree, set(cgs.get_states()), "I", strategy_index, model_path
+                cgs, tree, set(cgs.states), "I", strategy_index, model_path
             )
 
         reset_pruned_flag(tree)
@@ -177,9 +177,7 @@ def pruning(
     rename_nodes(tree)
     tree_states = get_states_from_tree(tree)
 
-    unwinded_CGS = tree_to_initial_CGS(
-        tree, tree_states, cgs.get_number_of_agents(), height
-    )
+    unwinded_CGS = tree_to_initial_CGS(tree, tree_states, height)
 
     pruned_cgs = build_cgs_from_tree(cgs, tree, tree_states, unwinded_CGS)
     result = model_checking(CTLformula, model_path, preloaded_model=pruned_cgs)

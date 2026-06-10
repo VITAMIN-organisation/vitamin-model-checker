@@ -46,9 +46,7 @@ class Node:
         self.predecessors = (
             [str(p) for p in predecessors] if predecessors is not None else []
         )
-        self.label_row = self.get_label_row_list(
-            cgs.get_states(), cgs.get_matrix_proposition()
-        )
+        self.label_row = self.get_label_row_list(cgs.states, cgs.matrix_prop)
         self.actions: List[str] = []
         self.old_state = name
         self.pruned = False

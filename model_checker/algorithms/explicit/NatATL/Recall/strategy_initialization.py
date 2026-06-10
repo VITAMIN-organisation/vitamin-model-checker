@@ -19,6 +19,7 @@ from model_checker.models.model_factory import (
 )
 from model_checker.parsers.game_structures.cgs import (
     CGSProtocol,
+    cgs_actions,
     cgs_validation,
 )
 
@@ -76,13 +77,16 @@ def initialize(
     logger.debug("Converted CTL formula: %s", CTLformula)
 
     k = get_k_value(formula)
-    logger.debug("States: %s", model_parser.get_states())
-    logger.debug("Proposition matrix: %s", model_parser.get_matrix_proposition())
+    logger.debug("States: %s", model_parser.states)
+    logger.debug("Proposition matrix: %s", model_parser.matrix_prop)
 
     agents = get_agents_from_natatl(formula)
     logger.debug("Involved agents: %s", agents)
 
-    actions_per_agent = model_parser.get_actions(agents)
+    cgs_actions.validate_agent_numbers(agents, model_parser.get_number_of_agents())
+    actions_per_agent = cgs_actions.extract_actions_for_agents(
+        model_parser.graph, agents
+    )
     logger.debug("Actions per agent: %s", actions_per_agent)
 
     agent_actions = {}
@@ -90,7 +94,7 @@ def initialize(
         agent_actions[f"actions_{agent_key}"] = actions_per_agent[agent_key]
 
     actions_list = list(agent_actions.values())
-    atomic_propositions = model_parser.get_atomic_prop()
+    atomic_propositions = model_parser.atomic_propositions
     logger.debug("Atomic propositions: %s", atomic_propositions)
 
     return (

@@ -3,7 +3,6 @@ from typing import Any, Dict
 from model_checker.algorithms.explicit.IATL.iatl_model_checking import (
     process_modelCheckingIATL_model_from_file,
 )
-from model_checker.parsers.formulas.IATL.parser import IATLParser
 
 
 def model_checking(formula: str, filename: str) -> Dict[str, Any]:

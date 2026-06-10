@@ -1,7 +1,8 @@
-"""CGS API: get_number_of_agents error handling, get_actions validation and extraction."""
+"""CGS API: get_number_of_agents error handling, action extraction from transitions."""
 
 import pytest
 
+from model_checker.parsers.game_structures.cgs import cgs_actions
 from model_checker.tests.helpers.model_helpers import load_test_model
 
 
@@ -17,22 +18,28 @@ class TestCGSNumberOfAgents:
 
 
 @pytest.mark.unit
-class TestCGSGetActions:
-    """get_actions validation and extraction from transitions."""
+class TestCGSActionExtraction:
+    """Action extraction from transition matrix via cgs_actions."""
 
-    def test_get_actions_validation(self, cgs_simple_parser):
-        """get_actions returns dict of agent actions; no invalid-id branch exercised here."""
+    def test_extract_actions_returns_dict(self, cgs_simple_parser):
+        """extract_actions_for_agents returns dict of agent actions."""
         num_agents = cgs_simple_parser.get_number_of_agents()
         all_agents = list(range(1, num_agents + 1))
-        result = cgs_simple_parser.get_actions(all_agents)
+        cgs_actions.validate_agent_numbers(all_agents, num_agents)
+        result = cgs_actions.extract_actions_for_agents(
+            cgs_simple_parser.graph, all_agents
+        )
         assert isinstance(result, dict)
         for _agent_key, agent_actions in result.items():
             assert "I" not in agent_actions
 
-    def test_get_actions_extracts_from_transitions(self, cgs_simple_parser):
+    def test_extract_actions_from_transitions(self, cgs_simple_parser):
         num_agents = cgs_simple_parser.get_number_of_agents()
         agents = list(range(1, num_agents + 1))
-        actions = cgs_simple_parser.get_actions(agents)
+        cgs_actions.validate_agent_numbers(agents, num_agents)
+        actions = cgs_actions.extract_actions_for_agents(
+            cgs_simple_parser.graph, agents
+        )
         all_action_strings = set()
         for row in cgs_simple_parser.graph:
             for elem in row:

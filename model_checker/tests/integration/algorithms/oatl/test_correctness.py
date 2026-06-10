@@ -82,4 +82,4 @@ class TestOATLSemantics:
         assert "error" not in result
         states = extract_states_from_result(result)
         assert states is not None
-        assert states <= set(oatl_model.get_states())
+        assert states <= set(oatl_model.states)

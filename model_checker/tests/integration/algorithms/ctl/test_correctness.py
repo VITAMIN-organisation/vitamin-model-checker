@@ -63,7 +63,7 @@ class TestCTLEUAuErSemantics:
         assert "error" not in result
         states = extract_states_from_result(result)
         assert states is not None
-        assert states <= set(cgs_simple_parser.get_states())
+        assert states <= set(cgs_simple_parser.states)
 
     def test_au_operator_returns_state_set(self, cgs_simple_parser):
         """A[p U q] (universal until) returns a state set without error."""
@@ -71,7 +71,7 @@ class TestCTLEUAuErSemantics:
         assert "error" not in result
         states = extract_states_from_result(result)
         assert states is not None
-        assert states <= set(cgs_simple_parser.get_states())
+        assert states <= set(cgs_simple_parser.states)
 
     def test_er_operator_returns_state_set_or_parseable(self, cgs_simple_parser):
         """E[p R q] (existential release): either returns a state set or parser reports syntax (ER support may vary)."""
@@ -79,7 +79,7 @@ class TestCTLEUAuErSemantics:
         if "error" not in result:
             states = extract_states_from_result(result)
             assert states is not None
-            assert states <= set(cgs_simple_parser.get_states())
+            assert states <= set(cgs_simple_parser.states)
         else:
             assert (
                 "syntax" in result.get("res", "").lower()

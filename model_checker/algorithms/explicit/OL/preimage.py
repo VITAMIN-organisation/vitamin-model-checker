@@ -1,78 +1,149 @@
-"""Cost-bounded pre-image computation for OL."""
+"""OL cost-bounded semantics via shortest-path computations.
+
+Operator meaning under demonic linear cost bounds:
+  F: min accumulated cost to reach phi is within the bound.
+  G: phi holds and min cost to leave phi exceeds the bound.
+  X: every transition within the step bound stays in phi.
+  U: min cost to reach psi with the prefix in phi is within the bound.
+  R: dual of (not phi) U (not psi); W: psi R (phi or psi).
+"""
 
 from typing import List, Set
 
-from model_checker.algorithms.explicit.shared.state_utils import (
-    state_names_to_indices,
-)
+from model_checker.algorithms.explicit.shared.cost_utils import transition_cell_cost
+from model_checker.algorithms.explicit.shared.state_utils import state_names_to_indices
 
 
-def build_pre_set_array(cgs) -> List[Set[int]]:
-    """Build per-state list of predecessor state indices."""
-    graph = cgs.graph
-    n = len(graph)
-    pre_sets = [set() for _ in range(n)]
-    for i in range(n):
-        for j in range(n):
-            if graph[i][j] != 0:
-                pre_sets[j].add(i)
-    return pre_sets
-
-
-def get_pre_image(pre_sets: List[Set[int]], target_indices: Set[int]) -> Set[int]:
-    """Return set of predecessor indices for the given target indices."""
-    result = set()
+def _min_cost_to_targets(cgs, target_indices: Set[int]) -> List[float]:
+    """Minimum accumulated cost from each state to any target index."""
+    n = len(cgs.graph)
+    min_cost = [float("inf")] * n
     for idx in target_indices:
-        result.update(pre_sets[idx])
+        min_cost[idx] = 0.0
+
+    for _ in range(n):
+        updated = False
+        for i in range(n):
+            for j in range(n):
+                cell = cgs.graph[i][j]
+                if cell in (0, "0"):
+                    continue
+                candidate = transition_cell_cost(cgs, i, cell) + min_cost[j]
+                if candidate < min_cost[i]:
+                    min_cost[i] = candidate
+                    updated = True
+        if not updated:
+            break
+    return min_cost
+
+
+def states_within_cost(cgs, target_states: Set[str], max_cost: int) -> Set[str]:
+    """States that can reach target_states with accumulated cost <= max_cost."""
+    if not target_states:
+        return set()
+    target_indices = state_names_to_indices(cgs, target_states)
+    if not target_indices:
+        return set()
+    min_cost = _min_cost_to_targets(cgs, target_indices)
+    return {
+        cgs.get_state_name_by_index(i)
+        for i, cost in enumerate(min_cost)
+        if cost <= max_cost
+    }
+
+
+def states_with_next_in(cgs, target_states: Set[str], max_step_cost: int) -> Set[str]:
+    """States where every step within max_step_cost stays in target_states."""
+    target_indices = state_names_to_indices(cgs, target_states)
+    if not target_indices:
+        return set()
+
+    graph = cgs.graph
+    result: Set[str] = set()
+    for i in range(len(graph)):
+        has_affordable_step = False
+        for j in range(len(graph)):
+            cell = graph[i][j]
+            if cell in (0, "0"):
+                continue
+            if transition_cell_cost(cgs, i, cell) > max_step_cost:
+                continue
+            has_affordable_step = True
+            if j not in target_indices:
+                break
+        else:
+            if has_affordable_step:
+                result.add(cgs.get_state_name_by_index(i))
     return result
 
 
-def _edge_cost_to_float(cell: object) -> float:
-    """
-    Convert a graph cell to a numeric cost for OL.
-
-    OL expects costCGS with Transition_With_Costs: graph cells are 0 or numeric
-    (int/float or numeric string). Non-numeric or non-edge cells are treated as 0.
-    """
-    if cell is None or cell == 0 or cell == "0":
-        return 0.0
-    if isinstance(cell, (int, float)):
-        return float(cell)
-    if isinstance(cell, str) and cell != "*":
-        try:
-            return float(cell)
-        except (ValueError, TypeError):
-            pass
-    return 0.0
+def states_globally_in(cgs, phi_states: Set[str], max_cost: int) -> Set[str]:
+    """States in phi where the adversary cannot reach outside phi within max_cost."""
+    phi = {str(s) for s in phi_states}
+    all_states = {str(s) for s in cgs.all_states_set}
+    violation_targets = all_states - phi
+    if not violation_targets:
+        return phi
+    reach_violation = states_within_cost(cgs, violation_targets, max_cost)
+    return phi - reach_violation
 
 
-def triangle_check(
-    cgs, state_idx: int, cost_bound: int, target_indices: Set[int]
-) -> bool:
-    """Return True if total cost from state_idx to states outside target_indices is <= cost_bound."""
-    graph = cgs.graph
-    n = len(graph)
-    total_cost = 0.0
+def _min_cost_until(cgs, phi_states: Set[str], psi_states: Set[str]) -> List[float]:
+    """Minimum cost to reach psi while visiting only phi on the prefix."""
+    n = len(cgs.graph)
+    phi_indices = state_names_to_indices(cgs, phi_states)
+    psi_indices = state_names_to_indices(cgs, psi_states)
+    allowed = phi_indices | psi_indices
 
-    for r in range(n):
-        if r not in target_indices:
-            cell = graph[state_idx][r]
-            if cell != 0 and cell != "0":
-                total_cost += _edge_cost_to_float(cell)
+    min_cost = [float("inf")] * n
+    for idx in psi_indices:
+        min_cost[idx] = 0.0
 
-    return total_cost <= cost_bound
+    for _ in range(n):
+        updated = False
+        for i in range(n):
+            if i in psi_indices or i not in phi_indices:
+                continue
+            for j in range(n):
+                cell = cgs.graph[i][j]
+                if cell in (0, "0") or j not in allowed:
+                    continue
+                candidate = transition_cell_cost(cgs, i, cell) + min_cost[j]
+                if candidate < min_cost[i]:
+                    min_cost[i] = candidate
+                    updated = True
+        if not updated:
+            break
+    return min_cost
 
 
-def triangle_down(
-    cgs, cost_bound: int, target_states: Set[str], pre_sets: List[Set[int]]
+def states_until(
+    cgs, phi_states: Set[str], psi_states: Set[str], max_cost: int
 ) -> Set[str]:
-    """Cost-bounded pre-image: states that can reach target_states within cost_bound."""
-    target_indices = state_names_to_indices(cgs, target_states)
-    potential_pre = get_pre_image(pre_sets, target_indices)
+    """States from which psi is reachable within max_cost while phi holds on the prefix."""
+    min_cost = _min_cost_until(cgs, phi_states, psi_states)
+    return {
+        cgs.get_state_name_by_index(i)
+        for i, cost in enumerate(min_cost)
+        if cost <= max_cost
+    }
 
-    winning_indices = set()
-    for s_idx in potential_pre:
-        if triangle_check(cgs, s_idx, cost_bound, target_indices):
-            winning_indices.add(s_idx)
 
-    return {cgs.get_state_name_by_index(idx) for idx in winning_indices}
+def states_release(
+    cgs, phi_states: Set[str], psi_states: Set[str], max_cost: int
+) -> Set[str]:
+    """phi R psi as the dual of (not phi) U (not psi) under the same cost bound."""
+    all_states = {str(s) for s in cgs.all_states_set}
+    phi = {str(s) for s in phi_states}
+    psi = {str(s) for s in psi_states}
+    witness = states_until(cgs, all_states - phi, all_states - psi, max_cost)
+    return all_states - witness
+
+
+def states_weak(
+    cgs, phi_states: Set[str], psi_states: Set[str], max_cost: int
+) -> Set[str]:
+    """phi W psi equals psi R (phi or psi) under the same cost bound."""
+    psi = {str(s) for s in psi_states}
+    phi_or_psi = {str(s) for s in phi_states} | psi
+    return states_release(cgs, phi_or_psi, psi, max_cost)

@@ -2,28 +2,19 @@
 
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, Union
 
+from model_checker.parsers.game_structures.cgs import cgs_actions
+
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS
-
-
-def _build_atom_dict(atom_values: List[Tuple[str, float]]) -> Dict[str, float]:
-    """Build state -> value dict from list of (state, value) pairs."""
-    return dict(atom_values)
 
 
 def build_transition_cache(
     cgs: "CGS", coalition: str
 ) -> Dict[int, Dict[frozenset, List[int]]]:
-    """Build per-state cache: coalition_move -> list of destination indices.
-
-    Args:
-        cgs: CGS model.
-        coalition: Coalition string.
-
-    Returns:
-        Dict from state index to {coalition_move: [dest_indices]}.
-    """
-    agents = cgs.get_agents_from_coalition(coalition)
+    """Build a per-state cache mapping coalition moves to destination indices."""
+    agents = cgs_actions.get_agents_from_coalition(coalition)
+    formatted_agents = cgs_actions.format_agents(agents)
+    num_agents = cgs.get_number_of_agents()
     graph = cgs.graph
     cache = {}
 
@@ -33,7 +24,11 @@ def build_transition_cache(
             if action != 0:
                 action_list = cgs.build_action_list(action)
                 for move in action_list:
-                    coalition_move = frozenset(cgs.get_coalition_action({move}, agents))
+                    coalition_move = frozenset(
+                        cgs_actions.get_coalition_actions(
+                            {move}, formatted_agents, num_agents
+                        )
+                    )
                     if coalition_move not in moves_by_coalition:
                         moves_by_coalition[coalition_move] = []
                     moves_by_coalition[coalition_move].append(dest_idx)
@@ -49,25 +44,23 @@ def evaluate_max_strategy(
     atom_dict: Dict[str, float],
     transition_cache: Dict = None,
 ) -> float:
-    """Max over coalition moves of min over successors of atom value at state_idx.
-
-    Args:
-        cgs: CGS model.
-        agents: Coalition agents.
-        state_idx: State to evaluate.
-        atom_dict: State name -> real value.
-        transition_cache: Optional cache from build_transition_cache.
-    """
+    """Return the max-min coalition strategy value at the given state."""
     if transition_cache and state_idx in transition_cache:
         moves_by_coalition = transition_cache[state_idx]
     else:
         graph = cgs.graph
+        formatted_agents = cgs_actions.format_agents(agents)
+        num_agents = cgs.get_number_of_agents()
         moves_by_coalition = {}
         for dest_idx, action in enumerate(graph[state_idx]):
             if action != 0:
                 action_list = cgs.build_action_list(action)
                 for move in action_list:
-                    coalition_move = frozenset(cgs.get_coalition_action({move}, agents))
+                    coalition_move = frozenset(
+                        cgs_actions.get_coalition_actions(
+                            {move}, formatted_agents, num_agents
+                        )
+                    )
                     if coalition_move not in moves_by_coalition:
                         moves_by_coalition[coalition_move] = []
                     moves_by_coalition[coalition_move].append(dest_idx)
@@ -95,26 +88,16 @@ def pre(
     atom_values: Union[List[Tuple[str, float]], str],
     transition_cache: Optional[Dict] = None,
 ) -> List[Tuple[str, float]]:
-    """Pre-image for ATLF: each state gets max-min value over coalition/successors.
-
-    Args:
-        cgs: CGS model.
-        coalition: Coalition string.
-        atom_values: List of (state, value) or string repr; defines successor values.
-        transition_cache: Optional cache from build_transition_cache(cgs, coalition).
-
-    Returns:
-        List of (state, value) for the pre-image.
-    """
-    agents = cgs.get_agents_from_coalition(coalition)
-    states = cgs.get_states()
+    """Compute the ATLF pre-image as a list of (state, value) pairs."""
+    agents = cgs_actions.get_agents_from_coalition(coalition)
+    states = cgs.states
 
     if isinstance(atom_values, str):
         import ast
 
         atom_values = ast.literal_eval(atom_values)
 
-    atom_dict = _build_atom_dict(atom_values)
+    atom_dict = dict(atom_values)
     if transition_cache is None:
         transition_cache = build_transition_cache(cgs, coalition)
 

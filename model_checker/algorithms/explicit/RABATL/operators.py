@@ -6,7 +6,6 @@ This module contains handler functions for all RABATL operators, both unary
 """
 
 from model_checker.algorithms.explicit.RABATL.preimage import pre
-from model_checker.algorithms.explicit.shared import state_set_to_str
 from model_checker.algorithms.explicit.shared.bound_utils import (
     diff_bound,
     extract_coalition_and_bound,
@@ -34,7 +33,7 @@ def handle_coalition_globally(cgs, node):
             return pre(cgs, coalition, p, bound) & target_states
 
         result = greatest_fixpoint(cgs.all_states_set.copy(), update)
-        node.value = state_set_to_str(result)
+        node.value = str(tuple(sorted({str(s) for s in result})))
     else:
         p = set()
         curr_bound_p = [0] * len(bound)
@@ -46,14 +45,16 @@ def handle_coalition_globally(cgs, node):
                 t = pre(cgs, coalition, p, [0] * len(bound)) & target_states
             if not inc_bound(curr_bound_p, bound):
                 break
-        node.value = state_set_to_str(p)
+        node.value = str(tuple(sorted({str(s) for s in p})))
 
 
 def handle_coalition_next(cgs, node):
     """Handle <J><b>X operator: coalition can force next state within resource bounds."""
     coalition, bound = extract_coalition_and_bound(node.value)
     target_states = parse_state_set_literal(node.left.value)
-    node.value = state_set_to_str(pre(cgs, coalition, target_states, bound))
+    node.value = str(
+        tuple(sorted({str(s) for s in pre(cgs, coalition, target_states, bound)}))
+    )
 
 
 def handle_coalition_eventually(cgs, node):
@@ -68,7 +69,7 @@ def handle_coalition_eventually(cgs, node):
             return pre(cgs, coalition, p, bound) & all_states
 
         result = least_fixpoint(target_states, update)
-        node.value = state_set_to_str(result)
+        node.value = str(tuple(sorted({str(s) for s in result})))
     else:
         p = set()
         curr_bound_p = [0] * len(bound)
@@ -80,7 +81,7 @@ def handle_coalition_eventually(cgs, node):
                 t = pre(cgs, coalition, p, [0] * len(bound)) & all_states
             if not inc_bound(curr_bound_p, bound):
                 break
-        node.value = state_set_to_str(p)
+        node.value = str(tuple(sorted({str(s) for s in p})))
 
 
 # ---------------------------------------------------------
@@ -100,7 +101,7 @@ def handle_coalition_until(cgs, node):
             return pre(cgs, coalition, p, bound) & states1
 
         result = least_fixpoint(states2, update)
-        node.value = state_set_to_str(result)
+        node.value = str(tuple(sorted({str(s) for s in result})))
     else:
         p = set()
         curr_bound_p = [0] * len(bound)
@@ -112,4 +113,4 @@ def handle_coalition_until(cgs, node):
                 t = pre(cgs, coalition, p, [0] * len(bound)) & states1
             if not inc_bound(curr_bound_p, bound):
                 break
-        node.value = state_set_to_str(p)
+        node.value = str(tuple(sorted({str(s) for s in p})))

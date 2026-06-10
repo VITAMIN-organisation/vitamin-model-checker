@@ -38,11 +38,6 @@ _BINARY = {
 }
 
 
-def _get_atl_parser() -> Any:
-    """Return the shared ATL parser instance."""
-    return FormulaParserFactory.get_parser_instance("ATL")
-
-
 def _atl_unary_key(parser_instance: Any, val: Any) -> Optional[str]:
     if parser_instance.verify("NOT", val):
         return "NOT"
@@ -76,26 +71,14 @@ def _atl_binary_key(parser_instance: Any, val: Any) -> Optional[str]:
 def solve_tree(
     cgs: "CGS", node: Any, transition_cache: Optional[Dict[str, Any]] = None
 ) -> None:
-    """
-    Recursively solve the formula tree bottom-up.
-
-    Formula is parsed into a binary tree structure. Leaf nodes are atomic
-    propositions (resolved to state sets). Internal nodes apply operators
-    to combine child results. Each node's value becomes the set of states
-    satisfying that subformula.
-
-    Args:
-        cgs: The CGS model instance
-        node: Current tree node to evaluate
-        transition_cache: Optional pre-computed transitions (for performance)
-    """
+    """Evaluate the formula tree bottom-up, storing satisfying states at each node."""
     if node.left is not None:
         solve_tree(cgs, node.left, transition_cache)
     if node.right is not None:
         solve_tree(cgs, node.right, transition_cache)
 
     val = node.value
-    parser_instance = _get_atl_parser()
+    parser_instance = FormulaParserFactory.get_parser_instance("ATL")
     if node.right is None:
         key = _atl_unary_key(parser_instance, val)
         if key and key in _UNARY:

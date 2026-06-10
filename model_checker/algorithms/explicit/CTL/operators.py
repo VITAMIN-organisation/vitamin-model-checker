@@ -16,10 +16,6 @@ from model_checker.algorithms.explicit.CTL.preimage import (
     pre_image_exist,
     pre_release_universal,
 )
-from model_checker.algorithms.explicit.shared import (
-    normalize_state_set,
-    state_set_to_str,
-)
 from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_and as _bool_and,
 )
@@ -45,7 +41,7 @@ if TYPE_CHECKING:
 
 def handle_not(cgs: "CGS", node: Any) -> None:
     """Handle NOT operator: complement of child's state set."""
-    _bool_not(cgs, node, normalize_result=False)
+    _bool_not(cgs, node)
 
 
 def handle_ex(cgs: "CGS", node: Any) -> None:
@@ -55,17 +51,17 @@ def handle_ex(cgs: "CGS", node: Any) -> None:
         cgs.get_reverse_index() if hasattr(cgs, "get_reverse_index") else None
     )
     edges = cgs.get_edges()
-    result = normalize_state_set(
-        pre_image_exist(edges, states, reverse_index=reverse_index)
-    )
-    node.value = state_set_to_str(result)
+    result = {
+        str(s) for s in pre_image_exist(edges, states, reverse_index=reverse_index)
+    }
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 def handle_ax(cgs: "CGS", node: Any) -> None:
     """Handle AX operator: all next states satisfy phi."""
     states = parse_state_set_literal(node.left.value)
-    result = normalize_state_set(pre_image_all(cgs.get_edges(), cgs.states, states))
-    node.value = state_set_to_str(result)
+    result = {str(s) for s in pre_image_all(cgs.get_edges(), cgs.states, states)}
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 def handle_ef(cgs: "CGS", node: Any) -> None:
@@ -80,7 +76,7 @@ def handle_ef(cgs: "CGS", node: Any) -> None:
         return T.union(pre_image_exist(edges, T, reverse_index=reverse_index))
 
     result = least_fixpoint(target, update)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 def _compute_af(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
@@ -103,7 +99,7 @@ def _compute_af(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
 
 def handle_af(cgs: "CGS", node: Any) -> None:
     """Handle AF operator: all paths eventually reach phi."""
-    node.value = state_set_to_str(_compute_af(cgs, node))
+    node.value = str(tuple(sorted({str(s) for s in _compute_af(cgs, node)})))
 
 
 def _compute_eg(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
@@ -125,7 +121,7 @@ def _compute_eg(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
 
 def handle_eg(cgs: "CGS", node: Any) -> None:
     """Handle EG operator: there exists a path where phi holds globally."""
-    node.value = state_set_to_str(_compute_eg(cgs, node))
+    node.value = str(tuple(sorted({str(s) for s in _compute_eg(cgs, node)})))
 
 
 def handle_ag(cgs: "CGS", node: Any) -> None:
@@ -138,15 +134,15 @@ def handle_ag(cgs: "CGS", node: Any) -> None:
         return T.union(pre_image_exist(edges, T))
 
     ef_not_phi = least_fixpoint(not_phi, update)
-    node.value = state_set_to_str(all_states - ef_not_phi)
+    node.value = str(tuple(sorted({str(s) for s in all_states - ef_not_phi})))
 
 
 def handle_ar(cgs: "CGS", node: Any) -> None:
     """Handle AR operator: universal release A(phi R psi)."""
     phi_states = parse_state_set_literal(node.left.value)
     psi_states = parse_state_set_literal(node.right.value)
-    result = normalize_state_set(pre_release_universal(cgs, phi_states, psi_states))
-    node.value = state_set_to_str(result)
+    result = {str(s) for s in pre_release_universal(cgs, phi_states, psi_states)}
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 # ---------------------------------------------------------
@@ -156,17 +152,17 @@ def handle_ar(cgs: "CGS", node: Any) -> None:
 
 def handle_or(cgs: "CGS", node: Any) -> None:
     """Handle OR operator: disjunction of two formulas."""
-    _bool_or(cgs, node, normalize_result=True)
+    _bool_or(cgs, node)
 
 
 def handle_and(cgs: "CGS", node: Any) -> None:
     """Handle AND operator: conjunction of two formulas."""
-    _bool_and(cgs, node, normalize_result=True)
+    _bool_and(cgs, node)
 
 
 def handle_implies(cgs: "CGS", node: Any) -> None:
     """Handle IMPLIES operator: phi -> psi = not phi or psi."""
-    _bool_implies(cgs, node, normalize_result=False)
+    _bool_implies(cgs, node)
 
 
 def handle_eu(cgs: "CGS", node: Any) -> None:
@@ -186,12 +182,12 @@ def handle_eu(cgs: "CGS", node: Any) -> None:
         )
 
     result = least_fixpoint(psi_states, update)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 def _compute_au(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
     """Compute A(phi U psi) = mu Y. psi or (phi and AX Y). Returns the state set."""
-    phi_states = normalize_state_set(parse_state_set_literal(node.left.value))
+    phi_states = {str(s) for s in parse_state_set_literal(node.left.value)}
     psi_states = parse_state_set_literal(node.right.value)
     all_states = cgs.all_states_set
     edges = cached_edges if cached_edges is not None else cgs.get_edges()
@@ -204,7 +200,7 @@ def _compute_au(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
 
 def handle_au(cgs: "CGS", node: Any) -> None:
     """Handle AU operator: all paths satisfy phi until psi."""
-    node.value = state_set_to_str(_compute_au(cgs, node))
+    node.value = str(tuple(sorted({str(s) for s in _compute_au(cgs, node)})))
 
 
 def handle_er(cgs: "CGS", node: Any) -> None:
@@ -222,4 +218,4 @@ def handle_er(cgs: "CGS", node: Any) -> None:
         )
 
     a_not_phi_until = least_fixpoint(not_psi, update)
-    node.value = state_set_to_str(all_states - a_not_phi_until)
+    node.value = str(tuple(sorted({str(s) for s in all_states - a_not_phi_until})))

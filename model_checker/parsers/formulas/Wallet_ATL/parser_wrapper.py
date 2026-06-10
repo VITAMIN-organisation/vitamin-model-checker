@@ -5,8 +5,10 @@ This file is managed by the VITAMIN Module Integrator.
 """
 
 from typing import Any
+
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 from model_checker.parsers.formulas.Wallet_ATL.parser import Wallet_ATLParser
+
 
 class Wallet_ATLParserWrapper(BaseLogicParser):
     """Bridge for Wallet_ATLParser to VMC BaseLogicParser."""

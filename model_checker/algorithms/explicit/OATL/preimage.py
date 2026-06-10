@@ -3,13 +3,13 @@
 from typing import Any, Dict, Set, Tuple
 
 from model_checker.algorithms.explicit.shared.bit_vector import (
+    BIT_VECTOR_THRESHOLD,
     BitVectorStateSet,
-    should_use_bit_vectors,
 )
 from model_checker.algorithms.explicit.shared.state_utils import (
     state_names_to_indices,
 )
-from model_checker.parsers.game_structures.cgs import CostCGSProtocol
+from model_checker.parsers.game_structures.cgs import CostCGSProtocol, cgs_actions
 
 _cost_cache: Dict[Tuple[str, str], float] = {}
 _base_action_cache: Dict[Tuple[str, tuple], str] = {}
@@ -61,14 +61,18 @@ def _get_cached_base_action(cgs, action: str, agents: Set[str]) -> str:
     if cache_key in _base_action_cache:
         return _base_action_cache[cache_key]
 
-    base_action = cgs.get_base_action(action, agents)
+    base_action = cgs_actions.get_coalition_actions(
+        {action},
+        cgs_actions.format_agents(agents),
+        cgs.get_number_of_agents(),
+    ).pop()
     _base_action_cache[cache_key] = base_action
     return base_action
 
 
 def D(cgs, source_state_name: str, coalition: str, safe_states: Set[str]) -> Set[str]:
     """Actions for coalition from source_state that keep the next state in safe_states."""
-    agents = cgs.get_agents_from_coalition(coalition)
+    agents = cgs_actions.get_agents_from_coalition(coalition)
     source_idx = cgs.get_index_by_state_name(source_state_name)
     safe_indices = state_names_to_indices(cgs, safe_states)
 
@@ -76,7 +80,7 @@ def D(cgs, source_state_name: str, coalition: str, safe_states: Set[str]) -> Set
     num_states = len(graph)
     winning_actions = set()
 
-    use_bit_vector = should_use_bit_vectors(num_states)
+    use_bit_vector = num_states >= BIT_VECTOR_THRESHOLD
     if use_bit_vector:
         safe_bits = BitVectorStateSet(num_states, safe_indices)
 
@@ -176,15 +180,7 @@ def cross(
     target_states: Set[str],
     early_stop: Set[str] = None,
 ) -> Set[str]:
-    """Pre-image for OATL: states that can reach target_states in one step within max_cost.
-
-    Args:
-        cgs: Cost CGS model.
-        max_cost: Maximum cost per step.
-        coalition: Coalition string.
-        target_states: Target state names.
-        early_stop: State names to skip (e.g. already in fixpoint).
-    """
+    """States that can reach target_states in one step within max_cost."""
     result = set()
     potential_pre = get_pre_image(cgs, target_states)
 

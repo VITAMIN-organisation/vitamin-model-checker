@@ -134,7 +134,7 @@ def existential_natatl_sequential(
 
     while not found_solution and i <= k:
         try:
-            tree = build_tree_from_CGS(cgs, cgs.get_states(), height)
+            tree = build_tree_from_CGS(cgs, cgs.states, height)
         except Exception:
             return (False, [], height, cgs)
 
@@ -182,7 +182,7 @@ def existential_natatl_alternated(
 
     while not found_solution and i <= k:
         try:
-            tree = build_tree_from_CGS(cgs, cgs.get_states(), height)
+            tree = build_tree_from_CGS(cgs, cgs.states, height)
         except Exception:
             return False
 

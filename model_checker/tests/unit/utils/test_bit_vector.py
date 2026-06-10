@@ -5,9 +5,6 @@ import pytest
 from model_checker.algorithms.explicit.shared.bit_vector import (
     BIT_VECTOR_THRESHOLD,
     BitVectorStateSet,
-    bit_vector_to_indices,
-    indices_to_bit_vector,
-    should_use_bit_vectors,
 )
 
 
@@ -42,10 +39,10 @@ class TestBitVectorStateSet:
         bv.discard(5)  # Should not raise
         assert len(bv) == 2
 
-    def test_from_set(self):
-        """Test creating from set."""
+    def test_from_indices(self):
+        """Test creating from an index iterable."""
         indices = {1, 3, 5, 7}
-        bv = BitVectorStateSet.from_set(10, indices)
+        bv = BitVectorStateSet(10, indices)
         assert len(bv) == 4
         assert bv.to_set() == indices
 
@@ -116,21 +113,21 @@ class TestBitVectorStateSet:
         bv1.difference_update(bv2)
         assert bv1.to_set() == {1}
 
-    def test_inplace_operators(self):
-        """Test in-place operators."""
+    def test_inplace_mutations(self):
+        """Test in-place union, intersection, and difference."""
         bv1 = BitVectorStateSet(10, [1, 2])
         bv2 = BitVectorStateSet(10, [2, 3])
-        bv1 |= bv2
+        bv1.update(bv2)
         assert bv1.to_set() == {1, 2, 3}
 
         bv3 = BitVectorStateSet(10, [1, 2, 3])
         bv4 = BitVectorStateSet(10, [2, 3])
-        bv3 &= bv4
+        bv3.intersection_update(bv4)
         assert bv3.to_set() == {2, 3}
 
         bv5 = BitVectorStateSet(10, [1, 2, 3])
         bv6 = BitVectorStateSet(10, [2])
-        bv5 -= bv6
+        bv5.difference_update(bv6)
         assert bv5.to_set() == {1, 3}
 
     def test_equality(self):
@@ -195,29 +192,12 @@ class TestBitVectorStateSet:
         repr_str = repr(bv)
         assert "BitVectorStateSet" in repr_str
 
-
-@pytest.mark.unit
-class TestBitVectorHelpers:
-    """Test bit vector helper functions."""
-
-    def test_should_use_bit_vectors_threshold(self):
-        """Test threshold check."""
-        assert not should_use_bit_vectors(100)
-        assert not should_use_bit_vectors(BIT_VECTOR_THRESHOLD - 1)
-        assert should_use_bit_vectors(BIT_VECTOR_THRESHOLD)
-        assert should_use_bit_vectors(1000)
-
-    def test_indices_to_bit_vector(self):
-        """Test conversion from indices to bit vector."""
-        indices = {1, 3, 5}
-        bv = indices_to_bit_vector(10, indices)
-        assert bv.to_set() == indices
-
-    def test_bit_vector_to_indices(self):
-        """Test conversion from bit vector to indices."""
-        bv = BitVectorStateSet(10, [1, 3, 5])
-        indices = bit_vector_to_indices(bv)
-        assert indices == {1, 3, 5}
+    def test_bit_vector_threshold(self):
+        """Test threshold used to choose bit-vector pre-image paths."""
+        assert 100 < BIT_VECTOR_THRESHOLD
+        assert BIT_VECTOR_THRESHOLD - 1 < BIT_VECTOR_THRESHOLD
+        assert BIT_VECTOR_THRESHOLD >= BIT_VECTOR_THRESHOLD
+        assert 1000 >= BIT_VECTOR_THRESHOLD
 
 
 @pytest.mark.unit

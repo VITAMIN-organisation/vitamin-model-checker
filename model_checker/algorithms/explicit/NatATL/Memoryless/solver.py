@@ -1,9 +1,4 @@
-"""
-Solver module for NatATL Memoryless verification.
-
-This module orchestrates the strategy enumeration and verification loop,
-iterating through complexity bounds and checking strategies via pruning.
-"""
+"""Strategy enumeration and pruning loop for NatATL memoryless verification."""
 
 import logging
 from typing import Any, Dict, List
@@ -30,28 +25,7 @@ def solve_natatl_memoryless(
     cgs: CGSProtocol,
     model_path: str,
 ) -> Dict[str, Any]:
-    """
-    Solve NatATL Memoryless verification by enumerating and checking strategies.
-
-    This function implements the core verification loop:
-    1. Iterate through complexity bounds from 1 to k
-    2. For each bound, generate all possible strategies
-    3. For each strategy, apply pruning and verify the formula
-    4. Return the first winning strategy found (early termination)
-
-    Args:
-        k: Maximum complexity bound
-        agent_actions: Dictionary mapping agent keys to their available actions
-        actions_list: List of action lists for each agent
-        atomic_propositions: List of atomic propositions in the model
-        CTLformula: CTL formula to verify (converted from NatATL)
-        agents: List of agent numbers in the coalition
-        cgs: CGS model object
-        model_path: Path to model file
-
-    Returns:
-        Dictionary with Satisfiability, Complexity Bound, and Winning Strategy
-    """
+    """Search strategies up to complexity k; return the first one that passes pruning."""
     found_solution = False
     result: Dict[str, Any] = {}
 

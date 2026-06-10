@@ -1,102 +1,80 @@
-"""OL model checking: cost bounds, error cases and basic semantics."""
+"""OL integration tests: errors and cost-bounded semantics on fixtures."""
 
 import pytest
 
-from model_checker.algorithms.explicit.OL.OL import (
-    _core_ol_checking,
-    model_checking,
-)
-from model_checker.tests.helpers.model_helpers import (
-    extract_states_from_result,
-    load_test_model,
-)
+from model_checker.algorithms.explicit.OL.OL import model_checking
+
+
+def _initial_state_satisfied(result) -> bool:
+    init = str(result.get("initial_state", ""))
+    if ": True" in init:
+        return True
+    if ": False" in init:
+        return False
+    raise AssertionError(f"Unexpected initial_state field: {init!r}")
 
 
 @pytest.mark.unit
 @pytest.mark.model_checking
-class TestOLErrorHandling:
-    """Test OL error handling for invalid inputs."""
-
-    def test_ol_invalid_formula_syntax(self, test_data_dir):
-        """Test OL with invalid formula syntax."""
-        model_file = (
-            test_data_dir / "costCGS" / "OL" / "ol_2agents_medium_6states_costs.txt"
-        )
-
-        result = model_checking("INVALID_FORMULA", str(model_file))
+@pytest.mark.parametrize(
+    "formula, expect_error",
+    [
+        ("INVALID_FORMULA", True),
+        ("<J1> F nonexistent", True),
+        ("<JF r", True),
+        ("F r", True),
+        ("<J0> F r", True),
+    ],
+)
+def test_ol_rejects_invalid_input(test_data_dir, formula, expect_error):
+    model_file = (
+        test_data_dir / "costCGS" / "OL" / "ol_2agents_medium_6states_costs.txt"
+    )
+    result = model_checking(formula, str(model_file))
+    if expect_error:
         assert "error" in result or "Syntax error" in result.get("res", "")
-
-    def test_ol_nonexistent_atomic_proposition(self, test_data_dir):
-        """Test OL with non-existent atomic proposition."""
-        parser = load_test_model(
-            test_data_dir,
-            "costCGS/OL/ol_2agents_medium_6states_costs.txt",
-        )
-
-        # Use atomic proposition that doesn't exist
-        result = _core_ol_checking(parser, "<1><5>F nonexistent")
-        assert "error" in result or "does not exist" in result.get("res", "").lower()
-
-    def test_ol_invalid_coalition(self, test_data_dir):
-        """Test OL with invalid coalition (agent number out of range)."""
-        parser = load_test_model(
-            test_data_dir,
-            "costCGS/OL/ol_2agents_medium_6states_costs.txt",
-        )
-
-        result = _core_ol_checking(parser, "<99><5>F p")
-        assert "error" in result
-
-    def test_ol_missing_cost_bound(self, test_data_dir):
-        """Test OL with missing cost bound (should require cost bound)."""
-        parser = load_test_model(
-            test_data_dir,
-            "costCGS/OL/ol_2agents_medium_6states_costs.txt",
-        )
-
-        # OL requires cost bound syntax: <A><n>
-        # Missing cost bound should be invalid
-        result = _core_ol_checking(parser, "<1>F p")
-        assert "error" in result or "Syntax error" in result.get("res", "")
-
-    def test_ol_negative_cost_bound(self, test_data_dir):
-        """Test OL with negative cost bound (should be invalid)."""
-        parser = load_test_model(
-            test_data_dir,
-            "costCGS/OL/ol_2agents_medium_6states_costs.txt",
-        )
-
-        result = _core_ol_checking(parser, "<1><-5>F p")
-        assert "error" in result
+    else:
+        assert "error" not in result
 
 
 @pytest.mark.semantic
 @pytest.mark.model_checking
-class TestOLSemantics:
-    """Semantic OL tests using the standard OL fixture model."""
+@pytest.mark.parametrize(
+    "formula, expected",
+    [
+        ("<J1> F r", False),
+        ("<J2> F r", True),
+    ],
+)
+def test_ol_medium_fixture_reachability(test_data_dir, formula, expected):
+    """Min accumulated cost from s0 to r is 2 on the medium fixture."""
+    model_file = (
+        test_data_dir / "costCGS" / "OL" / "ol_2agents_medium_6states_costs.txt"
+    )
+    result = model_checking(formula, str(model_file))
+    assert _initial_state_satisfied(result) is expected
 
-    def test_ol_eventually_with_sufficient_cost_bound(self, test_data_dir):
-        """<J1>F r should hold in all states of the standard OL fixture (regression for known semantics)."""
-        model_file = (
-            test_data_dir / "costCGS" / "OL" / "ol_2agents_medium_6states_costs.txt"
-        )
 
-        result = model_checking("<J1>F r", str(model_file))
-        states = extract_states_from_result(result)
-
-        assert states == {"s0", "s1", "s2", "s3", "s4", "s5"}
-
-    def test_ol_eventually_other_atom(self, test_data_dir):
-        """<J1>F a on the same fixture returns a non-empty state set (a holds at s3, s5)."""
-        parser = load_test_model(
-            test_data_dir,
-            "costCGS/OL/ol_2agents_medium_6states_costs.txt",
-        )
-        result = _core_ol_checking(parser, "<J1>F a")
-        assert "error" not in result
-        assert "res" in result
-        states = extract_states_from_result(result)
-        assert states is not None
-        assert len(states) >= 1
-        assert states <= {"s0", "s1", "s2", "s3", "s4", "s5"}
-        assert "s5" in states
+@pytest.mark.semantic
+@pytest.mark.model_checking
+@pytest.mark.parametrize(
+    "formula, expected",
+    [
+        ("<J26> F goal", False),
+        ("<J27> F goal", True),
+        ("<J1> G safe", True),
+        ("<J2> G safe", False),
+        ("<J1> X safe", True),
+        ("<J1> X !goal", True),
+        ("<J30> safe U goal", False),
+        ("<J30> !goal U goal", True),
+        ("<J30> safe R goal", False),
+        ("<J30> !goal W goal", False),
+    ],
+)
+def test_ol_testvitamin_cost_bounded_operators(test_data_dir, formula, expected):
+    """Regression suite for cost-bounded OL operators on the testvitamin fixture."""
+    model_file = test_data_dir / "costCGS" / "OL" / "ol_testvitamin_2agents_8states.txt"
+    result = model_checking(formula, str(model_file))
+    assert "error" not in result
+    assert _initial_state_satisfied(result) is expected

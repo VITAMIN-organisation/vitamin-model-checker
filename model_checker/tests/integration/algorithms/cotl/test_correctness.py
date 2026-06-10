@@ -46,7 +46,7 @@ class TestCOTLCorrectness:
     ):
         """Model checker returns the exact expected state set for each model."""
         path = cotl_model_path
-        result, states = h.check_and_get_states(formula, path)
+        _, states = h.check_and_get_states(formula, path)
         assert (
             states == expected_states
         ), f"{model_id} {formula}: expected {expected_states}, got {states}"
@@ -57,7 +57,7 @@ class TestCOTLCorrectness:
 @pytest.mark.integration
 @pytest.mark.model_checking
 class TestCOTLDeterminism:
-    """Assert COTL output is deterministic (state_set_to_str uses sorted order); regression guard against str(set) or other non-deterministic serialization."""
+    """Assert COTL output is deterministic (sorted tuple serialization); regression guard against str(set)."""
 
     def test_same_formula_same_model_produces_identical_result(self, cotl_model_path):
         """Running the same formula on the same model multiple times yields identical state sets."""

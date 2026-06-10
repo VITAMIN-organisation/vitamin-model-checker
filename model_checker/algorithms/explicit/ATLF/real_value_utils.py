@@ -8,7 +8,7 @@ This module provides functions to manipulate real-valued state lists
 
 def set_value_tuple_list(cgs, value):
     """Assign a value to all tuples (state, value) in the list."""
-    return [(state, value) for state in cgs.get_states()]
+    return [(state, value) for state in cgs.states]
 
 
 def _to_dict(states_list):

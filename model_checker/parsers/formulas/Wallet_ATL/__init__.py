@@ -7,4 +7,4 @@ from .parser import (
 
 __all__ = ["Wallet_ATLParser", "Wallet_ATLFormulaParser"]
 
-METADATA = {'model_type': 'WalletCGS'}
+METADATA = {"model_type": "WalletCGS"}

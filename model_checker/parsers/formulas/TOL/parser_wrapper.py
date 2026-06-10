@@ -5,8 +5,10 @@ This file is managed by the VITAMIN Module Integrator.
 """
 
 from typing import Any
+
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 from model_checker.parsers.formulas.TOL.parser import TOLParser
+
 
 class TOLParserWrapper(BaseLogicParser):
     """Bridge for TOLParser to VMC BaseLogicParser."""

@@ -18,7 +18,7 @@ from model_checker.algorithms.explicit.NatATL.NatATLtoCTL import (
     get_k_value,
     natatl_to_ctl,
 )
-from model_checker.parsers.game_structures.cgs import CGS, cgs_validation
+from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,8 @@ def initialize(
     agents = get_agents_from_natatl(formula)
     logger.debug("Involved agents: %s", agents)
 
-    actions_per_agent = cgs.get_actions(agents)
+    cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
+    actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
     logger.debug("Actions per agent: %s", actions_per_agent)
 
     agent_actions = {}
@@ -76,7 +77,7 @@ def initialize(
         agent_actions[f"actions_{agent_key}"] = actions_per_agent[agent_key]
 
     actions_list = list(agent_actions.values())
-    atomic_propositions = cgs.get_atomic_prop()
+    atomic_propositions = cgs.atomic_propositions
     logger.debug("Atomic propositions: %s", atomic_propositions)
 
     return k, agent_actions, actions_list, atomic_propositions, CTLformula, agents, cgs

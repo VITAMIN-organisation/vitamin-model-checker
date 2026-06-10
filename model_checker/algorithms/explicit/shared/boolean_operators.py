@@ -1,55 +1,45 @@
-"""
-Shared boolean operator handlers for set-based model checkers.
+"""Boolean operators on formula tree nodes (AND, OR, NOT, IMPLIES)."""
 
-Used by ATL, CTL, RBATL, RABATL, OATL, OL. Node values are deterministic string
-reprs of state sets (parse_state_set_literal accepts set or str). These helpers
-parse, apply the set operation, and store the result via state_set_to_str.
-"""
+from typing import Any, Callable, Set
 
-from typing import Any
-
-from model_checker.algorithms.explicit.shared import (
-    normalize_state_set,
-    state_set_to_str,
-)
 from model_checker.engine.runner import parse_state_set_literal
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
 
-def handle_not(cgs: CGSProtocol, node: Any, normalize_result: bool = False) -> None:
+def _serialize_state_set(state_set) -> str:
+    return str(tuple(sorted({str(s) for s in state_set})))
+
+
+def _set_node_state_set(node: Any, state_set) -> None:
+    node.value = _serialize_state_set(state_set)
+
+
+def _binary_state_set(
+    node: Any, combine: Callable[[Set[str], Set[str]], Set[str]]
+) -> None:
+    left = parse_state_set_literal(node.left.value)
+    right = parse_state_set_literal(node.right.value)
+    _set_node_state_set(node, combine(left, right))
+
+
+def handle_not(cgs: CGSProtocol, node: Any) -> None:
     """Set node to the complement of the left child's state set."""
     states = parse_state_set_literal(node.left.value)
-    result = cgs.all_states_set - states
-    node.value = state_set_to_str(
-        normalize_state_set(result) if normalize_result else result
-    )
+    _set_node_state_set(node, cgs.all_states_set - states)
 
 
-def handle_or(cgs: CGSProtocol, node: Any, normalize_result: bool = False) -> None:
+def handle_or(_cgs: CGSProtocol, node: Any) -> None:
     """Set node to the union of left and right child state sets."""
-    states1 = parse_state_set_literal(node.left.value)
-    states2 = parse_state_set_literal(node.right.value)
-    result = states1 | states2
-    node.value = state_set_to_str(
-        normalize_state_set(result) if normalize_result else result
-    )
+    _binary_state_set(node, lambda left, right: left | right)
 
 
-def handle_and(cgs: CGSProtocol, node: Any, normalize_result: bool = False) -> None:
+def handle_and(_cgs: CGSProtocol, node: Any) -> None:
     """Set node to the intersection of left and right child state sets."""
-    states1 = parse_state_set_literal(node.left.value)
-    states2 = parse_state_set_literal(node.right.value)
-    result = states1 & states2
-    node.value = state_set_to_str(
-        normalize_state_set(result) if normalize_result else result
-    )
+    _binary_state_set(node, lambda left, right: left & right)
 
 
-def handle_implies(cgs: CGSProtocol, node: Any, normalize_result: bool = False) -> None:
+def handle_implies(cgs: CGSProtocol, node: Any) -> None:
     """Set node to (all_states - left) | right (phi -> psi = not phi or psi)."""
-    states1 = parse_state_set_literal(node.left.value)
-    states2 = parse_state_set_literal(node.right.value)
-    result = (cgs.all_states_set - states1) | states2
-    node.value = state_set_to_str(
-        normalize_state_set(result) if normalize_result else result
-    )
+    left = parse_state_set_literal(node.left.value)
+    right = parse_state_set_literal(node.right.value)
+    _set_node_state_set(node, (cgs.all_states_set - left) | right)

@@ -4,7 +4,7 @@ from ..timed_cgs import TimedCGS
 from .DBM import DBM
 
 """
-Kind of an ZoneGraph file to act as a utility for state-space exploration and bridge between 
+Kind of an ZoneGraph file to act as a utility for state-space exploration and bridge between
 DBM and timedCGS, is used by TCTL and other logics offering real-time verification of properties.
 """
 

@@ -61,4 +61,4 @@ class DBMAdapterTestCase(unittest.TestCase):
     def test_pipeline(self):
         tcgs = TimedCGS()
         tcgs.read_file("data/4-pipeline.txt")
-        zones = DBMAdapter.compute_predecessors(tcgs, "s0", "s1", "z>9")
+        DBMAdapter.compute_predecessors(tcgs, "s0", "s1", "z>9")

@@ -3,7 +3,6 @@ from typing import Any, Dict
 from model_checker.algorithms.explicit.ICTL.ictl_model_checking import (
     process_modelCheckingICTL_model_from_file,
 )
-from model_checker.parsers.formulas.ICTL.parser import ICTLParser
 
 
 def model_checking(formula: str, filename: str) -> Dict[str, Any]:
@@ -37,5 +36,5 @@ def model_checking(formula: str, filename: str) -> Dict[str, Any]:
         import traceback
 
         traceback.print_exc()
-        
+
         return {"error": {"message": str(e), "type": type(e).__name__}}

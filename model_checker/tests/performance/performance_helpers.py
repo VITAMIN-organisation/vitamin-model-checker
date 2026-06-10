@@ -18,7 +18,7 @@ def check_parser_performance(
     parser = load_cgs_from_content(temp_file, model_content)
     parse_time = time.time() - start_time
     assert parser is not None, f"Parser should succeed for {num_states} states"
-    assert len(parser.get_states()) == num_states, f"Expected {num_states} states"
+    assert len(parser.states) == num_states, f"Expected {num_states} states"
     assert (
         parse_time < max_time
     ), f"Parser took {parse_time:.2f}s for {num_states} states, expected < {max_time}s"

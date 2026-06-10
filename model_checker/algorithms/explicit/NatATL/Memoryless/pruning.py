@@ -29,7 +29,7 @@ def process_transition_matrix_data_fixed(
     cgs: CGS, model_path: str, agents: List[int], *strategies: Dict[str, Any]
 ) -> List[List]:
     """Pruning with corrected state coverage logic."""
-    graph = cgs.transition_matrix
+    graph = cgs.graph
     label_matrix = cgs.create_label_matrix(graph)
 
     for strategy_index, strategy in enumerate(strategies, start=1):
@@ -69,7 +69,7 @@ def process_transition_matrix_data_fixed(
                 )
                 covered_states.update(applicable_states)
 
-        all_states = set(cgs.get_states())
+        all_states = set(cgs.states)
         remaining = all_states - covered_states
         if remaining:
             graph = modify_matrix(
@@ -82,25 +82,12 @@ def process_transition_matrix_data_fixed(
 def pruning(
     cgs: CGS, model_path: str, agents: List[int], formula: str, current_agents: List
 ) -> bool:
+    """Prune the model to a strategy profile and run CTL on the result.
+
+    Returns True when the initial state satisfies the formula on the pruned model.
     """
-    Main pruning function: apply strategy and check if formula holds.
-
-    This is the core verification step for memoryless NatATL. It:
-    1. Creates a new CGS with the pruned transition matrix
-    2. Runs CTL model checking on the pruned model
-    3. Returns True if the initial state satisfies the formula
-
-    Args:
-        cgs: Original CGS model
-        model_path: Path to model file
-        agents: List of agent numbers in coalition
-        formula: CTL formula to verify (converted from NatATL)
-        current_agents: List of strategy dicts being tested
-
-    Returns:
-        True if the formula is satisfied in the initial state
-        under the given strategy, False otherwise
-    """
+    # Copy the model so the pruned graph and CTL run do not alter the shared cgs
+    # used while enumerating other strategies.
     cgs1 = copy.deepcopy(cgs)
     cgs1.graph = process_transition_matrix_data_fixed(
         cgs, model_path, agents, *current_agents

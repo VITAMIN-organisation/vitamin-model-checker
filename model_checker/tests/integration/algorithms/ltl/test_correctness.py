@@ -10,10 +10,10 @@ from model_checker.algorithms.explicit.LTL.LTL import (
     model_checking_wins_some_nash,
 )
 from model_checker.algorithms.explicit.LTL.strategies import (
-    generate_guarded_action_pairs,
     generate_strategies,
     initialize,
 )
+from model_checker.algorithms.explicit.shared import strategies_base
 from model_checker.tests.helpers.model_helpers import generate_linear_chain
 
 
@@ -161,7 +161,7 @@ class TestLTLNashFunctions:
             cgs,
             _,
         ) = initialize(ctl_small_model.filename, "F q", 2, [1])
-        cartesian = generate_guarded_action_pairs(
+        cartesian = strategies_base.generate_guarded_action_pairs(
             1, agent_actions, actions_list, atomic_propositions
         )
         strategies_gen = generate_strategies(cartesian, 1, agents, [False])
@@ -194,7 +194,7 @@ class TestLTLNashFunctions:
             cgs,
             _,
         ) = initialize(ctl_small_model.filename, "F q", 2, [1])
-        cartesian = generate_guarded_action_pairs(
+        cartesian = strategies_base.generate_guarded_action_pairs(
             1, agent_actions, actions_list, atomic_propositions
         )
         strategies_gen = generate_strategies(cartesian, 1, agents, [False])
@@ -227,7 +227,7 @@ class TestLTLNashFunctions:
             cgs,
             _,
         ) = initialize(ctl_small_model.filename, "F q", 2, [1])
-        cartesian = generate_guarded_action_pairs(
+        cartesian = strategies_base.generate_guarded_action_pairs(
             1, agent_actions, actions_list, atomic_propositions
         )
         strategies_gen = generate_strategies(cartesian, 1, agents, [False])

@@ -1,7 +1,24 @@
-from binarytree import Node
-from model_checker.parsers.formulas.ICTL.ictl_ply_parser import do_parsingICTL, verifyICTL
+import time
 
-from .util.process_input import *
+import numpy as np
+from binarytree import Node
+
+from model_checker.parsers.formulas.ICTL.ictl_ply_parser import (
+    do_parsingICTL,
+    verifyICTL,
+)
+
+from .util.process_input import (
+    calculate_subset_states_hat,
+    generate_3n_model,
+    generate_experiment_model,
+    get_atom_index,
+    get_edges,
+    get_preorder,
+    get_preorder_edges,
+    get_state_name_by_index,
+    read_file,
+)
 
 
 # returns the states where the proposition holds
@@ -110,12 +127,11 @@ class ICTL_Model_Checker:
     # those that satisfy AXa. The final result is stored in NOT operator root.
     def solve_tree(self, node):
         if node.left is not None:
-            
-            
+
             self.solve_tree(node.left)
 
         if node.right is not None:
-            
+
             self.solve_tree(node.right)
 
         if node.right is None:  # UNARY OPERATORS: not, globally, next, eventually
@@ -275,9 +291,9 @@ def model_checking(formula, model_checker):
         return result
 
     # formula parsing
-    
+
     res_parsing = do_parsingICTL(formula)
-    
+
     if res_parsing is None:
         result = {"res": "Syntax Error", "initial_state": ""}
         return result
@@ -285,7 +301,7 @@ def model_checking(formula, model_checker):
     if root is None:
         result = {"res": "Syntax Error: the atom does not exist", "initial_state": ""}
         return result
-    
+
     # model checking
     model_checker.solve_tree(root)
 
@@ -305,71 +321,68 @@ def model_checking(formula, model_checker):
 
 def process_modelCheckingICTL_model_from_file(filename, formula):
     data = read_file(filename)
-    
+
     model_checker = ICTL_Model_Checker(data)
     result = model_checking(formula, model_checker)
-    
+
     return result
 
 
 def process_modelCheckingICTL_model_generated(states_row, states_col, formula):
     data = generate_experiment_model(states_row, states_col)
-    
+
     model_checker = ICTL_Model_Checker(data)
     result = model_checking(formula, model_checker)
-    
+
     return result
 
 
 def do_test_process_modelCheckingICTL_model_generated(formula):
     i = 240
     with open(f"results{i}x{i}.txt", "a") as f:
-        
+
         f.write(f"Matrix {i} x {i}, Tot states:{i * i}\n")
         for execs in range(10):
-            
+
             f.write(f"exec:{execs}\n")
             t0 = time.time()
             data = generate_experiment_model(i, i)
             tot_num_rel = np.count_nonzero(data["graph"] != "0")
             t1 = time.time()
-            
-            
+
             f.write(f"Relations:{tot_num_rel}\n")
             f.write(f"Generation_Time:{t1 - t0}\n")
             t2 = time.time()
-            
+
             model_checker = ICTL_Model_Checker(data)
             t3 = time.time()
-            
+
             f.write(f"Processing_preorder_time:{t3 - t2}\n")
-            
-            result = model_checking(formula, model_checker)
+
+            model_checking(formula, model_checker)
             t4 = time.time()
-            
+
             f.write(f"MC_Time:{t4 - t3}\n")
-            
-            
-            
+
         f.close()
 
 
 def do_test_process_modelCheckingICTL_3k_model_generated():
     n = [200]
-    with open(f"results_k_model.txt", "a") as f:
-        f.write(f"n°agents,n°states,T_MC (sec)\n")
+    with open("results_k_model.txt", "a") as f:
+        f.write("n°agents,n°states,T_MC (sec)\n")
         for i in n:
             formula = f"{' & '.join(f'p{k}' for k in range(i))} -> (EF an0 & (an{i - 1} -> know) & (know -> an{i - 1}))"
-            
+
             data = generate_3n_model(i)
-            
+
             tot_states_n = data["states_counter"]
-            
+
             model_checker = ICTL_Model_Checker(data)
-            
+
             t_execs = 0
-            for execs in range(10):
-                
+            for _execs in range(10):
+
                 t1 = time.time()
                 model_checking(formula, model_checker)
                 t_execs += time.time() - t1

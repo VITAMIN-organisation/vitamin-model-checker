@@ -14,7 +14,7 @@ class CostCGS(CGS):
 
     Adds cost sections (e.g. Costs_for_actions, Transition_With_Costs) on top
     of the base CGS. Use read_file(path) to load a file; then use
-    get_cost_for_action(action, state) or get_cost_for_action_all() for cost data.
+    get_cost_for_action(action, state) or cost_for_action for cost data.
     """
 
     # --- Initialization and File Reading ---
@@ -27,14 +27,7 @@ class CostCGS(CGS):
         self.usesCostsInsteadOfActions = False
 
     def read_file(self, filename: str) -> None:
-        """Load and parse a CostCGS model from a file path.
-
-        Args:
-            filename: Path to the CostCGS model file.
-
-        Raises:
-            ValueError: If section structure or dimensions are invalid.
-        """
+        """Load a CostCGS model from a file. Raises ValueError on bad structure."""
         with open(filename, encoding="utf-8") as f:
             lines = f.readlines()
 
@@ -47,39 +40,17 @@ class CostCGS(CGS):
         cost_cgs_parser.parse_transitions(lines, self)
 
     def read_from_model_object(self, model: Any) -> None:
-        """Fill this CostCGS from an existing model object instead of reading a file.
-
-        Args:
-            model: Object with transition_matrix, state_names, propositions,
-                labelling_function, initial_state, number_of_agents, actions,
-                cost_for_action.
-        """
+        """Copy fields from an existing model object, including cost_for_action."""
         super().read_from_model_object(model)
         self.cost_for_action = model.cost_for_action
 
     # --- Cost Accessor Methods ---
 
     def get_cost_for_action(self, action: str, state: str) -> Any:
-        """Return the cost value(s) for the given action and state.
-
-        Args:
-            action: Action string (e.g. coalition action or "*" for all-wildcard).
-            state: State name.
-
-        Returns:
-            Cost value from the cost table; uses "*" key for state if action is all-wildcard.
-        """
-        key = self.translate_action_and_state_to_key(action, state)
+        """Look up cost for action at state; all-wildcard actions use the '*' key."""
+        key = f"{action};{state}"
         if key in self.cost_for_action:
             return self.cost_for_action[key]
         if action == "*" * self.get_number_of_agents():
-            key = self.translate_action_and_state_to_key("*", state)
+            key = f"*;{state}"
         return self.cost_for_action[key]
-
-    def get_cost_for_action_all(self) -> dict:
-        """Return the full mapping of (action;state) keys to cost values.
-
-        Returns:
-            Dict with keys from translate_action_and_state_to_key; values are costs.
-        """
-        return self.cost_for_action

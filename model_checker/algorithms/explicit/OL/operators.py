@@ -1,84 +1,74 @@
 """
 OL operator handlers for formula tree evaluation.
 
-This module contains handler functions for all OL operators, both unary
-(NOT, <Jn>X, <Jn>F, <Jn>G) and binary (OR, AND, IMPLIES, <Jn>U).
+Unary: NOT, <Jn>X, <Jn>F, <Jn>G. Binary: OR, AND, IMPLIES, <Jn>U, <Jn>R, <Jn>W.
 """
 
-from typing import List, Set
+import re
+from typing import Callable, Set
 
-from model_checker.algorithms.explicit.OL.preimage import triangle_down
-from model_checker.algorithms.explicit.shared import state_set_to_str
-from model_checker.algorithms.explicit.shared.fixpoint_iter import (
-    greatest_fixpoint,
-    least_fixpoint,
+from model_checker.algorithms.explicit.OL.preimage import (
+    states_globally_in,
+    states_release,
+    states_until,
+    states_weak,
+    states_with_next_in,
+    states_within_cost,
 )
 from model_checker.engine.runner import parse_state_set_literal
 
+_OL_BOUND_RE = re.compile(r"^<J(\d+)>")
+
 
 def extract_bound(formula_node_value: str) -> int:
-    """Extract cost bound from operator: <Jn>."""
-    try:
-        bound = (
-            int(formula_node_value[2:-1])
-            if formula_node_value.endswith(">")
-            else int(formula_node_value[2:])
-        )
-    except (ValueError, IndexError):
-        bound = 0
-    return bound
+    """Extract cost bound from OL operator token like <J27>F."""
+    match = _OL_BOUND_RE.match(formula_node_value)
+    if not match:
+        return 0
+    return int(match.group(1))
 
 
-# ---------------------------------------------------------
-# UNARY OPERATOR HANDLERS (NOT is in shared.boolean_operators; solver imports it)
-# ---------------------------------------------------------
-
-
-def handle_demonic_globally(cgs, node, pre_sets: List[Set[int]]):
-    """Handle <Jn>G operator: demonic globally within cost bound."""
+def handle_demonic_globally(cgs, node):
+    """Handle <Jn>G: phi holds while the adversary cannot leave phi within the bound."""
     bound = extract_bound(node.value)
     target = parse_state_set_literal(node.left.value)
-
-    def update(p):
-        return target & triangle_down(cgs, bound, p, pre_sets)
-
-    result = greatest_fixpoint(cgs.all_states_set.copy(), update)
-    node.value = state_set_to_str(result)
+    node.value = str(
+        tuple(sorted({str(s) for s in states_globally_in(cgs, target, bound)}))
+    )
 
 
-def handle_demonic_next(cgs, node, pre_sets: List[Set[int]]):
-    """Handle <Jn>X operator: demonic next within cost bound."""
+def handle_demonic_next(cgs, node):
+    """Handle <Jn>X: every affordable step within the bound stays in phi."""
     bound = extract_bound(node.value)
     target = parse_state_set_literal(node.left.value)
-    node.value = state_set_to_str(triangle_down(cgs, bound, target, pre_sets))
+    node.value = str(
+        tuple(sorted({str(s) for s in states_with_next_in(cgs, target, bound)}))
+    )
 
 
-def handle_demonic_eventually(cgs, node, pre_sets: List[Set[int]]):
-    """Handle <Jn>F operator: demonic eventually within cost bound."""
+def handle_demonic_eventually(cgs, node):
+    """Handle <Jn>F: phi is reachable within accumulated cost bound."""
     bound = extract_bound(node.value)
     target = parse_state_set_literal(node.left.value)
-    all_states = cgs.all_states_set
-
-    def update(p):
-        return target | (all_states & triangle_down(cgs, bound, p, pre_sets))
-
-    result = least_fixpoint(target, update)
-    node.value = state_set_to_str(result)
+    node.value = str(
+        tuple(sorted({str(s) for s in states_within_cost(cgs, target, bound)}))
+    )
 
 
-# ---------------------------------------------------------
-# BINARY OPERATOR HANDLERS (OR, AND, IMPLIES in shared.boolean_operators)
-# ---------------------------------------------------------
-
-
-def handle_demonic_until(cgs, node, pre_sets: List[Set[int]]):
-    """Handle <Jn>U operator: demonic until within cost bound."""
+def handle_demonic_ternary(
+    cgs,
+    node,
+    evaluate: Callable[..., Set[str]],
+):
+    """Handle <Jn>U, <Jn>R, and <Jn>W from a shared phi/psi/bound evaluation."""
     bound = extract_bound(node.value)
-    states1 = parse_state_set_literal(node.left.value)  # phi states
-    states2 = parse_state_set_literal(node.right.value)  # psi states
+    phi = parse_state_set_literal(node.left.value)
+    psi = parse_state_set_literal(node.right.value)
+    node.value = str(tuple(sorted({str(s) for s in evaluate(cgs, phi, psi, bound)})))
 
-    def update(p):
-        return states2 | (states1 & triangle_down(cgs, bound, p, pre_sets))
 
-    result = least_fixpoint(states2, update)
-    node.value = state_set_to_str(result)
+TERNARY_EVALUATORS = {
+    "DEMONIC_UNTIL": states_until,
+    "DEMONIC_RELEASE": states_release,
+    "DEMONIC_WEAK": states_weak,
+}

@@ -1,10 +1,4 @@
-"""
-Strategy generation for NatATL Memoryless model checker.
-
-This module provides strategy initialization and generation specifically for
-memoryless NatATL verification. It uses the shared strategy utilities and
-adds NatATL-specific formula parsing and model initialization.
-"""
+"""Model and formula setup for NatATL memoryless verification."""
 
 import logging
 import os
@@ -15,7 +9,7 @@ from model_checker.algorithms.explicit.NatATL.NatATLtoCTL import (
     get_k_value,
     natatl_to_ctl,
 )
-from model_checker.parsers.game_structures.cgs import CGS, cgs_validation
+from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
 
 logger = logging.getLogger(__name__)
 
@@ -23,18 +17,7 @@ logger = logging.getLogger(__name__)
 def initialize(
     model_path: str, formula: str, cgs: Optional[CGS] = None
 ) -> Tuple[int, Dict[str, List[str]], List[List[str]], List[str], str, List[int], CGS]:
-    """
-    Initialize model and parse NatATL formula for memoryless verification.
-
-    Args:
-        model_path: Path to the CGS model file
-        formula: NatATL formula string
-        cgs: Optional existing CGS object (avoids reloading)
-
-    Returns:
-        Tuple of (k, agent_actions, actions_list, atomic_propositions,
-                 CTLformula, agents, cgs)
-    """
+    """Load the model, parse NatATL, and return k, actions, CTL formula, and agents."""
     filename = os.path.abspath(model_path)
     if not os.path.isfile(filename):
         raise FileNotFoundError(f"Model file not found: {filename}")
@@ -72,7 +55,8 @@ def initialize(
     logger.debug("Involved agents: %s", agents)
 
     # Get available actions for each agent
-    actions_per_agent = cgs.get_actions(agents)
+    cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
+    actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
     logger.debug("Actions per agent: %s", actions_per_agent)
 
     agent_actions = {}
@@ -80,7 +64,7 @@ def initialize(
         agent_actions[f"actions_{agent_key}"] = actions_per_agent[agent_key]
 
     actions_list = list(agent_actions.values())
-    atomic_propositions = cgs.get_atomic_prop()
+    atomic_propositions = cgs.atomic_propositions
     logger.debug("Atomic propositions: %s", atomic_propositions)
 
     return k, agent_actions, actions_list, atomic_propositions, CTLformula, agents, cgs

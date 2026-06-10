@@ -1,11 +1,4 @@
-"""Strategy generation for NatATL-style model checkers.
-
-Used by NatATL (memoryless), NatATLF, and NatSL to build guarded strategies:
-conditions over atomic propositions paired with actions, enumerated up to a
-complexity bound. Provides condition generation, negation expansion, cartesian
-products of conditions and actions, and lazy strategy enumeration so all
-checkers share one implementation.
-"""
+"""Generate guarded strategies (condition-action pairs) for NatATL-style checkers."""
 
 import itertools
 import logging
@@ -17,22 +10,7 @@ logger = logging.getLogger(__name__)
 def generate_conditions(
     atomic_props: List[str], connectives: List[str], max_complexity: int
 ) -> Generator[str, None, None]:
-    """Enumerate boolean conditions over atoms up to a token-complexity limit.
-
-    Builds conditions recursively by combining atomic propositions with the
-    given connectives (e.g. "and", "or"). Complexity is the number of
-    space-separated tokens; only conditions with complexity <= max_complexity
-    are yielded. Connective choice is deterministic so the same inputs give
-    the same outputs across runs.
-
-    Args:
-        atomic_props: Proposition names (e.g. ``['a', 'b', 'c']``).
-        connectives: Connective operators (e.g. ``['and', 'or']``); first is used.
-        max_complexity: Maximum number of tokens per condition.
-
-    Returns:
-        Generator yielding condition strings such as ``"a"``, ``"a && b"``, ``"a and b or c"``.
-    """
+    """Yield boolean conditions over atoms up to a given token count."""
     condition_set: Set[str] = set()
 
     def generate_condition(k: int, condition: List[str]) -> Generator[str, None, None]:
@@ -67,20 +45,7 @@ def generate_conditions(
 def generate_negated_conditions(
     conditions: List[str], max_complexity: int
 ) -> Generator[str, None, None]:
-    """Expand conditions into all variants with some atoms negated.
-
-    For each condition (e.g. ``"a && b"``), yields every combination of
-    negating or not negating each atom: ``"!a && b"``, ``"a && !b"``,
-    ``"!a && !b"``. Only variants whose complexity (token count + 1 per ``!``)
-    is at most max_complexity are yielded.
-
-    Args:
-        conditions: Condition strings to expand (atoms joined by ``" && "``).
-        max_complexity: Maximum allowed complexity for a yielded string.
-
-    Returns:
-        Generator yielding negated condition strings within the complexity bound.
-    """
+    """Yield each condition with every choice of negated atoms, within max_complexity."""
     for condition in conditions:
         atomic_props = condition.split(" && ")
         for combo in itertools.product(["", "!"], repeat=len(atomic_props)):
@@ -101,22 +66,9 @@ def generate_strategies(
     agents: List[int],
     found_solution: bool,
 ) -> Generator[List[Dict], None, None]:
-    """Enumerate collective strategies (one (condition, action) mapping per agent).
+    """Yield strategy profiles (one guarded mapping per agent) at complexity_bound.
 
-    Each yielded item is a list of strategy dicts, one per agent, where each
-    dict has key ``"condition_action_pairs"`` with a list of (condition, action)
-    tuples. Only combinations whose total condition complexity equals
-    complexity_bound are considered. Enumeration is lazy (depth-first) to avoid
-    blowing up memory on large strategy spaces.
-
-    Args:
-        cartesian_products: Per-agent lists of (condition, action) pairs.
-        complexity_bound: Required total complexity for a valid strategy.
-        agents: Agent indices (length must match cartesian_products usage).
-        found_solution: If True, nothing is yielded (used for early termination).
-
-    Returns:
-        Generator yielding lists of strategy dicts, one dict per agent.
+    Stops yielding when found_solution is True.
     """
     strategies = [[] for _ in range(len(agents))]
 
@@ -158,19 +110,7 @@ def generate_strategies(
 
 
 def is_duplicate(existing_strategies: List[Dict], new_strategy: Dict) -> bool:
-    """
-    Check if a strategy already exists in the list.
-
-    Prevents duplicate strategies from being generated multiple times,
-    which would waste computation during model checking.
-
-    Args:
-        existing_strategies: List of previously generated strategies
-        new_strategy: New strategy to check for duplicates
-
-    Returns:
-        True if new_strategy matches an existing one, False otherwise
-    """
+    """Return True if new_strategy has the same condition_action_pairs as one already listed."""
     for existing_strategy in existing_strategies:
         if (
             existing_strategy["condition_action_pairs"]
@@ -183,20 +123,7 @@ def is_duplicate(existing_strategies: List[Dict], new_strategy: Dict) -> bool:
 def generate_cartesian_products(
     actions_list: List[List[str]], conditions: List[str]
 ) -> Dict[str, List[Tuple[str, str]]]:
-    """Build all (condition, action) pairs per agent.
-
-    For each agent index i, takes actions_list[i] and forms the product with
-    conditions, giving every (cond, act) pair that agent could use in a
-    guarded strategy.
-
-    Args:
-        actions_list: One list of action names per agent.
-        conditions: Condition strings to pair with actions.
-
-    Returns:
-        Dict from keys ``"actions_agent1"``, ``"actions_agent2"``, ... to
-        lists of ``(condition, action)`` tuples.
-    """
+    """Pair every condition with every action for each agent (actions_agent1, ...)."""
     cartesian_products = {}
     for i, actions in enumerate(actions_list, start=1):
         agent_key = f"actions_agent{i}"
@@ -213,22 +140,9 @@ def generate_guarded_action_pairs(
     actions_list: List[List[str]],
     atomic_propositions: List[str],
 ) -> Dict[str, List[Tuple[str, str]]]:
-    """Produce all (condition, action) pairs for each agent up to a complexity bound.
+    """Build all (condition, action) pairs per agent up to complexity_bound.
 
-    Main entry point for strategy generation: builds conditions from
-    atomic_propositions and connectives, expands with negation variants, then
-    pairs every resulting condition with every action for each agent. Used by
-    NatATL-family checkers to feed strategy enumeration.
-
-    Args:
-        complexity_bound: Max condition complexity (typically the formula's k).
-        agent_actions: Map from agent keys (e.g. ``"agent1"``) to action lists.
-        actions_list: List of action lists, one per agent, in same order as agents.
-        atomic_propositions: Proposition names available in the model.
-
-    Returns:
-        Map from keys like ``"actions_agent1"`` to lists of ``(condition, action)``.
-        On error returns an empty dict and logs.
+    Returns an empty dict on error.
     """
     connectives = ["and", "or"]
     try:
@@ -257,16 +171,7 @@ def generate_guarded_action_pairs(
 
 
 def agent_combinations(new_combinations: List) -> Generator[Tuple, None, None]:
-    """Yield every pair (a, b) with a and b from new_combinations.
-
-    Used when building or comparing strategies across two agent combinations.
-
-    Args:
-        new_combinations: Iterable of agent or combination identifiers.
-
-    Returns:
-        Generator yielding pairs ``(a, b)`` for each a, b in new_combinations.
-    """
+    """Yield all ordered pairs from new_combinations."""
     for agent1 in new_combinations:
         for agent2 in new_combinations:
             yield agent1, agent2

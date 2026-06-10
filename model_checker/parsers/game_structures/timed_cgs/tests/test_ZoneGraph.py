@@ -1,6 +1,5 @@
 import unittest
 
-from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.timed_cgs.ZoneGraph import ZoneGraph
 

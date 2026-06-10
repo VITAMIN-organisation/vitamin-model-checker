@@ -2,9 +2,20 @@ from collections import defaultdict
 
 import numpy as np
 from binarytree import Node
-from model_checker.parsers.formulas.IATL.iatl_ply_parser import *
 
-from .util.process_input import *
+from model_checker.parsers.formulas.IATL.iatl_ply_parser import (
+    do_parsingIATL,
+    verifyIATL,
+)
+
+from .util.process_input import (
+    get_agents_from_coalition,
+    get_edges,
+    get_index_by_state_name,
+    get_preorder,
+    get_preorder_edges,
+    read_file,
+)
 
 
 # returns the states where the proposition holds
@@ -139,19 +150,16 @@ class IATLModelChecker:
         return set(np.where(np.isin(self.get_states(), list(states)))[0])
 
     def pre_existsIATL(self, coalition, state_set, show_strategy):
-        agents = get_agents_from_coalition(coalition)
+        get_agents_from_coalition(coalition)
         state_set = self.convert_state_setIATL(state_set)  # returns a set of indexes
-        pre_states = set()
-        dict_state_action = dict()  # dictionary state-action
-        strategy = defaultdict(list)
 
         # take states that have at least one transition to one of the states in the set
-        dict_state_action = self.get_inner_states_of_state_set(state_set)
-        return set(), dict()
+        self.get_inner_states_of_state_set(state_set)
+        return set(), {}
 
     def get_inner_states_of_state_set(self, state_set):
         # take states that have at least one transition to one of the states in the set
-        row_indices = np.arange(self.graph["graph"].shape[0])
+        np.arange(self.graph["graph"].shape[0])
         col_indices = np.array(list(state_set)).astype(int)
         valid_positions = np.where(self.graph["graph"][:, col_indices] != "0")
         row_valid_indices = valid_positions[0]
@@ -162,13 +170,13 @@ class IATLModelChecker:
         }
 
     def pre_forallIATL(self, a, b, c):
-        return set(), dict()
+        return set(), {}
 
     def process_globally(self, node, pre_func, strategy, show_strategy):
         coalition = node.value[1:-2]
         states = string_to_setIATL(node.left.value)
         p = set(self.get_states())
-        tmp_strat = res_dict = defaultdict(list)
+        tmp_strat = defaultdict(list)
         t = states
         while p - t:  # p not in t
             p = t
@@ -400,4 +408,3 @@ def process_modelCheckingIATL_model_from_file(filename, formula):
     model_checker = IATLModelChecker(data)
     result = model_checking(formula, model_checker)
     return result
-

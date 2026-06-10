@@ -9,6 +9,7 @@ from model_checker.parsers.formulas.TCTL import (
     do_parsingTCTL,
     verifyTCTL,
 )
+from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.timed_cgs.ZoneGraph import ZoneGraph
@@ -29,8 +30,8 @@ class Vertex:
 def _print_tree(node, level=0):
     if isinstance(node, Vertex):
         _print_tree(node.left, level + 1)
-        value = f" " * 4 * level + "-> " + str(node.value)
-        if node.time_constraints != None:
+        value = " " * 4 * level + "-> " + str(node.value)
+        if node.time_constraints is not None:
             value += "".join(node.time_constraints)
         _print_tree(node.right, level + 1)
 
@@ -40,8 +41,8 @@ def get_states_prop_holds(tcgs: TimedCGS, prop):
     Returns the set of states in which the proposition `prop` is true.
     """
     states = set()
-    prop_matrix = tcgs.get_matrix_proposition()
-    index = tcgs.get_atom_index(prop)
+    prop_matrix = tcgs.matrix_prop
+    index = proposition_index(tcgs.atomic_propositions, prop)
     if index is None:
         return None
     for state, row in enumerate(prop_matrix):
@@ -67,7 +68,7 @@ def string_to_set(string: str):
     """
     parts = string.split(":")
     if len(parts) > 1:
-        return set([parts[0].strip()])
+        return {parts[0].strip()}
     else:
         if string == "set()":
             return set()
@@ -196,7 +197,7 @@ def pre_release_A(tcgs, holds_phi, holds_psi):
       - s satisfies ψ, and
       - if s does not satisfy φ, then every successor of s belongs to the fixpoint.
     """
-    all_states = set(tcgs.get_states())
+    all_states = set(tcgs.states)
     # Initially, the result (fixpoint) is given by the states satisfying ψ.
     result = holds_psi.copy()
     transitions = tcgs.get_edges()
@@ -289,144 +290,133 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
     if hasattr(node, "subject"):
         solve_tree(tcgs, zone_graph, node.subject)
 
-    match node:
-        case Unary():
-            node.satisfying_states = set(tcgs.states) - node.operand.satisfying_states
-        case ClockExpr():
-            node.satisfying_states = (
-                node.subject.satisfying_states
-            )  # the clock constraint is applied later when resolving the quantified path.
-        case Binary():
-            if verifyTCTL("OR", node.op):
-                node.satisfying_states = node.left.satisfying_states.union(
-                    node.right.satisfying_states
-                )
-            elif verifyTCTL("AND", node.op):
-                node.satisfying_states = node.left.satisfying_states.intersection(
-                    node.right.satisfying_states
-                )
-            elif verifyTCTL("IMPLIES", node.op):  #  φ -> θ  ≡ ¬φ ∨ θ,
-                # not_left = set(tcgs.states) - node.left.satisfying_states
-                # node.satisfying_states = not_left.union({'s5'})
-                states1 = node.left.satisfying_states
-                states2 = node.right.satisfying_states
-                not_states1 = set(tcgs.get_states()) - states1
-                rest = not_states1.union(states2)
-                node.satisfying_states = rest
+    if isinstance(node, Unary):
+        node.satisfying_states = set(tcgs.states) - node.operand.satisfying_states
+    elif isinstance(node, ClockExpr):
+        node.satisfying_states = (
+            node.subject.satisfying_states
+        )  # the clock constraint is applied later when resolving the quantified path.
+    elif isinstance(node, Binary):
+        if verifyTCTL("OR", node.op):
+            node.satisfying_states = node.left.satisfying_states.union(
+                node.right.satisfying_states
+            )
+        elif verifyTCTL("AND", node.op):
+            node.satisfying_states = node.left.satisfying_states.intersection(
+                node.right.satisfying_states
+            )
+        elif verifyTCTL("IMPLIES", node.op):  #  φ -> θ  ≡ ¬φ ∨ θ,
+            states1 = node.left.satisfying_states
+            states2 = node.right.satisfying_states
+            not_states1 = set(tcgs.states) - states1
+            rest = not_states1.union(states2)
+            node.satisfying_states = rest
 
-        case QuantifiedPath():
-            if verifyTCTL("EXIST", node.quantifier) and verifyTCTL(
-                "EVENTUALLY", node.quantifier
-            ):
-                target_obj = node.formula.satisfying_states
-                T = target_obj.copy()
-                constraint = extract_closest_constraint(node.formula)
-                while True:
-                    new_T = T.union(
-                        pre_image_exist_time(tcgs, zone_graph, T, constraint)
+    elif isinstance(node, QuantifiedPath):
+        if verifyTCTL("EXIST", node.quantifier) and verifyTCTL(
+            "EVENTUALLY", node.quantifier
+        ):
+            target_obj = node.formula.satisfying_states
+            T = target_obj.copy()
+            constraint = extract_closest_constraint(node.formula)
+            while True:
+                new_T = T.union(
+                    pre_image_exist_time(tcgs, zone_graph, T, constraint)
+                )
+                if new_T == T:
+                    break
+                T = new_T
+            node.satisfying_states = T
+        elif verifyTCTL("FORALL", node.quantifier) and verifyTCTL(
+            "EVENTUALLY", node.quantifier
+        ):
+            target = set(tcgs.states) - node.formula.satisfying_states
+            T = target.copy()
+            while True:
+                new_T = T.union(
+                    pre_image_exist(
+                        tcgs,
+                        T,
+                        constraints=extract_closest_constraint(node.formula),
                     )
-                    if new_T == T:
-                        break
-                    T = new_T
-                node.satisfying_states = T
-            elif verifyTCTL("FORALL", node.quantifier) and verifyTCTL(
-                "EVENTUALLY", node.quantifier
-            ):
-                target = set(tcgs.states) - node.formula.satisfying_states
-                T = target.copy()
-                while True:
-                    new_T = T.union(
+                )
+                if new_T == T:
+                    break
+                T = new_T
+            node.satisfying_states = set(tcgs.states) - T
+        elif verifyTCTL("EXIST", node.quantifier) and verifyTCTL(
+            "GLOBALLY", node.quantifier
+        ):
+            target = node.formula.satisfying_states
+            T = set(tcgs.states)
+            while True:
+                new_T = target.intersection(
+                    pre_image_exist(
+                        tcgs,
+                        T,
+                        constraints=extract_closest_constraint(node.formula),
+                    )
+                )
+                if new_T == T:
+                    break
+                T = new_T
+            node.satisfying_states = T
+        elif verifyTCTL("FORALL", node.quantifier) and verifyTCTL(
+            "GLOBALLY", node.quantifier
+        ):
+            target = set(tcgs.states) - node.formula.satisfying_states
+            T = target.copy()
+            while True:
+                new_T = T.union(
+                    pre_image_exist_time(
+                        tcgs,
+                        zone_graph,
+                        T,
+                        constraints=extract_closest_constraint(node.formula),
+                    )
+                )
+                if new_T == T:
+                    break
+                T = new_T
+            node.satisfying_states = set(tcgs.states) - T
+        elif verifyTCTL("EXIST", node.quantifier) and verifyTCTL(
+            "UNTIL", node.quantifier
+        ):
+            states_phi = node.formula.left.satisfying_states
+            states_psi = node.formula.right.satisfying_states
+            T = states_psi.copy()
+            while True:
+                new_T = T.union(
+                    states_phi.intersection(
                         pre_image_exist(
                             tcgs,
                             T,
                             constraints=extract_closest_constraint(node.formula),
                         )
                     )
-                    if new_T == T:
-                        break
-                    T = new_T
-                node.satisfying_states = set(tcgs.states) - T
-            elif verifyTCTL("EXIST", node.quantifier) and verifyTCTL(
-                "GLOBALLY", node.quantifier
-            ):
-                target = node.formula.satisfying_states
-                T = set(tcgs.states)
-                while True:
-                    new_T = target.intersection(
+                )
+                if new_T == T:
+                    break
+                T = new_T
+            node.satisfying_states = T
+        elif verifyTCTL("FORALL", node.value) and verifyTCTL("UNTIL", node.value):
+            not_states_phi = set(tcgs.states) - node.formula.left.satisfying_states
+            not_states_psi = set(tcgs.states) - node.formula.right.satisfying_states
+            T = not_states_psi.copy()
+            while True:
+                new_T = T.union(
+                    (not_states_phi.intersection(not_states_psi)).intersection(
                         pre_image_exist(
-                            tcgs,
+                            tcgs.get_edges(),
                             T,
-                            constraints=extract_closest_constraint(node.formula),
+                            clock_constraints=tcgs.get_clock_constraints(),
                         )
                     )
-                    if new_T == T:
-                        break
-                    T = new_T
-                node.satisfying_states = T
-            elif verifyTCTL("FORALL", node.quantifier) and verifyTCTL(
-                "GLOBALLY", node.quantifier
-            ):  # AG φ
-                # AG φ = ¬EF(¬φ)  (AG phi is true iff there is no path to a state violating phi)
-                target = set(tcgs.states) - node.formula.satisfying_states
-                T = target.copy()
-                while True:
-                    new_T = T.union(
-                        pre_image_exist_time(
-                            tcgs,
-                            zone_graph,
-                            T,
-                            constraints=extract_closest_constraint(node.formula),
-                        )
-                    )
-                    if new_T == T:
-                        break
-                    T = new_T
-                node.satisfying_states = set(tcgs.states) - T
-            elif verifyTCTL("EXIST", node.quantifier) and verifyTCTL(
-                "UNTIL", node.quantifier
-            ):  # E(φ U ψ)
-                # Compute the least fixpoint: T = ψ ∪ (φ ∩ EX T)
-                states_phi = node.formula.left.satisfying_states
-                states_psi = node.formula.right.satisfying_states
-                T = states_psi.copy()
-                while True:
-                    new_T = T.union(
-                        states_phi.intersection(
-                            pre_image_exist(
-                                tcgs,
-                                T,
-                                constraints=extract_closest_constraint(node.formula),
-                            )
-                        )
-                    )
-                    if new_T == T:
-                        break
-                    T = new_T
-                node.satisfying_states = T
-            elif verifyTCTL("FORALL", node.value) and verifyTCTL(
-                "UNTIL", node.value
-            ):  # A(φ U ψ)
-                # A(φ U ψ) = ¬E(¬ψ U (¬φ ∧ ¬ψ)) (dual formula)
-                # We compute it via a transformation:
-                not_states_phi = set(tcgs.states) - node.formula.left.satisfying_states
-                not_states_psi = set(tcgs.states) - node.formula.right.satisfying_states
-                # Compute E(not ψ U (not φ ∧ not ψ))
-                T = not_states_psi.copy()
-                while True:
-                    new_T = T.union(
-                        (not_states_phi.intersection(not_states_psi)).intersection(
-                            pre_image_exist(
-                                tcgs.get_edges(),
-                                T,
-                                clock_constraints=tcgs.get_clock_constraints(),
-                            )
-                        )
-                    )
-                    if new_T == T:
-                        break
-                    T = new_T
-                # Complement: A(φ U ψ) = ¬T
-                node.satisfying_states = set(tcgs.states) - T
+                )
+                if new_T == T:
+                    break
+                T = new_T
+            node.satisfying_states = set(tcgs.states) - T
 
     return
 
@@ -440,7 +430,7 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
     if node.right is None:
         if verifyTCTL("NOT", node.value):  # ¬φ, local (negation)
             states = string_to_set(node.left.value)
-            ris = set(tcgs.get_states()) - states
+            ris = set(tcgs.states) - states
             node.value = str(ris)
 
         elif verifyTCTL("EXIST", node.value) and verifyTCTL(
@@ -456,7 +446,7 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
             "NEXT", node.value
         ):  # AX φ, next doesn't exist on TCTL
             states = string_to_set(node.left.value)
-            ris = pre_image_all(tcgs.get_edges(), tcgs.get_states(), states)
+            ris = pre_image_all(tcgs.get_edges(), tcgs.states, states)
             node.value = str(ris)
 
         elif verifyTCTL("EXIST", node.value) and verifyTCTL(
@@ -481,7 +471,7 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
             "EVENTUALLY", node.value
         ):  # AF φ
             # AF φ = ¬EG(¬φ). Compute EF on the complement and then take its complement
-            target = set(tcgs.get_states()) - string_to_set(node.left.value)
+            target = set(tcgs.states) - string_to_set(node.left.value)
             T = target.copy()
             while True:
                 new_T = T.union(
@@ -491,7 +481,7 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
                     break
                 T = new_T
             # Complement with respect to the full set of states
-            node.value = str(set(tcgs.get_states()) - T)
+            node.value = str(set(tcgs.states) - T)
 
         elif verifyTCTL("EXIST", node.value) and verifyTCTL(
             "GLOBALLY", node.value
@@ -552,7 +542,7 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
         elif verifyTCTL("IMPLIES", node.value):  # φ -> θ  ≡ ¬φ ∨ θ, local
             states1 = string_to_set(node.left.value)
             states2 = string_to_set(node.right.value)
-            not_states1 = set(tcgs.get_states()) - states1
+            not_states1 = set(tcgs.states) - states1
             ris = not_states1.union(states2)
             node.value = str(ris)
 
@@ -581,8 +571,8 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
         ):  # A(φ U ψ)
             # A(φ U ψ) = ¬E(¬ψ U (¬φ ∧ ¬ψ)) (formula duale)
             # Possiamo calcolarla tramite una trasformazione:
-            not_states_phi = set(tcgs.get_states()) - string_to_set(node.left.value)
-            not_states_psi = set(tcgs.get_states()) - string_to_set(node.right.value)
+            not_states_phi = set(tcgs.states) - string_to_set(node.left.value)
+            not_states_psi = set(tcgs.states) - string_to_set(node.right.value)
             # Calcoliamo E(not ψ U (not φ ∧ not ψ))
             T = not_states_psi.copy()
             while True:
@@ -599,27 +589,27 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
                     break
                 T = new_T
             # Complemento: A(φ U ψ) = ¬T
-            node.value = str(set(tcgs.get_states()) - T)
+            node.value = str(set(tcgs.states) - T)
 
         # For the existential RELEASE operator (if needed) it can be defined dually,
         # e.g.: E(φ R ψ) = ¬A(¬φ U ¬ψ)
         elif verifyTCTL("EXIST", node.value) and verifyTCTL(
             "RELEASE", node.value
         ):  # E(φ R ψ)
-            not_states_phi = set(tcgs.get_states()) - string_to_set(node.left.value)
-            not_states_psi = set(tcgs.get_states()) - string_to_set(node.right.value)
+            not_states_phi = set(tcgs.states) - string_to_set(node.left.value)
+            not_states_psi = set(tcgs.states) - string_to_set(node.right.value)
             # Compute A(not φ U not ψ)
             T = not_states_psi.copy()
             while True:
                 new_T = T.union(
                     not_states_phi.intersection(not_states_psi).intersection(
-                        pre_image_all(tcgs.get_edges(), tcgs.get_states(), T)
+                        pre_image_all(tcgs.get_edges(), tcgs.states, T)
                     )
                 )
                 if new_T == T:
                     break
                 T = new_T
-            node.value = str(set(tcgs.get_states()) - T)
+            node.value = str(set(tcgs.states) - T)
 
 
 # -------------------------------------

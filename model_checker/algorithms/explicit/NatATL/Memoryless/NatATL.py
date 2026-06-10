@@ -25,17 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def model_checking(formula: str, model_path: str) -> Dict[str, Any]:
-    """
-    Executes NatATL (Memoryless) model checking.
-
-    Args:
-        formula: NatATL formula string.
-        model_path: Path to model file.
-
-    Returns:
-        Dictionary with Satisfiability, Complexity Bound, and Winning Strategy,
-        or error dictionary.
-    """
+    """Main entry point for NatATL memoryless model checking."""
     if not formula or not formula.strip():
         return create_validation_error("Formula not entered")
 

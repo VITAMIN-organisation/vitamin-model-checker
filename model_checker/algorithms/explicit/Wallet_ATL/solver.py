@@ -42,10 +42,6 @@ _BINARY = {
 }
 
 
-def _get_walletatl_parser():
-    return FormulaParserFactory.get_parser_instance("Wallet_ATL")
-
-
 def _walletatl_unary_key(parser_instance: Any, val: Any) -> Optional[str]:
     if parser_instance.verify("NOT", val):
         return "NOT"
@@ -91,7 +87,7 @@ def solve_tree(cgs, node, transition_cache: Optional[Dict[str, Any]] = None) -> 
     if node.right is not None:
         solve_tree(cgs, node.right, transition_cache)
 
-    parser_instance = _get_walletatl_parser()
+    parser_instance = FormulaParserFactory.get_parser_instance("Wallet_ATL")
     val = node.value
 
     if node.right is None:

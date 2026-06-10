@@ -1,5 +1,6 @@
-from model_checker.parsers.formulas.TOL import *
-from model_checker.parsers.formulas.TOL.parser import (
+import re
+
+from model_checker.parsers.formulas.TOL.tol_ply_parser import (
     AtomicProp,
     Binary,
     ClockExpr,
@@ -11,11 +12,10 @@ from model_checker.parsers.formulas.TOL.parser import (
     do_parsing,
     verify,
 )
+from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
-from model_checker.parsers.game_structures.timed_cgs.timed_cgs import *
+from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.timed_cgs.ZoneGraph import ZoneGraph
-
-from model_checker.models.model_factory import CostCGS
 
 # =============================================================================
 # NEW AST-BASED APPROACH (similar to TCTL)
@@ -245,8 +245,8 @@ class Vertex:
 def _print_tree(node, level=0):
     if isinstance(node, Vertex):
         _print_tree(node.left, level + 1)
-        value = f" " * 4 * level + "-> " + str(node.value)
-        if node.time_constraints != None:
+        value = " " * 4 * level + "-> " + str(node.value)
+        if node.time_constraints is not None:
             value += "".join(node.time_constraints)
         _print_tree(node.right, level + 1)
 
@@ -254,9 +254,8 @@ def _print_tree(node, level=0):
 # returns the states where the proposition holds
 def get_states_prop_holds(prop):
     states = set()
-    prop_matrix = timedCostCGS.get_matrix_proposition()
-
-    index = timedCostCGS.get_atom_index(prop)
+    prop_matrix = timedCostCGS.matrix_prop
+    index = proposition_index(timedCostCGS.atomic_propositions, prop)
     if index is None:
         return None
     for state, source in enumerate(prop_matrix):
@@ -335,7 +334,7 @@ def build_tree(tpl):
         if verify("FALSE", str(tpl)):
             return Vertex(str(states))
         elif verify("TRUE", str(tpl)):
-            return Vertex(str(set(timedCostCGS.get_states())))
+            return Vertex(str(set(timedCostCGS.states)))
         states_proposition = get_states_prop_holds(str(tpl))
         if states_proposition is None:
             return None
@@ -361,7 +360,7 @@ def complement(state_set):
 def pre(state_set, constraints: tuple[str] = None):
     result = set()
     graph = timedCostCGS.get_graph()
-    for i, source in enumerate(
+    for i, _source in enumerate(
         graph
     ):  # take states that have at least one transition to one of the states in the set
         for j in state_set:
@@ -380,7 +379,7 @@ def pre_timed(state_set, zone_graph: ZoneGraph, constraints: tuple[str]):
     # Convert state names to indices if needed (ensure consistency)
     # state_indices = convert_state_set(state_set)
 
-    for i, source_row in enumerate(graph):  # For each potential predecessor state 'i'
+    for i, _ in enumerate(graph):
         for source_name, target_name in transitions:
             source_idx = timedCostCGS.get_index_by_state_name(source_name)
             target_idx = timedCostCGS.get_index_by_state_name(target_name)
@@ -433,19 +432,15 @@ def pre_set_variant(state_set, constraints: tuple[str] = None):
 # triangle "right" operator
 def triangle(s, n, state_set):
     cost = 0
-    tCost = 0
     graph = timedCostCGS.get_graph()
-    isLoopPresent = False
     for r in state_set:
-        if graph[s][r] != "*":
-            value = graph[s][r]
-            if isinstance(value, str) and ":" in value:
-                cost += sum(int(part) for part in value.split(":") if part)
-            else:
-                cost += int(value)
+        if graph[s][r] == "*":
+            continue
+        value = graph[s][r]
+        if isinstance(value, str) and ":" in value:
+            cost += sum(int(part) for part in value.split(":") if part)
         else:
-            isLoopPresent = True
-    # return ((cost <= n and (cost != 0 or isLoopPresent)))
+            cost += int(value)
     return cost <= n
 
 
@@ -483,11 +478,10 @@ def solve_tree(node, zone_graph: ZoneGraph):
         solve_tree(node.left, zone_graph)
     if node.right is not None:
         solve_tree(node.right, zone_graph)
-    i = 0
     if node.right is None:  # UNARY OPERATORS: not, globally, next, eventually
         if verify("NOT", node.value):  # e.g. ¬φ
             states = string_to_set(node.left.value)
-            all_states = set(timedCostCGS.get_states())
+            all_states = set(timedCostCGS.states)
             ris = all_states - states
             node.value = str(ris)
 
@@ -521,7 +515,7 @@ def solve_tree(node, zone_graph: ZoneGraph):
         ):  # e.g. <Jn>Fφ
             # <Jn>trueUϕ.
             n = int(node.value[2:-2])
-            states1 = set(timedCostCGS.get_states())
+            states1 = set(timedCostCGS.states)
             states2 = string_to_set(node.left.value)
             p = set()
             t = states2
@@ -563,7 +557,7 @@ def solve_tree(node, zone_graph: ZoneGraph):
             n = int(node.value[2:-2])
             states1 = string_to_set(node.left.value)
             states2 = string_to_set(node.right.value)
-            p = set(timedCostCGS.get_states())
+            p = set(timedCostCGS.states)
             t = states2
             while t != p:
                 p = t
@@ -579,7 +573,7 @@ def solve_tree(node, zone_graph: ZoneGraph):
             n = int(node.value[2:-2])
             states1 = string_to_set(node.right.value)
             states2 = string_to_set(node.left.value) | states1
-            p = set(timedCostCGS.get_states())
+            p = set(timedCostCGS.states)
             t = states2
             while t != p:
                 p = t
@@ -612,7 +606,7 @@ def solve_tree_adjacency_list(node):
     if node.right is None:  # UNARY OPERATORS: not, globally, next, eventually
         if verify("NOT", node.value):  # e.g. ¬φ
             states = string_to_set(node.left.value)
-            all_states = set(timedCostCGS.get_states())
+            all_states = set(timedCostCGS.states)
             ris = all_states - states
             node.value = str(ris)
 
@@ -623,12 +617,11 @@ def solve_tree_adjacency_list(node):
             n = int(node.value[2:-2])
             states1 = set()
             states2 = string_to_set(node.left.value)
-            p = set(timedCostCGS.get_states())
+            p = set(timedCostCGS.states)
             t = states2
             while t != p:
                 p = t
                 t = states2 & (states1 | triangle_down_variant(n, p))
-                i += 1
             node.value = str(p)
 
         elif verify("DEMONIC", node.value) and verify(
@@ -644,7 +637,7 @@ def solve_tree_adjacency_list(node):
         ):  # e.g. <Jn>Fφ
             # <Jn>trueUϕ.
             n = int(node.value[2:-2])
-            states1 = set(timedCostCGS.get_states())
+            states1 = set(timedCostCGS.states)
             states2 = string_to_set(node.left.value)
             p = set()
             t = states2
@@ -680,7 +673,7 @@ def solve_tree_adjacency_list(node):
             n = int(node.value[2:-2])
             states1 = string_to_set(node.left.value)
             states2 = string_to_set(node.right.value)
-            p = set(timedCostCGS.get_states())
+            p = set(timedCostCGS.states)
             t = states2
             while t != p:
                 p = t
@@ -693,7 +686,7 @@ def solve_tree_adjacency_list(node):
             n = int(node.value[2:-2])
             states1 = string_to_set(node.right.value)
             states2 = string_to_set(node.left.value) | states1
-            p = set(timedCostCGS.get_states())
+            p = set(timedCostCGS.states)
             t = states2
             while t != p:
                 p = t
@@ -710,7 +703,7 @@ def solve_tree_adjacency_list(node):
             # p -> q ≡ ¬p ∨ q
             states1 = string_to_set(node.left.value)
             states2 = string_to_set(node.right.value)
-            not_states1 = set(timedCostCGS.get_states()).difference(states1)
+            not_states1 = set(timedCostCGS.states).difference(states1)
             ris = not_states1.union(states2)
             node.value = str(ris)
 
@@ -748,12 +741,3 @@ def model_checking(formula: str, filename: str):
     # solution
     result = {"res": "Result: " + str(root.value)}
     return result
-
-
-# NEW VERSION - uses AST-based parsing
-def model_checking_new(formula: str, filename: str):
-    """
-    Wrapper function that uses the new AST approach.
-    Can be called to test the new implementation.
-    """
-    return model_checking_ast(formula, filename)

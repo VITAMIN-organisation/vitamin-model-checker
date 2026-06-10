@@ -234,7 +234,7 @@ def get_preorder_no_reflective(preorder_pairs):
 
 
 def read_file(filename):
-    with open(filename, "r") as f:
+    with open(filename) as f:
         lines = f.readlines()
 
     data = {
@@ -342,7 +342,7 @@ def get_atom_index(element, atomic_propositions):
         index = np.where(atomic_propositions == element)[0][0]
         return index
     except IndexError:
-        pass # Element not found in array.
+        pass  # Element not found in array.
         return None
 
 
@@ -376,9 +376,7 @@ def calculate_subset_states_hat(stati, closures, subset_states):
 # every (i,i+1) until i < n_states - 1 has an R relation to guarantee the seriality
 def generate_experiment_model(states_row, states_col):
     if states_col <= 2 or states_row <= 1:
-        raise ValueError(
-            "Matrix dimensions too small. Minimum supported size is 2x3."
-        )
+        raise ValueError("Matrix dimensions too small. Minimum supported size is 2x3.")
 
     data = {
         "graph": [],
@@ -495,15 +493,15 @@ def generate_labeling_matrix(n_states, states_col):
 def do_test_generator(states_row_max, states_col_max):
     for i in range(2, states_row_max):
         for j in range(3, states_col_max):
-            t0 = time.time()
+            time.time()
             generate_experiment_model(i, j)
-            t1 = time.time()
+            time.time()
 
 
 def generate(states_row, states_col):
-    t0 = time.time()
-    data = generate_experiment_model(states_row, states_col)
-    t1 = time.time()
+    time.time()
+    generate_experiment_model(states_row, states_col)
+    time.time()
 
 
 # --------------------------- Generation of the experiment 3k model ---------------------------
@@ -606,7 +604,7 @@ def generate3k_labeling_matrix(data, n, dims):
     matrix_proposition[row_ind, col_ind] = 1
 
     # Labeling states with an
-    states_an = [_ for _ in range(2, data["states_counter"], 3)]
+    states_an = list(range(2, data["states_counter"], 3))
     repetitions = []
     for i in range(1, n + 1):
         repetitions.extend(range(1, i + 1))
@@ -626,7 +624,7 @@ def generate3k_labeling_matrix(data, n, dims):
 
 
 def generate_3n_model(n):
-    data = dict()
+    data = {}
     data["graph"], dims = merge_3k_graphs(n)
     data["states"] = np.array([f"s{i}" for i in range(data["graph"].shape[0])])
     data["states_counter"] = len(data["states"])

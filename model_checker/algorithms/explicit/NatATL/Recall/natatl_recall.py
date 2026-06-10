@@ -14,7 +14,7 @@ from model_checker.algorithms.explicit.NatATL.Recall.solver import (
 from model_checker.algorithms.explicit.NatATL.Recall.strategy_initialization import (  # noqa: E501
     initialize,
 )
-from model_checker.engine.runner import execute_model_checking_with_parser
+from model_checker.engine.runner import bind_model_checking
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.utils.error_handler import (
     create_system_error,
@@ -59,8 +59,4 @@ def _core_natatl_recall_checking(cgs: CGS, formula: str) -> Dict[str, Any]:
         return create_system_error(f"Error during NatATL Recall checking: {str(e)}")
 
 
-def model_checking(formula: str, filename: str) -> Dict[str, Any]:
-    """Main entry point for NatATL Recall."""
-    return execute_model_checking_with_parser(
-        formula, filename, "NatATL", _core_natatl_recall_checking
-    )
+model_checking = bind_model_checking("NatATL", _core_natatl_recall_checking)

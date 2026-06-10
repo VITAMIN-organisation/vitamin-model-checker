@@ -1,15 +1,5 @@
 from . import do_parsing
 from . import verify as tol_verify
-from .tol_ply_parser import (
-    AtomicProp,
-    Binary,
-    ClockExpr,
-    DemonicBinary,
-    DemonicOp,
-    Expr,
-    SimpleTimeExpr,
-    Unary,
-)
 
 # Expose symbols for the checker
 verify = tol_verify

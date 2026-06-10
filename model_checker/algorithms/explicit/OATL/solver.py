@@ -19,11 +19,6 @@ from model_checker.algorithms.explicit.shared.boolean_operators import (
 )
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
-
-def _get_parser():
-    return FormulaParserFactory.get_parser_instance("OATL")
-
-
 _UNARY = {
     "NOT": handle_not,
     "COALITION_GLOBALLY": handle_coalition_globally,
@@ -91,12 +86,13 @@ def solve_tree(cgs, node, cache=None):
         solve_tree(cgs, node.right, cache)
 
     val = node.value
+    parser = FormulaParserFactory.get_parser_instance("OATL")
     if node.right is None:
-        key = _oatl_unary_key(_get_parser(), val)
+        key = _oatl_unary_key(parser, val)
         if key and key in _UNARY:
             _UNARY[key](cgs, node)
     elif node.left and node.right:
-        key = _oatl_binary_key(_get_parser(), val)
+        key = _oatl_binary_key(parser, val)
         if key and key in _BINARY:
             _BINARY[key](cgs, node)
 

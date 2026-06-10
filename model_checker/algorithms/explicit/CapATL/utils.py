@@ -8,8 +8,6 @@ computations, and knowledge set generation.
 import functools
 import logging
 
-import numpy as np
-
 from model_checker.algorithms.explicit.CapATL.knowledge import (
     p_knowledge,
     p_knowledge_for_Y,
@@ -27,20 +25,19 @@ def get_prop_held_in_state(cgs, state):
     index = get_index_by_state_name(cgs, state)
     if index is None:
         return None
-    prop_matrix = cgs.get_matrix_proposition()
+    prop_matrix = cgs.matrix_prop
     state_atoms = prop_matrix[index]
     return {prop for prop, value in enumerate(state_atoms) if value == 1}
 
 
 def get_atom_index(cgs, element):
     """Return the index of the given atom in the array of atomic propositions."""
-    array = cgs.get_atomic_prop()
-    try:
-        index = np.where(array == element)[0][0]
-        return index
-    except (IndexError, ValueError):
+    from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
+
+    index = proposition_index(cgs.atomic_propositions, element)
+    if index is None:
         logger.warning("Atom '%s' not found in model", element)
-        return None
+    return index
 
 
 def get_index_by_state_name(cgs, state):
@@ -59,7 +56,7 @@ def get_index_by_state_name(cgs, state):
         cgs._state_name_to_index_cache[state_str] = idx
         return idx
     except (IndexError, ValueError, AttributeError):
-        state_list = cgs.get_states()
+        state_list = cgs.states
         for count, st in enumerate(state_list):
             if state_str == str(st):
                 cgs._state_name_to_index_cache[state_str] = count
@@ -72,7 +69,7 @@ def build_state_cache(cgs):
     if not hasattr(cgs, "_state_name_to_index_cache"):
         cgs._state_name_to_index_cache = {}
     cgs._state_name_to_index_cache.clear()
-    state_list = cgs.get_states()
+    state_list = cgs.states
     for idx, state in enumerate(state_list):
         state_str = str(state)
         cgs._state_name_to_index_cache[state_str] = idx
@@ -84,29 +81,6 @@ def clear_state_cache(cgs):
     """Clear the state name to index cache."""
     if hasattr(cgs, "_state_name_to_index_cache"):
         cgs._state_name_to_index_cache.clear()
-
-
-def get_state_name_by_index(cgs, index):
-    """Get state name from index."""
-    return cgs.get_state_name_by_index(index)
-
-
-def build_list(cgs, action_string):
-    """Converts action_string into a list."""
-    if action_string == "*":
-        return ["*"] * cgs.get_number_of_agents()
-    return action_string.split(",")
-
-
-def get_agents_from_coalition(coalition):
-    """Return a set of agents given a coalition string."""
-    return set(coalition.strip("{}").split(","))
-
-
-def format_agents(agents):
-    """Sort and remove 0 from agents."""
-    agents_list = sorted([int(a) for a in agents if str(a) != "0"])
-    return agents_list
 
 
 def get_capacities_from_action2(cgs, action, agent):
@@ -145,28 +119,13 @@ def X_agt_cap(cgs):
     return [list(value) for value in combinations]
 
 
-@functools.lru_cache(maxsize=1)
-def X_agt_cap2(cgs):
-    """Get X_agt_cap as a set of tuples."""
-    return {tuple(elem) for elem in X_agt_cap(cgs)}
-
-
-def possible_knowledge(cgs):
-    """Generate all possible knowledge sets."""
-    cap_assgn = cgs.get_capacities_assignment()
-    agent_possible_caps = []
-    for elem in cap_assgn:
-        agent_caps = elem[1:]
-        agent_possible_caps.append([(c,) for c in agent_caps])
-
-    return find_combinations(agent_possible_caps)
-
-
 def pointed_knowledge_set(cgs):
     """Generate all possible state-knowledge pairs."""
     pk_set = []
-    states = cgs.get_states()
-    poss_k = possible_knowledge(cgs)
+    states = cgs.states
+    cap_assgn = cgs.get_capacities_assignment()
+    agent_possible_caps = [[(c,) for c in elem[1:]] for elem in cap_assgn]
+    poss_k = find_combinations(agent_possible_caps)
     n_agents = cgs.get_number_of_agents()
     agents_tot = list(range(1, n_agents + 1))
 
@@ -179,7 +138,7 @@ def pointed_knowledge_set(cgs):
 @functools.lru_cache(maxsize=8192)
 def Omega_Y(cgs, coalition_Y):
     """Compute possible knowledge elements for a specific coalition."""
-    agents_y = get_agents_from_coalition(coalition_Y)
+    agents_y = set(coalition_Y.strip("{}").split(","))
     pk_set = pointed_knowledge_set(cgs)
 
     omega_y_res = []
@@ -260,7 +219,10 @@ def indistinguishable_action(cgs, state1, state2, action, agent):
     if actions_encoded == 0:
         return None
 
-    possible_actions = build_list(cgs, actions_encoded)
+    if actions_encoded == "*":
+        possible_actions = ["*"] * cgs.get_number_of_agents()
+    else:
+        possible_actions = actions_encoded.split(",")
     ag_idx = int(agent) - 1
 
     return [
@@ -290,7 +252,9 @@ def function_F_for_succ(cgs, q1, q2, alpha, agent_a):
 def succ(cgs, pk_for_Y):
     """Compute successor knowledge elements given a coalition joint action."""
     coal = pk_for_Y.coalition
-    agents_coal = format_agents(get_agents_from_coalition(coal))
+    agents_coal = sorted(
+        int(a) for a in set(coal.strip("{}").split(",")) if str(a) != "0"
+    )
     action = pk_for_Y.action
     state = pk_for_Y.state
     set_capacity = pk_for_Y.knowledge
@@ -307,8 +271,11 @@ def succ(cgs, pk_for_Y):
         if actions_encoded == 0:
             continue
 
-        succ_name = get_state_name_by_index(cgs, succ_idx)
-        possible_actions = build_list(cgs, actions_encoded)
+        succ_name = cgs.get_state_name_by_index(succ_idx)
+        if actions_encoded == "*":
+            possible_actions = ["*"] * cgs.get_number_of_agents()
+        else:
+            possible_actions = actions_encoded.split(",")
 
         for alpha in possible_actions:
             # Check if alpha is consistent with coalition's beta

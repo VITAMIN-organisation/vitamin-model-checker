@@ -23,8 +23,8 @@ def build_tree_from_CGS(cgs: CGS, model_states: List[str], height: int) -> Node:
             return
 
         state_index = cgs.get_index_by_state_name(node.state)
-        transitions = cgs.transition_matrix[state_index]
-        model_states = cgs.get_states()
+        transitions = cgs.graph[state_index]
+        model_states = cgs.states
 
         for next_state_index, actions in enumerate(transitions):
             if actions == 0:
@@ -46,7 +46,7 @@ def build_tree_from_CGS(cgs: CGS, model_states: List[str], height: int) -> Node:
 
                 add_children(new_child, current_level + 1)
 
-    initial_state = cgs.get_initial_state()
+    initial_state = cgs.initial_state
     root = Node(initial_state, cgs)
     nodes[initial_state] = root
 
@@ -58,7 +58,6 @@ def build_tree_from_CGS(cgs: CGS, model_states: List[str], height: int) -> Node:
 def tree_to_initial_CGS(
     root: Node,
     states: List[str],
-    num_agents: int,
     max_depth: int,
 ) -> List[List[str]]:
     """
@@ -71,7 +70,6 @@ def tree_to_initial_CGS(
     Args:
         root: Root node of the pruned tree
         states: List of state names in the tree
-        num_agents: Number of agents in the model
         max_depth: Maximum traversal depth
 
     Returns:
@@ -101,13 +99,6 @@ def tree_to_initial_CGS(
 
     traverse(root, 0)
     return transition_matrix
-
-
-def _collect_labels_dfs(node: Node, out: List) -> None:
-    """Append label_row for each node in DFS order (same as get_states_from_tree)."""
-    out.append(node.label_row)
-    for child in node.children:
-        _collect_labels_dfs(child, out)
 
 
 def build_cgs_from_tree(
@@ -144,6 +135,12 @@ def build_cgs_from_tree(
         else list(cgs.atomic_propositions)
     )
     labelling = []
-    _collect_labels_dfs(tree, labelling)
+
+    def collect_labels(node: Node) -> None:
+        labelling.append(node.label_row)
+        for child in node.children:
+            collect_labels(child)
+
+    collect_labels(tree)
     pruned.matrix_prop = [row[:] if row else [] for row in labelling]
     return pruned

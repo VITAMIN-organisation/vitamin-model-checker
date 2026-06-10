@@ -2,6 +2,8 @@
 
 import pytest
 
+from model_checker.parsers.game_structures.cgs import cgs_actions
+from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.tests.helpers.model_helpers import load_test_model
 
 SINGLE_MODEL = "CGS/ATL/atl_2agents_4states_simple.txt"
@@ -94,7 +96,7 @@ class TestAllValidModelsAtomicPropositionOperations:
 
         if len(parser.atomic_propositions) > 0:
             for prop in parser.atomic_propositions:
-                prop_index = parser.get_atom_index(prop)
+                prop_index = proposition_index(parser.atomic_propositions, prop)
                 assert (
                     prop_index is not None
                 ), f"Atomic proposition '{prop}' not found in atomic propositions list"
@@ -114,20 +116,21 @@ class TestAllValidModelsActionOperations:
     """Test action-related operations on a representative set of models."""
 
     @pytest.mark.parametrize("model_path", [SINGLE_MODEL])
-    def test_get_actions_returns_valid_structure(self, test_data_dir, model_path):
-        """Test that get_actions() returns valid structure for all models."""
+    def test_extract_actions_returns_valid_structure(self, test_data_dir, model_path):
+        """Test that extract_actions_for_agents returns valid structure."""
         parser = load_test_model(test_data_dir, model_path)
 
         num_agents = parser.get_number_of_agents()
         agents = list(range(1, num_agents + 1))
-        actions = parser.get_actions(agents)
+        cgs_actions.validate_agent_numbers(agents, num_agents)
+        actions = cgs_actions.extract_actions_for_agents(parser.graph, agents)
 
         assert isinstance(
             actions, dict
-        ), f"get_actions() should return dict, got {type(actions)}"
+        ), f"extract_actions_for_agents should return dict, got {type(actions)}"
         assert (
             len(actions) == num_agents
-        ), f"get_actions() returned {len(actions)} agents, expected {num_agents}"
+        ), f"extract_actions_for_agents returned {len(actions)} agents, expected {num_agents}"
 
         for agent_num in agents:
             agent_key = f"agent{agent_num}"

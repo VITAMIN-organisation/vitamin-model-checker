@@ -1,6 +1,8 @@
 from typing import Any, Dict
 
-from model_checker.algorithms.explicit.TCTL.tctl_model_checking import timed_model_checking
+from model_checker.algorithms.explicit.TCTL.tctl_model_checking import (
+    timed_model_checking,
+)
 
 
 def model_checking(formula: str, filename: str) -> Dict[str, Any]:

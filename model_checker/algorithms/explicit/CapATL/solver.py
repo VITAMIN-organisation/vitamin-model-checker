@@ -18,7 +18,7 @@ from model_checker.algorithms.explicit.CapATL.operators import (
     handle_until,
 )
 from model_checker.algorithms.explicit.CapATL.utils import (
-    X_agt_cap2,
+    X_agt_cap,
     pointed_knowledge_set,
     verify_digits_and_letters,
 )
@@ -27,10 +27,6 @@ from model_checker.algorithms.explicit.shared.atom_utils import (
 )
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cgs import CapCGSProtocol
-
-
-def _get_parser():
-    return FormulaParserFactory.get_parser_instance("CapATL")
 
 
 def _extract_coalition(val_str):
@@ -45,20 +41,8 @@ def _extract_coalition(val_str):
 
 
 def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Optional[Node_PK]:
-    """
-    Build CapATL formula tree from parsed formula tuple.
-
-    Handles both atomic propositions and capacity constraints (e.g., "1c").
-    Leaf nodes contain pointed knowledge sets representing states where
-    the atom/capacity holds.
-
-    Args:
-        cgs: CGS model instance
-        tpl: Parsed formula tuple from parser
-
-    Returns:
-        Root Node_PK of the formula tree, or None if invalid
-    """
+    """Build the CapATL formula tree from a parsed formula tuple."""
+    parser = FormulaParserFactory.get_parser_instance("CapATL")
     if isinstance(tpl, tuple):
         root = Node_PK(tpl[0])
         if len(tpl) > 1:
@@ -73,7 +57,7 @@ def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Optional[Node_PK]:
         if isinstance(tpl, tuple) and len(tpl) == 2:
             agent_str, prop_str = str(tpl[0]), str(tpl[1])
             if agent_str.isdigit() and prop_str and prop_str[0].islower():
-                states_set = resolve_atom_with_constants(cgs, prop_str, _get_parser())
+                states_set = resolve_atom_with_constants(cgs, prop_str, parser)
                 if states_set is None:
                     return None
                 Theta = pointed_knowledge_set(cgs)
@@ -90,7 +74,7 @@ def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Optional[Node_PK]:
             ag_idx = int(ag_str) - 1
             cap_a = tpl_str[len(ag_str) :]
 
-            all_cap_combos = X_agt_cap2(cgs)
+            all_cap_combos = {tuple(elem) for elem in X_agt_cap(cgs)}
             winning_combos = {
                 c for c in all_cap_combos if ag_idx < len(c) and c[ag_idx] == cap_a
             }
@@ -99,7 +83,7 @@ def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Optional[Node_PK]:
             return Node_PK(winning_combos)
         else:
             # Atomic proposition
-            states_set = resolve_atom_with_constants(cgs, tpl_str, _get_parser())
+            states_set = resolve_atom_with_constants(cgs, tpl_str, parser)
             if states_set is None:
                 return None
             Theta = pointed_knowledge_set(cgs)
@@ -110,19 +94,7 @@ def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Optional[Node_PK]:
 
 
 def solve_tree(cgs: CapCGSProtocol, node: Optional[Node_PK]) -> None:
-    """
-    Recursively solve the CapATL formula tree using bottom-up evaluation.
-
-    Formula is parsed into a binary tree by the parser. Leaf nodes contain
-    atomic propositions or capacity constraints (already resolved to pointed
-    knowledge sets). Internal nodes apply CapATL operators to combine child
-    results. Each node's value becomes the set of pointed knowledge elements
-    where that subformula holds.
-
-    Args:
-        cgs: The CGS model instance
-        node: Current tree node to evaluate
-    """
+    """Evaluate the CapATL formula tree bottom-up."""
     if node is None:
         return set()
 
@@ -131,36 +103,35 @@ def solve_tree(cgs: CapCGSProtocol, node: Optional[Node_PK]) -> None:
     if node.right:
         solve_tree(cgs, node.right)
 
-    # Handle unary operators
+    parser = FormulaParserFactory.get_parser_instance("CapATL")
+
     if node.right is None:
         val_str = str(node.value)
         if node.left is None:
-            # Leaf node (atom or capacity)
             return node.value
 
-        if _get_parser().verify("NOT", val_str):
+        if parser.verify("NOT", val_str):
             handle_not(cgs, node)
 
-        elif _get_parser().verify("NEXT", val_str):
+        elif parser.verify("NEXT", val_str):
             coal_str = _extract_coalition(val_str)
             handle_next(cgs, node, coal_str)
 
-        elif _get_parser().verify("EVENTUALLY", val_str):
+        elif parser.verify("EVENTUALLY", val_str):
             coal_str = _extract_coalition(val_str)
             handle_eventually(cgs, node, coal_str)
 
-        elif _get_parser().verify("GLOBALLY", val_str):
+        elif parser.verify("GLOBALLY", val_str):
             coal_str = _extract_coalition(val_str)
             handle_globally(cgs, node, coal_str)
 
-    # Handle binary operators
     elif node.left and node.right:
         val_str = str(node.value)
-        if _get_parser().verify("AND", val_str):
+        if parser.verify("AND", val_str):
             handle_and(cgs, node)
-        elif _get_parser().verify("OR", val_str):
+        elif parser.verify("OR", val_str):
             handle_or(cgs, node)
-        elif _get_parser().verify("UNTIL", val_str):
+        elif parser.verify("UNTIL", val_str):
             coal_str = _extract_coalition(val_str)
             handle_until(cgs, node, coal_str)
 

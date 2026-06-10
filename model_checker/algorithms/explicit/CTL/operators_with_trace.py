@@ -24,8 +24,6 @@ from model_checker.algorithms.explicit.CTL.preimage import (
 )
 from model_checker.algorithms.explicit.shared import (
     build_predecessor_map_forward,
-    normalize_state_set,
-    state_set_to_str,
 )
 from model_checker.algorithms.explicit.shared.verification_result import (
     TraceType,
@@ -57,7 +55,7 @@ def handle_ex_with_trace(
     """
     states = parse_state_set_literal(node.left.value)
     result_states, predecessors = pre_image_exist_with_trace(cached_edges, states)
-    result_states = normalize_state_set(result_states)
+    result_states = {str(s) for s in result_states}
 
     op = OperatorWithTrace()
     op.result_states = result_states
@@ -65,7 +63,7 @@ def handle_ex_with_trace(
     op.trace_type = TraceType.WITNESS
     op.description = "Transition to state satisfying phi"
 
-    node.value = state_set_to_str(result_states)
+    node.value = str(tuple(sorted({str(s) for s in result_states})))
     return op
 
 
@@ -91,7 +89,7 @@ def handle_ef_with_trace(
     op.trace_type = TraceType.WITNESS
     op.description = "Path eventually reaching phi"
 
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
     return op
 
 
@@ -104,16 +102,14 @@ def handle_ax_with_trace(
     For counterexample: shows a state and a successor that doesn't satisfy phi.
     """
     states = parse_state_set_literal(node.left.value)
-    result = normalize_state_set(
-        pre_image_all(cached_edges, cgs.all_states_set, states)
-    )
+    result = {str(s) for s in pre_image_all(cached_edges, cgs.all_states_set, states)}
 
     # For counterexample, we need to find a state in result and a successor not in phi
     predecessors = {}
 
     # Build map of states to their bad successors (not in phi)
     all_states_set = cgs.all_states_set
-    states_set = normalize_state_set(states)
+    states_set = {str(s) for s in states}
     bad_successors = all_states_set - states_set
 
     for source, target in cached_edges:
@@ -129,7 +125,7 @@ def handle_ax_with_trace(
     op.trace_type = TraceType.WITNESS
     op.description = "All successors satisfy phi"
 
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
     return op
 
 
@@ -142,7 +138,7 @@ def handle_af_with_trace(
     For witness: AF phi = !EG !phi. For counterexample: show path that stays in !phi forever.
     """
     result = _compute_af(cgs, node, cached_edges)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
     predecessors = build_predecessor_map_forward(cached_edges, str(cgs.initial_state))
     op = OperatorWithTrace()
     op.result_states = result
@@ -161,7 +157,7 @@ def handle_eg_with_trace(
     For witness: shows a cycle or infinite path where phi holds globally.
     """
     result = _compute_eg(cgs, node, cached_edges)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
     eg_edges = [
         (s, t) for s, t in cached_edges if str(s) in result and str(t) in result
     ]
@@ -190,14 +186,14 @@ def handle_ag_with_trace(
     """
     all_states = cgs.all_states_set
     phi_states = parse_state_set_literal(node.left.value)
-    not_phi = all_states - normalize_state_set(phi_states)
+    not_phi = all_states - {str(s) for s in phi_states}
 
     def update(T: Set[str]) -> Set[str]:
         return T.union(pre_image_exist(cached_edges, T))
 
     ef_not_phi = least_fixpoint(not_phi, update)
     result = all_states - ef_not_phi
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
     ag_edges = [
         (s, t) for s, t in cached_edges if str(s) in result and str(t) in result
@@ -222,7 +218,7 @@ def handle_eu_with_trace(
     phi_states = parse_state_set_literal(node.left.value)
     psi_states = parse_state_set_literal(node.right.value)
 
-    phi_set = normalize_state_set(phi_states)
+    phi_set = {str(s) for s in phi_states}
 
     def update_with_trace(T):
         new_states, new_preds = pre_image_exist_with_trace(cached_edges, T)
@@ -239,7 +235,7 @@ def handle_eu_with_trace(
     op.trace_type = TraceType.WITNESS
     op.description = "Path where phi holds until psi"
 
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
     return op
 
 
@@ -252,7 +248,7 @@ def handle_au_with_trace(
     For witness: shows all paths reach psi with phi holding until then.
     """
     result = _compute_au(cgs, node, cached_edges)
-    node.value = state_set_to_str(result)
+    node.value = str(tuple(sorted({str(s) for s in result})))
     predecessors = build_predecessor_map_forward(cached_edges, str(cgs.initial_state))
     op = OperatorWithTrace()
     op.result_states = result

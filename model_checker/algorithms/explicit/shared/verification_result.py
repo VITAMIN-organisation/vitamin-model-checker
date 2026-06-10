@@ -1,9 +1,4 @@
-"""
-Verification result classes for model checking with witness and counterexample support.
-
-This module provides data structures to hold verification results along with
-witness traces (for positive results) and counterexamples (for negative results).
-"""
+"""Result objects with optional witness or counterexample traces."""
 
 from dataclasses import dataclass, field
 from enum import Enum
@@ -17,17 +12,7 @@ class TraceType(str, Enum):
 
 @dataclass
 class StateTrace:
-    """
-    Represents a trace (path) through the state space.
-
-    A trace is a sequence of states that demonstrates why a formula is
-    satisfied (witness) or violated (counterexample).
-
-    Attributes:
-        states: Ordered list of state names forming the path
-        trace_type: Type of trace ("witness" or "counterexample")
-        description: Human-readable description of what this trace shows
-    """
+    """A path through the model (witness or counterexample)."""
 
     states: List[str]
     trace_type: TraceType  # "witness" or "counterexample"
@@ -61,17 +46,7 @@ class StateTrace:
 
 @dataclass
 class StrategyTrace:
-    """
-    Represents a strategy for coalition operators with state-action mappings.
-
-    Used for ATL-family logics where we need to show not just a path,
-    but also the actions that achieve the goal.
-
-    Attributes:
-        agent_strategies: Mapping from agent ID to their strategy
-        trace: Optional state trace showing execution of the strategy
-        description: Human-readable description of the strategy
-    """
+    """Coalition strategy as state-action pairs, with an optional path."""
 
     agent_strategies: Dict[str, List[tuple]]  # agent -> [(state, action), ...]
     trace: Optional[StateTrace] = None
@@ -104,21 +79,7 @@ class StrategyTrace:
 
 @dataclass
 class VerificationResult:
-    """
-    Complete verification result with states and optional trace/strategy information.
-
-    This class replaces the simple set-of-states return type with a richer
-    structure that includes witness traces for positive results and
-    counterexamples for negative results.
-
-    Attributes:
-        states: Set of state names where the formula holds
-        satisfied: Whether the initial state satisfies the formula
-        initial_state: Name of the initial state
-        trace: Optional trace showing why formula holds/doesn't hold
-        strategy: Optional strategy for coalition operators (ATL-family)
-        metadata: Additional information (algorithm used, time taken, etc.)
-    """
+    """Model-checking outcome: satisfying states plus optional trace or strategy."""
 
     states: Set[str]
     satisfied: bool

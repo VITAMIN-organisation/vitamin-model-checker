@@ -111,7 +111,7 @@ LOGIC_CONFIG: LogicConfig = {
     [
         ("ATL", "<1>F p", {"s0", "s1", "s2", "s3"}, True),
         ("CTL", "AF p", {"s0", "s1", "s2", "s3"}, True),
-        ("OL", "<J1>F r", {"s0", "s1", "s2", "s3", "s4", "s5"}, True),
+        ("OL", "<J2>F r", {"s0", "s1", "s2", "s3", "s5"}, True),
     ],
 )
 def test_model_checking_exact_state_sets(

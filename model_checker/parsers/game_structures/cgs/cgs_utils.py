@@ -1,32 +1,28 @@
-"""Helpers for CGS: state/index lookups, graph edges, action lists, keys."""
+"""Helpers for CGS: proposition validation, graph edges, and action list parsing."""
 
+import re
 from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
-
-def get_index_by_state_name(states, state: str) -> int:
-    """Return the index of the state with the given name. Raises IndexError if not found."""
-    return np.where(states == state)[0][0]
+ATOMIC_PROPOSITION_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 
-def get_state_name_by_index(states, index: int) -> str:
-    """Return the state name at the given index. Raises IndexError if index is negative or out of range."""
-    if index < 0:
-        raise IndexError(f"State index must be non-negative, got {index}")
-    if index >= len(states):
-        raise IndexError(
-            f"State index {index} is out of bounds for {len(states)} states"
-        )
-    return states[index]
-
-
-def get_atom_index(atomic_propositions, element: str) -> Optional[int]:
-    """Return the index of the given atomic proposition, or None if it is not in the list."""
+def proposition_index(atomic_propositions, element) -> Optional[int]:
+    """Return the index of element in atomic_propositions, or None if absent."""
     try:
-        return np.where(atomic_propositions == element)[0][0]
-    except IndexError:
+        return int(np.where(atomic_propositions == element)[0][0])
+    except (IndexError, TypeError):
         return None
+
+
+def validate_atomic_proposition_name(name: str) -> None:
+    """Reject proposition names that formula parsers cannot reference."""
+    if not ATOMIC_PROPOSITION_NAME_RE.match(str(name)):
+        raise ValueError(
+            f"Atomic proposition {name!r} is invalid: expected lowercase "
+            "identifier matching [a-z][a-z0-9_]*."
+        )
 
 
 def get_edges(graph: List[List], states) -> List[Tuple[str, str]]:
@@ -56,10 +52,4 @@ def build_action_list(action_string: str, num_agents: int) -> List[str]:
     """Turn an action string into a list: "*" is expanded to num_agents chars, then split on commas."""
     if action_string == "*":
         action_string = "*" * num_agents
-    action_list = action_string.split(",")
-    return action_list
-
-
-def translate_action_and_state_to_key(action_string: str, state: str) -> str:
-    """Combine action string and state name into a single key (action;state)."""
-    return action_string + ";" + state
+    return action_string.split(",")

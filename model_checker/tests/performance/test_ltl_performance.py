@@ -29,12 +29,8 @@ class TestLTLNashEquilibrium:
 
     def test_nash_deviation_check_bounded(self, test_data_dir):
         """Verify Nash deviation checking doesn't explode."""
-        from model_checker.algorithms.explicit.LTL.strategies import (
-            generate_guarded_action_pairs,
-        )
-        from model_checker.algorithms.explicit.shared.strategies_base import (
-            generate_strategies,
-        )
+        from model_checker.algorithms.explicit.LTL.strategies import generate_strategies
+        from model_checker.algorithms.explicit.shared import strategies_base
 
         atomic_props = ["p", "q"]
         agent_actions = {
@@ -45,11 +41,8 @@ class TestLTLNashEquilibrium:
 
         start_time = time.time()
 
-        cartesian_products = generate_guarded_action_pairs(
-            k=2,
-            agent_actions=agent_actions,
-            actions_list=actions_list,
-            atomic_propositions=atomic_props,
+        cartesian_products = strategies_base.generate_guarded_action_pairs(
+            2, agent_actions, actions_list, atomic_props
         )
 
         agents = [1, 2]

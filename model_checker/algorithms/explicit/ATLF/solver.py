@@ -18,10 +18,6 @@ from model_checker.algorithms.explicit.ATLF.operators import (
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 
-def _get_parser():
-    return FormulaParserFactory.get_parser_instance("ATL")
-
-
 def solve_tree(cgs, node):
     """
     Recursively solve the formula tree for ATLF.
@@ -34,32 +30,32 @@ def solve_tree(cgs, node):
     if node.right is not None:
         solve_tree(cgs, node.right)
 
-    # Handle unary operators
+    parser = FormulaParserFactory.get_parser_instance("ATL")
+
     if node.right is None:
-        if _get_parser().verify("NOT", node.value):
+        if parser.verify("NOT", node.value):
             handle_not(cgs, node)
-        elif _get_parser().verify("COALITION", node.value) and _get_parser().verify(
+        elif parser.verify("COALITION", node.value) and parser.verify(
             "GLOBALLY", node.value
         ):
             handle_coalition_globally(cgs, node)
-        elif _get_parser().verify("COALITION", node.value) and _get_parser().verify(
+        elif parser.verify("COALITION", node.value) and parser.verify(
             "NEXT", node.value
         ):
             handle_coalition_next(cgs, node)
-        elif _get_parser().verify("COALITION", node.value) and _get_parser().verify(
+        elif parser.verify("COALITION", node.value) and parser.verify(
             "EVENTUALLY", node.value
         ):
             handle_coalition_eventually(cgs, node)
 
-    # Handle binary operators
     if node.left is not None and node.right is not None:
-        if _get_parser().verify("OR", node.value):
+        if parser.verify("OR", node.value):
             handle_or(cgs, node)
-        elif _get_parser().verify("AND", node.value):
+        elif parser.verify("AND", node.value):
             handle_and(cgs, node)
-        elif _get_parser().verify("COALITION", node.value) and _get_parser().verify(
+        elif parser.verify("COALITION", node.value) and parser.verify(
             "UNTIL", node.value
         ):
             handle_coalition_until(cgs, node)
-        elif _get_parser().verify("IMPLIES", node.value):
+        elif parser.verify("IMPLIES", node.value):
             handle_implies(cgs, node)

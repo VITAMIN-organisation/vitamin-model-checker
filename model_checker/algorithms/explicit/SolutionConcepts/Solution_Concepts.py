@@ -25,23 +25,7 @@ def is_not_nash(
     agent_actions: Dict[str, List[str]],
     atomic_propositions: List[str],
 ) -> bool:
-    """Checks if the strategy profile is NOT a Nash Equilibrium.
-
-    Iterates through each agent to find any profitable unilateral deviation.
-
-    Args:
-        model: Path to model file.
-        cgs: Concurrent Game Structure object.
-        agents: List of agent names.
-        ctl_formula: CTL formula to verify.
-        current_strategy: Current strategy profile.
-        bound: Strategy complexity bound.
-        agent_actions: Dictionary of agent actions.
-        atomic_propositions: List of atomic propositions.
-
-    Returns:
-        True if a profitable deviation is found (NOT Nash), False otherwise.
-    """
+    """Return True if some agent has a profitable unilateral deviation (not Nash)."""
     for agent_index, agent in enumerate(agents):
         logger.debug("Checking deviations for agent %s (Index: %d)", agent, agent_index)
 

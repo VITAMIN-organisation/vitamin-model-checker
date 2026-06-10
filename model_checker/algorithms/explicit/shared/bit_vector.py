@@ -1,9 +1,4 @@
-"""
-Efficient state set implementation using bit vectors.
-
-This module provides a bit vector implementation for storing sets of state indices,
-optimized for dense sets and frequent membership checks in large models.
-"""
+"""Bit-vector state sets for large models."""
 
 from typing import Iterable, Iterator, Optional, Set, Union
 
@@ -15,11 +10,7 @@ BIT_VECTOR_THRESHOLD = 300
 
 
 class BitVectorStateSet:
-    """Bit vector implementation for storing sets of integer state indices.
-
-    Uses a numpy boolean array (_bits) where _bits[i] == 1 indicates presence.
-    Best suited for models larger than BIT_VECTOR_THRESHOLD.
-    """
+    """Set of state indices stored as a numpy bit array."""
 
     __slots__ = ("_bits", "_num_states")
 
@@ -32,10 +23,6 @@ class BitVectorStateSet:
             for idx in initial_indices:
                 if 0 <= idx < num_states:
                     self._bits[idx] = 1
-
-    @classmethod
-    def from_set(cls, num_states: int, indices: Iterable[int]) -> "BitVectorStateSet":
-        return cls(num_states, indices)
 
     @classmethod
     def full(cls, num_states: int) -> "BitVectorStateSet":
@@ -143,45 +130,15 @@ class BitVectorStateSet:
         out._bits = self._bits & ~other._bits
         return out
 
-    def __ior__(self, other: "BitVectorStateSet") -> "BitVectorStateSet":
-        self.update(other)
-        return self
-
-    def __iand__(self, other: "BitVectorStateSet") -> "BitVectorStateSet":
-        self.intersection_update(other)
-        return self
-
-    def __isub__(self, other: "BitVectorStateSet") -> "BitVectorStateSet":
-        self.difference_update(other)
-        return self
-
     def issubset(self, other: "BitVectorStateSet") -> bool:
-        if isinstance(other, BitVectorStateSet):
-            return not np.any(self._bits & ~other._bits)
-        return self.to_set().issubset(other)
+        return not np.any(self._bits & ~other._bits)
 
     def issuperset(self, other: "BitVectorStateSet") -> bool:
-        if isinstance(other, BitVectorStateSet):
-            return not np.any(other._bits & ~self._bits)
-        return self.to_set().issuperset(other)
+        return not np.any(other._bits & ~self._bits)
 
     def isdisjoint(self, other: "BitVectorStateSet") -> bool:
-        if isinstance(other, BitVectorStateSet):
-            return not np.any(self._bits & other._bits)
-        return self.to_set().isdisjoint(other)
+        return not np.any(self._bits & other._bits)
 
     def __repr__(self) -> str:
         idxs = list(self)[:10]
         return f"BitVectorStateSet({idxs}{'...' if len(self) > 10 else ''})"
-
-
-def should_use_bit_vectors(num_states: int) -> bool:
-    return num_states >= BIT_VECTOR_THRESHOLD
-
-
-def indices_to_bit_vector(num_states: int, indices: Iterable[int]) -> BitVectorStateSet:
-    return BitVectorStateSet.from_set(num_states, indices)
-
-
-def bit_vector_to_indices(bv: BitVectorStateSet) -> Set[int]:
-    return bv.to_set()

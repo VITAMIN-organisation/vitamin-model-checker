@@ -2,7 +2,6 @@
 
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from model_checker.algorithms.explicit.shared import normalize_state_set
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
 
@@ -24,17 +23,8 @@ def pre_image_exist(
     target_states: Set[str],
     reverse_index: Optional[Dict[str, Set[str]]] = None,
 ) -> Set[str]:
-    """Existential pre-image (EX): states with at least one successor in target_states.
-
-    Args:
-        transitions: List of (source, target) pairs.
-        target_states: Target state names.
-        reverse_index: Optional pre-built reverse index.
-
-    Returns:
-        Set of predecessor state names.
-    """
-    target_states = normalize_state_set(target_states)
+    """Existential pre-image (EX): states with at least one successor in target_states."""
+    target_states = {str(s) for s in target_states}
 
     if len(transitions) < 50 and reverse_index is None:
         predecessors = set()
@@ -62,17 +52,9 @@ def pre_image_all(
     """Universal pre-image (AX): states whose successors are all in target_states.
 
     States with no successors are included (vacuous case).
-
-    Args:
-        transitions: List of (source, target) pairs.
-        all_states: All state names in the model.
-        target_states: Target state names.
-
-    Returns:
-        Set of state names satisfying AX predecessor condition.
     """
-    all_states = normalize_state_set(all_states)
-    target_states = normalize_state_set(target_states)
+    all_states = {str(s) for s in all_states}
+    target_states = {str(s) for s in target_states}
 
     forward_index = {}
     for source, target in transitions:
@@ -96,19 +78,10 @@ def pre_release_universal(
     phi_states: Set[str],
     psi_states: Set[str],
 ) -> Set[str]:
-    """Compute A(phi R psi) via greatest fixpoint (psi and (phi or AX Z)).
-
-    Args:
-        cgs: CGS model.
-        phi_states: States where phi holds.
-        psi_states: States where psi holds.
-
-    Returns:
-        Set of states satisfying A(phi R psi).
-    """
+    """Compute A(phi R psi) via greatest fixpoint (psi and (phi or AX Z))."""
     all_states = cgs.all_states_set
-    phi_states = normalize_state_set(phi_states)
-    psi_states = normalize_state_set(psi_states)
+    phi_states = {str(s) for s in phi_states}
+    psi_states = {str(s) for s in psi_states}
 
     result = psi_states.copy()
     transitions = cgs.get_edges()
@@ -139,16 +112,8 @@ def pre_image_exist_with_trace(
     transitions: List[Tuple[Any, Any]],
     target_states: Set[str],
 ) -> Tuple[Set[str], Dict[str, str]]:
-    """Existential pre-image plus a predecessor -> successor map for trace building.
-
-    Args:
-        transitions: List of (source, target) pairs.
-        target_states: Target state names.
-
-    Returns:
-        (predecessor_states, predecessors_map) with one chosen successor per predecessor.
-    """
-    target_states = normalize_state_set(target_states)
+    """Existential pre-image plus a predecessor-to-successor map for trace building."""
+    target_states = {str(s) for s in target_states}
     reverse_index = _build_reverse_index(transitions)
     predecessors = set()
     predecessors_map: Dict[str, str] = {}

@@ -41,22 +41,13 @@ def normalize_action_token(token: str) -> str:
 
 
 def parse_joint_action_cell(cell: str, num_agents: int) -> List[List[str]]:
-    """Parse one transition-matrix cell into per-agent action tokens for each joint choice.
+    """Parse one transition-matrix cell into joint action choices.
 
-    Supported formats for each non-zero cell in the Transition matrix:
-    - Compact character format (recommended, current examples):
-      * Joint choices separated by JOINT_CHOICE_SEPARATOR (",")
-      * Each joint is a string of characters, one character per agent position
-        (for example, "AC" with 2 agents means agent 1 does "A", agent 2 does "C").
-      * A joint without any AGENT_ACTION_SEPARATOR is treated as a sequence of characters;
-        the first num_agents characters are taken as the per-agent tokens and any extra
-        characters beyond num_agents are ignored.
-    - Explicit token format (optional, for longer names):
-      * Joint choices separated by JOINT_CHOICE_SEPARATOR (",")
-      * Within each joint, per-agent tokens separated by AGENT_ACTION_SEPARATOR ("|"),
-        for example "IDLE|MOVE" for 2 agents.
+    Joint moves in a cell are separated by ",". Each joint is either:
+    - one character per agent (e.g. "AC" means agent 1 does A, agent 2 does C), or
+    - tokens separated by "|" for longer names (e.g. "IDLE|MOVE").
 
-    Idle tokens can be "I" or "IDLE" and are normalized to CANONICAL_IDLE_TOKEN.
+    Only the first num_agents tokens are used. "I" and "IDLE" map to IDLE.
     """
     if not isinstance(cell, str):
         return []
@@ -101,10 +92,10 @@ def parse_joint_action_cell(cell: str, num_agents: int) -> List[List[str]]:
 def extract_actions_for_agents(
     graph: List[List], agents: List[int]
 ) -> Dict[str, List[str]]:
-    """Build a dict agent_name -> list of actions from the transition matrix for the given 1-based agents.
+    """Return ``agent{n}`` -> action tokens from graph cells for 1-based agent ids.
 
-    Each matrix cell encodes one or more joint choices as strings; for each joint choice we
-    collect the per-agent action tokens for the requested agents. Idle tokens are included.
+    Call ``validate_agent_numbers`` first. Cell encoding is defined by
+    ``parse_joint_action_cell``.
     """
     agent_indices = {agent: agent - 1 for agent in agents}
     actions_per_agent = {f"agent{agent}": set() for agent in agents}
@@ -175,12 +166,3 @@ def get_coalition_actions(
     if not agents:
         return {"-" * num_agents}
     return _process_actions_for_agents(actions, agents, num_agents, include_agents=True)
-
-
-def get_opponent_actions(
-    actions: Set[str], agents: Set[int], num_agents: int
-) -> Set[str]:
-    """Return the opponents’ part of each action string (coalition positions become "-")."""
-    return _process_actions_for_agents(
-        actions, agents, num_agents, include_agents=False
-    )

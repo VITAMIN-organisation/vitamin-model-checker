@@ -3,13 +3,13 @@
 from typing import List, Set, Union
 
 from model_checker.algorithms.explicit.shared.bit_vector import (
+    BIT_VECTOR_THRESHOLD,
     BitVectorStateSet,
-    should_use_bit_vectors,
 )
 from model_checker.algorithms.explicit.shared.state_utils import (
     state_names_to_indices,
 )
-from model_checker.parsers.game_structures.cgs import CostCGSProtocol
+from model_checker.parsers.game_structures.cgs import CostCGSProtocol, cgs_actions
 
 
 def get_good_actions(
@@ -19,15 +19,7 @@ def get_good_actions(
     agents: Set[str],
     bound: List[int],
 ) -> Set[str]:
-    """Return actions whose coalition cost is within bound at this state.
-
-    Args:
-        cgs: Cost CGS model.
-        actions: Available action strings.
-        state_idx: Current state index.
-        agents: Coalition agent indices (strings).
-        bound: Resource bound vector.
-    """
+    """Return actions at state_idx whose coalition cost fits within bound."""
     good_actions = set()
     state_name = cgs.get_state_name_by_index(state_idx)
 
@@ -72,14 +64,16 @@ def pre(
     state_set: Union[Set[str], str],
     bound: List[int],
 ) -> Set[str]:
-    """Pre-image for RABATL: states from which coalition can force one step into state_set within bound."""
-    agents = cgs.get_agents_from_coalition(coalition)
+    """States where coalition can reach state_set in one step within bound."""
+    agents = cgs_actions.get_agents_from_coalition(coalition)
+    formatted_agents = cgs_actions.format_agents(agents)
+    num_agents = cgs.get_number_of_agents()
     graph = cgs.graph
     num_states = len(graph)
     target_indices = state_names_to_indices(cgs, state_set)
     pre_states = set()
 
-    use_bit_vector = should_use_bit_vectors(num_states)
+    use_bit_vector = num_states >= BIT_VECTOR_THRESHOLD
     if use_bit_vector:
         target_bits = BitVectorStateSet(num_states, target_indices)
 
@@ -104,7 +98,9 @@ def pre(
                 pre_states.add(source_idx)
                 break
 
-            move_profile = cgs.get_coalition_action({action}, agents)
+            move_profile = cgs_actions.get_coalition_actions(
+                {action}, formatted_agents, num_agents
+            )
             is_winning = True
 
             for k, element in enumerate(graph[source_idx]):
@@ -112,7 +108,9 @@ def pre(
                     continue
 
                 row_actions = cgs.build_action_list(element)
-                opponent_moves = cgs.get_opponent_moves(row_actions, agents)
+                opponent_moves = cgs_actions._process_actions_for_agents(
+                    row_actions, formatted_agents, num_agents, include_agents=False
+                )
 
                 if move_profile.intersection(opponent_moves):
                     if use_bit_vector:

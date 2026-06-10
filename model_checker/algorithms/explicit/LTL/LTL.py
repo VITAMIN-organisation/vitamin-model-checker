@@ -13,10 +13,10 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from model_checker.algorithms.explicit.LTL.pruning import pruning
 from model_checker.algorithms.explicit.LTL.strategies import (
-    generate_guarded_action_pairs,
     generate_strategies,
     initialize,
 )
+from model_checker.algorithms.explicit.shared import strategies_base
 from model_checker.algorithms.explicit.SolutionConcepts.Solution_Concepts import (
     exists_nash,
     is_not_nash,
@@ -46,11 +46,7 @@ LTL_KEYWORDS = {
 def _validate_ltl_input(
     formula: str, filename: Optional[str]
 ) -> Optional[Dict[str, Any]]:
-    """Check that formula and filename are non-empty.
-
-    Returns:
-        An error dict if validation fails, otherwise None.
-    """
+    """Return an error dict if formula or filename is missing; otherwise None."""
     from model_checker.utils.error_handler import create_validation_error
 
     if not formula or not formula.strip():
@@ -89,11 +85,7 @@ def _load_ltl_model(filename: str) -> Any:
 def _validate_formula_propositions(
     formula: str, atomic_propositions: List[str]
 ) -> Optional[Dict[str, Any]]:
-    """Ensure every proposition used in the formula is declared in the model.
-
-    Returns:
-        An error dict if any proposition is missing, otherwise None.
-    """
+    """Return an error dict if the formula uses undeclared propositions; otherwise None."""
     from model_checker.utils.error_handler import create_validation_error
 
     formula_props = set(re.findall(r"\b([a-z]+)\b", formula)) - LTL_KEYWORDS
@@ -114,7 +106,7 @@ def _run_sure_win_and_format_result(
     cgs: CGSProtocol,
 ) -> Dict[str, Any]:
     """Run sure-win check and return the standard result dict with ``res`` and ``initial_state``."""
-    initial_state = cgs.get_initial_state()
+    initial_state = cgs.initial_state
     result = model_checking_sure_win(filename, formula, k, agents)
     if result.get("Satisfiability"):
         return {
@@ -130,21 +122,9 @@ def _run_sure_win_and_format_result(
 def model_checking_sure_win(
     model: Any, formula: str, k: int, agents: List[int]
 ) -> Dict[str, Any]:
-    """Decide whether the coalition has a sure-win strategy for the formula.
+    """Search for a sure-win strategy up to complexity k.
 
-    Searches for a strategy that makes the formula hold in every outcome.
-    Strategies are enumerated by complexity (1 to k); for each candidate,
-    the model is pruned under that strategy and the formula is checked (via
-    CTL). The first satisfying strategy is returned.
-
-    Args:
-        model: Path to the model file.
-        formula: LTL formula string.
-        k: Maximum strategy complexity bound.
-        agents: Agent indices in the coalition.
-
-    Returns:
-        Dict with keys ``Satisfiability`` (bool) and ``Complexity Bound`` (int).
+    Returns Satisfiability and the complexity bound where a strategy was found.
     """
     result = {}
     found_solution = False
@@ -162,7 +142,7 @@ def model_checking_sure_win(
     found_solution_state = [False]
 
     while not found_solution_state[0] and i <= k:
-        cartesian_products = generate_guarded_action_pairs(
+        cartesian_products = strategies_base.generate_guarded_action_pairs(
             i, agent_actions, actions_list, atomic_propositions
         )
         strategies_generator = generate_strategies(
@@ -207,21 +187,9 @@ def model_checking_is_not_nash(
     natural_strategies: Any,
     selected_agents: List[int],
 ) -> Dict[str, Any]:
-    """Check whether the given strategy profile is not a Nash equilibrium.
+    """Test whether natural_strategies is Nash.
 
-    If any agent can improve by unilaterally deviating from natural_strategies,
-    the profile is not Nash and Satisfiability is set to False.
-
-    Args:
-        model: Path to the model file.
-        cgs: Pre-loaded CGS model.
-        formula: LTL formula string.
-        k: Complexity bound for strategies.
-        natural_strategies: Strategy profile to test.
-        selected_agents: Agent indices to consider for deviations.
-
-    Returns:
-        Dict with ``Satisfiability`` (False if not Nash, True if Nash) and ``Complexity Bound``.
+    Satisfiability is False if some agent can improve by deviating alone.
     """
     result = {}
 
@@ -269,20 +237,7 @@ def model_checking_is_not_nash(
 def model_checking_exists_nash(
     model: Any, formula: str, k: int, agents: List[int]
 ) -> Dict[str, Any]:
-    """Decide whether some Nash equilibrium exists for the formula and agents.
-
-    Enumerates strategy profiles by complexity (1 to k) and returns as soon
-    as a profile is found where no agent can profitably deviate.
-
-    Args:
-        model: Path to the model file.
-        formula: LTL formula string.
-        k: Maximum strategy complexity bound.
-        agents: Agent indices to consider.
-
-    Returns:
-        Dict with ``Satisfiability`` and ``Complexity Bound``.
-    """
+    """Search for a Nash equilibrium up to complexity k."""
     (
         agent_actions,
         actions_list,
@@ -297,7 +252,7 @@ def model_checking_exists_nash(
     result = {}
 
     for i in range(1, k + 1):
-        cartesian_products = generate_guarded_action_pairs(
+        cartesian_products = strategies_base.generate_guarded_action_pairs(
             i, agent_actions, actions_list, atomic_propositions
         )
         strategies_generator = generate_strategies(
@@ -337,30 +292,16 @@ def model_checking_wins_some_nash(
     atomic_propositions: Any,
     target_agent: int,
 ) -> Dict[str, Any]:
-    """Check whether target_agent wins in the given strategy profile when it is Nash.
+    """Test one strategy profile for a single agent.
 
-    Verifies that the path induced by current_strategy satisfies target_agent's
-    objective and that the profile is a Nash equilibrium (no profitable deviation).
-    If both hold, the result indicates the agent wins in this Nash.
-
-    Args:
-        cgs: CGS model instance.
-        model: Path to the model file (used by pruning for cache and CTL).
-        agents: All agent indices.
-        CTLformula: CTL encoding of the objective.
-        current_strategy: Strategy profile to evaluate.
-        bound: Strategy complexity bound.
-        agent_actions: Per-agent action sets.
-        atomic_propositions: Model atomic propositions.
-        target_agent: Agent index whose winning is checked.
-
-    Returns:
-        Dict with ``Satisfiability`` (True if agent wins in this Nash).
+    Satisfiability is False when the target agent meets the CTL goal on the play
+    from this strategy and no agent can improve by deviating alone (Nash).
+    Otherwise Satisfiability is True.
     """
     result = {}
 
-    if check_agent_win(
-        cgs, model, target_agent, CTLformula, current_strategy
+    if pruning(
+        cgs, model, [target_agent], CTLformula, current_strategy
     ) and not is_not_nash(
         model,
         cgs,
@@ -378,31 +319,6 @@ def model_checking_wins_some_nash(
     return result
 
 
-def check_agent_win(
-    cgs: CGSProtocol,
-    model: str,
-    agent: int,
-    CTLformula: Any,
-    current_strategy: Any,
-) -> bool:
-    """Check whether the agent's objective holds under the given strategy.
-
-    Prunes the model with the strategy and runs CTL model checking for
-    the agent's formula on the pruned model.
-
-    Args:
-        cgs: CGS model instance.
-        model: Path to the model file (used by pruning for cache and CTL).
-        agent: Agent index.
-        CTLformula: Agent objective (CTL formula).
-        current_strategy: Strategy profile to evaluate.
-
-    Returns:
-        True if the objective is satisfied, False otherwise.
-    """
-    return pruning(cgs, model, [agent], CTLformula, current_strategy)
-
-
 def model_checking_lose_some_nash(
     cgs: CGSProtocol,
     model: str,
@@ -414,29 +330,15 @@ def model_checking_lose_some_nash(
     atomic_propositions: Any,
     target_agent: int,
 ) -> Dict[str, Any]:
-    """Check whether target_agent loses in the given profile when it is Nash.
+    """Test one strategy profile for a single agent (lose case).
 
-    Dual of wins_some_nash: the agent's objective fails on the induced path
-    and the profile is a Nash equilibrium.
-
-    Args:
-        cgs: CGS model instance.
-        model: Path to the model file (used by pruning for cache and CTL).
-        agents: All agent indices.
-        CTLformula: CTL encoding of the objective.
-        current_strategy: Strategy profile to evaluate.
-        bound: Strategy complexity bound.
-        agent_actions: Per-agent action sets.
-        atomic_propositions: Model atomic propositions.
-        target_agent: Agent index whose loss is checked.
-
-    Returns:
-        Dict with ``Satisfiability`` (True if agent loses in this Nash).
+    Satisfiability is True when the target agent misses the CTL goal and the
+    profile is Nash. Otherwise Satisfiability is False.
     """
     result = {}
 
-    if not check_agent_win(
-        cgs, model, target_agent, CTLformula, current_strategy
+    if not pruning(
+        cgs, model, [target_agent], CTLformula, current_strategy
     ) and not is_not_nash(
         model,
         cgs,
@@ -455,19 +357,7 @@ def model_checking_lose_some_nash(
 
 
 def model_checking(formula: str, filename: str) -> Dict[str, Any]:
-    """Main entry point for LTL model checking (sure-win, standard API).
-
-    Validates input, clears caches, loads the model, and runs sure-win
-    checking with k=5 and all agents. The formula is converted to CTL
-    for verification.
-
-    Args:
-        formula: LTL formula string.
-        filename: Path to the model file.
-
-    Returns:
-        Dict with ``res`` and ``initial_state`` (and optionally ``error``).
-    """
+    """Main entry point for LTL sure-win checking (k=5, all agents)."""
     from model_checker.utils.error_handler import (
         create_model_error,
         create_system_error,
@@ -483,7 +373,7 @@ def model_checking(formula: str, filename: str) -> Dict[str, Any]:
             return parse_err
 
         cgs = _load_ltl_model(filename)
-        atomic_propositions = cgs.get_atomic_prop()
+        atomic_propositions = cgs.atomic_propositions
         prop_err = _validate_formula_propositions(formula, atomic_propositions)
         if prop_err is not None:
             return prop_err
