@@ -12,8 +12,8 @@ from model_checker.algorithms.explicit.ICTL.ICTL import (
 from model_checker.algorithms.explicit.TCTL.TCTL import (
     model_checking as TCTL_model_checking,
 )
-from model_checker.algorithms.explicit.TOL.tol_model_checking import (
-    model_checking_ast as TOL_model_checking,
+from model_checker.algorithms.explicit.TOL.TOL import (
+    model_checking as TOL_model_checking,
 )
 from model_checker.algorithms.explicit.Wallet_ATL.Wallet_ATL import (
     model_checking as Wallet_ATL_model_checking,
@@ -29,14 +29,14 @@ from model_checker.parsers.formulas.Wallet_ATL.parser_wrapper import (
 )
 
 __all__ = [
-    "Wallet_ATL_model_checking",
-    "Wallet_ATLParser",
-    "TOL_model_checking",
-    "TOLParser",
-    "TCTL_model_checking",
-    "TCTLParser",
-    "ICTL_model_checking",
-    "ICTLParser",
     "IATL_model_checking",
     "IATLParser",
+    "ICTL_model_checking",
+    "ICTLParser",
+    "TCTL_model_checking",
+    "TCTLParser",
+    "TOL_model_checking",
+    "TOLParser",
+    "Wallet_ATL_model_checking",
+    "Wallet_ATLParser",
 ]
