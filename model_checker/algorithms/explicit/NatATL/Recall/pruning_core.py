@@ -8,7 +8,7 @@ and regex pruning, validates strategies, and performs CTL verification.
 import logging
 from typing import Dict, Set
 
-from model_checker.algorithms.explicit.CTL import model_checking
+from model_checker.algorithms.explicit.CTL.CTL import model_checking
 from model_checker.algorithms.explicit.NatATL.Recall.boolean_pruning import (
     boolean_pruning,
     idle_pruning,
@@ -36,8 +36,8 @@ from model_checker.algorithms.explicit.NatATL.Recall.tree_structure import (
 from model_checker.algorithms.explicit.NatATL.Recall.tree_traversal import (
     depth_first_search,
 )
-from model_checker.engine.runner import parse_state_set_literal
 from model_checker.parsers.game_structures.cgs.cgs import CGS
+from model_checker.utils.literals import parse_state_set_literal
 
 logger = logging.getLogger(__name__)
 

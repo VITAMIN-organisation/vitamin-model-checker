@@ -2,8 +2,8 @@
 
 from typing import Any, Callable, Set
 
-from model_checker.engine.runner import parse_state_set_literal
 from model_checker.parsers.game_structures.cgs import CGSProtocol
+from model_checker.utils.literals import parse_state_set_literal
 
 
 def _serialize_state_set(state_set) -> str:

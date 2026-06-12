@@ -13,7 +13,7 @@ consistent.
 ```mermaid
 flowchart LR
     caller["Python caller<br/>or host app"]
-    runner["engine/runner.py"]
+    execution["engine/execution.py"]
     modelFactory["Model parser factory"]
     formulaFactory["Formula parser factory"]
     modelParser["Game-structure parser"]
@@ -21,9 +21,9 @@ flowchart LR
     algorithm["Explicit algorithm"]
     result["Result dict"]
 
-    caller --> runner
-    runner --> modelFactory --> modelParser
-    runner --> formulaFactory --> formulaParser
+    caller --> execution
+    execution --> modelFactory --> modelParser
+    execution --> formulaFactory --> formulaParser
     modelParser --> algorithm
     formulaParser --> algorithm
     algorithm --> result
@@ -38,7 +38,7 @@ and makes traces easier to build, but large models can use a lot of memory.
 ```text
 model_checker/
 ├── algorithms/explicit/        # per-logic checking algorithms
-├── engine/                     # shared runner and execution helpers
+├── engine/                     # shared execution pipeline
 ├── parsers/
 │   ├── formulas/               # per-logic formula parsers
 │   └── game_structures/        # CGS, costCGS, capCGS, WalletCGS, timedCGS parsers
@@ -73,7 +73,7 @@ directly:
 
 ### Engine Layer
 
-`engine/runner.py` handles the common work around each model-checking call:
+`engine/execution.py` handles the common work around each model-checking call:
 
 - validate input,
 - choose the correct model parser,
@@ -93,7 +93,7 @@ shared validation and error handling stay consistent.
 ### Algorithm Layer
 
 Each logic has a module under `algorithms/explicit/<Logic>/`. Algorithms should
-receive the parsed model object from the runner, parse the formula with the
+receive the parsed model object from the engine, parse the formula with the
 right parser, evaluate the formula tree, and return a standard result dict.
 
 Use shared helpers where possible:

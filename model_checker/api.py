@@ -13,7 +13,7 @@ from model_checker.contrib.conformance import (
     check_parser_conformance,
 )
 from model_checker.contrib.manifest_schema import ModuleManifest
-from model_checker.engine.runner import execute_model_checking_with_parser
+from model_checker.engine.execution import execute_model_checking_with_parser
 from model_checker.models.model_factory import (
     create_model_parser,
     create_model_parser_for_logic,

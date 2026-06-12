@@ -1,1 +1,1 @@
-from model_checker.algorithms.explicit.RABATL.RABATL import *  # noqa: F403, F401
+"""RABATL (Resource-Aware Bounded ATL) explicit algorithm package."""

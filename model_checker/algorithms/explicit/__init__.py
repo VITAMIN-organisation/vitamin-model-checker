@@ -1,5 +1,6 @@
 """Explicit-state model checking implementations.
 
-Each subpackage (ATL, CTL, LTL, NatATL, OATL, etc.) exposes model_checking(formula, filename)
-and shares utilities under algorithms.explicit.shared.
+Each logic lives in a subpackage (ATL, CTL, OATL, etc.). Import the implementation
+module directly, e.g. ``from model_checker.algorithms.explicit.ATL.ATL import model_checking``.
+Shared helpers live under ``algorithms.explicit.shared``.
 """

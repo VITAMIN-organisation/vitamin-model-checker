@@ -127,7 +127,7 @@ The core function receives the parsed model object and the formula. It should:
 5. return error dicts through `model_checker.utils.error_handler` helpers.
 
 Avoid global model state. The model for each run is the object passed by the
-engine runner.
+engine execution layer.
 
 ## Model Type Mapping
 

@@ -64,7 +64,7 @@ def _oatl_binary_key(parser_instance, val):
     return None
 
 
-def solve_tree(cgs, node, cache=None):
+def solve_tree(cgs, node, solve_context, cache=None):
     """
     Recursively solve the formula tree for OATL.
     """
@@ -81,19 +81,19 @@ def solve_tree(cgs, node, cache=None):
         return
 
     if node.left:
-        solve_tree(cgs, node.left, cache)
+        solve_tree(cgs, node.left, solve_context, cache)
     if node.right:
-        solve_tree(cgs, node.right, cache)
+        solve_tree(cgs, node.right, solve_context, cache)
 
     val = node.value
     parser = FormulaParserFactory.get_parser_instance("OATL")
     if node.right is None:
         key = _oatl_unary_key(parser, val)
         if key and key in _UNARY:
-            _UNARY[key](cgs, node)
+            _UNARY[key](cgs, node, solve_context)
     elif node.left and node.right:
         key = _oatl_binary_key(parser, val)
         if key and key in _BINARY:
-            _BINARY[key](cgs, node)
+            _BINARY[key](cgs, node, solve_context)
 
     cache[node_key] = node.value

@@ -16,26 +16,24 @@ from model_checker.algorithms.explicit.shared.result_utils import (
     format_model_checking_result,
     verify_initial_state,
 )
-from model_checker.engine.runner import bind_model_checking
+from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.utils.error_handler import (
+    create_model_error,
+    create_semantic_error,
+    create_syntax_error,
+)
 
 
 def _validate_capatl_model(cgs):
     """Validate CapATL model structure."""
     if hasattr(cgs, "validity_model") and cgs.validity_model() is False:
-        from model_checker.utils.error_handler import create_model_error
-
         return create_model_error("Incorrect model structure")
     return None
 
 
 def _core_capatl_checking(cgs, formula):
     """Run CapATL model checking on a loaded model."""
-    from model_checker.utils.error_handler import (
-        create_semantic_error,
-        create_syntax_error,
-    )
-
     X_agt_cap.cache_clear()
     indistinguishable_action.cache_clear()
     function_F_for_succ.cache_clear()
@@ -67,7 +65,7 @@ def _core_capatl_checking(cgs, formula):
     return format_model_checking_result(winning_states, initial_state, is_satisfied)
 
 
-model_checking = bind_model_checking(
+model_checking = create_model_checking_entry(
     "CapATL",
     _core_capatl_checking,
     pre_validation_func=_validate_capatl_model,

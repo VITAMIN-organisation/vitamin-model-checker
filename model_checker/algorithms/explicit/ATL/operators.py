@@ -13,7 +13,7 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
 from model_checker.algorithms.explicit.shared.state_utils import (
     state_names_to_indices,
 )
-from model_checker.engine.runner import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal
 
 # ---------------------------------------------------------
 # UNARY OPERATOR HANDLERS (NOT in shared.boolean_operators; solver imports it)

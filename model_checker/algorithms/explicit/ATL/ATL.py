@@ -11,8 +11,12 @@ from model_checker.algorithms.explicit.shared import (
     format_model_checking_result,
     verify_initial_state,
 )
-from model_checker.engine.runner import bind_model_checking
+from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.utils.error_handler import (
+    create_semantic_error,
+    create_syntax_error,
+)
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS
@@ -20,11 +24,6 @@ if TYPE_CHECKING:
 
 def _core_atl_checking(cgs: "CGS", formula: str) -> Dict[str, Any]:
     """Run ATL model checking on a loaded model."""
-    from model_checker.utils.error_handler import (
-        create_semantic_error,
-        create_syntax_error,
-    )
-
     parser = FormulaParserFactory.get_parser_instance("ATL")
     res_parsing = parser.parse(formula, n_agent=cgs.get_number_of_agents())
     if res_parsing is None:
@@ -44,4 +43,4 @@ def _core_atl_checking(cgs: "CGS", formula: str) -> Dict[str, Any]:
     return format_model_checking_result(root.value, initial_state, is_satisfied)
 
 
-model_checking = bind_model_checking("ATL", _core_atl_checking)
+model_checking = create_model_checking_entry("ATL", _core_atl_checking)

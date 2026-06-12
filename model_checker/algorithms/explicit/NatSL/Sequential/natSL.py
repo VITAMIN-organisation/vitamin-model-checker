@@ -145,7 +145,7 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
     except FileNotFoundError:
         return create_system_error(f"Model file not found: {model_path}")
     except ValueError:
-        # Standard classification by runner.py
+        # Standard classification by the engine execution layer
         raise
     except Exception as e:
         logger.exception("Unexpected error during NatSL Sequential verification")

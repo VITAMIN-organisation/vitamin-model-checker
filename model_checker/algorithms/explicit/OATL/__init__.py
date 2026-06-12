@@ -1,1 +1,1 @@
-from model_checker.algorithms.explicit.OATL.OATL import *  # noqa: F403, F401
+"""OATL explicit algorithm package."""

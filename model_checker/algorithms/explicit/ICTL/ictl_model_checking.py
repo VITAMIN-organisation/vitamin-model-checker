@@ -1,12 +1,12 @@
 import time
 
 import numpy as np
-from binarytree import Node
 
 from model_checker.parsers.formulas.ICTL.ictl_ply_parser import (
     do_parsingICTL,
     verifyICTL,
 )
+from model_checker.utils.formula_tree import FormulaTreeNode
 
 from .util.process_input import (
     calculate_subset_states_hat,
@@ -76,7 +76,7 @@ class ICTL_Model_Checker:
     # Eg: Input: !AXa, Tree Root: NOT operator, Left Child: AXa
     def build_tree(self, tpl):
         if isinstance(tpl, tuple):
-            root = Node(tpl[0])
+            root = FormulaTreeNode(tpl[0])
             if len(tpl) > 1:
                 left_child = self.build_tree(tpl[1])
                 if left_child is None:
@@ -98,7 +98,7 @@ class ICTL_Model_Checker:
                     get_state_name_by_index(self.data["states"], element)
                     for element in states_proposition
                 }
-                root = Node(str(stati))
+                root = FormulaTreeNode(str(stati))
         return root
 
     def get_states(self):

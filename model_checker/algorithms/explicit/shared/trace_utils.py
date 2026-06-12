@@ -87,16 +87,6 @@ def reconstruct_trace_bfs(
     return None
 
 
-def reconstruct_counterexample_trace(
-    edges: List[Tuple[str, str]],
-    initial_state: str,
-    violating_states: Set[str],
-    max_length: int = 100,
-) -> Optional[List[str]]:
-    """Path from the initial state to a state where the property fails."""
-    return reconstruct_trace_bfs(edges, initial_state, violating_states, max_length)
-
-
 def build_predecessor_map_bfs(
     edges: List[Tuple[str, str]], target_states: Set[str]
 ) -> Dict[str, str]:

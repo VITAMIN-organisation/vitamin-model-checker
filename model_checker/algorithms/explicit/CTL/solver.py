@@ -25,9 +25,10 @@ from model_checker.algorithms.explicit.CTL.operators_with_trace import (
 from model_checker.algorithms.explicit.shared import (
     StateTrace,
     extract_shortest_trace,
+    reconstruct_trace_from_predecessors,
 )
-from model_checker.engine.runner import parse_state_set_literal
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.utils.literals import parse_state_set_literal
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS
@@ -163,10 +164,6 @@ def extract_trace_for_result(
         description = "Counterexample: Formula violated"
 
     if operator_trace.predecessors:
-        from model_checker.algorithms.explicit.shared.trace_utils import (
-            reconstruct_trace_from_predecessors,
-        )
-
         trace_path = reconstruct_trace_from_predecessors(
             initial_state, target_states, operator_trace.predecessors
         )

@@ -1,23 +1,30 @@
-"""RABATL pre-image: pre() for resource-aware bounded one-step forcing."""
+"""RABATL pre-image: compute_pre_states for resource-aware bounded one-step forcing."""
 
 import pytest
 
-from model_checker.algorithms.explicit.RABATL.preimage import pre
+from model_checker.algorithms.explicit.shared.bounded_atl_preimage import (
+    build_transition_cache,
+    compute_pre_states,
+)
 from model_checker.tests.helpers.model_helpers import load_test_model
 
 
 @pytest.mark.unit
 @pytest.mark.model_checking
 class TestRABATLPreImage:
-    """Test RABATL pre() function."""
+    """Test RABATL compute_pre_states function."""
 
     def test_pre_returns_subset_of_states(self, test_data_dir):
-        """pre() returns a set of state names contained in the model states."""
+        """compute_pre_states returns a set of state names contained in the model states."""
         cgs = load_test_model(
             test_data_dir, "costCGS/RABATL/rabatl_3agents_medium_6states_costs.txt"
         )
         all_states = set(cgs.states)
-        result = pre(cgs, "1", {"s1"}, [10, 10, 10])
+        coalition = "1"
+        trans_cache = build_transition_cache(cgs, coalition)
+        result = compute_pre_states(
+            cgs, coalition, {"s1"}, [10, 10, 10], trans_cache, "rabatl"
+        )
         assert isinstance(result, set)
         assert all(isinstance(s, str) for s in result)
         assert result <= all_states

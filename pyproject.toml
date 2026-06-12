@@ -21,7 +21,6 @@ dependencies = [
     "networkx==2.8.6",
     "ply==3.11",
     "antlr4-python3-runtime==4.8.0",
-    "binarytree==6.5.1",
     "anytree==2.8.0",
     "lxml>=6.0.2",
     "defusedxml>=0.7.1",
@@ -138,7 +137,6 @@ python_classes = "Test*"
 python_functions = "test_*"
 addopts = "-v --strict-markers --tb=short --import-mode=importlib"
 filterwarnings = [
-    "ignore::UserWarning:binarytree",
     "ignore:.*pkg_resources.*::UserWarning",
     "ignore:.*pkg_resources.*declare_namespace.*:DeprecationWarning",
 ]

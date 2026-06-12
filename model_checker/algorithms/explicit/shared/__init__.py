@@ -20,7 +20,6 @@ from model_checker.algorithms.explicit.shared.trace_utils import (
     build_predecessor_map_forward,
     extract_shortest_trace,
     format_trace_with_properties,
-    reconstruct_counterexample_trace,
     reconstruct_trace_bfs,
     reconstruct_trace_from_predecessors,
 )
@@ -50,7 +49,6 @@ __all__ = [
     # Trace utilities
     "reconstruct_trace_from_predecessors",
     "reconstruct_trace_bfs",
-    "reconstruct_counterexample_trace",
     "build_predecessor_map_bfs",
     "build_predecessor_map_forward",
     "extract_shortest_trace",

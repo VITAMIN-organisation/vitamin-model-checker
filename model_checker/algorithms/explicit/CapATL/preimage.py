@@ -1,39 +1,19 @@
 """Pre-image and strategy/knowledge helpers for CapATL."""
 
-import itertools
-from typing import Any, List, Tuple
+from model_checker.algorithms.explicit.CapATL.combinatorics import (
+    find_combinations,
+    get_actions_from_capacity_set,
+)
+from model_checker.algorithms.explicit.CapATL.utils import (
+    Omega_Y,
+    succ,
+)
 
-
-def find_combinations(lists: List[List[Any]]) -> List[Tuple[Any, ...]]:
-    """Cartesian product of the given lists; returns list of tuples."""
-    if not lists:
-        return []
-    return list(itertools.product(*lists))
-
-
-def get_actions_from_capacity_set(cgs, capacity_set):
-    """Return action combinations that satisfy the given capacity set."""
-
-    def get_actions_from_capacity(cgs, cap):
-        """Return actions available for capacity cap."""
-        ens = cgs.get_action_capacities()
-        result = []
-        for j in ens:
-            if cap in j:
-                result.extend(j[1:])  # Actions are after capacity identifier
-        return result
-
-    result = []
-    a = []
-    for elem in capacity_set:
-        for cap in elem:
-            a.append(get_actions_from_capacity(cgs, cap))
-        a = find_combinations(a)
-        for x in a:
-            if x not in result:
-                result.append(x)
-        a = []
-    return result
+__all__ = [
+    "find_combinations",
+    "get_actions_from_capacity_set",
+    "pre",
+]
 
 
 def group_by_state(succ_w):
@@ -63,9 +43,9 @@ def action_elem12(elem1, elem2):
     if st1 != st2:
         return False
 
-    for j1, j2 in enumerate(know_1):
-        for q in j2:
-            if q not in know_2[j1]:
+    for agent_idx, know_slice in enumerate(know_1):
+        for q in know_slice:
+            if q not in know_2[agent_idx]:
                 return False
     return elem2.action
 
@@ -131,11 +111,6 @@ def succ_in_W(succw, W, dict_W):
 
 def pre(cgs, W, coal_Y):
     """Pre-image for CapATL: elements whose successors are in W with unique state-action and in W."""
-    from model_checker.algorithms.explicit.CapATL.utils import (
-        Omega_Y,
-        succ,
-    )
-
     p_group = []
     omega_Y = Omega_Y(cgs, coal_Y)
 

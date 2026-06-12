@@ -5,12 +5,12 @@ Implements matrix-based pruning for LTL with game-theoretic solution concepts.
 Reuses modify_matrix from NatATL.Memoryless (same CGS transition format).
 """
 
-from model_checker.algorithms.explicit.CTL import model_checking
+from model_checker.algorithms.explicit.CTL.CTL import model_checking
 from model_checker.algorithms.explicit.NatATL.Memoryless.matrix_utils import (
     modify_matrix,
 )
-from model_checker.engine.runner import parse_state_set_literal
 from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
+from model_checker.utils.literals import parse_state_set_literal
 
 
 def process_transition_matrix_data(cgs, model, agents, *strategies):

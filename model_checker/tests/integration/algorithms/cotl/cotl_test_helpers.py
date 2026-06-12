@@ -5,9 +5,9 @@ derive state sets and atom lists from the loaded model instead of hardcoding.
 """
 
 from model_checker.algorithms.explicit.COTL.COTL import model_checking
-from model_checker.engine.runner import parse_state_set_literal
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.tests.helpers.model_helpers import load_test_model
+from model_checker.utils.literals import parse_state_set_literal
 
 
 def load_cotl_parser_from_file(path):

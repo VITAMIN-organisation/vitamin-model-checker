@@ -1,13 +1,11 @@
 """Format model-checking results and check the initial state."""
 
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set, Union
+from typing import Any, Dict, Optional, Set, Union
 
-from model_checker.engine.runner import parse_state_set_literal
-
-if TYPE_CHECKING:
-    from model_checker.algorithms.explicit.shared.verification_result import (
-        VerificationResult,
-    )
+from model_checker.algorithms.explicit.shared.verification_result import (
+    VerificationResult,
+)
+from model_checker.utils.literals import parse_state_set_literal
 
 
 def verify_initial_state(
@@ -38,12 +36,8 @@ def create_verification_result(
     trace: Optional[Any] = None,
     strategy: Optional[Any] = None,
     **metadata: Any,
-) -> "VerificationResult":
+) -> VerificationResult:
     """Create a VerificationResult, optionally with a trace or strategy."""
-    from model_checker.algorithms.explicit.shared.verification_result import (
-        VerificationResult,
-    )
-
     satisfied = initial_state in states
     return VerificationResult(
         states=states,
@@ -56,7 +50,7 @@ def create_verification_result(
 
 
 def format_verification_result(
-    result: "VerificationResult",
+    result: VerificationResult,
     include_trace: bool = True,
     compact_format: bool = False,
 ) -> Dict[str, Any]:

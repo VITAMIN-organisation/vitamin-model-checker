@@ -2,7 +2,9 @@
 
 from typing import Any, Callable, Optional, Protocol, Set, runtime_checkable
 
-from model_checker.engine.runner import build_formula_tree, states_where_prop_holds
+from model_checker.parsers.game_structures.cgs import CGSProtocol
+from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
+from model_checker.utils.formula_tree import build_formula_tree
 
 
 @runtime_checkable
@@ -11,6 +13,20 @@ class AtomicModel(Protocol):
 
     atomic_propositions: Any
     matrix_prop: Any
+
+
+def states_where_prop_holds(cgs: CGSProtocol, prop: str) -> Optional[Set[str]]:
+    """Return states where prop holds, or None if the proposition is unknown."""
+    idx = proposition_index(cgs.atomic_propositions, prop)
+    if idx is None:
+        return None
+
+    matching: Set[str] = set()
+    prop_matrix = cgs.matrix_prop
+    for state_idx, row in enumerate(prop_matrix):
+        if row[int(idx)] == 1:
+            matching.add(str(cgs.get_state_name_by_index(state_idx)))
+    return matching
 
 
 def resolve_atom(cgs: AtomicModel, atom: str) -> Optional[Set[str]]:

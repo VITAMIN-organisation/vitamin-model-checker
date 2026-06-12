@@ -2,7 +2,7 @@
 COTL model checker.
 
 Uses costCGS and the same formula syntax as OATL (<1><5>F p, etc.).
-The model (cgs) is passed in by the engine runner instead of a global.
+The model (cgs) is passed in by the engine execution layer instead of a global.
 """
 
 from model_checker.algorithms.explicit.shared import (
@@ -12,10 +12,6 @@ from model_checker.algorithms.explicit.shared import (
 from model_checker.algorithms.explicit.shared import (
     verify_initial_state as _verify_initial_state,
 )
-from model_checker.algorithms.explicit.shared.bit_vector import (
-    BIT_VECTOR_THRESHOLD,
-    BitVectorStateSet,
-)
 from model_checker.algorithms.explicit.shared.cost_utils import (
     extract_coalition_and_cost,
 )
@@ -23,12 +19,12 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
     least_fixpoint,
 )
-from model_checker.algorithms.explicit.shared.state_utils import state_indices_to_names
-from model_checker.engine.runner import (
-    bind_model_checking,
-    build_formula_tree,
-    parse_state_set_literal,
+from model_checker.algorithms.explicit.shared.oatl_index_preimage import (
+    build_pre_by_index,
+    cross_indices,
 )
+from model_checker.algorithms.explicit.shared.state_utils import state_indices_to_names
+from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cgs import cgs_actions
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
@@ -36,39 +32,8 @@ from model_checker.utils.error_handler import (
     create_semantic_error,
     create_syntax_error,
 )
-
-
-def _get_cached_base_action(cgs, action, agents_set):
-    """Return base action for (action, agents_set), using cache."""
-    if not hasattr(cgs, "_base_action_cache"):
-        cgs._base_action_cache = {}
-    key = (action, tuple(sorted(agents_set)))
-    if key not in cgs._base_action_cache:
-        cgs._base_action_cache[key] = cgs_actions.get_coalition_actions(
-            {action},
-            cgs_actions.format_agents(agents_set),
-            cgs.get_number_of_agents(),
-        ).pop()
-    return cgs._base_action_cache[key]
-
-
-def _build_pre_by_index(graph):
-    """Build target index -> set of source indices from the graph. O(|S|^2) once."""
-    n = len(graph)
-    pre_by_index = [set() for _ in range(n)]
-    for src in range(n):
-        for tgt in range(n):
-            if graph[src][tgt] != 0 and graph[src][tgt] != "0":
-                pre_by_index[tgt].add(src)
-    return pre_by_index
-
-
-def _pre_index(state_set_index, pre_by_index):
-    """Return predecessor state indices in one step. Uses pre_by_index, no name conversion."""
-    result = set()
-    for tgt in state_set_index:
-        result.update(pre_by_index[tgt])
-    return result
+from model_checker.utils.formula_tree import build_formula_tree
+from model_checker.utils.literals import parse_state_set_literal
 
 
 def _get_states_prop_holds(cgs, prop):
@@ -95,56 +60,6 @@ def _resolve_atom_cotl(cgs, atom):
     if states_proposition is None:
         return None
     return {cgs.get_state_name_by_index(i) for i in states_proposition}
-
-
-def _check_if_action_is_extension(action, extension_action):
-    for idx, letter in enumerate(action):
-        if letter == "-":
-            continue
-        if letter != extension_action[idx]:
-            return False
-    return True
-
-
-def _next(cgs, action, state):
-    """Return the set of next state indices reachable when the coalition plays this action."""
-    graph = cgs.graph
-    row = graph[state]
-    result = set()
-    for index, cell in enumerate(row):
-        if cell != 0 and cell != "0":
-            for elem_action in cgs.build_action_list(cell):
-                if action == elem_action or _check_if_action_is_extension(
-                    action, elem_action
-                ):
-                    result.add(index)
-                    break
-    return result
-
-
-def _D_index(cgs, src_index, state_set_index, agents_set, graph):
-    """Dominant actions from src_index that keep next state in state_set_index. Index-space only."""
-    num_states = len(graph)
-    row = graph[src_index]
-    use_bit_vector = num_states >= BIT_VECTOR_THRESHOLD
-    if use_bit_vector:
-        safe_bits = BitVectorStateSet(num_states, state_set_index)
-    else:
-        state_set_complement = set(range(num_states)) - state_set_index
-    result = set()
-    for _tgt_index, cell in enumerate(row):
-        if cell == 0 or cell == "0":
-            continue
-        for action in cgs.build_action_list(cell):
-            base_action = _get_cached_base_action(cgs, action, agents_set)
-            next_states = _next(cgs, base_action, src_index)
-            if use_bit_vector:
-                all_safe = all(i in safe_bits for i in next_states)
-            else:
-                all_safe = len(next_states & state_set_complement) == 0
-            if all_safe:
-                result.add(action)
-    return result
 
 
 def _get_cached_cost(cgs, action, state, agents_set):
@@ -177,20 +92,33 @@ def _Cost(cgs, action_set, state, agents, agents_set=None):
     return total
 
 
-def _cross_index(cgs, n, agents, state_indices, graph, pre_by_index, agents_set):
-    """Cost-bounded pre-image in index space. Returns set of predecessor indices."""
-    pre_indices = _pre_index(state_indices, pre_by_index)
-    result = set()
-    for src in pre_indices:
-        actions = _D_index(cgs, src, state_indices, agents_set, graph)
-        if actions:
-            state_name = cgs.get_state_name_by_index(src)
-            if _Cost(cgs, actions, state_name, agents, agents_set=agents_set) <= n:
-                result.add(src)
-    return result
+def _cross_index(
+    cgs,
+    max_cost,
+    coalition,
+    state_indices,
+    solve_context,
+    agents_set,
+    base_action_cache,
+):
+    """Cost-bounded pre-image in index space using coalition-specific costs."""
+
+    def affordable(cgs, actions, state_name, bound):
+        cost = _Cost(cgs, actions, state_name, coalition, agents_set=agents_set)
+        return cost is not None and cost <= bound
+
+    return cross_indices(
+        cgs,
+        max_cost,
+        coalition,
+        state_indices,
+        solve_context,
+        base_action_cache,
+        affordable,
+    )
 
 
-def _solve_unary_globally(cgs, node, graph, pre_by_index, num_states, all_states_index):
+def _solve_unary_globally(cgs, node, solve_context):
     coalition, n = extract_coalition_and_cost(node.value)
     states2_index = state_names_to_indices(
         cgs, parse_state_set_literal(node.left.value)
@@ -199,7 +127,13 @@ def _solve_unary_globally(cgs, node, graph, pre_by_index, num_states, all_states
 
     def update(p):
         return states2_index & _cross_index(
-            cgs, n, coalition, p, graph, pre_by_index, agents_set
+            cgs,
+            n,
+            coalition,
+            p,
+            solve_context,
+            agents_set,
+            cgs._base_action_cache,
         )
 
     t_index = greatest_fixpoint(states2_index, update)
@@ -208,19 +142,25 @@ def _solve_unary_globally(cgs, node, graph, pre_by_index, num_states, all_states
     )
 
 
-def _solve_unary_next(cgs, node, graph, pre_by_index):
+def _solve_unary_next(cgs, node, solve_context):
     coalition, n = extract_coalition_and_cost(node.value)
     states_index = state_names_to_indices(cgs, parse_state_set_literal(node.left.value))
     agents_set = cgs_actions.get_agents_from_coalition(coalition)
     res_index = _cross_index(
-        cgs, n, coalition, states_index, graph, pre_by_index, agents_set
+        cgs,
+        n,
+        coalition,
+        states_index,
+        solve_context,
+        agents_set,
+        cgs._base_action_cache,
     )
     node.value = str(
         tuple(sorted({str(s) for s in state_indices_to_names(cgs, res_index)}))
     )
 
 
-def _solve_unary_eventually(cgs, node, graph, pre_by_index, all_states_index):
+def _solve_unary_eventually(cgs, node, solve_context, all_states_index):
     coalition, n = extract_coalition_and_cost(node.value)
     states2_index = state_names_to_indices(
         cgs, parse_state_set_literal(node.left.value)
@@ -228,10 +168,16 @@ def _solve_unary_eventually(cgs, node, graph, pre_by_index, all_states_index):
     agents_set = cgs_actions.get_agents_from_coalition(coalition)
 
     def update(p):
-        cross_index = _cross_index(
-            cgs, n, coalition, p, graph, pre_by_index, agents_set
+        cross_result = _cross_index(
+            cgs,
+            n,
+            coalition,
+            p,
+            solve_context,
+            agents_set,
+            cgs._base_action_cache,
         )
-        return states2_index | (all_states_index & cross_index)
+        return states2_index | (all_states_index & cross_result)
 
     t_index = least_fixpoint(states2_index, update)
     node.value = str(
@@ -254,7 +200,7 @@ def _solve_binary_or(node):
     )
 
 
-def _solve_binary_until(cgs, node, graph, pre_by_index):
+def _solve_binary_until(cgs, node, solve_context):
     coalition, n = extract_coalition_and_cost(node.value)
     states1_index = state_names_to_indices(
         cgs, parse_state_set_literal(node.left.value)
@@ -265,10 +211,16 @@ def _solve_binary_until(cgs, node, graph, pre_by_index):
     agents_set = cgs_actions.get_agents_from_coalition(coalition)
 
     def update(p):
-        cross_index = _cross_index(
-            cgs, n, coalition, p, graph, pre_by_index, agents_set
+        cross_result = _cross_index(
+            cgs,
+            n,
+            coalition,
+            p,
+            solve_context,
+            agents_set,
+            cgs._base_action_cache,
         )
-        return states2_index | (states1_index & cross_index)
+        return states2_index | (states1_index & cross_result)
 
     t_index = least_fixpoint(states2_index, update)
     node.value = str(
@@ -276,7 +228,7 @@ def _solve_binary_until(cgs, node, graph, pre_by_index):
     )
 
 
-def _solve_binary_release(cgs, node, graph, pre_by_index, all_states_index):
+def _solve_binary_release(cgs, node, solve_context, all_states_index):
     coalition, n = extract_coalition_and_cost(node.value)
     states1_index = state_names_to_indices(
         cgs, parse_state_set_literal(node.left.value)
@@ -287,10 +239,16 @@ def _solve_binary_release(cgs, node, graph, pre_by_index, all_states_index):
     agents_set = cgs_actions.get_agents_from_coalition(coalition)
 
     def update(p):
-        cross_index = _cross_index(
-            cgs, n, coalition, p, graph, pre_by_index, agents_set
+        cross_result = _cross_index(
+            cgs,
+            n,
+            coalition,
+            p,
+            solve_context,
+            agents_set,
+            cgs._base_action_cache,
         )
-        return states2_index & (states1_index | cross_index)
+        return states2_index & (states1_index | cross_result)
 
     t_index = greatest_fixpoint(states2_index, update)
     node.value = str(
@@ -298,7 +256,7 @@ def _solve_binary_release(cgs, node, graph, pre_by_index, all_states_index):
     )
 
 
-def _solve_binary_weak(cgs, node, graph, pre_by_index, all_states_index):
+def _solve_binary_weak(cgs, node, solve_context, all_states_index):
     coalition, n = extract_coalition_and_cost(node.value)
     states1 = parse_state_set_literal(node.right.value)
     states2 = parse_state_set_literal(node.left.value) | states1
@@ -307,10 +265,16 @@ def _solve_binary_weak(cgs, node, graph, pre_by_index, all_states_index):
     agents_set = cgs_actions.get_agents_from_coalition(coalition)
 
     def update(p):
-        cross_index = _cross_index(
-            cgs, n, coalition, p, graph, pre_by_index, agents_set
+        cross_result = _cross_index(
+            cgs,
+            n,
+            coalition,
+            p,
+            solve_context,
+            agents_set,
+            cgs._base_action_cache,
         )
-        return states2_index & (states1_index | cross_index)
+        return states2_index & (states1_index | cross_result)
 
     t_index = greatest_fixpoint(states2_index, update)
     node.value = str(
@@ -390,24 +354,16 @@ def _make_solve_handlers():
         )
 
     def run_globally(ctx):
-        _solve_unary_globally(
-            ctx["cgs"],
-            ctx["node"],
-            ctx["graph"],
-            ctx["pre_by_index"],
-            ctx["num_states"],
-            ctx["all_states_index"],
-        )
+        _solve_unary_globally(ctx["cgs"], ctx["node"], ctx["solve_context"])
 
     def run_next(ctx):
-        _solve_unary_next(ctx["cgs"], ctx["node"], ctx["graph"], ctx["pre_by_index"])
+        _solve_unary_next(ctx["cgs"], ctx["node"], ctx["solve_context"])
 
     def run_eventually(ctx):
         _solve_unary_eventually(
             ctx["cgs"],
             ctx["node"],
-            ctx["graph"],
-            ctx["pre_by_index"],
+            ctx["solve_context"],
             ctx["all_states_index"],
         )
 
@@ -415,14 +371,13 @@ def _make_solve_handlers():
         _solve_binary_or(ctx["node"])
 
     def run_until(ctx):
-        _solve_binary_until(ctx["cgs"], ctx["node"], ctx["graph"], ctx["pre_by_index"])
+        _solve_binary_until(ctx["cgs"], ctx["node"], ctx["solve_context"])
 
     def run_release(ctx):
         _solve_binary_release(
             ctx["cgs"],
             ctx["node"],
-            ctx["graph"],
-            ctx["pre_by_index"],
+            ctx["solve_context"],
             ctx["all_states_index"],
         )
 
@@ -430,8 +385,7 @@ def _make_solve_handlers():
         _solve_binary_weak(
             ctx["cgs"],
             ctx["node"],
-            ctx["graph"],
-            ctx["pre_by_index"],
+            ctx["solve_context"],
             ctx["all_states_index"],
         )
 
@@ -458,23 +412,22 @@ def _make_solve_handlers():
 _SOLVE_HANDLERS = _make_solve_handlers()
 
 
-def _solve_tree(cgs, node, graph, pre_by_index, num_states):
+def _solve_tree(cgs, node, solve_context):
     if node.left is not None:
-        _solve_tree(cgs, node.left, graph, pre_by_index, num_states)
+        _solve_tree(cgs, node.left, solve_context)
     if node.right is not None:
-        _solve_tree(cgs, node.right, graph, pre_by_index, num_states)
+        _solve_tree(cgs, node.right, solve_context)
 
     parser = FormulaParserFactory.get_parser_instance("OATL")
     op = _get_node_operator(node, parser)
     if op is None:
         return
 
+    num_states = len(solve_context["graph"])
     context = {
         "cgs": cgs,
         "node": node,
-        "graph": graph,
-        "pre_by_index": pre_by_index,
-        "num_states": num_states,
+        "solve_context": solve_context,
         "all_states": {str(s) for s in cgs.states},
         "all_states_index": set(range(num_states)),
     }
@@ -482,9 +435,13 @@ def _solve_tree(cgs, node, graph, pre_by_index, num_states):
 
 
 def _core_cotl_checking(cgs, formula):
-    if hasattr(cgs, "_cost_cache"):
+    if not hasattr(cgs, "_cost_cache"):
+        cgs._cost_cache = {}
+    else:
         cgs._cost_cache.clear()
-    if hasattr(cgs, "_base_action_cache"):
+    if not hasattr(cgs, "_base_action_cache"):
+        cgs._base_action_cache = {}
+    else:
         cgs._base_action_cache.clear()
     parser = FormulaParserFactory.get_parser_instance("OATL")
     res_parsing = parser.parse(formula, n_agent=cgs.get_number_of_agents())
@@ -497,9 +454,8 @@ def _core_cotl_checking(cgs, formula):
         return create_semantic_error("The atom does not exist in the model")
 
     graph = cgs.graph
-    num_states = len(graph)
-    pre_by_index = _build_pre_by_index(graph)
-    _solve_tree(cgs, root, graph, pre_by_index, num_states)
+    solve_context = {"graph": graph, "pre_by_index": build_pre_by_index(graph)}
+    _solve_tree(cgs, root, solve_context)
 
     initial_state = cgs.initial_state
     is_satisfied = _verify_initial_state(initial_state, root.value)
@@ -507,4 +463,4 @@ def _core_cotl_checking(cgs, formula):
     return format_model_checking_result(root.value, initial_state, is_satisfied)
 
 
-model_checking = bind_model_checking("COTL", _core_cotl_checking)
+model_checking = create_model_checking_entry("COTL", _core_cotl_checking)

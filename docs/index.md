@@ -22,7 +22,7 @@ formats, logic implementations, or tests.
 - formula parsers under `model_checker/parsers/formulas/`,
 - model parsers under `model_checker/parsers/game_structures/`,
 - explicit-state algorithms under `model_checker/algorithms/explicit/`,
-- shared execution in `model_checker/engine/runner.py`,
+- shared execution in `model_checker/engine/execution.py`,
 - test fixtures and correctness tests under `model_checker/tests/`,
 - Python entry points in `pyproject.toml`.
 

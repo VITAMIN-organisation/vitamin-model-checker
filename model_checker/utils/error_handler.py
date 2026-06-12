@@ -84,3 +84,39 @@ def create_validation_error(
 ) -> Dict[str, Any]:
     """Create a validation error response (e.g., missing agents)."""
     return create_error_response("validation", message, details)
+
+
+_TAGGED_ERROR_PREFIXES = (
+    ("[SEMANTIC]", create_semantic_error),
+    ("[SYNTAX]", create_syntax_error),
+    ("[MODEL]", create_model_error),
+)
+
+_SYNTAX_KEYWORDS = (
+    "formula",
+    "parsing",
+    "syntax",
+    "unexpected token",
+    "syntactically",
+    "invalid natatl",
+    "could not extract",
+)
+
+_SEMANTIC_KEYWORDS = ("atom", "does not exist", "not found", "unknown")
+
+
+def value_error_to_response(error_msg: str) -> Dict[str, Any]:
+    """Map a ValueError message to the appropriate structured error response."""
+    for tag, factory in _TAGGED_ERROR_PREFIXES:
+        if tag in error_msg:
+            return factory(error_msg.replace(tag, "").strip())
+
+    lowered = error_msg.lower()
+    if "index" in lowered or "dimension" in lowered:
+        return create_model_error(error_msg)
+    if any(keyword in lowered for keyword in _SYNTAX_KEYWORDS):
+        return create_syntax_error(error_msg)
+    if any(keyword in lowered for keyword in _SEMANTIC_KEYWORDS):
+        return create_semantic_error(error_msg)
+
+    return create_system_error(error_msg)

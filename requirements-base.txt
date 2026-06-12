@@ -15,7 +15,6 @@ ply==3.11
 antlr4-python3-runtime==4.8.0
 
 # Data Structures
-binarytree==6.5.1
 anytree==2.8.0
 
 # XML Processing
@@ -26,7 +25,7 @@ defusedxml>=0.7.1
 # CI and Docker use Python 3.11; numpy 1.26.x supports 3.11
 numpy>=1.26.0,<1.27.0
 
-# Utilities (setuptools required for binarytree: provides pkg_resources at import)
+# Utilities
 setuptools>=61.0,<82
 requests>=2.32.5,<3.0.0
 validators==0.22.0

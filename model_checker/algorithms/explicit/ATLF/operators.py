@@ -19,7 +19,7 @@ from model_checker.algorithms.explicit.ATLF.real_value_utils import (
     union_values,
     update_values,
 )
-from model_checker.engine.runner import parse_tuple_list_literal
+from model_checker.utils.literals import parse_tuple_list_literal
 
 
 def _compute_coalition_globally_fixpoint(cgs, coalition: str, phi_states, trans_cache):

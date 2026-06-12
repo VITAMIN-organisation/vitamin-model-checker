@@ -28,7 +28,7 @@ from model_checker.algorithms.explicit.shared.boolean_operators import (
 from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_or as _bool_or,
 )
-from model_checker.engine.runner import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS

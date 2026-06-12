@@ -65,8 +65,15 @@ class TestATLTransitionCache:
         assert len(cache) == len(cgs_simple_parser.states)
         for state_idx in range(len(cgs_simple_parser.states)):
             assert state_idx in cache
-            moves = cache[state_idx]
-            assert isinstance(moves, list)
-            if check_tuple_structure and moves:
-                assert isinstance(moves[0], tuple)
-                assert len(moves[0]) == 3
+            state_moves = cache[state_idx]
+            if check_tuple_structure:
+                assert isinstance(state_moves, dict)
+                for coalition_move, transitions in state_moves.items():
+                    assert isinstance(coalition_move, tuple)
+                    assert isinstance(transitions, list)
+                    if transitions:
+                        opponent_move, dest_idx = transitions[0]
+                        assert isinstance(opponent_move, tuple)
+                        assert isinstance(dest_idx, int)
+            else:
+                assert isinstance(state_moves, list)

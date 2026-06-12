@@ -12,8 +12,8 @@ from model_checker.algorithms.explicit.NatATL.Recall.condition_cache import (
     ctl_model_checking_cached,
 )
 from model_checker.algorithms.explicit.NatATL.Recall.tree_structure import Node
-from model_checker.engine.runner import parse_state_set_literal
 from model_checker.parsers.game_structures.cgs.cgs import CGS
+from model_checker.utils.literals import parse_state_set_literal
 
 logger = logging.getLogger(__name__)
 

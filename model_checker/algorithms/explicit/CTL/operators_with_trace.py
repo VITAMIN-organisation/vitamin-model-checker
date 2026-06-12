@@ -28,7 +28,7 @@ from model_checker.algorithms.explicit.shared import (
 from model_checker.algorithms.explicit.shared.verification_result import (
     TraceType,
 )
-from model_checker.engine.runner import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal
 
 
 class OperatorWithTrace:

@@ -2,7 +2,7 @@
 
 import pytest
 
-from model_checker.algorithms.explicit.CTL import CTL
+from model_checker.algorithms.explicit.CTL.CTL import model_checking
 
 
 def _build_model(num_states, atomic_propositions, labelling):
@@ -67,7 +67,7 @@ class TestCTLTraceGeneration:
         model_file = tmp_path / "test_model.txt"
         model_file.write_text(model_content)
 
-        result = CTL.model_checking(
+        result = model_checking(
             formula=formula, filename=str(model_file), generate_trace=True
         )
 
@@ -79,7 +79,7 @@ class TestCTLTraceGeneration:
         model_file = tmp_path / "test_model.txt"
         model_file.write_text(model_content)
 
-        result = CTL.model_checking(
+        result = model_checking(
             formula="AG p", filename=str(model_file), generate_trace=True
         )
 

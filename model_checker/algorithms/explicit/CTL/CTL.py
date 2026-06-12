@@ -7,12 +7,22 @@ from model_checker.algorithms.explicit.CTL.solver import (
     solve_tree_with_trace,
 )
 from model_checker.algorithms.explicit.shared import (
+    StateTrace,
     build_resolved_formula_tree,
+    create_verification_result,
+    extract_shortest_trace,
     format_model_checking_result,
     verify_initial_state,
 )
-from model_checker.engine.runner import parse_state_set_literal
+from model_checker.engine.execution import execute_model_checking_with_parser
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.utils.error_handler import (
+    create_semantic_error,
+    create_syntax_error,
+    create_system_error,
+    create_validation_error,
+)
+from model_checker.utils.literals import parse_state_set_literal
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS
@@ -22,11 +32,6 @@ def _parse_and_build_ctl_tree(
     cgs: "CGS", formula: str
 ) -> Union[Dict[str, Any], Tuple[Any, None]]:
     """Parse the formula and build the tree, or return an error."""
-    from model_checker.utils.error_handler import (
-        create_semantic_error,
-        create_syntax_error,
-    )
-
     parser = FormulaParserFactory.get_parser_instance("CTL")
     res_parsing = parser.parse(formula)
     if res_parsing is None:
@@ -47,11 +52,6 @@ def _build_fallback_trace(
     is_satisfied: bool,
 ) -> Any:
     """Build a shortest-path witness or counterexample when operator traces are missing."""
-    from model_checker.algorithms.explicit.shared import (
-        StateTrace,
-        extract_shortest_trace,
-    )
-
     result_states = {str(s) for s in parse_state_set_literal(root_value)}
     if is_satisfied:
         target_states = result_states
@@ -81,10 +81,6 @@ def _format_ctl_result(
 ) -> Dict[str, Any]:
     """Format the model checking result, with a trace when available."""
     if trace is not None:
-        from model_checker.algorithms.explicit.shared import (
-            create_verification_result,
-        )
-
         result_states = {str(s) for s in parse_state_set_literal(root_value)}
 
         verification_result = create_verification_result(
@@ -128,13 +124,7 @@ def model_checking(
 ) -> Dict[str, Any]:
     """Entry point for CTL model checking from a file or a pre-loaded model."""
     if preloaded_model is not None:
-        from model_checker.utils.error_handler import create_system_error
-
         if not formula or not formula.strip():
-            from model_checker.utils.error_handler import (
-                create_validation_error,
-            )
-
             return create_validation_error("Formula not entered")
 
         try:
@@ -148,9 +138,6 @@ def model_checking(
             raise
         except Exception as e:
             return create_system_error(f"Error during CTL model checking: {str(e)}")
-    from model_checker.engine.runner import (
-        execute_model_checking_with_parser,
-    )
 
     def core_checking_wrapper(cgs, formula_str):
         return _core_ctl_checking(cgs, formula_str, generate_trace)

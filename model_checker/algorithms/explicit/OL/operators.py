@@ -15,7 +15,7 @@ from model_checker.algorithms.explicit.OL.preimage import (
     states_with_next_in,
     states_within_cost,
 )
-from model_checker.engine.runner import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal
 
 _OL_BOUND_RE = re.compile(r"^<J(\d+)>")
 

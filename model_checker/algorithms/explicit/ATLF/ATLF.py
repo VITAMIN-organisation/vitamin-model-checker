@@ -1,8 +1,13 @@
 from model_checker.algorithms.explicit.ATLF.solver import solve_tree
 from model_checker.algorithms.explicit.shared import build_resolved_formula_tree
-from model_checker.engine.runner import bind_model_checking, parse_tuple_list_literal
+from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
+from model_checker.utils.error_handler import (
+    create_semantic_error,
+    create_syntax_error,
+)
+from model_checker.utils.literals import parse_tuple_list_literal
 
 
 def get_tuple_list_prop(cgs, prop):
@@ -30,11 +35,6 @@ def get_value_initial_state(initial_state, string):
 
 def _core_atlf_checking(cgs, formula):
     """Run ATLF model checking on a loaded model."""
-    from model_checker.utils.error_handler import (
-        create_semantic_error,
-        create_syntax_error,
-    )
-
     parser = FormulaParserFactory.get_parser_instance("ATLF")
     res_parsing = parser.parse(formula, n_agent=cgs.get_number_of_agents())
     if res_parsing is None:
@@ -66,4 +66,4 @@ def _resolve_atom(cgs, atom):
     return str(couples)
 
 
-model_checking = bind_model_checking("ATLF", _core_atlf_checking)
+model_checking = create_model_checking_entry("ATLF", _core_atlf_checking)

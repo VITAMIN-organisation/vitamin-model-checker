@@ -2,9 +2,9 @@
 
 This module ports Wallet_ATL to the same explicit-algorithm structure used by ATL:
 - parser via FormulaParserFactory
-- tree building via engine.runner.build_formula_tree
+- tree building via utils.formula_tree.build_formula_tree
 - operator solving via dedicated solver/operators modules
-- execution wrapper via engine.runner.execute_model_checking_with_parser
+- execution wrapper via engine.execution.create_model_checking_entry
 """
 
 import re
@@ -18,8 +18,13 @@ from model_checker.algorithms.explicit.shared import (
     resolve_atom,
     verify_initial_state,
 )
-from model_checker.engine.runner import bind_model_checking, build_formula_tree
+from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.utils.error_handler import (
+    create_semantic_error,
+    create_syntax_error,
+)
+from model_checker.utils.formula_tree import build_formula_tree
 
 from .solver import solve_tree
 
@@ -156,11 +161,6 @@ def _extract_state_name(initial_state: str) -> str:
 
 def _core_walletatl_checking(cgs, formula: str) -> Dict[str, Any]:
     """Core Wallet_ATL model checking logic."""
-    from model_checker.utils.error_handler import (
-        create_semantic_error,
-        create_syntax_error,
-    )
-
     parser = FormulaParserFactory.get_parser_instance("Wallet_ATL")
     res_parsing = parser.parse(formula, max_coalition=cgs.get_number_of_agents())
     if res_parsing is None:
@@ -189,4 +189,4 @@ def _core_walletatl_checking(cgs, formula: str) -> Dict[str, Any]:
     return format_model_checking_result(root.value, initial_state, is_satisfied)
 
 
-model_checking = bind_model_checking("Wallet_ATL", _core_walletatl_checking)
+model_checking = create_model_checking_entry("Wallet_ATL", _core_walletatl_checking)

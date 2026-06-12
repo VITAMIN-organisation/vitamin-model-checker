@@ -8,13 +8,13 @@ computations, and knowledge set generation.
 import functools
 import logging
 
+from model_checker.algorithms.explicit.CapATL.combinatorics import (
+    find_combinations,
+    get_actions_from_capacity_set,
+)
 from model_checker.algorithms.explicit.CapATL.knowledge import (
     p_knowledge,
     p_knowledge_for_Y,
-)
-from model_checker.algorithms.explicit.CapATL.preimage import (
-    find_combinations,
-    get_actions_from_capacity_set,
 )
 
 logger = logging.getLogger(__name__)

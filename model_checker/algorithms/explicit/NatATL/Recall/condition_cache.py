@@ -7,7 +7,7 @@ boolean_pruning across strategies, the result is cached. Key: (condition, model_
 
 from typing import Any, Dict, Optional
 
-from model_checker.algorithms.explicit.CTL import model_checking
+from model_checker.algorithms.explicit.CTL.CTL import model_checking
 
 
 def ctl_model_checking_cached(
