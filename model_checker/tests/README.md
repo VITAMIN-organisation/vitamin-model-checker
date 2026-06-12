@@ -1,231 +1,104 @@
-# Tests overview
+# Model checker tests
 
-This document explains how the test suite is organized, how to reuse the common
-helpers, and how to run only the pieces you care about.
+This suite checks that the VITAMIN model checker parses inputs correctly, runs
+algorithms as intended, and stays usable through the public API. The layout
+follows a simple testing pyramid: small fast checks at the bottom, full
+workflows at the top.
 
-## Directory layout
+## What we are trying to guarantee
 
-All tests live under `model_checker/tests`:
+1. **Inputs are handled safely** - model files and formulas are parsed and
+   validated; malformed or inconsistent inputs fail in a controlled way.
+2. **Logics mean what they should** - on small, known models, satisfying state
+   sets match expected semantics (not just "the code runs").
+3. **The library behaves like a product** - the same entry points callers use
+   in applications work across logics, including errors and edge cases.
+4. **Regressions are caught early** - performance tests flag large slowdowns;
+   unit tests pin down fragile internals before they break integration tests.
 
-- `unit/` - fast, focused tests for individual functions, parsers, and small algorithm pieces.
-- `integration/` - end-to-end logic tests over real models (correctness and semantics).
-- `e2e/` - full "user workflow" tests that go through the public API.
-- `performance/` - performance and scalability tests that enforce time limits.
-- `helpers/` - shared helpers used by the tests (model loading, builders, assertions).
+New logics and features should extend this guarantees, not bypass them.
 
-## Fixtures and test data
+## Layers (main idea)
 
-All model and test data live under `tests/fixtures/`: valid models in `fixtures/{CGS,costCGS,capCGS}/{LOGIC}/`, invalid and edge-case files in `fixtures/tests/{invalid,edge_cases}/`. Tests either load from `test_data_dir` or build small models in memory via `tests/helpers/model_helpers.py`.
+Tests are grouped by **scope**, not by implementation detail. Deeper folders
+mirror logics and components; the names on disk are the map.
 
-Common fixtures are defined in `tests/conftest.py`:
+```text
+unit/           Isolated pieces: parsers, validators, algorithm helpers
+integration/    Real models + model checking, wired as in production
+e2e/            End-to-end paths a user or host application would take
+performance/    Time-bounded checks for scalability regressions
+fixtures/       Static model files and invalid/edge-case inputs
+helpers/        Test-only utilities (loading fixtures, asserting on results)
+```
 
-- `test_data_dir` - path to `tests/fixtures/`. Use with
-  `load_test_model(test_data_dir, "CGS/ATL/...")`. Invalid and edge-case files
-  live under `fixtures/tests/`.
-- `temp_file` - helper that writes a string of model content to a temporary file
-  and returns its path. Used by tests that construct models on the fly.
-- `cgs_simple_parser` - a pre-loaded parser for `atl_2agents_4states_simple.txt`,
-  so tests that just need "some small CGS" don't have to load it themselves.
+**Unit** tests answer: "Does this function or class do the right thing in
+isolation?" They should be fast and narrow. Prefer them for parser grammar,
+matrix validation, fixpoint steps, conversion utilities, and shared data
+structures.
 
-Some logics have an extra conftest under their integration folder, for example
-`integration/algorithms/cotl/conftest.py`, which provides `cotl_model_path` for
-COTL tests.
+**Integration** tests answer: "Given a real model and formula, does this logic
+produce the right answer or the right error?" They are the main correctness
+backbone per logic. Typical themes:
 
-## Shared helpers
+- **Semantics** - expected state sets on small models with known answers.
+- **Correctness / API** - invalid formulas, bad coalitions, missing atoms,
+  and other error paths through the public checker.
+- **Logic-specific depth** - extra scenarios where a logic needs more than
+  smoke coverage (fixpoints, pre-images, traces, recall strategies, etc.).
 
-Helpers live in `tests/helpers/` and are imported by both unit and integration tests.
+**E2E** tests answer: "Can someone load a model, run checking, and use the
+result without touching internals?" Keep this layer thin; it guards the
+overall workflow.
 
-- `model_helpers.py`
-  - loading: `load_test_model`, `load_cgs_from_content`, `load_costcgs_from_content`
-  - content builders: `build_cgs_model_content`, `generate_linear_chain`,
-    `generate_cycle_model`, `generate_cost_cgs_linear_chain_content`, ...
-  - result parsing: `extract_states_from_result` (turns the checker's `res` field
-    into a Python `set`)
-  - formula parsing: `assert_parse_structure` for quick sanity checks on
-    formula parse trees
+**Performance** tests answer: "Did we accidentally make common cases much
+slower?" They use timeouts and coarse bounds, not micro-benchmarks. For
+detailed pyperf benchmarking, see the separate
+`vitamin-benchmark-model-checker` project.
 
-COTL integration tests also use
-`integration/algorithms/cotl/cotl_test_helpers.py` for small helpers such as
-`check_and_get_states`, `result_states`, and `load_cotl_parser`.
+## How tests get their models
 
-Performance tests share a small helper module in
-`tests/performance/performance_helpers.py`:
+Two complementary approaches:
 
-- `check_parser_performance` - builds and parses a generated model and asserts
-  that parsing finishes under a given time bound.
-- `run_model_checking_with_timeout` - runs a model-checking call in a separate
-  thread, enforces a timeout, and returns `(states, elapsed_time)`.
+- **Fixtures** - checked-in `.txt` models under `fixtures/`. Use these when
+  the shape of the file matters (real game structures, cost/cap extensions,
+  invalid files for error handling).
+- **Synthetic models** - built in memory via `model_checker.synthetic_models`
+  (and test helpers that load or assert on them). Use these when size or
+  repetition matters (chains, cycles, scalability sweeps).
 
-## Unit tests (`unit/`)
+Pick the smallest model that still exercises the behavior under test.
 
-Unit tests are deliberately small and cheap. They exercise:
+## Markers and running tests
 
-- formula parsing
-- model file parsing and validation
-- CGS / costCGS API helpers
-- low-level algorithm pieces (fixpoints, transition caches, tree building, etc.)
+Markers in `conftest.py` describe **intent** (unit, integration, semantic,
+parser, performance, e2e, etc.). Combine them when filtering, for example
+only integration tests or everything except performance.
 
-### Formula parsers
+From the repository root:
 
-`unit/parsers/formulas/` contains smoke tests that only care about syntax and
-basic structure:
+```bash
+pytest model_checker/tests/
+pytest model_checker/tests/unit/
+pytest model_checker/tests/integration/
+pytest model_checker/tests/ -m performance
+pytest model_checker/tests/ -m "integration and not performance"
+```
 
-- `test_formula_parsers_smoke.py` - one parametrised test that checks the
-  per-logic formula parsers (ATL, CTL, LTL, NatATL, OATL, OL, RBATL, NatSL,
-  CapATL) accept valid inputs and reject invalid ones.
+Run the narrowest set that covers your change before opening a PR.
 
-### Model parsers and CGS API
+## Adding or changing tests
 
-`unit/parsers/models/` covers the file-level parsers and core CGS API:
+- Match the **layer** to the question you are asking (unit vs integration).
+- Put logic-specific tests under that logic's folder; reuse shared helpers
+  instead of copying model-loading or result-parsing code.
+- Prefer one clear assertion per scenario; name tests after the behavior, not
+  the function under test.
+- If you add a new logic, aim for at least parser smoke coverage, integration
+  correctness on a small fixture, and semantics on a model with known answers.
 
-- `test_model_file_parsing.py` - missing sections, malformed matrices, labelling
-  rules, duplicate sections, and cost/cap extension sections.
-- `test_cgs_api.py` - convenience methods on the CGS object
-  (`get_number_of_agents`, `get_actions`, `get_coalition_action`,
-  `get_opponent_moves`, etc.).
-- `test_cgs_validation.py` - structural validation of parsed models
-  (`validate_model_structure`).
+## VMI and integrated logics
 
-### Algorithm-level unit tests
-
-`unit/algorithms/` contains tests that focus on algorithm internals, without
-running the full model-checking loop.
-
-- `test_witness_counterexample.py` - shared across logics; exercises
-  `VerificationResult`, trace types, and `extract_shortest_trace`.
-
-Logic-specific algorithm unit tests live under `unit/algorithms/<logic>/`:
-
-- `unit/algorithms/atl/test_fixpoint_cache.py` - ATL fixpoint computation and
-  transition cache building.
-- `unit/algorithms/ltl/test_ltl_to_ctl.py` - LTL-to-CTL formula conversion.
-- `unit/algorithms/natatl/test_matrix_parser.py` - NatATL idle-matrix validation
-  (`validate_nat_idle_requirements`).
-- `unit/algorithms/natatl/recall/` - NatATL-recall helpers:
-  `test_tree_building.py`, `test_boolean_pruning.py`, `test_strategy_generation.py`.
-
-### Utilities
-
-- `unit/utils/test_bit_vector.py` - tests for the bit-vector state-set helper
-  used by some algorithms.
-
-## Integration tests (`integration/`)
-
-Integration tests wire together real models, the public model-checking API, and
-selected helpers. They live under:
-
-- `integration/parsers/` - parser integration tests
-- `integration/algorithms/<logic>/` - per-logic correctness and semantics
-- `integration/interface/` - cross-logic API tests
-
-### Parser integration
-
-- `integration/parsers/test_valid_models_structure.py` - loads a representative
-  set of fixture models and checks that transition and labelling matrices are
-  dimensionally consistent, state indexes and names round-trip correctly, and
-  atomic propositions can be looked up by name.
-
-### Logic-specific integration tests
-
-Each logic has a folder under `integration/algorithms/<logic>/`. Not every
-logic has the same files, but the pattern is consistent:
-
-- `test_correctness.py` - API and error handling (invalid formulas, invalid
-  coalitions, missing atoms, etc.). Some also contain basic satisfiability
-  checks.
-- `test_semantics.py` - expected state sets for key formulas on small models.
-
-On top of that, some logics have extra coverage:
-
-**CTL** (`integration/algorithms/ctl/`)
-
-- `test_correctness.py` - API and error handling.
-- `test_semantics.py` - expected state sets on simple and custom models.
-- `test_ctl_edge_cases.py` - cycles, deadlocks, and combinations on small
-  models.
-- `test_complex_formulas.py` - deeply nested temporal operators (for example
-  `EF(AG(EX p))`).
-- `test_corner_cases.py` - single-state model with a self-loop, checking
-  `EF`, `EG`, `AF`, `AG`.
-- `test_fixpoint.py` - fixpoint convergence for `EF`, `AF`, `EG`, `AG`.
-- `test_preimage.py` - `pre_image_exist` and `pre_image_all`.
-- `test_trace_generation.py` - witness / counterexample trace generation.
-
-**ATL** (`integration/algorithms/atl/`)
-
-- `test_correctness.py` - API and error handling.
-- `test_semantics.py` - expected state sets on simple ATL models.
-- `test_critical_paths.py` - coalition pre-image when an opponent can spoil the
-  outcome.
-
-**NatATL** (`integration/algorithms/natatl/`)
-
-- `memoryless/` - `test_correctness.py`, `test_semantics.py`.
-- `recall/` - `test_correctness.py`, `test_critical_scenarios.py`.
-
-Other logics (OATL, OL, RBATL, RABATL, CapATL, etc.) follow the same
-`test_correctness.py` / `test_semantics.py` pattern in their own folders.
-
-### Interface tests
-
-- `integration/interface/test_model_checker_api.py` - covers the
-  cross-logic API surface: running different logics through the same entry
-  point and checking that results and error paths are consistent.
-
-## End-to-end tests (`e2e/`)
-
-The `e2e/` directory contains a small number of tests that simulate how a user
-would actually call the library:
-
-- `test_full_workflows.py` - loads models, runs model checking for several
-  logics, exercises error handling for invalid files, runs a "large model /
-  complex formula" scenario, and checks strategy extraction.
-
-## Performance tests (`performance/`)
-
-Performance tests are pass/fail and enforce explicit time limits. They are
-marked with `@pytest.mark.performance` and live under `performance/`:
-
-- `test_atl_performance.py`, `test_ctl_performance.py`, `test_oatl_performance.py`,
-  `test_natatl_performance.py`, `test_scalability.py`, etc.
-- Most tests use `run_model_checking_with_timeout` and/or
-  `check_parser_performance` from `tests/performance/performance_helpers.py`.
-
-These tests are meant to catch regressions (for example, a change that makes
-`EF p` suddenly 10x slower), not to provide fine-grained benchmark numbers.
-
-## Markers and how to run tests
-
-Markers are registered in `tests/conftest.py` and can be combined in expressions
-such as `-m "unit and atl"` or `-m "integration and not performance"`.
-The main markers are:
-
-- `unit` - unit tests
-- `integration` - integration tests
-- `semantic` - semantics-level tests
-- `parser` - parser tests
-- `validation` - model validation tests
-- `model_checking` - model-checking core
-- `edge_case` - edge and corner cases
-- `robustness` - robustness and error handling
-- `performance` - performance tests
-- `e2e` - end-to-end tests
-- `workflow` - workflow-oriented tests
-
-Typical commands:
-
-- all tests:
-  `pytest model_checker/tests/`
-- only unit tests:
-  `pytest model_checker/tests/unit/`
-- only integration tests:
-  `pytest model_checker/tests/integration/`
-- only e2e tests:
-  `pytest model_checker/tests/e2e/`
-- filter by marker, for example integration only:
-  `pytest model_checker/tests/ -m integration`
-
-When VMI integrates a logic bundle into this repository, run the relevant
-integration tests here after the VMI post-integration verification has passed.
-VMI proves the bundle can be installed and imported; this suite protects the
-core package behavior over time.
+When a logic bundle is integrated into this repository, run the relevant tests
+here after VMI's post-integration checks pass. VMI verifies install and import;
+this suite verifies that the core package still behaves correctly over time.
