@@ -2,7 +2,7 @@
 
 `vitamin-model-checker` is the core Python package for VITAMIN model checking.
 It contains the formula parsers, model parsers, explicit-state algorithms,
-benchmarks, fixtures, and tests used by the wider VITAMIN stack.
+fixtures, and tests used by the wider VITAMIN stack.
 
 This repository does not expose an HTTP service by default. The package is used
 directly from Python, by the Workbench application, and as the integration target
@@ -12,7 +12,8 @@ for `vitamin-module-integrator`.
 
 | Project | Role |
 |---|---|
-| `vitamin-model-checker` | Core Python library and CLI/benchmark tooling. |
+| `vitamin-model-checker` | Core Python library. |
+| `vitamin-benchmark-model-checker` | pyperf benchmark tool for this package. |
 | `vitamin-module-integrator` | Validates logic bundles and applies them to this repo. |
 | `vitamin-workbench` | User-facing web/API application that calls the model checker. |
 
@@ -29,11 +30,11 @@ source .venv/bin/activate
 make install
 ```
 
-`make install` installs the package in editable mode with benchmark support.
-For development-only dependencies, you can also use:
+`make install` installs the package in editable mode with development dependencies.
+For documentation tooling:
 
 ```bash
-pip install -e ".[dev,bench,docs]"
+pip install -e ".[dev,docs]"
 ```
 
 ## Run Tests
@@ -61,14 +62,24 @@ The documentation starts at `docs/index.md`.
 
 ## Benchmarks
 
+Benchmark this package with `vitamin-benchmark-model-checker`, a separate pip
+package that times `model_checking()` across logics via the `vitamin.benchmarks`
+entry points declared here.
+
 ```bash
-make benchmark
-make benchmark LOGIC=COTL
-make benchmark OUTPUT=bench.json
-make benchmark MODE=compare BASELINE=before.json RESULT=after.json
+pip install vitamin-benchmark-model-checker
+vitamin-benchmark --logic CTL --output ctl.json
 ```
 
-Benchmark details live in `model_checker/benchmarking/README.md`.
+For local development with a checkout of both repos:
+
+```bash
+pip install -e .
+pip install -e ../vitamin-benchmark-model-checker
+```
+
+See the `vitamin-benchmark-model-checker` README for compare mode, plots, and
+the full benchmark matrix.
 
 ## Docker
 

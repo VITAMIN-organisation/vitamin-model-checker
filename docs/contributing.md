@@ -9,7 +9,7 @@ use `vitamin-module-integrator` first.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev,bench,docs]"
+pip install -e ".[dev,docs]"
 ```
 
 `make install` is also available, but the explicit `pip install` command is
@@ -42,10 +42,12 @@ add direct colors with `classDef`, `style`, or `themeVariables`.
 
 ## Benchmark Commands
 
+Benchmarks live in `vitamin-benchmark-model-checker`. From that repository:
+
 ```bash
-make benchmark LOGIC=CTL
-make benchmark LOGIC=CTL OUTPUT=before.json
-make benchmark MODE=compare BASELINE=before.json RESULT=after.json
+vitamin-benchmark --logic CTL
+vitamin-benchmark --logic CTL --output before.json
+vitamin-benchmark --mode compare --baseline before.json --result after.json
 ```
 
 Benchmarks are useful when an algorithm change might affect runtime. They do not

@@ -194,11 +194,6 @@ marked with `@pytest.mark.performance` and live under `performance/`:
 These tests are meant to catch regressions (for example, a change that makes
 `EF p` suddenly 10x slower), not to provide fine-grained benchmark numbers.
 
-## Benchmarks
-
-Benchmarks are not part of the pytest suite. Use the benchmark tool in
-`model_checker/benchmarking/README.md` when you need timing data.
-
 ## Markers and how to run tests
 
 Markers are registered in `tests/conftest.py` and can be combined in expressions

@@ -55,6 +55,7 @@ ENV/
 .vmi-snapshots/
 
 # Package specifics
+ctl.json
 ctl.json.summary.json
 ictl_err.log
 

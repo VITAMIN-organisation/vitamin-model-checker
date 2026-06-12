@@ -13,8 +13,8 @@ network port by default.
 
 ## Local Development
 
-Running tests, benchmarks, or scripts in this repository does not require a
-reserved HTTP port.
+Running tests or scripts in this repository does not require a reserved HTTP
+port.
 
 Only allocate a port if you intentionally wrap this package in a service. If
 you do that, document the wrapper in the owning project rather than treating it

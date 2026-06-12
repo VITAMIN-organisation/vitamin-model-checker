@@ -38,7 +38,6 @@ and makes traces easier to build, but large models can use a lot of memory.
 ```text
 model_checker/
 ├── algorithms/explicit/        # per-logic checking algorithms
-├── benchmarking/               # pyperf benchmark CLI and cases
 ├── engine/                     # shared runner and execution helpers
 ├── parsers/
 │   ├── formulas/               # per-logic formula parsers
@@ -166,7 +165,8 @@ The recommended path for adding a new logic is:
 1. Build a VMI bundle.
 2. Validate it with `vitamin-module-integrator`.
 3. Let VMI integrate files and entry points into this repository.
-4. Run this repository's tests and benchmarks where relevant.
+4. Run this repository's tests and, where relevant, benchmarks from
+   `vitamin-benchmark-model-checker`.
 
 Maintainers can still add or change built-in logic manually. See
 [Adding a New Logic](adding_a_new_logic.md) for both workflows.
@@ -180,9 +180,9 @@ Tests live under `model_checker/tests/`:
 - `e2e/` for full user-like workflows,
 - `performance/` for time-bound regression checks.
 
-Benchmarks live under `model_checker/benchmarking/` and use `pyperf`. Use them
-when an algorithm change may affect runtime, not as a replacement for
-correctness tests.
+The `vitamin-benchmark-model-checker` package provides pyperf benchmarks against
+`vitamin.benchmarks` entry points. Use it when an algorithm change may affect
+runtime, not as a replacement for correctness tests.
 
 ## Known Limits
 

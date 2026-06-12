@@ -17,7 +17,8 @@ flowchart LR
 
 | Project | Owns | Does not own |
 |---|---|---|
-| `vitamin-model-checker` | Parsers, model structures, algorithms, tests, benchmarks, Python entry points. | Bundle upload UI, HTTP routes, AI prompts, Workbench UI. |
+| `vitamin-model-checker` | Parsers, model structures, algorithms, tests, Python entry points. | Bundle upload UI, HTTP routes, AI prompts, Workbench UI. |
+| `vitamin-benchmark-model-checker` | pyperf benchmark tool for core logics. | Core parser/algorithm implementation. |
 | `vitamin-module-integrator` | Bundle standard, validation pipeline, integration pipeline, cleanup, generated OpenAPI client for its own UI. | Core model-checking algorithm implementation. |
 | `vitamin-workbench` | User-facing app, backend API, prompts, UI flows. | The core parser/algorithm package. |
 
@@ -27,7 +28,8 @@ flowchart LR
 2. VMI validates parser, checker, structure, dependencies, examples, and tests.
 3. VMI integrates the bundle into this repo by copying files and patching entry
    points.
-4. This repo's tests and benchmarks confirm the core package still behaves.
+4. This repo's tests (and benchmarks from `vitamin-benchmark-model-checker`)
+   confirm the core package still behaves.
 5. Workbench can expose the logic in the user-facing application when its own
    config/UI is updated.
 

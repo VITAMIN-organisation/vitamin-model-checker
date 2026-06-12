@@ -220,7 +220,8 @@ Use this checklist when you are maintaining this repository directly:
 - [ ] Add tests under `model_checker/tests/`.
 - [ ] Add examples if the logic should appear in demo flows.
 - [ ] Run `pytest model_checker/tests/`.
-- [ ] Run benchmarks if the change can affect performance.
+- [ ] Run benchmarks from `vitamin-benchmark-model-checker` if the change can
+      affect performance.
 
 ## Workbench Notes
 

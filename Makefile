@@ -1,6 +1,6 @@
 # Intended to be run from model_checker/ or project root.
 
-.PHONY: help install build clean format lint test test-models benchmark
+.PHONY: help install build clean format lint test test-models
 
 # ------------------------------
 # Configuration
@@ -17,10 +17,6 @@ help:
 	@echo "  --- Setup ---"
 	@echo "  make install       Install package in development mode"
 	@echo ""
-	@echo "  --- Run & Analyze ---"
-	@echo "  make benchmark     Run benchmark tool (pyperf)"
-	@echo "                     Variables: MODE, LOGIC, OUTPUT, EXPORT_PLOTS, BASELINE, RESULT"
-	@echo ""
 	@echo "  --- Build & Cleanup ---"
 	@echo "  make build         Build distribution package"
 	@echo "  make clean         Remove Python cache and egg-info"
@@ -35,34 +31,8 @@ help:
 # ------------------------------
 install:
 	@echo "Installing package..."
-	@cd $(PROJECT_ROOT) && $(PYTHON) -m pip install -e ".[bench]"
+	@cd $(PROJECT_ROOT) && $(PYTHON) -m pip install -e ".[dev]"
 	@echo "Done."
-
-# ------------------------------
-# Run & Analyze
-# ------------------------------
-benchmark:
-	@echo "Running benchmark tool..."
-	@cd $(PROJECT_ROOT) && if [ "$(MODE)" = "compare" ]; then \
-		if [ -z "$(BASELINE)" ] || [ -z "$(RESULT)" ]; then \
-			echo "Error: MODE=compare requires BASELINE and RESULT."; \
-			echo "Usage: make benchmark MODE=compare BASELINE=before.json RESULT=after.json"; \
-			exit 1; \
-		fi; \
-		$(PYTHON) -m model_checker.benchmarking --mode compare --baseline "$(BASELINE)" --result "$(RESULT)"; \
-	elif [ -n "$(LOGIC)" ] && [ -n "$(OUTPUT)" ] && [ -n "$(EXPORT_PLOTS)" ]; then \
-		$(PYTHON) -m model_checker.benchmarking --logic "$(LOGIC)" --output "$(OUTPUT)" --export-plots "$(EXPORT_PLOTS)"; \
-	elif [ -n "$(OUTPUT)" ] && [ -n "$(EXPORT_PLOTS)" ]; then \
-		$(PYTHON) -m model_checker.benchmarking --output "$(OUTPUT)" --export-plots "$(EXPORT_PLOTS)"; \
-	elif [ -n "$(LOGIC)" ] && [ -n "$(OUTPUT)" ]; then \
-		$(PYTHON) -m model_checker.benchmarking --logic "$(LOGIC)" --output "$(OUTPUT)"; \
-	elif [ -n "$(LOGIC)" ]; then \
-		$(PYTHON) -m model_checker.benchmarking --logic "$(LOGIC)"; \
-	elif [ -n "$(OUTPUT)" ]; then \
-		$(PYTHON) -m model_checker.benchmarking --output "$(OUTPUT)"; \
-	else \
-		$(PYTHON) -m model_checker.benchmarking; \
-	fi
 
 # ------------------------------
 # Build & Cleanup

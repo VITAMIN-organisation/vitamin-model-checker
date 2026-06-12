@@ -1,5 +1,5 @@
 # VITAMIN Model Checker - Core Library Build
-# This image is used specifically for running tests and benchmarks in an isolated environment.
+# This image is used specifically for running tests in an isolated environment.
 
 FROM python:3.11-slim
 

@@ -43,20 +43,11 @@ dev = [
     "pytest-timeout>=2.0.0",
     "pytest-xdist>=3.6.0",
 ]
-bench = [
-    "pyperf>=2.7.0",
-]
-bench-viz = [
-    "matplotlib>=3.8.0",
-]
 docs = [
     "mkdocs>=1.5.0",
     "mkdocs-material>=9.5.0",
     "mkdocstrings[python]>=0.24.0",
 ]
-
-[project.scripts]
-model_checker-benchmark = "model_checker.benchmarking.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -125,7 +116,11 @@ COTL = "model_checker.parsers.formulas.OATL:METADATA"
 CTL = "model_checker.parsers.formulas.CTL:METADATA"
 LTL = "model_checker.parsers.formulas.LTL:METADATA"
 NatATL = "model_checker.parsers.formulas.NatATL:METADATA"
+NatATL_Recall = "model_checker.parsers.formulas.NatATL:METADATA"
 NatATLF = "model_checker.parsers.formulas.NatATLF:METADATA"
+NatSL = "model_checker.parsers.formulas.NatSL:METADATA"
+NatSL_Sequential = "model_checker.parsers.formulas.NatSL:METADATA"
+NatSL_Alternated = "model_checker.parsers.formulas.NatSL:METADATA"
 OATL = "model_checker.parsers.formulas.OATL:METADATA"
 OL = "model_checker.parsers.formulas.OL:METADATA"
 RABATL = "model_checker.parsers.formulas.RABATL:METADATA"

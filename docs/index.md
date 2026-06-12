@@ -2,7 +2,7 @@
 
 This is the developer and reference documentation for the VITAMIN model-checker
 library. Use it when you need to understand the package internals, model file
-formats, logic implementations, tests, or benchmarks.
+formats, logic implementations, or tests.
 
 ## Reading Paths
 
@@ -24,8 +24,10 @@ formats, logic implementations, tests, or benchmarks.
 - explicit-state algorithms under `model_checker/algorithms/explicit/`,
 - shared execution in `model_checker/engine/runner.py`,
 - test fixtures and correctness tests under `model_checker/tests/`,
-- benchmark tooling under `model_checker/benchmarking/`,
 - Python entry points in `pyproject.toml`.
+
+Performance benchmarks use the external `vitamin-benchmark-model-checker`
+package.
 
 It does not own the Workbench HTTP API. It also does not own the VMI UI. Those
 live in sibling projects and call into this package.

@@ -1,13 +1,14 @@
 # Python API Overview
 
 These pages document the `model_checker` Python package: parsers, algorithms,
-engine helpers, utilities, and benchmark support.
+engine helpers, and utilities.
 
 This is not the Workbench HTTP API and not the VMI backend API.
 
 | API surface | Where it lives | What it is for |
 |---|---|---|
-| Python package API | `vitamin-model-checker` | Import parsers, run model checking, test algorithms, benchmark logic. |
+| Python package API | `vitamin-model-checker` | Import parsers, run model checking, and test algorithms. |
+| Benchmark tool | `vitamin-benchmark-model-checker` | pyperf timing against `vitamin.benchmarks` entry points. |
 | Integration API | `vitamin-module-integrator` | Upload, validate, integrate, remove, and verify logic bundles. |
 | HTTP/user API | `vitamin-workbench` | User-facing application and backend routes. |
 
