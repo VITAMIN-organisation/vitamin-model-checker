@@ -18,9 +18,8 @@ def _moves_by_coalition_for_state(
 ) -> Dict[frozenset, List[int]]:
     """Group outgoing transitions at one state by coalition move."""
     moves_by_coalition: Dict[frozenset, List[int]] = {}
-    graph = cgs.graph
 
-    for dest_idx, action in enumerate(graph[state_idx]):
+    for dest_idx, action in enumerate(cgs.graph[state_idx]):
         if action == 0:
             continue
         for move in cgs.build_action_list(action):
@@ -37,13 +36,12 @@ def build_transition_cache(cgs: "CGS", coalition: str) -> TransitionCache:
     agents = cgs_actions.get_agents_from_coalition(coalition)
     formatted_agents = cgs_actions.format_agents(agents)
     num_agents = cgs.get_number_of_agents()
-    graph = cgs.graph
 
     return {
         state_idx: _moves_by_coalition_for_state(
             cgs, state_idx, formatted_agents, num_agents
         )
-        for state_idx in range(len(graph))
+        for state_idx in range(len(cgs.graph))
     }
 
 
@@ -75,7 +73,6 @@ def evaluate_max_strategy(
 
 def pre(
     cgs: "CGS",
-    coalition: str,
     atom_values: Union[List[Tuple[str, float]], str],
     transition_cache: TransitionCache,
 ) -> List[Tuple[str, float]]:

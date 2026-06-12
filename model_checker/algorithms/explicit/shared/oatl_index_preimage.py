@@ -43,10 +43,9 @@ def check_if_action_is_extension(action: str, extension_action: str) -> bool:
 
 def next_states(cgs, action_profile: str, state_idx: int, graph=None) -> Set[int]:
     """Return indices reachable from state_idx when the coalition plays action_profile."""
-    if graph is None:
-        graph = cgs.graph
+    outgoing = cgs.graph[state_idx] if graph is None else graph[state_idx]
     reachable: Set[int] = set()
-    for next_idx, label in enumerate(graph[state_idx]):
+    for next_idx, label in enumerate(outgoing):
         if label == 0 or label == "0":
             continue
         for act in cgs.build_action_list(label):

@@ -1,0 +1,26 @@
+# MODEL: Minimal two-agent IATL BCGS with two states
+
+# PURPOSE: Smoke tests for coalition pre-image and model loading.
+
+# LOGIC: IATL
+
+# At s0 agent 1 can idle (only s0) or play A (only s1).
+# Pre_d({s0}) contains s0; Pre_f({s0}) does not.
+
+Transition
+II,II AA,AA
+0 II,II
+Preorder
+1 0
+0 1
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+1
+0
+Number_of_agents
+2

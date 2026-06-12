@@ -58,12 +58,11 @@ def states_with_next_in(cgs, target_states: Set[str], max_step_cost: int) -> Set
     if not target_indices:
         return set()
 
-    graph = cgs.graph
     result: Set[str] = set()
-    for i in range(len(graph)):
+    for i in range(len(cgs.graph)):
         has_affordable_step = False
-        for j in range(len(graph)):
-            cell = graph[i][j]
+        for j in range(len(cgs.graph)):
+            cell = cgs.graph[i][j]
             if cell in (0, "0"):
                 continue
             if transition_cell_cost(cgs, i, cell) > max_step_cost:

@@ -79,6 +79,7 @@ ICTL = "model_checker.parsers.formulas.ICTL.parser:ICTLParser"
 IATL = "model_checker.parsers.formulas.IATL.parser:IATLParser"
 
 [project.entry-points."vitamin.models"]
+BCGS = "model_checker.parsers.game_structures.bcgs.bcgs:BCGS"
 CGS = "model_checker.parsers.game_structures.cgs.cgs:CGS"
 costCGS = "model_checker.parsers.game_structures.cost_cgs.cost_cgs:CostCGS"
 capCGS = "model_checker.parsers.game_structures.cap_cgs.cap_cgs:CapCGS"

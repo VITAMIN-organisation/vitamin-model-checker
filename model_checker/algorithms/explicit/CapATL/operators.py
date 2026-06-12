@@ -12,10 +12,6 @@ from model_checker.algorithms.explicit.CapATL.utils import (
     pointed_knowledge_set,
 )
 
-# ---------------------------------------------------------
-# UNARY OPERATOR HANDLERS
-# ---------------------------------------------------------
-
 
 def handle_not(cgs, node):
     """Handle NOT operator: complement of child's pointed knowledge set."""
@@ -59,11 +55,6 @@ def handle_globally(cgs, node, coal_str):
             pi_omega_Y(cgs, target, coal_str)
         )
     node.value = set(pi_theta(cgs, list(w_old)))
-
-
-# ---------------------------------------------------------
-# BINARY OPERATOR HANDLERS
-# ---------------------------------------------------------
 
 
 def handle_and(cgs, node):

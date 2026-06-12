@@ -453,8 +453,10 @@ def _core_cotl_checking(cgs, formula):
     if root is None:
         return create_semantic_error("The atom does not exist in the model")
 
-    graph = cgs.graph
-    solve_context = {"graph": graph, "pre_by_index": build_pre_by_index(graph)}
+    solve_context = {
+        "graph": cgs.graph,
+        "pre_by_index": build_pre_by_index(cgs.graph),
+    }
     _solve_tree(cgs, root, solve_context)
 
     initial_state = cgs.initial_state

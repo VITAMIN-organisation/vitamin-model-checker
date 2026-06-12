@@ -31,10 +31,9 @@ def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCa
     agents = cgs_actions.get_agents_from_coalition(coalition)
     formatted_agents = cgs_actions.format_agents(agents)
     num_agents = cgs.get_number_of_agents()
-    graph = cgs.graph
     cache: TransitionCache = {}
 
-    for state_idx, row in enumerate(graph):
+    for state_idx, row in enumerate(cgs.graph):
         profiles_by_dest: Dict[int, List[str]] = {}
         opponent_moves_by_column: List[frozenset] = []
 
@@ -76,8 +75,7 @@ def compute_pre_states(
     agents = cgs_actions.get_agents_from_coalition(coalition)
     formatted_agents = cgs_actions.format_agents(agents)
     num_agents = cgs.get_number_of_agents()
-    graph = cgs.graph
-    num_states = len(graph)
+    num_states = len(cgs.graph)
     target_indices = state_names_to_indices(cgs, state_set)
     pre_states: Set[int] = set()
 

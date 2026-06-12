@@ -209,13 +209,12 @@ def pi_theta(cgs, W):
 @functools.lru_cache(maxsize=1024)
 def indistinguishable_action(cgs, state1, state2, action, agent):
     """Epistemic indistinguishable action check."""
-    graph = cgs.graph
     idx1 = get_index_by_state_name(cgs, state1)
     idx2 = get_index_by_state_name(cgs, state2)
     if idx1 is None or idx2 is None:
         return None
 
-    actions_encoded = graph[idx1][idx2]
+    actions_encoded = cgs.graph[idx1][idx2]
     if actions_encoded == 0:
         return None
 
@@ -258,7 +257,6 @@ def succ(cgs, pk_for_Y):
     action = pk_for_Y.action
     state = pk_for_Y.state
     set_capacity = pk_for_Y.knowledge
-    graph = cgs.graph
     n_agents = cgs.get_number_of_agents()
     agents_tot = list(range(1, n_agents + 1))
 
@@ -267,7 +265,7 @@ def succ(cgs, pk_for_Y):
         return []
 
     successors = []
-    for succ_idx, actions_encoded in enumerate(graph[idx]):
+    for succ_idx, actions_encoded in enumerate(cgs.graph[idx]):
         if actions_encoded == 0:
             continue
 

@@ -23,8 +23,10 @@ class TestOATLPreImage:
         content = generate_cost_cgs_linear_chain_content(num_states=3, num_agents=1)
         cgs = load_costcgs_from_content(temp_file, content)
 
-        graph = cgs.graph
-        solve_context = {"graph": graph, "pre_by_index": build_pre_by_index(graph)}
+        solve_context = {
+            "graph": cgs.graph,
+            "pre_by_index": build_pre_by_index(cgs.graph),
+        }
 
         target_indices_s1 = state_names_to_indices(cgs, {"s1"})
         result_s1 = {

@@ -20,11 +20,6 @@ def _all_agents_coalition(cgs) -> str:
     return ",".join(str(agent) for agent in range(1, cgs.get_number_of_agents() + 1))
 
 
-# ---------------------------------------------------------
-# UNARY OPERATOR HANDLERS
-# ---------------------------------------------------------
-
-
 def handle_globally(cgs, node, transition_cache):
     """Handle G operator using all agents as coalition (legacy Wallet_ATL behavior)."""
     coalition = _all_agents_coalition(cgs)
@@ -111,11 +106,6 @@ def handle_wallet_coalition_eventually(cgs, node, transition_cache):
 
     result = least_fixpoint(initial_states, update_with_skip)
     node.value = str(tuple(sorted({str(s) for s in result})))
-
-
-# ---------------------------------------------------------
-# BINARY OPERATOR HANDLERS
-# ---------------------------------------------------------
 
 
 def handle_until(cgs, node, transition_cache):

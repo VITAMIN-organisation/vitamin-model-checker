@@ -1,43 +1,40 @@
+"""IATL model checking on BCGS models."""
+
 from typing import Any, Dict
 
-from model_checker.algorithms.explicit.IATL.iatl_model_checking import (
-    process_modelCheckingIATL_model_from_file,
+from model_checker.algorithms.explicit.IATL.checker import IATLModelChecker
+from model_checker.algorithms.explicit.IATL.solver import solve_tree
+from model_checker.algorithms.explicit.shared.result_utils import (
+    format_model_checking_result,
+    verify_initial_state,
 )
+from model_checker.engine.execution import create_model_checking_entry
+from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.utils.error_handler import create_semantic_error, create_syntax_error
 
 
-def model_checking(formula: str, filename: str) -> Dict[str, Any]:
-    """Run IATL model checking."""
-    # VMI standard requires (formula, filename), IATL inner requires (filename, formula)
-    # The original result is returned with 'States_Satisfying_Formula' key instead of 'res'
-    if filename == "dummy.txt" or not __import__("os").path.exists(filename):
-        return {
-            "res": "Result: {s0}",
-            "initial_state": "s0",
-            "formula": formula,
-            "model": filename,
-        }
-    try:
-        raw_result = process_modelCheckingIATL_model_from_file(filename, formula)
+def _core_iatl_checking(parser, formula: str) -> Dict[str, Any]:
+    """Run IATL model checking on a loaded BCGS parser."""
+    checker = IATLModelChecker(parser.data)
 
-        # Ensure VMI compatibility by providing 'res'
-        res_str = raw_result.get("States_Satisfying_Formula", "")
-        # Add the 'Result: ' prefix explicitly if not present (as VMI commonly expects)
-        if not res_str.startswith("Result:"):
-            res_str = f"Result: {res_str}"
+    formula_parser = FormulaParserFactory.get_parser_instance("IATL")
+    parsed = formula_parser.parse(formula, n_agent=checker.data["number_of_agents"])
+    if parsed is None:
+        error_msg = (
+            formula_parser.errors[0]
+            if formula_parser.errors
+            else "Syntax error in formula"
+        )
+        return create_syntax_error(error_msg)
 
-        return {
-            "res": res_str,
-            "initial_state": (
-                raw_result.get("Res_Initial_state", "").split(" : ")[0]
-                if " : " in str(raw_result.get("Res_Initial_state", ""))
-                else ""
-            ),
-            "formula": formula,
-            "model": filename,
-            "raw_result": raw_result,
-        }
-    except Exception as e:
-        import traceback
+    root = checker.build_tree(parsed)
+    if root is None:
+        return create_semantic_error("Syntax Error: the atom does not exist")
 
-        traceback.print_exc()
-        return {"error": {"message": str(e), "type": type(e).__name__}}
+    solve_tree(checker, root)
+    init_state = str(checker.data["initial_state"])
+    is_satisfied = verify_initial_state(init_state, root.value)
+    return format_model_checking_result(root.value, init_state, is_satisfied)
+
+
+model_checking = create_model_checking_entry("IATL", _core_iatl_checking)

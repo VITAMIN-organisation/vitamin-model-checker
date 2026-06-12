@@ -33,7 +33,7 @@ def _compute_coalition_globally_fixpoint(cgs, coalition: str, phi_states, trans_
     candidate = phi_states
     while not first_included_in_second(current_value, candidate):
         current_value = candidate
-        pre_result = pre(cgs, coalition, current_value, trans_cache)
+        pre_result = pre(cgs, current_value, trans_cache)
         candidate = intersection_values(pre_result, phi_states)
     return current_value
 
@@ -51,7 +51,7 @@ def _compute_coalition_eventually_fixpoint(
     candidate = phi_states
     while not first_included_in_second(candidate, current_value):
         current_value = update_values(current_value, candidate)
-        candidate = pre(cgs, coalition, current_value, trans_cache)
+        candidate = pre(cgs, current_value, trans_cache)
     return current_value
 
 
@@ -68,7 +68,7 @@ def _compute_coalition_until_fixpoint(
     candidate = psi_states
     while not first_included_in_second(candidate, current_value):
         current_value = update_values(current_value, candidate)
-        pre_result = pre(cgs, coalition, current_value, trans_cache)
+        pre_result = pre(cgs, current_value, trans_cache)
         candidate = intersection_values(pre_result, phi_states)
     return current_value
 
@@ -78,11 +78,6 @@ def _parse_real_values(value):
     if isinstance(value, str):
         return parse_tuple_list_literal(value)
     return value
-
-
-# ---------------------------------------------------------
-# UNARY OPERATOR HANDLERS
-# ---------------------------------------------------------
 
 
 def handle_not(cgs, node):
@@ -108,7 +103,7 @@ def handle_coalition_next(cgs, node):
     coalition = node.value[1:-2]
     left_parsed = _parse_real_values(node.left.value)
     trans_cache = build_transition_cache(cgs, coalition)
-    ris = pre(cgs, coalition, left_parsed, trans_cache)
+    ris = pre(cgs, left_parsed, trans_cache)
     node.value = str(ris)
 
 
@@ -121,11 +116,6 @@ def handle_coalition_eventually(cgs, node):
         cgs, coalition, states, trans_cache
     )
     node.value = str(result_states)
-
-
-# ---------------------------------------------------------
-# BINARY OPERATOR HANDLERS
-# ---------------------------------------------------------
 
 
 def handle_or(cgs, node):

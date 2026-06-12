@@ -29,10 +29,6 @@ from model_checker.algorithms.explicit.shared.state_utils import (
 from model_checker.parsers.game_structures.cgs import cgs_actions
 from model_checker.utils.literals import parse_state_set_literal
 
-# ---------------------------------------------------------
-# UNARY OPERATOR HANDLERS (NOT in shared.boolean_operators)
-# ---------------------------------------------------------
-
 
 def handle_coalition_globally(cgs, node, solve_context: SolveContext):
     """Handle <Jn>G operator: coalition can ensure phi forever within cost bound."""
@@ -134,11 +130,6 @@ def handle_coalition_eventually(cgs, node, solve_context: SolveContext):
         result.update(frontier)
 
     node.value = str(tuple(sorted({str(s) for s in result})))
-
-
-# ---------------------------------------------------------
-# BINARY OPERATOR HANDLERS (OR, AND, IMPLIES in shared.boolean_operators)
-# ---------------------------------------------------------
 
 
 def handle_coalition_until(cgs, node, solve_context: SolveContext):

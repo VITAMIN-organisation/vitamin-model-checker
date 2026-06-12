@@ -47,8 +47,10 @@ def _core_oatl_checking(cgs, formula):
     if root is None:
         return create_semantic_error("One or more atoms do not exist in the model")
 
-    graph = cgs.graph
-    solve_context = {"graph": graph, "pre_by_index": build_pre_by_index(graph)}
+    solve_context = {
+        "graph": cgs.graph,
+        "pre_by_index": build_pre_by_index(cgs.graph),
+    }
     solve_tree(cgs, root, solve_context)
 
     initial_state = cgs.initial_state

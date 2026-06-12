@@ -8,6 +8,7 @@ import os
 from typing import Union
 
 from model_checker.discovery import discover_logic_resource
+from model_checker.parsers.game_structures.bcgs.bcgs import BCGS
 from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
@@ -42,14 +43,16 @@ def detect_model_type_from_content(content: str) -> str:
     """
     if "Transition_With_Costs" in content or "Costs_for_actions" in content:
         return "costCGS"
-    elif "Capacities" in content or "Capacities_assignment" in content:
+    if "Capacities" in content or "Capacities_assignment" in content:
         return "capCGS"
+    if "Preorder" in content:
+        return "BCGS"
     return "CGS"
 
 
 def create_model_parser(
     filename: str, expected_type: str = None
-) -> Union[CGS, CostCGS, CapCGS]:
+) -> Union[BCGS, CGS, CostCGS, CapCGS]:
     """Create appropriate model parser instance based on model file content.
 
     Detects the game structure type or uses the expected type to resolve
@@ -71,7 +74,7 @@ def create_model_parser(
 
 def create_model_parser_for_logic(
     filename: str, logic_type: str = None
-) -> Union[CGS, CostCGS, CapCGS]:
+) -> Union[BCGS, CGS, CostCGS, CapCGS]:
     """Create appropriate model parser instance based on formula type requirements.
 
     Args:

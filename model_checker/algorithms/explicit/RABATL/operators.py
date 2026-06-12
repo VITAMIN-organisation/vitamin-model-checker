@@ -20,10 +20,6 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
 )
 from model_checker.utils.literals import parse_state_set_literal
 
-# ---------------------------------------------------------
-# UNARY OPERATOR HANDLERS (NOT in shared.boolean_operators)
-# ---------------------------------------------------------
-
 
 def handle_coalition_globally(cgs, node):
     """Handle <J><b>G operator: coalition can ensure phi forever within resource bounds."""
@@ -148,11 +144,6 @@ def handle_coalition_eventually(cgs, node):
             if not inc_bound(curr_bound_p, bound):
                 break
         node.value = str(tuple(sorted({str(s) for s in p})))
-
-
-# ---------------------------------------------------------
-# BINARY OPERATOR HANDLERS (OR, AND, IMPLIES in shared.boolean_operators)
-# ---------------------------------------------------------
 
 
 def handle_coalition_until(cgs, node):

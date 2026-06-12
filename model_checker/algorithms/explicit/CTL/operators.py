@@ -34,11 +34,6 @@ if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS
 
 
-# ---------------------------------------------------------
-# UNARY OPERATOR HANDLERS
-# ---------------------------------------------------------
-
-
 def handle_not(cgs: "CGS", node: Any) -> None:
     """Handle NOT operator: complement of child's state set."""
     _bool_not(cgs, node)
@@ -143,11 +138,6 @@ def handle_ar(cgs: "CGS", node: Any) -> None:
     psi_states = parse_state_set_literal(node.right.value)
     result = {str(s) for s in pre_release_universal(cgs, phi_states, psi_states)}
     node.value = str(tuple(sorted({str(s) for s in result})))
-
-
-# ---------------------------------------------------------
-# BINARY OPERATOR HANDLERS
-# ---------------------------------------------------------
 
 
 def handle_or(cgs: "CGS", node: Any) -> None:

@@ -131,11 +131,6 @@ def build_tree(tcgs: TimedCGS, tpl):
     return root
 
 
-# ---------------------------------------------------------
-# FUNCTIONS FOR COMPUTING PRE-IMAGES (CTL)
-# ---------------------------------------------------------
-
-
 def pre_image_exist(tcgs: TimedCGS, list_holds_p, constraints: tuple):
     """
     Computes the pre-image algorithm of a real-time system using backwards zone reachability.
@@ -253,11 +248,6 @@ def states_with_time_constraints(
         #    result.add(state.location)
 
     return result
-
-
-# ------------------------------
-# FUNCTION THAT RESOLVES THE FORMULA TREE
-# ------------------------------
 
 
 def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
@@ -610,9 +600,6 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
             node.value = str(set(tcgs.states) - T)
 
 
-# -------------------------------------
-# MODEL CHECKING FUNCTION (CTL)
-# -------------------------------------
 def timed_model_checking(formula, filename):
     if not formula.strip():
         result = {"res": "Error: no formula specified", "initial_state": ""}

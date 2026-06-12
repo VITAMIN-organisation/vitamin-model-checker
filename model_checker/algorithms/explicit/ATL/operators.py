@@ -15,10 +15,6 @@ from model_checker.algorithms.explicit.shared.state_utils import (
 )
 from model_checker.utils.literals import parse_state_set_literal
 
-# ---------------------------------------------------------
-# UNARY OPERATOR HANDLERS (NOT in shared.boolean_operators; solver imports it)
-# ---------------------------------------------------------
-
 
 def handle_coalition_globally(cgs, node, transition_cache):
     """Handle <A>G operator: coalition can ensure phi forever."""
@@ -52,11 +48,6 @@ def handle_coalition_eventually(cgs, node, transition_cache):
 
     result = least_fixpoint(states, update_with_skip)
     node.value = str(tuple(sorted({str(s) for s in result})))
-
-
-# ---------------------------------------------------------
-# BINARY OPERATOR HANDLERS (OR, AND, IMPLIES in shared.boolean_operators)
-# ---------------------------------------------------------
 
 
 def handle_coalition_until(cgs, node, transition_cache):

@@ -2,9 +2,7 @@
 
 .PHONY: help install build clean format lint test test-models
 
-# ------------------------------
 # Configuration
-# ------------------------------
 PYTHON := python3
 # Directory containing this Makefile (model_checker)
 MKFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
@@ -26,17 +24,13 @@ help:
 	@echo "  make lint          Lint code with ruff"
 	@echo "  make test          Run unit and integration tests (fast)"
 
-# ------------------------------
 # Setup
-# ------------------------------
 install:
 	@echo "Installing package..."
 	@cd $(PROJECT_ROOT) && $(PYTHON) -m pip install -e ".[dev]"
 	@echo "Done."
 
-# ------------------------------
 # Build & Cleanup
-# ------------------------------
 build:
 	@echo "Building distribution package..."
 	@cd $(PROJECT_ROOT) && $(PYTHON) -m pip install -q build wheel setuptools 2>/dev/null || true
@@ -51,9 +45,7 @@ clean:
 	@cd $(MKFILE_DIR) && find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
 	@echo "Done."
 
-# ------------------------------
 # Quality
-# ------------------------------
 format:
 	@command -v black >/dev/null 2>&1 || { echo "Install black: $(PYTHON) -m pip install black"; exit 1; }
 	@cd $(MKFILE_DIR) && black .

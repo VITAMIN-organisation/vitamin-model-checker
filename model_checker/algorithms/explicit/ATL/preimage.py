@@ -59,7 +59,6 @@ def build_transition_cache(
     Without coalition: state maps to a list of (joint_profile, next_state_index).
     With coalition: state maps to coalition_move -> [(opponent_move, next_state_index)].
     """
-    graph = cgs.graph
     cache: TransitionCache = {}
 
     coalition_context: Optional[Tuple[Set[int], int]] = None
@@ -70,7 +69,7 @@ def build_transition_cache(
             cgs.get_number_of_agents(),
         )
 
-    for state_index, outgoing in enumerate(graph):
+    for state_index, outgoing in enumerate(cgs.graph):
         if coalition_context is not None:
             formatted_agents, num_agents = coalition_context
             moves_by_coalition: Dict[Tuple, List[Tuple]] = {}
@@ -101,7 +100,6 @@ def _group_moves_by_coalition_for_state(
     cgs: CGSProtocol,
     state_index: int,
     coalition_agents: Set[str],
-    graph: List[List[int]],
     transition_cache: Optional[TransitionCache],
 ) -> Dict[Tuple, List[Tuple]]:
     """Group outgoing transitions at one state by coalition move."""
@@ -114,7 +112,7 @@ def _group_moves_by_coalition_for_state(
         joint_moves = transition_cache[state_index]
     else:
         joint_moves: List[Tuple] = []
-        for next_index, mask in enumerate(graph[state_index]):
+        for next_index, mask in enumerate(cgs.graph[state_index]):
             if mask != 0:
                 for prof in cgs.build_action_list(mask):
                     joint_moves.append((prof, next_index))
@@ -168,8 +166,7 @@ def pre(
     T_idx = state_names_to_indices(cgs, state_set)
     A = cgs_actions.get_agents_from_coalition(coalition)
 
-    graph = cgs.graph
-    num_states = len(graph)
+    num_states = len(cgs.graph)
     result = set()
     use_bit_vector = num_states >= BIT_VECTOR_THRESHOLD
     if use_bit_vector:
@@ -183,7 +180,6 @@ def pre(
             cgs=cgs,
             state_index=q,
             coalition_agents=A,
-            graph=graph,
             transition_cache=transition_cache,
         )
 
