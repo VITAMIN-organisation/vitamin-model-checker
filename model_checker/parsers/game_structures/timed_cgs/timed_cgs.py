@@ -75,9 +75,7 @@ class TimedCGS(CostCGS):
                 section_name = current_section.name
                 if section_name == Sections.CLOCKS.name:
                     self.clocks = line.strip().split()
-                    self.clock_constraints_dict = {
-                        clock: [] for clock in self.clocks
-                    }
+                    self.clock_constraints_dict = {clock: [] for clock in self.clocks}
                     self.clocks_dict = {
                         value: index for index, value in enumerate(self.clocks)
                     }

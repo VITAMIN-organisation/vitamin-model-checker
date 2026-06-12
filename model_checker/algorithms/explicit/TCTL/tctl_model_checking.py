@@ -320,9 +320,7 @@ def solve_tree(tcgs: TimedCGS, zone_graph: ZoneGraph, node: Expr):
             T = target_obj.copy()
             constraint = extract_closest_constraint(node.formula)
             while True:
-                new_T = T.union(
-                    pre_image_exist_time(tcgs, zone_graph, T, constraint)
-                )
+                new_T = T.union(pre_image_exist_time(tcgs, zone_graph, T, constraint))
                 if new_T == T:
                     break
                 T = new_T

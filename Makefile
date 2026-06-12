@@ -29,7 +29,6 @@ help:
 	@echo "  make format        Format code with black"
 	@echo "  make lint          Lint code with ruff"
 	@echo "  make test          Run unit and integration tests (fast)"
-	@echo "  make test-models   Run comprehensive model tests (slow)"
 
 # ------------------------------
 # Setup
@@ -96,9 +95,4 @@ lint:
 test:
 	@echo "Running unit and integration tests..."
 	@cd $(PROJECT_ROOT) && $(PYTHON) -m pytest -m "not slow" model_checker/tests/
-	@echo "Done."
-
-test-models:
-	@echo "Running all tests including comprehensive models..."
-	@cd $(PROJECT_ROOT) && $(PYTHON) -m pytest model_checker/tests/
 	@echo "Done."
