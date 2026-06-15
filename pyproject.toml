@@ -7,15 +7,34 @@ name = "vitamin-model-checker"
 version = "1.6.0"
 description = "The VITAMIN model checker python package"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 authors = [
     {name = "VITAMIN Team"}
 ]
-# Dependencies are specified in model_checker/requirements-base.txt
-# Install with: pip install -r model_checker/requirements-base.txt
-# Or use: pip install -e .[dev] for development dependencies
+license = { file = "LICENSE" }
+keywords = [
+    "model-checking",
+    "multi-agent-systems",
+    "temporal-logic",
+    "CTL",
+    "ATL",
+    "LTL",
+    "vitamin",
+    "verification",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Testing",
+]
+# Runtime dependencies for the installable package. Workbench lockfiles use requirements-base.txt.
 dependencies = [
-    "setuptools>=61.0,<82",
     "automata-lib==6.0.2",
     "visual-automata==1.1.1",
     "networkx==2.8.6",
@@ -32,6 +51,13 @@ dependencies = [
     "prometheus-client==0.14.1",
     "tqdm>=4.66.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/VITAMIN-organisation/vitamin-model-checker"
+Repository = "https://github.com/VITAMIN-organisation/vitamin-model-checker"
+Documentation = "https://github.com/VITAMIN-organisation/vitamin-model-checker/tree/main/docs"
+Issues = "https://github.com/VITAMIN-organisation/vitamin-model-checker/issues"
+Changelog = "https://github.com/VITAMIN-organisation/vitamin-model-checker/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [

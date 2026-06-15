@@ -5,6 +5,13 @@ This package provides model checking capabilities for various temporal logics
 including CTL, ATL, LTL, and their extensions.
 """
 
+try:
+    from importlib.metadata import PackageNotFoundError, version
+
+    __version__ = version("vitamin-model-checker")
+except PackageNotFoundError:
+    __version__ = "1.6.0"
+
 from model_checker.api import (
     CGS,
     CapCGS,
@@ -23,8 +30,6 @@ from model_checker.api import (
     execute_model_checking_with_parser,
     format_model_checking_result,
 )
-
-__version__ = "1.0.0"
 
 __all__ = [
     "execute_model_checking_with_parser",

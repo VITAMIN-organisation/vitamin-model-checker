@@ -95,7 +95,9 @@ class TestNatATLScalability:
         result = model_checking("<{1}, 1>F p", model_path)
         elapsed = time.time() - start_time
 
-        assert "error" not in result, f"NatATL model checking should not error: {result}"
+        assert (
+            "error" not in result
+        ), f"NatATL model checking should not error: {result}"
         assert result.get("Satisfiability") is True, "Formula should be satisfiable"
         assert (
             elapsed < 10

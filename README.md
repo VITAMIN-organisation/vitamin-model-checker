@@ -1,14 +1,63 @@
 # VITAMIN Model Checker
 
-`vitamin-model-checker` is the core Python package for VITAMIN model checking.
-It contains the formula parsers, model parsers, explicit-state algorithms,
-fixtures, and tests used by the wider VITAMIN stack.
+Core Python library for model checking multi-agent systems. It provides formula
+parsers, game-structure parsers, and explicit-state algorithms for CTL, ATL, LTL,
+and many extensions.
 
-This repository does not expose an HTTP service by default. The package is used
-directly from Python, by the Workbench application, and as the integration target
-for `vitamin-module-integrator`.
+**Requirements:** Python 3.11+
 
-## Repository Role
+## Install
+
+```bash
+pip install vitamin-model-checker
+```
+
+Development install from a checkout:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev,docs]"
+```
+
+## Quick start
+
+```python
+from model_checker.algorithms.explicit.CTL.CTL import model_checking
+
+result = model_checking("AG p", "path/to/model.txt")
+print(result)
+```
+
+Most logics expose the same `model_checking(formula, filename)` entry point and
+return a plain dict suitable for serialization.
+
+Higher-level helpers are available from the public API:
+
+```python
+from model_checker import FormulaParserFactory, execute_model_checking_with_parser
+
+parser = FormulaParserFactory.get_parser("CTL")
+# execute_model_checking_with_parser(...) for integrated workflows
+```
+
+### Supported logics
+
+Built-in formula logics include ATL, ATLF, CapATL, CTL, IATL, ICTL, LTL, NatATL,
+NatATLF, NatSL, OATL, OL, RABATL, RBATL, TCTL, TOL, and Wallet_ATL. Model
+structures include CGS, BCGS, CostCGS, CapCGS, WalletCGS, and timedCGS. See
+`pyproject.toml` entry points (`vitamin.parsers`, `vitamin.models`,
+`vitamin.benchmarks`) for the full registry.
+
+## Documentation
+
+- Repository docs: [docs/index.md](docs/index.md)
+- Architecture, file formats, and logic guides live under `docs/`
+- API reference pages are generated with MkDocs (`pip install -e ".[docs]"` then
+  `mkdocs serve`)
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
+
+## Repository role
 
 | Project | Role |
 |---|---|
@@ -17,27 +66,15 @@ for `vitamin-module-integrator`.
 | `vitamin-module-integrator` | Validates logic bundles and applies them to this repo. |
 | `vitamin-workbench` | User-facing web/API application that calls the model checker. |
 
-For the cross-project view, see `docs/vitamin-stack.md`.
+For the cross-project view, see [docs/vitamin-stack.md](docs/vitamin-stack.md).
 
-## Setup
+Links:
 
-Python 3.11 is the recommended development version because CI and Docker use it.
-The package metadata defines the supported range in `pyproject.toml`.
+- Homepage: https://github.com/VITAMIN-organisation/vitamin-model-checker
+- PyPI: https://pypi.org/project/vitamin-model-checker/
+- Issues: https://github.com/VITAMIN-organisation/vitamin-model-checker/issues
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-make install
-```
-
-`make install` installs the package in editable mode with development dependencies.
-For documentation tooling:
-
-```bash
-pip install -e ".[dev,docs]"
-```
-
-## Run Tests
+## Run tests
 
 ```bash
 pytest model_checker/tests/unit/
@@ -50,15 +87,13 @@ make test-models   # full model_checker/tests suite
 
 Test-suite details live in `model_checker/tests/README.md`.
 
-## Build Docs
+## Build docs
 
 ```bash
 pip install -e ".[docs]"
 mkdocs serve
 mkdocs build --strict
 ```
-
-The documentation starts at `docs/index.md`.
 
 ## Benchmarks
 
@@ -93,7 +128,7 @@ make test
 
 See `docker/README.md` for the Docker workflow.
 
-## Adding Logic
+## Adding logic
 
 The recommended path is to package a new logic as a VMI bundle, validate it with
 `vitamin-module-integrator`, and let the integrator apply the files and entry
@@ -101,3 +136,9 @@ points to this repository.
 
 Manual in-repo changes are still useful for maintainers working directly on the
 core package. See `docs/adding_a_new_logic.md` for both workflows.
+
+## License
+
+Distributed under the SOURCE-AVAILABLE NON-COMMERCIAL LICENSE. See [LICENSE](LICENSE)
+for the full text. Commercial use requires prior written permission from the
+copyright holder.
