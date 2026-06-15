@@ -1,7 +1,4 @@
-"""Parsing of CGS model files.
-
-Reads section headers, builds transition and labelling matrices, and fills a CGS instance.
-"""
+"""CGS model file parsing."""
 
 import warnings
 
@@ -33,6 +30,9 @@ EXTENSION_SECTION_HEADERS = frozenset(
         "Capacities",
         "Capacities_assignment",
         "Actions_for_capacities",
+        "Clocks",
+        "Clock_constraints",
+        "Invariants",
     }
 )
 
@@ -41,10 +41,7 @@ EXTENSION_SECTION_HEADERS = frozenset(
 
 
 def process_transition_row(row, actions):
-    """Turn a raw transition row into a processed row: "0" becomes int 0, rest stay as strings.
-
-    Appends any comma-separated action strings into the actions list (in place).
-    """
+    """Parse one transition row; append action names to actions."""
     new_row = []
     for item in row:
         if item == "0":
@@ -52,13 +49,12 @@ def process_transition_row(row, actions):
         else:
             item_str = str(item)
             new_row.append(item_str)
-            # Extract actions from comma-separated values
             actions.extend(item_str.split(","))
     return new_row
 
 
 def _check_rectangular_rows(rows, section_name):
-    """Check that every row has the same length. Raises ValueError with 'inhomogeneous' if not."""
+    """All rows must have the same length."""
     if not rows:
         return
     first_len = len(rows[0])
@@ -72,10 +68,7 @@ def _check_rectangular_rows(rows, section_name):
 
 
 def process_labelling_row(row, row_index=None):
-    """Convert a labelling row: "0" and "1" become ints. Raises ValueError if any other value appears.
-
-    row_index is optional and only used to make error messages clearer.
-    """
+    """Parse a labelling row (0 or 1). row_index only affects error text."""
     processed_row = []
     for col_index, item in enumerate(row):
         if item == "0":
@@ -83,7 +76,6 @@ def process_labelling_row(row, row_index=None):
         elif item == "1":
             processed_row.append(1)
         else:
-            # Build error message with location information
             location = ""
             if row_index is not None:
                 location = f" at row {row_index}, column {col_index}"
@@ -97,11 +89,11 @@ def process_labelling_row(row, row_index=None):
 # --- Section Filtering and Extraction Helpers ---
 
 
-def filter_lines_for_common_sections(lines, sections_to_skip):
-    """Drop lines that belong to the given section headers; keep the rest.
+def filter_lines_for_common_sections(lines, sections_to_skip, exit_skip_on=None):
+    """Skip sections_to_skip; exit_skip_on ends a skip (default SECTION_HEADERS)."""
+    if exit_skip_on is None:
+        exit_skip_on = SECTION_HEADERS
 
-    Used by capCGS and costCGS so they can parse only the common CGS sections.
-    """
     filtered_lines = []
     current_section_to_skip = None
 
@@ -116,7 +108,7 @@ def filter_lines_for_common_sections(lines, sections_to_skip):
             continue
 
         if current_section_to_skip:
-            if stripped in SECTION_HEADERS:
+            if stripped in exit_skip_on:
                 current_section_to_skip = None
                 filtered_lines.append(line)
             continue
@@ -127,11 +119,7 @@ def filter_lines_for_common_sections(lines, sections_to_skip):
 
 
 def extract_transition_rows(lines, additional_transition_headers=None):
-    """Collect all lines that are transition rows (between Transition and the next section).
-
-    You can pass additional_transition_headers (e.g. {"Transition_With_Costs"}) so those
-    sections are treated as transition sections too.
-    """
+    """Rows under Transition; additional_transition_headers names extra matrix sections."""
     current_section = None
     rows_graph = []
     transition_headers = {"Transition"}
@@ -158,7 +146,7 @@ def extract_transition_rows(lines, additional_transition_headers=None):
 
 
 def _warn_duplicate_section(section_name):
-    """Emit a warning for a duplicate section header."""
+    """Warn when a section header appears more than once."""
     messages = {
         "Initial_State": (
             "Duplicate 'Initial_State' section detected. "
@@ -183,10 +171,7 @@ def _warn_duplicate_section(section_name):
 
 
 def _collect_section_data(lines, instance):
-    """Run the section loop; return (states_list, atomic_propositions_list, rows_graph, rows_prop, actions).
-
-    Sets instance.initial_state and instance.number_of_agents as side effects.
-    """
+    """One pass over lines; sets initial_state and number_of_agents on instance."""
     current_section = None
     rows_graph = []
     rows_unknown = []
@@ -275,7 +260,7 @@ def _collect_section_data(lines, instance):
 
 
 def _apply_states(instance, states_list):
-    """Validate and assign states_list to instance.states (deduplicated)."""
+    """Deduplicated state names into instance.states."""
     if not states_list:
         instance.states = np.array([])
         return
@@ -296,7 +281,7 @@ def _apply_states(instance, states_list):
 
 
 def _apply_atomic_propositions(instance, atomic_propositions_list):
-    """Validate and assign atomic_propositions_list to instance.atomic_propositions (deduplicated)."""
+    """Deduplicated proposition names into instance.atomic_propositions."""
     if not atomic_propositions_list:
         instance.atomic_propositions = np.array([])
         return
@@ -318,7 +303,7 @@ def _apply_atomic_propositions(instance, atomic_propositions_list):
 
 
 def _apply_graph_and_actions(instance, rows_graph, actions):
-    """Assign transition matrix and actions list to instance."""
+    """Transition matrix and action list on instance."""
     if not rows_graph:
         instance.graph = []
         instance.actions = list(set(actions))
@@ -329,19 +314,18 @@ def _apply_graph_and_actions(instance, rows_graph, actions):
 
 
 def _apply_labelling(instance, rows_prop):
-    """Validate and assign labelling matrix to instance."""
+    """Labelling matrix on instance.matrix_prop."""
     if not rows_prop:
         instance.matrix_prop = np.array([])
         return
     _check_rectangular_rows(rows_prop, "Labelling")
-    # Process each row to ensure valid binary values and populate matrix_prop
     instance.matrix_prop = [
         process_labelling_row(row, i) for i, row in enumerate(rows_prop)
     ]
 
 
 def _apply_unknown_transitions(instance, rows_unknown):
-    """Validate and assign unknown transition matrix to instance."""
+    """Unknown-transition matrix on instance."""
     if not rows_unknown:
         instance.unknown_transition_matrix = []
         return
@@ -352,7 +336,7 @@ def _apply_unknown_transitions(instance, rows_unknown):
 
 
 def parse_cgs_file(lines, instance):
-    """Read the given file lines and fill the CGS instance: states, graph, labelling, etc."""
+    """Parse file lines into instance."""
     (
         states_list,
         atomic_propositions_list,

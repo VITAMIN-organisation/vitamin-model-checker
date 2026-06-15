@@ -59,6 +59,9 @@ class TestCgsParserConstants:
             "Capacities",
             "Capacities_assignment",
             "Actions_for_capacities",
+            "Clocks",
+            "Clock_constraints",
+            "Invariants",
         }
         assert cgs_parser.EXTENSION_SECTION_HEADERS == expected
 

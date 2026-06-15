@@ -1,30 +1,39 @@
+"""TCTL model checking."""
+
+from functools import partial
 from typing import Any, Dict
 
-from model_checker.algorithms.explicit.TCTL.tctl_model_checking import (
-    timed_model_checking,
+from model_checker.algorithms.explicit.shared.result_utils import (
+    format_model_checking_result,
+    run_explicit_entry_model_checking,
+    verify_initial_state,
 )
+from model_checker.algorithms.explicit.TCTL.solver import solve_tree
+from model_checker.parsers.formulas.TCTL import do_parsingTCTL
+from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
+from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
 
-def model_checking(formula: str, filename: str) -> Dict[str, Any]:
-    """Run TCTL model checking."""
-    try:
-        raw_result = timed_model_checking(formula, filename)
+def _core_model_checking(formula: str, filename: str) -> Dict[str, Any]:
+    if not formula.strip():
+        return {"res": "Error: no formula specified", "initial_state": ""}
 
-        # TCTL returns a dict with 'res' and 'initial_state'
-        # We ensure it matches VMI expectations
-        res_str = raw_result.get("res", "")
-        if not res_str.startswith("Result:"):
-            res_str = f"Result: {res_str}"
+    tcgs = TimedCGS()
+    tcgs.read_file(filename)
 
+    ast = do_parsingTCTL(formula.strip())
+    if ast is None:
         return {
-            "res": res_str,
-            "initial_state": raw_result.get("initial_state", ""),
-            "formula": formula,
-            "model": filename,
-            "raw_result": raw_result,
+            "res": "Syntax error in formula or the atom doesn't exist",
+            "initial_state": "",
         }
-    except Exception as e:
-        import traceback
 
-        traceback.print_exc()
-        return {"error": {"message": str(e), "type": type(e).__name__}}
+    zone_graph = ZoneGraph(tcgs)
+    solve_tree(tcgs, zone_graph, ast)
+
+    init_state = str(tcgs.initial_state)
+    is_satisfied = verify_initial_state(init_state, ast.satisfying_states)
+    return format_model_checking_result(ast.satisfying_states, init_state, is_satisfied)
+
+
+model_checking = partial(run_explicit_entry_model_checking, _core_model_checking)

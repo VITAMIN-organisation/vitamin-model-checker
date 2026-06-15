@@ -111,7 +111,11 @@ def _check_model_metadata(data) -> None:
 
 
 def check_conditions_hold(data) -> None:
-    """Validate that ``data`` describes a well-formed ICTL birelational model."""
+    """Validate that ``data`` describes a well-formed ICTL birelational model.
+
+    Enforces C1, C2, and C3 birelational constraints, plus preorder and
+    labeling rules.
+    """
     graph = data["graph"]
     preorder = np.vectorize(lambda cell: cell in _PREORDER_CELLS, otypes=[bool])(graph)
 

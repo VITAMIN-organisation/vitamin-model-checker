@@ -1,0 +1,20 @@
+Transition
+P R 0 P 0 0
+0 P,R R 0 P 0
+R 0 P,R P 0 P
+0 R 0 P R 0
+0 0 0 R P R
+0 0 0 R 0 P
+Name_State
+s0 s1 s2 s3 s4 s5
+Initial_State
+s0
+Atomic_propositions
+e h c
+Labelling
+0 0 0
+1 0 0
+0 1 0
+0 1 0
+1 0 0
+0 1 0

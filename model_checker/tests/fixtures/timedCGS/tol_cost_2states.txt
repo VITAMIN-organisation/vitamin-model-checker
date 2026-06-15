@@ -1,0 +1,30 @@
+# MODEL: Two-state timedCGS with numeric transition costs for TOL tests
+
+# PURPOSE: Exercise {Jk} demonic cost bounds (triangle semantics).
+
+# LOGIC: TOL
+
+# GRAPH: s0 --3--> s1 --4--> s0 (no self-loops). q at s0, p at s1. Initial s0.
+
+Transition_With_Costs
+0 3
+4 0
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p q
+Labelling
+0 1
+1 0
+Number_of_agents
+1
+Clocks
+x
+Clock_constraints
+x<=10
+x<=10
+Invariants
+x<=10
+x<=10

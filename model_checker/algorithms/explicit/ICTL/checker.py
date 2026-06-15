@@ -37,6 +37,11 @@ class ICTLModelChecker:
     def states_set(self) -> Set[str]:
         return {str(s) for s in self.data["states"]}
 
+    def states_with_upset_in(self, target: Set[str]) -> Set[str]:
+        """States whose P-upset is contained in target (paper ^up operator)."""
+        closures = self.upward_closure
+        return {state for state in self.states_set if closures[state].issubset(target)}
+
     def build_tree(self, parsed_formula) -> Optional[FormulaTreeNode]:
         """Build a formula tree with atoms resolved to state sets."""
 

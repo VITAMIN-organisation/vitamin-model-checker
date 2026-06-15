@@ -3,10 +3,6 @@
 import re
 from typing import TYPE_CHECKING
 
-from model_checker.algorithms.explicit.IATL.preimage import (
-    pre_image_exists,
-    pre_image_forall,
-)
 from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
     least_fixpoint,
@@ -29,20 +25,14 @@ def coalition_from_node(node_value: str) -> str:
 
 def handle_not(checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
     y = checker.states_set - parse_state_set_literal(node.left.value)
-    closures = checker.upward_closure
-    node.value = str(
-        {state for state in checker.states_set if closures[str(state)].issubset(y)}
-    )
+    node.value = str(checker.states_with_upset_in(y))
 
 
 def handle_implies(checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
     y = checker.states_set.difference(states1).union(states2)
-    closures = checker.upward_closure
-    node.value = str(
-        {state for state in checker.states_set if closures[str(state)].issubset(y)}
-    )
+    node.value = str(checker.states_with_upset_in(y))
 
 
 def handle_or(checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
@@ -62,16 +52,7 @@ def handle_coalition_next_exists(
 ) -> None:
     coalition = coalition_from_node(node.value)
     states = parse_state_set_literal(node.left.value)
-    node.value = str(
-        pre_image_exists(
-            checker.data["graph"],
-            checker.data["states"],
-            coalition,
-            {str(state) for state in states},
-            checker.data["number_of_agents"],
-            transition_cache=checker.transition_cache_for(coalition),
-        )
-    )
+    node.value = str(checker.pre_exists(coalition, states))
 
 
 def handle_coalition_next_forall(
@@ -79,16 +60,8 @@ def handle_coalition_next_forall(
 ) -> None:
     coalition = coalition_from_node(node.value)
     states = parse_state_set_literal(node.left.value)
-    node.value = str(
-        pre_image_forall(
-            checker.data["graph"],
-            checker.data["states"],
-            coalition,
-            {str(state) for state in states},
-            checker.data["number_of_agents"],
-            transition_cache=checker.transition_cache_for(coalition),
-        )
-    )
+    pre_forall = checker.pre_forall(coalition, states)
+    node.value = str(checker.states_with_upset_in(pre_forall))
 
 
 def handle_coalition_globally_exists(
@@ -97,20 +70,8 @@ def handle_coalition_globally_exists(
     coalition = coalition_from_node(node.value)
     phi_states = parse_state_set_literal(node.left.value)
 
-    cache = checker.transition_cache_for(coalition)
-
     def update(current):
-        return (
-            pre_image_exists(
-                checker.data["graph"],
-                checker.data["states"],
-                coalition,
-                {str(state) for state in current},
-                checker.data["number_of_agents"],
-                transition_cache=cache,
-            )
-            & phi_states
-        )
+        return checker.pre_exists(coalition, current) & phi_states
 
     node.value = str(greatest_fixpoint(checker.states_set.copy(), update))
 
@@ -121,20 +82,8 @@ def handle_coalition_globally_forall(
     coalition = coalition_from_node(node.value)
     phi_states = parse_state_set_literal(node.left.value)
 
-    cache = checker.transition_cache_for(coalition)
-
     def update(current):
-        return (
-            pre_image_forall(
-                checker.data["graph"],
-                checker.data["states"],
-                coalition,
-                {str(state) for state in current},
-                checker.data["number_of_agents"],
-                transition_cache=cache,
-            )
-            & phi_states
-        )
+        return checker.pre_forall(coalition, current) & phi_states
 
     node.value = str(greatest_fixpoint(checker.states_set.copy(), update))
 
@@ -145,17 +94,8 @@ def handle_coalition_eventually_exists(
     coalition = coalition_from_node(node.value)
     phi_states = parse_state_set_literal(node.left.value)
 
-    cache = checker.transition_cache_for(coalition)
-
     def update(current):
-        return current | pre_image_exists(
-            checker.data["graph"],
-            checker.data["states"],
-            coalition,
-            {str(state) for state in current},
-            checker.data["number_of_agents"],
-            transition_cache=cache,
-        )
+        return current | checker.pre_exists(coalition, current)
 
     node.value = str(least_fixpoint(phi_states, update))
 
@@ -166,17 +106,8 @@ def handle_coalition_eventually_forall(
     coalition = coalition_from_node(node.value)
     phi_states = parse_state_set_literal(node.left.value)
 
-    cache = checker.transition_cache_for(coalition)
-
     def update(current):
-        return current | pre_image_forall(
-            checker.data["graph"],
-            checker.data["states"],
-            coalition,
-            {str(state) for state in current},
-            checker.data["number_of_agents"],
-            transition_cache=cache,
-        )
+        return current | checker.pre_forall(coalition, current)
 
     node.value = str(least_fixpoint(phi_states, update))
 
@@ -187,23 +118,11 @@ def handle_coalition_until_exists(
     coalition = coalition_from_node(node.value)
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-    cache = checker.transition_cache_for(coalition)
-    accumulated = set()
-    frontier = states2
-    while frontier - accumulated:
-        accumulated |= frontier
-        frontier = (
-            pre_image_exists(
-                checker.data["graph"],
-                checker.data["states"],
-                coalition,
-                {str(state) for state in accumulated},
-                checker.data["number_of_agents"],
-                transition_cache=cache,
-            )
-            & states1
-        )
-    node.value = str(accumulated)
+
+    def update(accumulated):
+        return accumulated | (checker.pre_exists(coalition, accumulated) & states1)
+
+    node.value = str(least_fixpoint(states2, update))
 
 
 def handle_coalition_until_forall(
@@ -212,23 +131,11 @@ def handle_coalition_until_forall(
     coalition = coalition_from_node(node.value)
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-    cache = checker.transition_cache_for(coalition)
-    accumulated = set()
-    frontier = states2
-    while frontier - accumulated:
-        accumulated |= frontier
-        frontier = (
-            pre_image_forall(
-                checker.data["graph"],
-                checker.data["states"],
-                coalition,
-                {str(state) for state in accumulated},
-                checker.data["number_of_agents"],
-                transition_cache=cache,
-            )
-            & states1
-        )
-    node.value = str(accumulated)
+
+    def update(accumulated):
+        return accumulated | (checker.pre_forall(coalition, accumulated) & states1)
+
+    node.value = str(least_fixpoint(states2, update))
 
 
 def handle_coalition_release_exists(
@@ -237,23 +144,11 @@ def handle_coalition_release_exists(
     coalition = coalition_from_node(node.value)
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-    cache = checker.transition_cache_for(coalition)
-    q1 = checker.states_set.copy()
-    q3 = states2
-    while not q1.issubset(q3):
-        q1 &= q3
-        q3 = (
-            pre_image_exists(
-                checker.data["graph"],
-                checker.data["states"],
-                coalition,
-                {str(state) for state in q1},
-                checker.data["number_of_agents"],
-                transition_cache=cache,
-            )
-            | states1
-        )
-    node.value = str(q1)
+
+    def update(q1):
+        return states2 & (states1 | checker.pre_exists(coalition, q1))
+
+    node.value = str(greatest_fixpoint(checker.states_set.copy(), update))
 
 
 def handle_coalition_release_forall(
@@ -262,20 +157,8 @@ def handle_coalition_release_forall(
     coalition = coalition_from_node(node.value)
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-    cache = checker.transition_cache_for(coalition)
-    q1 = checker.states_set.copy()
-    q3 = states2
-    while not q1.issubset(q3):
-        q1 &= q3
-        q3 = (
-            pre_image_forall(
-                checker.data["graph"],
-                checker.data["states"],
-                coalition,
-                {str(state) for state in q1},
-                checker.data["number_of_agents"],
-                transition_cache=cache,
-            )
-            | states1
-        )
-    node.value = str(q1)
+
+    def update(q1):
+        return states2 & (states1 | checker.pre_forall(coalition, q1))
+
+    node.value = str(greatest_fixpoint(checker.states_set.copy(), update))

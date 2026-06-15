@@ -179,7 +179,7 @@ def _check_model_metadata(data) -> None:
     if data["number_of_agents"] <= 0:
         raise AssertionError("There's no actions in your model.")
     if not np.all(np.isin(data["preorder"], [0, 1])):
-        raise AssertionError("Only boolean proposition matrix are admitted.")
+        raise AssertionError("Only boolean preorder matrices are admitted.")
     if not np.all(np.isin(data["matrix_prop"], [0, 1])):
         raise AssertionError("Only boolean proposition matrix are admitted.")
 

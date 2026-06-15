@@ -6,6 +6,7 @@ from model_checker.algorithms.explicit.ICTL.preimage import (
     pre_image_all,
     pre_image_exist,
 )
+from model_checker.algorithms.explicit.shared.fixpoint_iter import greatest_fixpoint
 from model_checker.utils.literals import parse_state_set_literal
 
 if TYPE_CHECKING:
@@ -15,17 +16,15 @@ if TYPE_CHECKING:
 
 def handle_not(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     y = checker.states_set - parse_state_set_literal(node.left.value)
-    closures = checker.upward_closure
-    node.value = str(
-        {state for state in checker.states_set if closures[state].issubset(y)}
-    )
+    node.value = str(checker.states_with_upset_in(y))
 
 
 def handle_ax(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     states_sat = parse_state_set_literal(node.left.value)
     negated = checker.states_set - states_sat
     pre = pre_image_all(checker.edges, negated)
-    node.value = str(checker.states_set - pre)
+    pre_forall = checker.states_set - pre
+    node.value = str(checker.states_with_upset_in(pre_forall))
 
 
 def handle_ex(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
@@ -113,30 +112,27 @@ def handle_au(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
 def handle_er(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-    p = checker.states_set
-    t = states2
-    while p - t:
-        p = t
-        t = pre_image_exist(checker.edges, p) & states1
-    node.value = str(p)
+    edges = checker.edges
+
+    def update(q1: Set[str]) -> Set[str]:
+        return states2 & (states1 | pre_image_exist(edges, q1))
+
+    node.value = str(greatest_fixpoint(checker.states_set, update))
 
 
 def handle_ar(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-    p = checker.states_set
-    t = states2
-    while p - t:
-        p = t
-        t = pre_image_all(checker.edges, p) & states1
-    node.value = str(p)
+    edges = checker.edges
+
+    def update(q1: Set[str]) -> Set[str]:
+        return states2 & (states1 | pre_image_all(edges, q1))
+
+    node.value = str(greatest_fixpoint(checker.states_set, update))
 
 
 def handle_implies(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
     y = checker.states_set.difference(states1).union(states2)
-    closures = checker.upward_closure
-    node.value = str(
-        {state for state in checker.states_set if closures[state].issubset(y)}
-    )
+    node.value = str(checker.states_with_upset_in(y))

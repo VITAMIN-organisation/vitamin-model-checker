@@ -29,10 +29,6 @@ class Bound:
 
         return False
 
-    def __str__(self):
-        const_str = "∞" if self.constant == np.inf else str(self.constant)
-        return f"({const_str},{self.operator})"
-
     def __eq__(self, value):
         return self.constant == value.constant and self.operator == value.operator
 

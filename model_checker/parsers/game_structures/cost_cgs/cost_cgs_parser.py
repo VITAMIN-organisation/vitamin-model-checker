@@ -1,8 +1,4 @@
-"""Parsing for costCGS model files.
-
-Handles cost sections (Costs_for_actions, Costs_for_actions_split), transitions
-with costs, and reuses the base CGS parser for common sections.
-"""
+"""costCGS file parsing."""
 
 from typing import Any, List
 
@@ -10,10 +6,6 @@ from model_checker.parsers.game_structures.cgs import cgs_parser
 
 
 def parse_cost_sections(lines: List[str], instance: Any) -> None:
-    """Read cost sections into instance.cost_for_action.
-
-    Sets usesCostsInsteadOfActions when Transition_With_Costs appears.
-    """
     current_section = None
 
     cost_section_headers = {
@@ -52,7 +44,7 @@ def parse_cost_sections(lines: List[str], instance: Any) -> None:
 
 
 def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None:
-    """Parse one line: action state$cost[:cost...] with optional ;-separated groups."""
+    """One Costs_for_actions line."""
     values = line.strip().split()
     if len(values) < 2:
         raise ValueError(
@@ -90,7 +82,6 @@ def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None
 
 
 def parse_common_sections(lines: List[str], instance: Any) -> None:
-    """Load states, labels, and agents via the base CGS parser (no transition rows)."""
     sections_to_skip = {
         "Transition",
         "Transition_With_Costs",
@@ -104,7 +95,6 @@ def parse_common_sections(lines: List[str], instance: Any) -> None:
 
 
 def extract_transition_rows(lines: List[str], instance: Any) -> List[Any]:
-    """Collect rows from Transition or Transition_With_Costs."""
     current_section = None
     rows_graph = []
 
@@ -129,7 +119,6 @@ def extract_transition_rows(lines: List[str], instance: Any) -> List[Any]:
 
 
 def parse_transitions(lines: List[str], instance: Any) -> None:
-    """Build instance.graph from transition rows (costs or actions)."""
     rows_graph = extract_transition_rows(lines, instance)
     if not rows_graph:
         return
@@ -147,11 +136,7 @@ def parse_transitions(lines: List[str], instance: Any) -> None:
 def process_transition_row_with_costs(
     row: List[Any], actions: List[Any], instance: Any
 ) -> List[Any]:
-    """Process one transition row.
-
-    With Transition_With_Costs, cells are 0 or a cost string; otherwise parse
-    as standard CGS actions and collect names in actions.
-    """
+    """One transition row: numeric costs or CGS actions."""
     if instance.usesCostsInsteadOfActions:
         return [0 if item == "0" else str(item) for item in row]
     else:

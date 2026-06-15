@@ -1,26 +1,36 @@
+"""TOL model checking."""
+
+from functools import partial
 from typing import Any, Dict
 
-from model_checker.algorithms.explicit.TOL.tol_model_checking import model_checking_ast
+from model_checker.algorithms.explicit.shared.result_utils import (
+    format_model_checking_result,
+    run_explicit_entry_model_checking,
+    verify_initial_state,
+)
+from model_checker.algorithms.explicit.TOL.solver import solve_tree
+from model_checker.parsers.formulas.TOL.tol_ply_parser import do_parsing
+from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
+from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
 
-def model_checking(formula: str, filename: str) -> Dict[str, Any]:
-    """Run TOL model checking."""
-    try:
-        raw_result = model_checking_ast(formula, filename)
+def _core_model_checking(formula: str, filename: str) -> Dict[str, Any]:
+    if not formula.strip():
+        return {"res": "Error: formula not entered", "initial_state": ""}
 
-        res_str = raw_result.get("res", "")
-        if not res_str.startswith("Result"):
-            res_str = f"Result: {res_str}"
+    ast = do_parsing(formula.strip())
+    if ast is None:
+        return {"res": "Syntax Error", "initial_state": ""}
 
-        return {
-            "res": res_str,
-            "initial_state": raw_result.get("initial_state", ""),
-            "formula": formula,
-            "model": filename,
-            "raw_result": raw_result,
-        }
-    except Exception as e:
-        import traceback
+    tcgs = TimedCGS()
+    tcgs.read_file(filename)
 
-        traceback.print_exc()
-        return {"error": {"message": str(e), "type": type(e).__name__}}
+    zone_graph = ZoneGraph(tcgs)
+    solve_tree(tcgs, zone_graph, ast)
+
+    init_state = str(tcgs.initial_state)
+    is_satisfied = verify_initial_state(init_state, ast.satisfying_states)
+    return format_model_checking_result(ast.satisfying_states, init_state, is_satisfied)
+
+
+model_checking = partial(run_explicit_entry_model_checking, _core_model_checking)

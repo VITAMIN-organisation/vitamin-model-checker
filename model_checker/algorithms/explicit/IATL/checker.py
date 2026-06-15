@@ -7,6 +7,8 @@ import numpy as np
 from model_checker.algorithms.explicit.IATL.preimage import (
     TransitionCache,
     build_transition_cache,
+    pre_image_exists,
+    pre_image_forall,
 )
 from model_checker.algorithms.explicit.ICTL.util.graph import (
     get_preorder,
@@ -32,6 +34,13 @@ class IATLModelChecker:
     def states_set(self) -> Set[str]:
         return {str(state) for state in self.data["states"]}
 
+    def states_with_upset_in(self, target: Set[str]) -> Set[str]:
+        """States whose P-upset is contained in target."""
+        closures = self.upward_closure
+        return {
+            state for state in self.states_set if closures[str(state)].issubset(target)
+        }
+
     def transition_cache_for(self, coalition: str) -> TransitionCache:
         """Return cached coalition-grouped transitions, building on first use."""
         cache = self._transition_caches.get(coalition)
@@ -43,6 +52,28 @@ class IATLModelChecker:
             )
             self._transition_caches[coalition] = cache
         return cache
+
+    def pre_exists(self, coalition: str, target: Set[str]) -> Set[str]:
+        """Coalition existential pre-image Pre_d(A, target)."""
+        return pre_image_exists(
+            self.data["graph"],
+            self.data["states"],
+            coalition,
+            {str(state) for state in target},
+            self.data["number_of_agents"],
+            transition_cache=self.transition_cache_for(coalition),
+        )
+
+    def pre_forall(self, coalition: str, target: Set[str]) -> Set[str]:
+        """Coalition universal pre-image Pre_f(A, target)."""
+        return pre_image_forall(
+            self.data["graph"],
+            self.data["states"],
+            coalition,
+            {str(state) for state in target},
+            self.data["number_of_agents"],
+            transition_cache=self.transition_cache_for(coalition),
+        )
 
     def build_tree(self, parsed_formula) -> Optional[FormulaTreeNode]:
         """Build a formula tree with atoms resolved to state sets."""

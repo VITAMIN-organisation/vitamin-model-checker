@@ -800,7 +800,10 @@ Coalition logic with intuitionistic existential and universal coalitions.
 
 **Temporal operators:** `X`, `F`, `G`, `U`, `R`.
 
-**Model type:** `CGS`.
+**Model type:** BCGS (CGS transitions plus a boolean `Preorder` matrix). Loaded by
+`IATL/util/graph.read_file`.
+
+**Deep dive:** [IATL/algorithm.md](IATL/algorithm.md)
 
 ---
 
@@ -809,7 +812,7 @@ Coalition logic with intuitionistic existential and universal coalitions.
 
 Timed extension of CTL over `timedCGS` models with clock constraints.
 
-**Quantifiers:** `A`, `E` with `X`, `F`, `G`, `U`.
+**Quantifiers:** `A`, `E` with `F`, `G`, `U` (no `X` or release in the parser).
 
 **Clock constraints:** attach bounds to propositions, for example `x <= 5` or `t: formula`.
 
@@ -820,7 +823,9 @@ EF crossing
 AG (x <= 10 -> safe)
 ```
 
-**Model type:** `timedCGS`.
+**Model type:** `timedCGS` (loaded by `TimedCGS.read_file`).
+
+**Deep dive:** [TCTL/algorithm.md](TCTL/algorithm.md)
 
 ---
 
@@ -841,6 +846,8 @@ Linear-style timed logic with demonic cost prefixes over `timedCGS` models.
 **Temporal operators:** `X`, `F`, `G`, `U`, `R`, `W`.
 
 **Model type:** `timedCGS`. Shares the `timed_cgs` parser with TCTL.
+
+**Deep dive:** [TOL/algorithm.md](TOL/algorithm.md)
 
 ---
 
@@ -881,7 +888,7 @@ Atomic identifiers for propositions and variables must avoid clashing with reser
 | **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
 | **ICTL** | Branching | `EX`, `AX`, `EF`, `AG`, `EU` | `E`, `A` | CGS |
 | **IATL** | Branching | `<A>X`, `F`, `G`, `U` | `<1>` exist, `[1]` forall | CGS |
-| **TCTL** | Branching | `AX`, `EF`, `AG`, clock bounds | `A`, `E` + clocks | timedCGS |
+| **TCTL** | Branching | `EF`, `AG`, clock bounds | `A`, `E` + clocks | timedCGS |
 | **TOL** | Linear | `{Jk}X`, `F`, `G`, `U` | `{J5}` demonic bound | timedCGS |
 
 
