@@ -233,7 +233,7 @@ def generate_capcgs_linear_chain_model(num_states, num_agents=2, prop_names=None
         num_agents=num_agents,
         unknown_transitions=[row.split() for row in unknown_transitions],
         capacities=["c"],
-        capacities_assignment=[["1"] * num_agents],
+        capacities_assignment=[["1"] for _ in range(num_agents)],
         actions_for_capacities={"c": ["A"]},
     )
 

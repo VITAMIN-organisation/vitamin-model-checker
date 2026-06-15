@@ -37,9 +37,9 @@ PARSER_PERFORMANCE_CASES = [
 ]
 
 CTL_EF_SCALABILITY_CASES = [
-    (500, 30.0, 2.0, pytest.param),
-    (1000, 60.0, 3.0, pytest.param),
-    (2000, 120.0, 3.0, pytest.param),
+    (500, 30.0, 2.0),
+    (1000, 60.0, 3.0),
+    (2000, 120.0, 3.0),
 ]
 
 
@@ -59,11 +59,7 @@ class TestScalabilityAnalysis:
 
     @pytest.mark.parametrize(
         "num_states,max_time,timeout_multiplier",
-        [
-            (500, 30.0, 2.0),
-            (1000, 60.0, 3.0),
-            (2000, 120.0, 3.0),
-        ],
+        CTL_EF_SCALABILITY_CASES,
         ids=["ctl_ef_500", "ctl_ef_1000", "ctl_ef_2000"],
     )
     def test_ctl_ef_scales(self, temp_file, num_states, max_time, timeout_multiplier):
@@ -81,40 +77,6 @@ class TestScalabilityAnalysis:
             temp_file=temp_file,
         )
         assert len(states) > 0, "EF p should hold in at least some states"
-
-    @pytest.mark.slow
-    def test_ctl_ef_1000_states_slow(self, temp_file):
-        """Test CTL EF with 1000 states (marked slow)."""
-        num_states, num_agents = 1000, 2
-        model_content = generate_linear_chain(num_states, num_agents)
-        parser = load_cgs_from_content(temp_file, model_content)
-        states, _ = run_model_checking_with_timeout(
-            parser,
-            _run_ctl_model_checking,
-            "EF p",
-            60.0,
-            timeout_multiplier=3.0,
-            model_content=model_content,
-            temp_file=temp_file,
-        )
-        assert len(states) > 0
-
-    @pytest.mark.slow
-    def test_ctl_ef_2000_states_slow(self, temp_file):
-        """Test CTL EF with 2000 states (marked slow)."""
-        num_states, num_agents = 2000, 2
-        model_content = generate_linear_chain(num_states, num_agents)
-        parser = load_cgs_from_content(temp_file, model_content)
-        states, _ = run_model_checking_with_timeout(
-            parser,
-            _run_ctl_model_checking,
-            "EF p",
-            120.0,
-            timeout_multiplier=3.0,
-            model_content=model_content,
-            temp_file=temp_file,
-        )
-        assert len(states) > 0
 
     def test_memory_usage_1000_states(self, temp_file):
         """1000-state model stays within memory limit."""

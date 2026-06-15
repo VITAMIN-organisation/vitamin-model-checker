@@ -5,13 +5,6 @@ from model_checker.algorithms.explicit.TOL.tol_model_checking import model_check
 
 def model_checking(formula: str, filename: str) -> Dict[str, Any]:
     """Run TOL model checking."""
-    if filename == "dummy.txt" or not __import__("os").path.exists(filename):
-        return {
-            "res": "Result: {s0}",
-            "initial_state": "s0",
-            "formula": formula,
-            "model": filename,
-        }
     try:
         raw_result = model_checking_ast(formula, filename)
 

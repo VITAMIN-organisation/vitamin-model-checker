@@ -756,19 +756,29 @@ ATL with wallet-aware coalitions over `WalletCGS` models.
 <a id="ictl---intuitionistic-ctl"></a>
 ## ICTL - Intuitionistic CTL
 
-Branching-time logic with intuitionistic path quantifiers over standard CGS models.
+Intuitionistic branching-time logic over **birelational models**: a preorder `P`
+(information growth) and a serial transition relation `R` (system evolution) on
+the same state set. This is **not** a standard CGS file; models use an `N x N`
+matrix with cell labels `0`, `R`, `P`, `P,R`.
 
-**Quantifiers:** `E` / `exist`, `A` / `forall` (same tokens as CTL).
+**Quantifiers:** `E` / `exist`, `A` / `forall` (path quantifiers over `R`-paths).
 
-**Temporal operators:** `X`, `F`, `G`, `U`, `R`.
+**Temporal operators:** `X`, `F`, `G`, `U`, `R` (`F`/`G` are parser sugar).
 
 **Examples:**
 ```text
-EX a
+EX e
+EF e
 AG (p -> EF q)
+E p R q
 ```
 
-**Model type:** `CGS`.
+**Model type:** birelational matrix (loaded by `ICTL/util/graph.read_file`).
+Metadata entry point lists `CGS` for VMI compatibility; see
+[ICTL Algorithm](ICTL/algorithm.md) for theory, validation (C1/C2/C3), and the
+model-checking algorithm.
+
+**Deep dive:** [ICTL/algorithm.md](ICTL/algorithm.md)
 
 ---
 

@@ -95,14 +95,11 @@ class TestNatATLScalability:
         result = model_checking("<{1}, 1>F p", model_path)
         elapsed = time.time() - start_time
 
-        if "error" in result:
-            assert elapsed < 5, (
-                "Even with format error, should fail quickly, took " f"{elapsed:.2f}s"
-            )
-        else:
-            assert (
-                elapsed < 10
-            ), f"NatATL 20-state model took {elapsed:.2f}s, expected < 10s"
+        assert "error" not in result, f"NatATL model checking should not error: {result}"
+        assert result.get("Satisfiability") is True, "Formula should be satisfiable"
+        assert (
+            elapsed < 10
+        ), f"NatATL 20-state model took {elapsed:.2f}s, expected < 10s"
 
 
 class TestNatATLMemoryBoundedness:

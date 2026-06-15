@@ -7,13 +7,6 @@ from model_checker.algorithms.explicit.TCTL.tctl_model_checking import (
 
 def model_checking(formula: str, filename: str) -> Dict[str, Any]:
     """Run TCTL model checking."""
-    if filename == "dummy.txt" or not __import__("os").path.exists(filename):
-        return {
-            "res": "Result: {s0}",
-            "initial_state": "s0",
-            "formula": formula,
-            "model": filename,
-        }
     try:
         raw_result = timed_model_checking(formula, filename)
 

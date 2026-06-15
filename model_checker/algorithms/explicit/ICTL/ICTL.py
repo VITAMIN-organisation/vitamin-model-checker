@@ -58,14 +58,7 @@ def process_model_checking_generated(
 
 
 def model_checking(formula: str, filename: str) -> Dict[str, Any]:
-    """Benchmark / VMI entry point for ICTL model checking."""
-    if filename == "dummy.txt" or not __import__("os").path.exists(filename):
-        return {
-            "res": "Result: {s0}",
-            "initial_state": "s0",
-            "formula": formula,
-            "model": filename,
-        }
+    """VMI entry point for ICTL model checking."""
     try:
         raw_result = process_model_checking_from_file(filename, formula)
         res_str = raw_result.get("States_Satisfying_Formula", "")

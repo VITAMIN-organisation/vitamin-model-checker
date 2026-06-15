@@ -18,6 +18,9 @@ from typing import Any, Dict
 from model_checker.algorithms.explicit.NatSL.shared_recall import (
     existential_natatl_alternated as existentialNatATL,
 )
+from model_checker.algorithms.explicit.NatSL.shared_recall import (
+    existential_natatl_sequential,
+)
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.formulas.NatSL.conversion import (
     convert_parsed_natsl_to_natatl_separated,
@@ -93,9 +96,14 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
         logger.debug("Existential NatATL formula: %s", existential_natatl)
         logger.debug("Universal NatATL formula: %s", universal_natatl)
 
-        solution = existentialNatATL(
-            model_path, existential_natatl[0], universal_natatl[0], start_time
-        )
+        if not universal_natatl:
+            solution, _, _, _ = existential_natatl_sequential(
+                model_path, existential_natatl[0]
+            )
+        else:
+            solution = existentialNatATL(
+                model_path, existential_natatl[0], universal_natatl[0], start_time
+            )
 
         result["Satisfiability"] = solution
 

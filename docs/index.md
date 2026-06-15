@@ -13,6 +13,7 @@ formats, logic implementations, or tests.
 | Understand model and formula files | [File Formats](file_formats.md) |
 | See how this repo fits with VMI and Workbench | [VITAMIN Stack](vitamin-stack.md) |
 | Look up formula syntax for a logic | [Logic Knowledge Base](logic_knowledge_base.md) |
+| ICTL theory, algorithm, and correctness | [ICTL Algorithm](ICTL/algorithm.md) |
 | Contribute to this repository | [Contributing](contributing.md) |
 | Browse Python package docs | [API Overview](api/overview.md) |
 | Check deployment ports | [Deployment Ports](deployment-ports.md) |

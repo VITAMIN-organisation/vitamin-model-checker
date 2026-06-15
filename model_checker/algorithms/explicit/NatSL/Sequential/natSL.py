@@ -122,6 +122,13 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
             result["Satisfiability"] = solution
             return result
 
+        if not universal_natatl:
+            logger.info(
+                "No direct solution and no universal quantifiers; formula is unsatisfiable"
+            )
+            result["Satisfiability"] = False
+            return result
+
         logger.info(
             "No direct solution. Checking %d candidate trees against universal strategies",
             len(trees),

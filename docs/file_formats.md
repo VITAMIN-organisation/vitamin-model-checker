@@ -179,7 +179,7 @@ The first formula is treated as the primary formula by tools that need one.
 | COTL | `<1,2><5> G p` | costCGS |
 | CapATL | `<{1}, 3> F (K1 p)` | capCGS |
 | Wallet_ATL | `<<1>>X auction_active` | WalletCGS |
-| ICTL | `EX a` or `AG (p -> EF q)` | CGS |
+| ICTL | `EX e` or `AG (p -> EF q)` | Birelational matrix (see [ICTL/algorithm.md](ICTL/algorithm.md)) |
 | IATL | `<1>G a` or `[1,2]F goal` | CGS |
 | TCTL | `AG a` or `EF crossing` | timedCGS |
 | TOL | `{J5}F a` | timedCGS |
