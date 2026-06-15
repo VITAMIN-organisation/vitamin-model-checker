@@ -39,6 +39,11 @@ class TestCostBoundedSemantics:
             ("{J5}G p", set(), False),
             ("{J2} q U p", {"s1"}, False),
             ("{J3} q U p", {"s0", "s1"}, True),
+            ("{J3} q R p", set(), False),
+            ("{J5} q R p", set(), False),
+            ("{J2} q W p", {"s1"}, False),
+            ("{J3} q W p", {"s0", "s1"}, True),
+            ("{J5} q W p", {"s0", "s1"}, True),
         ],
     )
     def test_formula_semantics(self, formula, expected_states, initial_true):

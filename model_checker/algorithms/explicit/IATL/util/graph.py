@@ -15,29 +15,6 @@ _SECTION_HANDLERS = {
 }
 
 
-def get_actions(graph, agents):
-    """Extract per-agent action sets from the BCGS transition matrix."""
-
-    def process_elem(elem):
-        if elem in (0, "*", "0"):
-            return [[], []]
-        action_profiles = elem.split(",")
-        return [
-            [action[agent] for action in action_profiles if action[agent] != "I"]
-            for agent in agents
-        ]
-
-    actions_matrix = np.vectorize(process_elem, otypes=[list])(graph)
-    agent_actions = [
-        np.concatenate([actions[i] for actions in actions_matrix.flat])
-        for i in range(len(agents))
-    ]
-    return {
-        f"agent{agent}": np.unique(agent_actions[i]).tolist()
-        for i, agent in enumerate(agents)
-    }
-
-
 def read_file(filename):
     """Load and validate an IATL BCGS model from a text file."""
     with open(filename, encoding="utf-8") as handle:
@@ -70,8 +47,6 @@ def read_file(filename):
     data["atomic_propositions"] = np.array(data["atomic_propositions"])
     data["matrix_prop"] = np.array(data["matrix_prop"], dtype=int)
     data["preorder"] = np.array(data["preorder"], dtype=int)
-    data["agents"] = np.array(list(range(data["number_of_agents"])))
-    data["actions"] = get_actions(data["graph"], data["agents"])
 
     from model_checker.algorithms.explicit.IATL.util.validation import (
         check_conditions_hold,

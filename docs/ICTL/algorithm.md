@@ -274,9 +274,7 @@ flowchart TD
 | Function | Purpose |
 |----------|---------|
 | `model_checking(formula, filename)` | VMI-compatible wrapper |
-| `process_model_checking_from_file` | Load matrix file and check |
-| `process_model_checking_generated` | Synthetic model via `generate_experiment_model` |
-| `run_model_checking` | Core: parse, build tree, solve |
+| `run_model_checking(formula, checker)` | Parse, build tree, solve on a loaded checker |
 
 ### Checker setup (`checker.py`)
 

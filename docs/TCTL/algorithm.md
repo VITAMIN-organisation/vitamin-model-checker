@@ -131,10 +131,11 @@ Shared helpers live in `parsers/game_structures/timed_cgs/semantics.py`:
 | Path | Coverage |
 |------|----------|
 | `tests/integration/algorithms/tctl/test_smoke.py` | Pinned semantics on minimal timedCGS |
+| `tests/integration/algorithms/tctl/test_correctness.py` | AF, EG, clock guards, until on minimal fixture |
 | `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared fixture with TOL |
 
 ## Related documentation
 
-- [TOL implementation reference](TOL/algorithm.md)
+- [TOL implementation reference](../TOL/algorithm.md)
 - [File formats](../file_formats.md) (timedCGS sections)
 - [Logic Knowledge Base](../logic_knowledge_base.md#tctl---timed-ctl)

@@ -1,13 +1,24 @@
 """Smoke tests for ICTL model checking."""
 
+from pathlib import Path
+
 from model_checker.algorithms.explicit.ICTL.checker import ICTLModelChecker
 from model_checker.algorithms.explicit.ICTL.ICTL import (
-    process_model_checking_generated,
+    model_checking,
     run_model_checking,
 )
 from model_checker.algorithms.explicit.ICTL.util.generators import (
     generate_experiment_model,
 )
+from model_checker.algorithms.explicit.ICTL.util.graph import read_file
+from model_checker.utils.literals import parse_state_set_literal
+
+_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "experiment_2x3.txt"
+
+
+def _states(result):
+    assert "error" not in result
+    return parse_state_set_literal(result["res"].removeprefix("Result: "))
 
 
 def test_generate_experiment_model_passes_validation():
@@ -16,14 +27,16 @@ def test_generate_experiment_model_passes_validation():
     assert data["initial_state"] == "s0"
 
 
-def test_run_model_checking_on_generated_model():
-    data = generate_experiment_model(2, 3)
+def test_run_model_checking_on_checker():
+    data = read_file(str(_FIXTURE))
     checker = ICTLModelChecker(data)
     result = run_model_checking("EF e", checker)
-    assert "States_Satisfying_Formula" in result
-    assert "Res_Initial_state" in result
+    assert _states(result) == {"s0", "s1", "s2", "s3", "s4", "s5"}
+    assert result["initial_state"] == "Initial state s0: True"
 
 
-def test_process_model_checking_generated():
-    result = process_model_checking_generated(2, 3, "AG e")
-    assert result["Tot_states"] >= 0
+def test_model_checking_on_fixture():
+    result = model_checking("AG e", str(_FIXTURE))
+    assert _states(result) == {"s1"}
+    assert result["initial_state"] == "Initial state s0: False"
+    assert result["res"].startswith("Result:")

@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, Optional, Set, Union
 from model_checker.algorithms.explicit.shared.verification_result import (
     VerificationResult,
 )
+from model_checker.utils.error_handler import create_system_error
 from model_checker.utils.literals import parse_state_set_literal
 
 
@@ -21,7 +22,7 @@ def format_model_checking_result(
     initial_state: str,
     is_satisfied: bool,
 ) -> Dict[str, Any]:
-    """Legacy res / initial_state dict."""
+    """Standard res / initial_state dict."""
     if isinstance(result_states, set):
         result_states = str({str(s) for s in result_states})
     return {
@@ -44,7 +45,6 @@ def wrap_explicit_entry_result(
         "initial_state": raw_result.get("initial_state", ""),
         "formula": formula,
         "model": filename,
-        "raw_result": raw_result,
     }
 
 
@@ -59,10 +59,7 @@ def run_explicit_entry_model_checking(
             check_fn(formula, filename), formula, filename
         )
     except Exception as exc:
-        import traceback
-
-        traceback.print_exc()
-        return {"error": {"message": str(exc), "type": type(exc).__name__}}
+        return create_system_error(f"Error during model checking: {str(exc)}")
 
 
 def create_verification_result(

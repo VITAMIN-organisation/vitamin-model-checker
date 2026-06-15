@@ -21,7 +21,7 @@ There are no path quantifiers `E`/`A`; branching is not part of the syntax.
 
 ## timedCGS models
 
-Same file format as TCTL (see [TCTL/algorithm.md](TCTL/algorithm.md)). TOL uses
+Same file format as TCTL (see [TCTL/algorithm.md](../TCTL/algorithm.md)). TOL uses
 `TimedCGS.read_file` and `ZoneGraph`.
 
 Transition cells may be:
@@ -114,12 +114,12 @@ Shared timed helpers: `parsers/game_structures/timed_cgs/semantics.py`.
 | Path | Coverage |
 |------|----------|
 | `tests/integration/algorithms/tol/test_smoke.py` | Pipeline on zero-cost minimal timedCGS |
-| `tests/integration/algorithms/tol/test_correctness.py` | Pinned `{Jk}` semantics with transition costs |
+| `tests/integration/algorithms/tol/test_correctness.py` | Pinned `{Jk}` semantics with transition costs, release, weak until |
 | `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared zero-cost fixture with TCTL |
 | `tests/fixtures/timedCGS/tol_cost_2states.txt` | Two-state cost-bounded TOL fixture |
 
 ## Related documentation
 
-- [TCTL implementation reference](TCTL/algorithm.md)
+- [TCTL implementation reference](../TCTL/algorithm.md)
 - [File formats](../file_formats.md)
 - [Logic Knowledge Base](../logic_knowledge_base.md#tol---timed-obligation-logic)

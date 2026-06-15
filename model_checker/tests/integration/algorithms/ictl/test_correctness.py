@@ -7,13 +7,14 @@ import pytest
 
 from model_checker.algorithms.explicit.ICTL.checker import ICTLModelChecker
 from model_checker.algorithms.explicit.ICTL.ICTL import (
-    process_model_checking_from_file,
+    model_checking,
     run_model_checking,
 )
 from model_checker.algorithms.explicit.ICTL.preimage import pre_image_all
 from model_checker.algorithms.explicit.ICTL.util.graph import (
     get_preorder,
     labeled_pairs,
+    read_file,
 )
 from model_checker.utils.literals import parse_state_set_literal
 
@@ -22,7 +23,8 @@ _EXPERIMENT_MODEL = _FIXTURES / "experiment_2x3.txt"
 
 
 def _states_from_result(result):
-    return parse_state_set_literal(result["States_Satisfying_Formula"])
+    assert "error" not in result
+    return parse_state_set_literal(result["res"].removeprefix("Result: "))
 
 
 def _ax_chain_model_data():
@@ -81,12 +83,27 @@ class TestUpwardClosureOperators:
 
 class TestReleaseOperators:
     def test_existential_release_on_fixture(self):
-        result = process_model_checking_from_file(str(_EXPERIMENT_MODEL), "E e R h")
+        result = model_checking("E e R h", str(_EXPERIMENT_MODEL))
         assert _states_from_result(result) == {"s2"}
 
     def test_universal_release_on_fixture(self):
-        result = process_model_checking_from_file(str(_EXPERIMENT_MODEL), "A e R h")
+        result = model_checking("A e R h", str(_EXPERIMENT_MODEL))
         assert _states_from_result(result) == set()
+
+
+class TestUntilOperators:
+    @pytest.mark.parametrize(
+        ("formula", "expected_states", "initial_satisfied"),
+        [
+            ("E e U h", {"s1", "s2", "s3", "s4", "s5"}, False),
+            ("A e U h", {"s2", "s3", "s4", "s5"}, False),
+            ("E e U c", set(), False),
+        ],
+    )
+    def test_until_on_fixture(self, formula, expected_states, initial_satisfied):
+        result = model_checking(formula, str(_EXPERIMENT_MODEL))
+        assert _states_from_result(result) == expected_states
+        assert result["initial_state"] == f"Initial state s0: {initial_satisfied}"
 
 
 class TestFixtureSemantics:
@@ -105,15 +122,23 @@ class TestFixtureSemantics:
         ],
     )
     def test_formula_result(self, formula, expected_states, initial_satisfied):
-        result = process_model_checking_from_file(str(_EXPERIMENT_MODEL), formula)
+        result = model_checking(formula, str(_EXPERIMENT_MODEL))
         assert _states_from_result(result) == expected_states
-        assert result["Res_Initial_state"] == f"s0 : {initial_satisfied}"
+        assert result["initial_state"] == f"Initial state s0: {initial_satisfied}"
+
+
+class TestVmiEntry:
+    def test_model_checking_returns_standard_result(self):
+        result = model_checking("EF e", str(_EXPERIMENT_MODEL))
+        assert "error" not in result
+        assert result["res"].startswith("Result:")
+        assert result["formula"] == "EF e"
+        assert result["model"] == str(_EXPERIMENT_MODEL)
+        assert "raw_result" not in result
 
 
 class TestValidation:
     def test_fixture_passes_validation(self):
-        from model_checker.algorithms.explicit.ICTL.util.graph import read_file
-
         data = read_file(str(_EXPERIMENT_MODEL))
         assert data["initial_state"] == "s0"
         assert data["states_counter"] == 6
