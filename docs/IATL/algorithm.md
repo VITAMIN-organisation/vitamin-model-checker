@@ -241,7 +241,7 @@ Coalition labels are parsed from node values with `coalition_from_node` in
 |-------------|---------------|
 | `ICTL/util/graph.get_preorder` | Transitive P-upset |
 | `shared/fixpoint_iter` | `F`, `G`, `U`, `R` fixpoints |
-| `shared/result_utils` | Result formatting |
+| `shared/result_formatters` | Result formatting |
 | `engine/execution.create_model_checking_entry` | VMI entry point |
 | `parsers/formulas/parser_utils` | Coalition validation |
 

@@ -1,6 +1,6 @@
-# model_checker.algorithms.explicit.shared
+# model_checker.algorithms.explicit.shared.result_formatters
 
-::: model_checker.algorithms.explicit.shared
+::: model_checker.algorithms.explicit.shared.result_formatters
     options:
       show_root_heading: true
       heading_level: 2

@@ -11,6 +11,10 @@ theme:
       primary: indigo
       accent: indigo
 
+markdown_extensions:
+  - pymdownx.highlight:
+      auto_title: true
+
 plugins:
   - search
   - autorefs
