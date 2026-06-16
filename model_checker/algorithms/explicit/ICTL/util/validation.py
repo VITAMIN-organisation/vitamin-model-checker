@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from model_checker.algorithms.explicit.ICTL.util.graph import labeled_pairs
+from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 
 _PREORDER_CELLS = frozenset({"P", "P,R"})
 _TRANSITION_CELLS = frozenset({"R", "P,R"})
@@ -10,26 +10,31 @@ _TRANSITION_CELLS = frozenset({"R", "P,R"})
 
 def _check_birelational_constraint(
     graph,
-    row_indices,
-    col_indices,
-    row_symbols,
-    col_symbols,
+    source_indices,
+    target_indices,
+    source_labels,
+    target_labels,
 ) -> bool:
-    """Check one of the C1/C2/C3 birelational inference constraints."""
-    row_symbols = set(row_symbols)
-    col_symbols = set(col_symbols)
+    """Validate one birelational compatibility rule over matrix edge labels."""
+    source_labels = set(source_labels)
+    target_labels = set(target_labels)
     return all(
+        # For each relevant target-side index y
         any(
+            # there exists a source-side index u
             not all(
-                graph[row_idx, col_idx] in col_symbols
-                and graph[col_idx, row_idx] in row_symbols
-                for col_idx in col_indices
+                # such that not every candidate index forms both required edges:
+                # u -> y labeled as target, and y -> u labeled as source.
+                graph[u, y] in target_labels and graph[y, u] in source_labels
+                for y in target_indices
             )
-            for row_idx in row_indices
-            if any(graph[row_idx, col_idx] in row_symbols for col_idx in col_indices)
+            for u in source_indices
+            # Keep only u values that participate in the source label family.
+            if any(graph[u, y] in source_labels for y in target_indices)
         )
-        for col_idx in col_indices
-        if any(graph[row_idx, col_idx] in col_symbols for row_idx in row_indices)
+        for y in target_indices
+        # Keep only y values that are reachable via the target label family.
+        if any(graph[u, y] in target_labels for u in source_indices)
     )
 
 
@@ -43,7 +48,7 @@ def _check_serial(graph: np.ndarray) -> None:
         raise AssertionError("The graph does not satisfy transition serial condition.")
 
 
-def _check_reflexive(graph: np.ndarray, preorder: np.ndarray) -> None:
+def _check_reflexive(preorder: np.ndarray) -> None:
     if not np.all(preorder[np.diag_indices_from(preorder)]):
         raise AssertionError("The graph is not reflective.")
 
@@ -64,17 +69,24 @@ def _check_transitive(preorder: np.ndarray) -> None:
 
 
 def _check_inference_constraints(graph: np.ndarray) -> None:
-    n = graph.shape[0]
-    indices = range(n)
-    transition_preorder = ["R", "P,R"]
-    preorder_transition = ["P", "P,R"]
+    state_indices = range(graph.shape[0])
 
+    # C1/C2: transition-like source labels against preorder-like target labels.
     if not _check_birelational_constraint(
-        graph, indices, indices, transition_preorder, preorder_transition
+        graph,
+        state_indices,
+        state_indices,
+        _TRANSITION_CELLS,
+        _PREORDER_CELLS,
     ):
         raise AssertionError("The graph does not satisfy conditions C1 and C2.")
+    # C3: same check with source/target label families swapped.
     if not _check_birelational_constraint(
-        graph, indices, indices, preorder_transition, transition_preorder
+        graph,
+        state_indices,
+        state_indices,
+        _PREORDER_CELLS,
+        _TRANSITION_CELLS,
     ):
         raise AssertionError("The graph does not satisfy condition C3.")
 
@@ -122,7 +134,7 @@ def check_conditions_hold(data) -> None:
     _check_model_metadata(data)
     _check_graph_shape(graph)
     _check_serial(graph)
-    _check_reflexive(graph, preorder)
+    _check_reflexive(preorder)
     _check_antisymmetric(preorder)
     _check_transitive(preorder)
     _check_inference_constraints(graph)

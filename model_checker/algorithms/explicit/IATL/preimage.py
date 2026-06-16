@@ -7,7 +7,7 @@ Semantics follow Bozzelli et al. (KR 2025), Proposition 2:
   target set consistent with that decision.
 """
 
-from typing import Dict, List, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from model_checker.parsers.game_structures.cgs import cgs_actions
 
@@ -68,24 +68,25 @@ def build_transition_cache(
     }
 
 
-def pre_image_exists(
+def _coalition_pre_image(
     graph_matrix,
     state_list,
     coalition: str,
     target_states: Set[str],
     num_agents: int,
-    transition_cache: TransitionCache = None,
+    transition_cache: Optional[TransitionCache],
+    qualifies: Callable[[MovesByCoalition, Set[int]], bool],
 ) -> Set[str]:
-    """Pre_d(A, X): existential coalition pre-image (<A>X)."""
+    """Return states that reach target_states in one coalition step."""
+    result: Set[str] = set()
     targets = {str(state) for state in target_states}
     target_idx = {idx for idx, state in enumerate(state_list) if str(state) in targets}
     if not target_idx:
-        return set()
+        return result
 
     formatted_agents = cgs_actions.format_agents(
         cgs_actions.get_agents_from_coalition(coalition)
     )
-    result: Set[str] = set()
 
     for state_idx, row in enumerate(graph_matrix):
         if transition_cache is not None:
@@ -94,12 +95,57 @@ def pre_image_exists(
             moves_by_coalition = group_moves_by_coalition(
                 row, num_agents, formatted_agents
             )
-        for transitions in moves_by_coalition.values():
-            if _all_opponent_moves_lead_to_target(transitions, target_idx):
-                result.add(str(state_list[state_idx]))
-                break
+        if qualifies(moves_by_coalition, target_idx):
+            result.add(str(state_list[state_idx]))
 
     return result
+
+
+def _state_in_exists_pre_image(
+    moves_by_coalition: MovesByCoalition,
+    target_idx: Set[int],
+) -> bool:
+    """Every opponent response from that move lands in the target for each coalition move"""
+    for transitions in moves_by_coalition.values():
+        if _all_opponent_moves_lead_to_target(transitions, target_idx):
+            return True
+    return False
+
+
+def pre_image_exists(
+    graph_matrix,
+    state_list,
+    coalition: str,
+    target_states: Set[str],
+    num_agents: int,
+    transition_cache: TransitionCache = None,
+) -> Set[str]:
+    """
+    exists: Some coalition choice + All opponent responses -> target
+    Pre_d(A, X): existential coalition pre-image (<A>X)."""
+    return _coalition_pre_image(
+        graph_matrix,
+        state_list,
+        coalition,
+        target_states,
+        num_agents,
+        transition_cache,
+        _state_in_exists_pre_image,
+    )
+
+
+def _state_in_forall_pre_image(
+    moves_by_coalition: MovesByCoalition,
+    target_idx: Set[int],
+) -> bool:
+    """Some successor from that move is in target for each coalition move"""
+    if not moves_by_coalition:
+        return False
+
+    return all(
+        any(dest in target_idx for _, dest in transitions)
+        for transitions in moves_by_coalition.values()
+    )
 
 
 def pre_image_forall(
@@ -110,30 +156,15 @@ def pre_image_forall(
     num_agents: int,
     transition_cache: TransitionCache = None,
 ) -> Set[str]:
-    """Pre_f(A, X): universal coalition pre-image ([A]X)."""
-    targets = {str(state) for state in target_states}
-    target_idx = {idx for idx, state in enumerate(state_list) if str(state) in targets}
-    if not target_idx:
-        return set()
-
-    formatted_agents = cgs_actions.format_agents(
-        cgs_actions.get_agents_from_coalition(coalition)
+    """
+    forall: All coalition choices + Some opponent successor -> target
+    Pre_f(A, X): universal coalition pre-image ([A]X)."""
+    return _coalition_pre_image(
+        graph_matrix,
+        state_list,
+        coalition,
+        target_states,
+        num_agents,
+        transition_cache,
+        _state_in_forall_pre_image,
     )
-    result: Set[str] = set()
-
-    for state_idx, row in enumerate(graph_matrix):
-        if transition_cache is not None:
-            moves_by_coalition = transition_cache[state_idx]
-        else:
-            moves_by_coalition = group_moves_by_coalition(
-                row, num_agents, formatted_agents
-            )
-        if not moves_by_coalition:
-            continue
-        if all(
-            any(dest in target_idx for _, dest in transitions)
-            for transitions in moves_by_coalition.values()
-        ):
-            result.add(str(state_list[state_idx]))
-
-    return result

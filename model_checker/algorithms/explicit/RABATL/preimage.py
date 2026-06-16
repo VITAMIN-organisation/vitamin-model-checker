@@ -13,7 +13,7 @@ def get_good_actions(
     bound: List[int],
 ) -> Set[str]:
     """Return actions at state_idx whose coalition cost fits within bound."""
-    good_actions = set()
+    good_actions: Set[str] = set()
     state_name = cgs.get_state_name_by_index(state_idx)
 
     for action in actions:

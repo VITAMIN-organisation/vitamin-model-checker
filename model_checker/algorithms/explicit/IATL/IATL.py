@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from model_checker.algorithms.explicit.IATL.checker import IATLModelChecker
 from model_checker.algorithms.explicit.IATL.solver import solve_tree
-from model_checker.algorithms.explicit.shared.result_utils import (
+from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,
     verify_initial_state,
 )

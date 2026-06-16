@@ -56,9 +56,7 @@ def _unary_handler(
     return None
 
 
-def _binary_handler(
-    parser_instance: Any, checker: "IATLModelChecker", node: "FormulaTreeNode"
-) -> Optional[Any]:
+def _binary_handler(parser_instance: Any, node: "FormulaTreeNode") -> Optional[Any]:
     val = node.value
     if parser_instance.verify("OR", val):
         return handle_or
@@ -101,6 +99,6 @@ def solve_tree(checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
         return
 
     if node.left is not None and node.right is not None:
-        handler = _binary_handler(parser_instance, checker, node)
+        handler = _binary_handler(parser_instance, node)
         if handler is not None:
             handler(checker, node)

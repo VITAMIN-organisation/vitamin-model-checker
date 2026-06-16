@@ -5,8 +5,7 @@ from model_checker.algorithms.explicit.shared.atom_utils import (
     resolve_atom,
     resolve_atom_with_constants,
 )
-from model_checker.algorithms.explicit.shared.result_utils import (
-    create_verification_result,
+from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,
     format_verification_result,
     verify_initial_state,
@@ -22,6 +21,9 @@ from model_checker.algorithms.explicit.shared.trace_utils import (
     format_trace_with_properties,
     reconstruct_trace_bfs,
     reconstruct_trace_from_predecessors,
+)
+from model_checker.algorithms.explicit.shared.verification_builders import (
+    create_verification_result,
 )
 from model_checker.algorithms.explicit.shared.verification_result import (
     StateTrace,

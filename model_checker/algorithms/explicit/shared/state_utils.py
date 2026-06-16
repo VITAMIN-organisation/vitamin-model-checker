@@ -9,9 +9,8 @@ def state_names_to_indices(cgs: CGSProtocol, state_names: Iterable[Any]) -> Set[
     """Map state names to their indices; unknown names are skipped."""
     indices = set()
     for name in state_names:
-        name_str = str(name)
         try:
-            idx = cgs.get_index_by_state_name(name_str)
+            idx = cgs.get_index_by_state_name(str(name))
             if idx is not None:
                 indices.add(int(idx))
         except (ValueError, KeyError, AttributeError, IndexError):

@@ -13,9 +13,9 @@ from model_checker.algorithms.explicit.ICTL.ICTL import (
 from model_checker.algorithms.explicit.ICTL.preimage import pre_image_all
 from model_checker.algorithms.explicit.ICTL.util.graph import (
     get_preorder,
-    labeled_pairs,
     read_file,
 )
+from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 from model_checker.utils.literals import parse_state_set_literal
 
 _FIXTURES = Path(__file__).resolve().parent / "fixtures"

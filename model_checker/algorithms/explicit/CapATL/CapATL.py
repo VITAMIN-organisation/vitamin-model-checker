@@ -12,7 +12,7 @@ from model_checker.algorithms.explicit.CapATL.utils import (
     indistinguishable_action,
     succ,
 )
-from model_checker.algorithms.explicit.shared.result_utils import (
+from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,
     verify_initial_state,
 )

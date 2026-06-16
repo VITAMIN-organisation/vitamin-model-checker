@@ -14,11 +14,6 @@ if TYPE_CHECKING:
     from model_checker.utils.formula_tree import FormulaTreeNode
 
 
-def handle_not(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
-    y = checker.states_set - parse_state_set_literal(node.left.value)
-    node.value = str(checker.states_with_upset_in(y))
-
-
 def handle_ax(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     states_sat = parse_state_set_literal(node.left.value)
     negated = checker.states_set - states_sat
@@ -85,6 +80,11 @@ def handle_and(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
     node.value = str(states1 & states2)
+
+
+def handle_not(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
+    y = checker.states_set - parse_state_set_literal(node.left.value)
+    node.value = str(checker.states_with_upset_in(y))
 
 
 def handle_eu(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:

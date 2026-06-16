@@ -5,7 +5,7 @@ game structure models, and conformance utilities. New integrations update
 this surface via ``model_checker.api_integrated``.
 """
 
-from model_checker.algorithms.explicit.shared.result_utils import (
+from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,
 )
 from model_checker.contrib.conformance import (

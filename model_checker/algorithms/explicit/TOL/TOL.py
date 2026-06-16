@@ -3,9 +3,11 @@
 from functools import partial
 from typing import Any, Dict
 
-from model_checker.algorithms.explicit.shared.result_utils import (
-    format_model_checking_result,
+from model_checker.algorithms.explicit.shared.entry_result_wrappers import (
     run_explicit_entry_model_checking,
+)
+from model_checker.algorithms.explicit.shared.result_formatters import (
+    format_model_checking_result,
     verify_initial_state,
 )
 from model_checker.algorithms.explicit.TOL.solver import solve_tree

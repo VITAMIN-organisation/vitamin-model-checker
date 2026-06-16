@@ -35,13 +35,13 @@ def handle_implies(checker: "IATLModelChecker", node: "FormulaTreeNode") -> None
     node.value = str(checker.states_with_upset_in(y))
 
 
-def handle_or(checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
+def handle_or(_checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
     node.value = str(states1 | states2)
 
 
-def handle_and(checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
+def handle_and(_checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
     node.value = str(states1 & states2)

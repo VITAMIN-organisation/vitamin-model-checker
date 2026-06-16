@@ -2,6 +2,9 @@
 
 from typing import TYPE_CHECKING, Callable
 
+from model_checker.algorithms.explicit.shared.boolean_semantics import (
+    compute_boolean_result,
+)
 from model_checker.parsers.game_structures.timed_cgs.semantics import (
     states_where_prop_holds,
     states_with_time_constraints,
@@ -42,25 +45,31 @@ def eval_simple_time_expr(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> No
 
 def handle_not(tcgs: "TimedCGS", node) -> None:
     all_states = set(tcgs.states)
-    node.satisfying_states = all_states - node.operand.satisfying_states
+    node.satisfying_states = compute_boolean_result(
+        "NOT", node.operand.satisfying_states, all_states=all_states
+    )
 
 
 def handle_or(node) -> None:
-    node.satisfying_states = node.left.satisfying_states.union(
-        node.right.satisfying_states
+    node.satisfying_states = compute_boolean_result(
+        "OR", node.left.satisfying_states, right_states=node.right.satisfying_states
     )
 
 
 def handle_and(node) -> None:
-    node.satisfying_states = node.left.satisfying_states.intersection(
-        node.right.satisfying_states
+    node.satisfying_states = compute_boolean_result(
+        "AND", node.left.satisfying_states, right_states=node.right.satisfying_states
     )
 
 
 def handle_implies(tcgs: "TimedCGS", node) -> None:
     all_states = set(tcgs.states)
-    not_left = all_states - node.left.satisfying_states
-    node.satisfying_states = not_left.union(node.right.satisfying_states)
+    node.satisfying_states = compute_boolean_result(
+        "IMPLIES",
+        node.left.satisfying_states,
+        right_states=node.right.satisfying_states,
+        all_states=all_states,
+    )
 
 
 def handle_clock_expr(node) -> None:

@@ -7,6 +7,22 @@ from typing import Dict, Generator, List, Set, Tuple
 logger = logging.getLogger(__name__)
 
 
+def _search_strategy_profiles(
+    strategies: List[List[Dict]],
+    current_strategy: List[Dict],
+    depth: int,
+) -> Generator[List[Dict], None, None]:
+    """Enumerate collective strategies by depth-first combination over agents."""
+    if depth == len(strategies):
+        yield current_strategy.copy()
+        return
+
+    for agent_strategy in strategies[depth]:
+        current_strategy.append(agent_strategy)
+        yield from _search_strategy_profiles(strategies, current_strategy, depth + 1)
+        current_strategy.pop()
+
+
 def generate_conditions(
     atomic_props: List[str], connectives: List[str], max_complexity: int
 ) -> Generator[str, None, None]:
@@ -72,41 +88,31 @@ def generate_strategies(
     """
     strategies = [[] for _ in range(len(agents))]
 
-    def search_solution(
-        strategies: List[List[Dict]],
-        current_strategy: List[Dict],
-        depth: int,
-    ) -> Generator[List[Dict], None, None]:
-        """Enumerate collective strategies by depth-first combination over agents."""
-        if depth == len(agents):
-            yield current_strategy
-        else:
-            for agent in strategies[depth]:
-                current_strategy.append(agent)
-                yield from search_solution(strategies, current_strategy, depth + 1)
-                current_strategy.pop()
-
     if not found_solution:
         for index, agent_key in enumerate(cartesian_products):
             cartesian_product = cartesian_products[agent_key]
 
             for r in range(1, complexity_bound + 1):
-                combinations = itertools.combinations(cartesian_product, r)
-                filtered_combinations = [
-                    combination
-                    for combination in combinations
-                    if len({action for _, action in combination}) == r
-                ]
-                for combination in filtered_combinations:
-                    total_complexity = sum(
-                        len(condition.split()) + (1 if "!" in condition else 0)
-                        for condition, _ in combination
-                    )
-                    if total_complexity == complexity_bound:
-                        new_strategy = {"condition_action_pairs": list(combination)}
-                        if not is_duplicate(strategies[index], new_strategy):
-                            strategies[index].append(new_strategy)
-                            yield from search_solution(strategies, [], 0)
+                for combination in itertools.combinations(cartesian_product, r):
+                    distinct_actions = {action for _, action in combination}
+                    if len(distinct_actions) != len(combination):
+                        continue
+
+                    total_complexity = 0
+                    for condition, _ in combination:
+                        condition_complexity = len(condition.split())
+                        if "!" in condition:
+                            condition_complexity += 1
+                        total_complexity += condition_complexity
+                    if total_complexity != complexity_bound:
+                        continue
+
+                    new_strategy = {"condition_action_pairs": list(combination)}
+                    if is_duplicate(strategies[index], new_strategy):
+                        continue
+
+                    strategies[index].append(new_strategy)
+                    yield from _search_strategy_profiles(strategies, [], 0)
 
 
 def is_duplicate(existing_strategies: List[Dict], new_strategy: Dict) -> bool:

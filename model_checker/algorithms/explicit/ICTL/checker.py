@@ -2,10 +2,8 @@
 
 from typing import Any, Dict, Optional, Set
 
-from model_checker.algorithms.explicit.ICTL.util.graph import (
-    get_preorder,
-    labeled_pairs,
-)
+from model_checker.algorithms.explicit.ICTL.util.graph import get_preorder
+from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.utils.formula_tree import FormulaTreeNode, build_formula_tree
 

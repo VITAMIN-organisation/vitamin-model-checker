@@ -1,4 +1,11 @@
-"""Strip resource or cost bounds from a formula to get plain ATL (for prefiltering)."""
+"""
+Projection from resource-bounded ATL formulas to plain ATL.
+
+Used by the ATL prefilter to quickly reject formulas that are false even without
+resource constraints.  If the unbounded ATL check already returns False at the
+initial state, no resource allocation can make the formula true, so the expensive
+bounded checker is skipped entirely.
+"""
 
 import re
 

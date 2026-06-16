@@ -5,39 +5,46 @@ from typing import Dict, List, Optional, Set, Tuple
 
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
+MAX_TRACE_LENGTH = 100
+
+
+def _build_adjacency(edges: List[Tuple[str, str]]) -> Dict[str, List[str]]:
+    """Build a forward adjacency list from an edge list."""
+    adjacency: Dict[str, List[str]] = {}
+    for source, target in edges:
+        adjacency.setdefault(source, []).append(target)
+    return adjacency
+
 
 def reconstruct_trace_from_predecessors(
     initial_state: str,
     target_states: Set[str],
     predecessors: Dict[str, str],
-    max_length: int = 100,
+    max_length: int = MAX_TRACE_LENGTH,
 ) -> Optional[List[str]]:
     """Walk backward from a target state to the initial state using predecessors."""
     if not target_states:
         return None
 
-    # Find a target state that's reachable from initial state
-    # by checking if we can trace back to initial state
+    if initial_state in target_states:
+        return [initial_state]
+
     for target in target_states:
         current = target
         path = [current]
         visited = {current}
 
-        # Trace backwards to initial state
         while current != initial_state and len(path) < max_length:
             if current not in predecessors:
-                break  # No path from this target
-
+                break
             current = predecessors[current]
             if current in visited:
-                break  # Cycle detected
-
+                break
             path.append(current)
             visited.add(current)
 
-        # Check if we reached the initial state
         if current == initial_state:
-            path.reverse()  # Reverse to get forward path
+            path.reverse()
             return path
 
     return None
@@ -47,7 +54,7 @@ def reconstruct_trace_bfs(
     edges: List[Tuple[str, str]],
     initial_state: str,
     target_states: Set[str],
-    max_length: int = 100,
+    max_length: int = MAX_TRACE_LENGTH,
 ) -> Optional[List[str]]:
     """Shortest path from the initial state to any target, using forward BFS."""
     if not target_states:
@@ -56,14 +63,7 @@ def reconstruct_trace_bfs(
     if initial_state in target_states:
         return [initial_state]
 
-    # Build adjacency list for forward search
-    adjacency: Dict[str, List[str]] = {}
-    for source, target in edges:
-        if source not in adjacency:
-            adjacency[source] = []
-        adjacency[source].append(target)
-
-    # BFS to find shortest path
+    adjacency = _build_adjacency(edges)
     queue = deque([(initial_state, [initial_state])])
     visited = {initial_state}
 
@@ -76,10 +76,7 @@ def reconstruct_trace_bfs(
         if current in target_states:
             return path
 
-        if current not in adjacency:
-            continue
-
-        for neighbor in adjacency[current]:
+        for neighbor in adjacency.get(current, []):
             if neighbor not in visited:
                 visited.add(neighbor)
                 queue.append((neighbor, path + [neighbor]))
@@ -91,25 +88,17 @@ def build_predecessor_map_bfs(
     edges: List[Tuple[str, str]], target_states: Set[str]
 ) -> Dict[str, str]:
     """Map each state to one predecessor, searching backward from targets."""
-    # Build reverse adjacency list for backward search
     reverse_adj: Dict[str, List[str]] = {}
     for source, target in edges:
-        if target not in reverse_adj:
-            reverse_adj[target] = []
-        reverse_adj[target].append(source)
+        reverse_adj.setdefault(target, []).append(source)
 
     predecessors: Dict[str, str] = {}
     queue = deque(target_states)
     visited = set(target_states)
 
-    # Backward BFS from targets
     while queue:
         current = queue.popleft()
-
-        if current not in reverse_adj:
-            continue
-
-        for predecessor in reverse_adj[current]:
+        for predecessor in reverse_adj.get(current, []):
             if predecessor not in visited:
                 visited.add(predecessor)
                 predecessors[predecessor] = current
@@ -192,25 +181,14 @@ def build_predecessor_map_forward(
     edges: List[Tuple[str, str]], initial_state: str
 ) -> Dict[str, str]:
     """Map each reachable state to the predecessor found by forward BFS."""
-    # Build forward adjacency list
-    adjacency: Dict[str, List[str]] = {}
-    for source, target in edges:
-        if source not in adjacency:
-            adjacency[source] = []
-        adjacency[source].append(target)
-
+    adjacency = _build_adjacency(edges)
     predecessors: Dict[str, str] = {}
     queue = deque([initial_state])
     visited = {initial_state}
 
-    # Forward BFS from initial state
     while queue:
         current = queue.popleft()
-
-        if current not in adjacency:
-            continue
-
-        for successor in adjacency[current]:
+        for successor in adjacency.get(current, []):
             if successor not in visited:
                 visited.add(successor)
                 predecessors[successor] = current
@@ -224,7 +202,7 @@ def extract_shortest_trace(
     target_states: Set[str],
     all_states: Set[str],
     edges: List[Tuple[str, str]],
-    max_length: int = 100,
+    max_length: int = MAX_TRACE_LENGTH,
 ) -> Optional[List[str]]:
     """Shortest path to a valid target state, or None if there is no path."""
     # Validate inputs
@@ -253,18 +231,12 @@ def format_trace_with_properties(
     result = []
     for state in trace:
         props_at_state = _get_props_at_state(cgs, state)
-
-        if highlight_props:
-            highlighted = [p for p in props_at_state if p in highlight_props]
-            if highlighted:
-                result.append(f"{state} [{', '.join(highlighted)}]")
-            else:
-                result.append(state)
-        else:
-            if props_at_state:
-                result.append(f"{state} [{', '.join(props_at_state)}]")
-            else:
-                result.append(state)
+        visible = (
+            [p for p in props_at_state if p in highlight_props]
+            if highlight_props
+            else props_at_state
+        )
+        result.append(f"{state} [{', '.join(visible)}]" if visible else state)
 
     return " -> ".join(result)
 

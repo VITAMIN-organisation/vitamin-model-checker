@@ -9,7 +9,7 @@ def get_good_actions(
     cgs: CostCGSProtocol, actions: List[str], state_idx: int, bound: List[int]
 ) -> Set[str]:
     """Return actions at state_idx whose cost fits within bound."""
-    good_actions = set()
+    good_actions: Set[str] = set()
     state_name = cgs.get_state_name_by_index(state_idx)
     for action in actions:
         try:
