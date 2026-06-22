@@ -666,6 +666,8 @@ The base model for CTL, LTL, ATL, NatATL, NatSL, ICTL, and IATL.
 5.  **Atomic_propositions**: Space-separated list of available propositions.
 6.  **Labelling**: Binary labelling matrix (States x Propositions).
 7.  **Number_of_agents**: Total count of agents in the system.
+8.  **Agent_labels** (optional): Whitespace-separated display names for agents
+    1..n. Formulas use `<1>`, `<2>`, ...; labels are metadata only.
 
 **Example Action Format:**
 For 2 agents: `AC` means Agent 1 performs action `A` and Agent 2 performs action `C`.

@@ -163,6 +163,19 @@ def collect_model_structure_errors(cgs) -> List[str]:
         )
     )
 
+    agent_labels = getattr(cgs, "agent_labels", None) or []
+    if agent_labels:
+        try:
+            num_agents = cgs.get_number_of_agents()
+            if len(agent_labels) != num_agents:
+                errors.append(
+                    f"Agent_labels has {len(agent_labels)} label(s) but "
+                    f"Number_of_agents is {num_agents}. "
+                    "Provide one whitespace-separated label per agent."
+                )
+        except ValueError as e:
+            errors.append(str(e))
+
     return errors
 
 

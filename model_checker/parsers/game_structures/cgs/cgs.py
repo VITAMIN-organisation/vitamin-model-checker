@@ -38,6 +38,7 @@ class CGS:
         self.matrix_prop = []
         self.initial_state = ""
         self.number_of_agents: Optional[int] = None
+        self.agent_labels: list = []
         self.actions = []
         self._all_states_set = None
         self._state_to_index = None
@@ -69,6 +70,8 @@ class CGS:
         else:
             self.number_of_agents = int(str(na).strip()) if str(na).strip() else None
         self.actions = model.actions
+        labels = getattr(model, "agent_labels", None)
+        self.agent_labels = list(labels) if labels else []
         self.unknown_transition_matrix = getattr(model, "unknown_transition_matrix", [])
         self.invalidate_caches()
         self._cached_edges = None
@@ -128,6 +131,13 @@ class CGS:
                 "followed by a valid integer value."
             )
         return self.number_of_agents
+
+    def get_agent_labels(self):
+        """Return display labels for agents 1..n; defaults to '1', '2', ... when omitted."""
+        n = self.get_number_of_agents()
+        if self.agent_labels:
+            return list(self.agent_labels)
+        return cgs_utils.default_agent_labels(n)
 
     def build_action_list(self, action_string):
         """Turn an action string (e.g. with '*' or commas) into a list of action strings; result is cached."""

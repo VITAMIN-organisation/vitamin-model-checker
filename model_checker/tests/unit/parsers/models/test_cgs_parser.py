@@ -45,6 +45,7 @@ class TestCgsParserConstants:
             "Atomic_propositions",
             "Labelling",
             "Number_of_agents",
+            "Agent_labels",
         }
         assert cgs_parser.SECTION_HEADERS == expected
 
@@ -71,20 +72,49 @@ class TestParseCgsFile:
     """parse_cgs_file(lines, instance) fills CGS instance correctly."""
 
     def test_minimal_content_fills_instance(self):
-        lines = _minimal_cgs_lines()
         cgs = CGS()
-        cgs_parser.parse_cgs_file(lines, cgs)
+        cgs_parser.parse_cgs_file(_minimal_cgs_lines(), cgs)
 
         assert len(cgs.states) == 2
         assert cgs.states[0] == "s0" and cgs.states[1] == "s1"
         assert cgs.initial_state == "s0"
         assert cgs.number_of_agents == 2
         assert cgs.get_number_of_agents() == 2
+        assert cgs.get_agent_labels() == ["1", "2"]
         assert len(cgs.atomic_propositions) == 1
         assert cgs.atomic_propositions[0] == "p"
         assert len(cgs.graph) == 2
         assert len(cgs.matrix_prop) == 2
         assert cgs.actions is not None
+
+    def test_agent_labels_section_parsed(self):
+        lines = _minimal_cgs_lines()
+        idx = next(i for i, line in enumerate(lines) if line == "Number_of_agents")
+        lines = lines[: idx + 2] + ["Agent_labels", "Tianji Opponent"] + lines[idx + 2 :]
+
+        cgs = CGS()
+        cgs_parser.parse_cgs_file(lines, cgs)
+
+        assert cgs.get_agent_labels() == ["Tianji", "Opponent"]
+        assert cgs.agent_labels == ["Tianji", "Opponent"]
+
+    def test_invalid_agent_label_raises(self):
+        lines = _minimal_cgs_lines()
+        idx = next(i for i, line in enumerate(lines) if line == "Number_of_agents")
+        lines = lines[: idx + 2] + ["Agent_labels", "bad@label"] + lines[idx + 2 :]
+
+        with pytest.raises(ValueError, match=r"Agent label 'bad@label' is invalid"):
+            cgs_parser.parse_cgs_file(lines, CGS())
+
+    def test_agent_labels_count_mismatch_fails_validation(self):
+        lines = _minimal_cgs_lines()
+        idx = next(i for i, line in enumerate(lines) if line == "Number_of_agents")
+        lines = lines[: idx + 2] + ["Agent_labels", "OnlyOne"] + lines[idx + 2 :]
+
+        cgs = CGS()
+        cgs_parser.parse_cgs_file(lines, cgs)
+        with pytest.raises(ValueError, match="Agent_labels has 1 label"):
+            cgs.validate_model_structure()
 
     def test_invalid_atomic_proposition_name_raises(self):
         lines = _minimal_cgs_lines()
@@ -130,7 +160,6 @@ class TestParseCgsFile:
 
         cgs = CGS()
         cgs_parser.parse_cgs_file(lines, cgs)
-
         assert cgs.initial_state == "s0"
         assert cgs.number_of_agents == 2
         assert len(cgs.atomic_propositions) == 1

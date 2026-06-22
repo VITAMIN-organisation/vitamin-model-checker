@@ -5,6 +5,7 @@ import warnings
 import numpy as np
 
 from model_checker.parsers.game_structures.cgs.cgs_utils import (
+    validate_agent_label_name,
     validate_atomic_proposition_name,
 )
 
@@ -19,6 +20,7 @@ SECTION_HEADERS = frozenset(
         "Atomic_propositions",
         "Labelling",
         "Number_of_agents",
+        "Agent_labels",
     }
 )
 
@@ -164,6 +166,10 @@ def _warn_duplicate_section(section_name):
             "Duplicate 'Atomic_propositions' section detected. "
             "Propositions will be accumulated and deduplicated."
         ),
+        "Agent_labels": (
+            "Duplicate 'Agent_labels' section detected. "
+            "Previous labels will be overwritten with the last occurrence."
+        ),
     }
     msg = messages.get(section_name)
     if msg:
@@ -179,6 +185,7 @@ def _collect_section_data(lines, instance):
     states_list = []
     atomic_propositions_list = []
     actions = []
+    agent_labels_list = []
     seen_sections = set()
 
     def process_transition(line):
@@ -219,6 +226,12 @@ def _collect_section_data(lines, instance):
                     f"Invalid value for Number_of_agents: '{raw}'. Expected a valid integer."
                 ) from None
 
+    def process_agent_labels(line):
+        if line:
+            values = line.split()
+            if values:
+                agent_labels_list.extend(values)
+
     section_processors = {
         "Transition": process_transition,
         "Unknown_Transition_by": lambda line: (
@@ -229,6 +242,7 @@ def _collect_section_data(lines, instance):
         "Atomic_propositions": process_atomic_propositions,
         "Labelling": process_labelling,
         "Number_of_agents": process_number_of_agents,
+        "Agent_labels": process_agent_labels,
     }
 
     for line in lines:
@@ -256,6 +270,7 @@ def _collect_section_data(lines, instance):
         rows_unknown,
         rows_prop,
         actions,
+        agent_labels_list,
     )
 
 
@@ -335,6 +350,18 @@ def _apply_unknown_transitions(instance, rows_unknown):
     ]
 
 
+def _apply_agent_labels(instance, agent_labels_list):
+    """Display labels for agents 1..n; does not affect verification semantics."""
+    if not agent_labels_list:
+        instance.agent_labels = []
+        return
+    labels = []
+    for label in agent_labels_list:
+        validate_agent_label_name(label)
+        labels.append(str(label).strip())
+    instance.agent_labels = labels
+
+
 def parse_cgs_file(lines, instance):
     """Parse file lines into instance."""
     (
@@ -344,9 +371,11 @@ def parse_cgs_file(lines, instance):
         rows_unknown,
         rows_prop,
         actions,
+        agent_labels_list,
     ) = _collect_section_data(lines, instance)
     _apply_states(instance, states_list)
     _apply_atomic_propositions(instance, atomic_propositions_list)
     _apply_graph_and_actions(instance, rows_graph, actions)
     _apply_labelling(instance, rows_prop)
     _apply_unknown_transitions(instance, rows_unknown)
+    _apply_agent_labels(instance, agent_labels_list)

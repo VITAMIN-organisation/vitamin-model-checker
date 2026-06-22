@@ -37,6 +37,7 @@ A basic CGS model usually contains these sections:
 5. `Atomic_propositions`
 6. `Labelling`
 7. `Number_of_agents`
+8. `Agent_labels` (optional display names for agents 1..n)
 
 Section headers are case-sensitive.
 
@@ -60,7 +61,20 @@ Labelling
 
 Number_of_agents
 2
+
+Agent_labels
+Tianji Opponent
 ```
+
+### `Agent_labels`
+
+Optional whitespace-separated display names for agents. Label *i* refers to
+agent *i* (1-based), in the same order as joint-action columns. Formulas still
+use numeric coalitions such as `<1>` and `<2>`; labels do not change
+verification semantics. When omitted, agents are shown as `1`, `2`, ...
+
+Each label must match `[a-zA-Z0-9_-]+`. The number of labels must equal
+`Number_of_agents`.
 
 ### `Transition`
 

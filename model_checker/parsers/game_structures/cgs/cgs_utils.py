@@ -1,5 +1,6 @@
 """Helpers for CGS: proposition validation, graph edges, and action list parsing."""
 
+import re
 from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
@@ -22,6 +23,26 @@ def validate_atomic_proposition_name(name: str) -> None:
             f"Atomic proposition {name!r} is invalid: expected identifier matching "
             "[a-zA-Z][a-zA-Z0-9_]*."
         )
+
+
+AGENT_LABEL_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+
+def validate_agent_label_name(name: str) -> None:
+    """Reject agent display labels that cannot be stored in Agent_labels."""
+    label = str(name).strip()
+    if not label or not AGENT_LABEL_NAME_RE.match(label):
+        raise ValueError(
+            f"Agent label {name!r} is invalid: use non-empty tokens matching "
+            "[a-zA-Z0-9_-]+ (whitespace-separated in Agent_labels)."
+        )
+
+
+def default_agent_labels(number_of_agents: int) -> List[str]:
+    """Return canonical default labels '1', '2', ... for the given agent count."""
+    if number_of_agents <= 0:
+        return []
+    return [str(i + 1) for i in range(number_of_agents)]
 
 
 def get_edges(graph: List[List], states) -> List[Tuple[str, str]]:
