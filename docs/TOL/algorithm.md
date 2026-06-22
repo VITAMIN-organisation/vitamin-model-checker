@@ -42,6 +42,11 @@ phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
       | phi : clock_expr | phi with clock_expr
 ```
 
+- Atoms: lowercase identifiers (`p`, `safe_1`) or mixed-case names with a lowercase
+  second letter (`Goal`). Single-letter uppercase tokens (`F`, `G`, `X`, `U`, `R`,
+  `W`) remain demonic/temporal operators. Clock names such as `x` in `x<=3` use
+  the same token class as propositions.
+
 ### Demonic temporal operators
 
 ```text

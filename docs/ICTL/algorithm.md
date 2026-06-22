@@ -111,7 +111,7 @@ phi ::= p | phi /\ phi | phi \/ phi | phi -> phi | not phi
       | A X phi | A(phi U psi) | A(phi R psi)
 ```
 
-- Atoms: lowercase alphanumeric (`e`, `p1`, ...).
+- Atoms: lowercase identifiers (`e`, `p1`, `safe_1`) or mixed-case names with a lowercase second letter (`Goal`, `safe_1` via lowercase branch). This keeps sugar such as `EX` / `AG` distinct from proposition names.
 - Negation: `not phi` or `! phi` (no `bot` literal; handled as intuitionistic negation).
 - Implication: `->`, `>`, or `implies`.
 - Conjunction / disjunction: `&&`, `&`, `and` / `||`, `|`, `or`.

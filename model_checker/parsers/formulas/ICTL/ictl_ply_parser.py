@@ -1,6 +1,8 @@
 import ply.lex as lex
 import ply.yacc as yacc
 
+from model_checker.parsers.syntax_patterns import ICTL_PROPOSITION_TOKEN
+
 _LEXER_HAS_ERROR = False
 _PARSER_HAS_ERROR = False
 _MODULE_REF = __import__(__name__, fromlist=["_MODULE_REF"])
@@ -30,7 +32,7 @@ t_AND = r"&&|\&|and"
 t_OR = r"\|\||\||or"
 t_NOT = r"!|not"
 t_IMPLIES = r"->|>|implies"
-t_PROP = r"[a-z0-9]+|[a-z]\d+"
+t_PROP = ICTL_PROPOSITION_TOKEN
 t_UNTIL = r"U|until"
 t_RELEASE = r"R|release"
 t_GLOBALLY = r"G|globally|always"

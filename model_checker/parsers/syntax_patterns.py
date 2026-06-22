@@ -15,6 +15,18 @@ AGENT_LIST = r"\d+(?:,\d+)*"
 COALITION_ATL_TOKEN = rf"<{AGENT_LIST}>"
 EMPTY_COALITION_RE = re.compile(r"<\s*>")
 
+# ICTL: lowercase atoms or mixed-case with lowercase from the second character
+# (avoids lexing EX, AX, EF, AG, ... as proposition names).
+ICTL_PROPOSITION_TOKEN = (
+    rf"(?:[a-z][{_ALNUM_UNDERSCORE}]*|[A-Z][a-z][{_ALNUM_UNDERSCORE}]*)"
+)
+
+# TCTL / TOL: same lexer constraint as ICTL (single-letter E/A/F/G/U/X/R/W stay operators).
+TCTL_TOL_PROPOSITION_TOKEN = ICTL_PROPOSITION_TOKEN
+
+# NatSL temporal atoms after F / !F (single letters a-h only).
+NATSL_TEMPORAL_PROPOSITION_TOKEN = r"[a-h]"
+
 # NatATL capacity coalitions: <{1,2}, 5>.
 NATATL_CAPACITY_RE = re.compile(rf"<\{{({AGENT_LIST})\}},\s*(\d+)>")
 NATATL_COALITION_TOKEN = rf"<\{{(?:\d+,)*\d+\}},\s*\d+>"

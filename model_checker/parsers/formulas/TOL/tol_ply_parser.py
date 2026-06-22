@@ -5,6 +5,8 @@ import unicodedata
 import ply.lex as lex
 import ply.yacc as yacc
 
+from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
+
 _LEXER_HAS_ERROR = False
 _PARSER_HAS_ERROR = False
 
@@ -161,9 +163,11 @@ precedence = (("right", "NOT"),)
 
 
 def t_PROP(t):
-    r"[a-z]+\d*(?:_\d+)?"
     t.type = reserved.get(t.value, "PROP")
     return t
+
+
+t_PROP.__doc__ = TCTL_TOL_PROPOSITION_TOKEN
 
 
 # Token error handling

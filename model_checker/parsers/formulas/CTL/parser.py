@@ -3,12 +3,12 @@
 What it handles:
 - CTL formulas with path quantifiers (A/E) combined with temporal operators (X, F, G, U).
 - Boolean connectives (AND/OR/NOT/IMPLIES) and parentheses/brackets for grouping.
-- Propositions matching [a-z][a-z0-9_]*.
+- Propositions matching [a-zA-Z][a-zA-Z0-9_]*.
 
 What it rejects:
 - Unicode or disallowed special characters (only (), [], logical operators allowed).
 - Temporal operators (X, F, G, U) without a preceding path quantifier (A/E).
-- Propositions whose first character is not a lowercase letter, or invalid identifiers.
+- Invalid proposition identifiers or reserved words used as proposition names.
 
 Behavior:
 - Returns an AST tuple on success or None on invalid input; does not raise for

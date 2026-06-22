@@ -10,7 +10,12 @@ Behavior:
 
 from typing import Optional
 
-from model_checker.parsers.syntax_patterns import PROPOSITION_TOKEN
+import re
+
+from model_checker.parsers.syntax_patterns import (
+    NATSL_TEMPORAL_PROPOSITION_TOKEN,
+    PROPOSITION_TOKEN,
+)
 from ..parser_utils import run_common_prechecks
 from ..shared_parser import BaseLogicParser
 
@@ -124,6 +129,21 @@ class NatSLParser(BaseLogicParser):
         p[0] = ("!", "F", p[3])
 
     # === Validation ===
+    def _post_validation(self, formula, result):
+        if result is None:
+            return False
+        tail = formula.split(":", 1)[-1].strip()
+        match = re.search(r"!?F\s+(\w+)\s*$", tail)
+        if not match:
+            return True
+        atom = match.group(1)
+        if not re.fullmatch(NATSL_TEMPORAL_PROPOSITION_TOKEN, atom):
+            self.errors.append(
+                f"NatSL temporal atom must be a single letter a-h, got '{atom}'"
+            )
+            return False
+        return True
+
     def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
         return run_common_prechecks(
             formula,

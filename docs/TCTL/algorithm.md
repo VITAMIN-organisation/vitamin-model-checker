@@ -54,6 +54,11 @@ phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
       | phi : clock_expr
 ```
 
+- Atoms: lowercase identifiers (`p`, `safe_1`) or mixed-case names with a lowercase
+  second letter (`Goal`). Single-letter uppercase tokens (`E`, `A`, `F`, `G`, `U`)
+  remain path/temporal operators. Clock names such as `x` in `x<=3` use the same
+  token class as propositions.
+
 - `phi : x<=3` attaches a clock guard to a subformula (used during backward
   reachability).
 - Standalone `x<=3` matches states whose zones satisfy the constraint.
