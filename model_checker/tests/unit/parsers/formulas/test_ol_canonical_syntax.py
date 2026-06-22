@@ -15,7 +15,7 @@ def test_ol_parser_accepts_canonical_cost_prefix():
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("formula", ["<2> F safe", "F safe"])
+@pytest.mark.parametrize("formula", ["<2> F safe", "F safe", "<J0> F safe"])
 def test_ol_parser_rejects_non_canonical_cost_prefix(formula):
     parser = OLParser()
     assert parser.parse(formula, n_agent=1) is None

@@ -444,6 +444,7 @@ OL is the linear-time counterpart to OATL. It evaluates cost-bounded formulas ov
 **Validation Rules:**
 - **Mandatory 'J'**: OL prefixes MUST include the letter `J` after the opening angle bracket (e.g., `<J10>`). A numeric-only prefix (e.g., `<10>`) is rejected.
 - **Bound Requirement**: Every temporal operator must be prefixed with `<Jk>`. Bare `F p` and numeric-only `<5> F p` are rejected.
+- **Positive bound**: `k` must be at least 1; `<J0>` is rejected (lexer and validation).
 
 **Formula Examples:**
 ```text

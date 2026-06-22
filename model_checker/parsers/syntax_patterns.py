@@ -39,7 +39,7 @@ COALITION_BOUND_INNER_RE = re.compile(
 TRAILING_COALITION_COMMA_RE = re.compile(r"<\d+,>")
 NEGATIVE_AGENT_IN_COALITION_RE = re.compile(r"<-\d+>")
 
-# OL demonic cost prefix: <Jk> (e.g. <J5>).
-OL_DEMONIC_TOKEN = r"<J[0-9]+>"
-OL_DEMONIC_BOUND_FULL_RE = re.compile(r"^<J(\d+)>$")
-OL_DEMONIC_BOUND_PREFIX_RE = re.compile(r"^<J(\d+)>")
+# OL demonic cost prefix: <Jk> (e.g. <J5>); k must be a positive integer (no <J0>).
+OL_DEMONIC_TOKEN = r"<J[1-9]\d*>"
+OL_DEMONIC_BOUND_FULL_RE = re.compile(r"^<J([1-9]\d*)>$")
+OL_DEMONIC_BOUND_PREFIX_RE = re.compile(r"^<J([1-9]\d*)>")

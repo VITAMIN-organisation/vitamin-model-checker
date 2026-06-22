@@ -6,7 +6,7 @@ Supported:
 
 Rejects:
 - Numeric-only prefixes (e.g. `<5>F p`) and bare temporal operators (e.g. `F p`).
-- Missing or malformed demonic costs (e.g., `<J>F p`).
+- Missing or malformed demonic costs (e.g., `<J>F p`, `<J0>F p`).
 - Empty formulas, non-ASCII, nulls, or disallowed special characters.
 
 Returns:
@@ -90,7 +90,12 @@ class OLParser(BaseLogicParser):
         match = OL_DEMONIC_BOUND_FULL_RE.match(demonic_str)
         if not match:
             raise DemonicValueError(f"Invalid demonic token: {demonic_str}")
-        return match.group(1)
+        cost = int(match.group(1))
+        if cost < 1:
+            raise DemonicValueError(
+                f"Demonic cost must be a positive integer, got <J{cost}>"
+            )
+        return str(cost)
 
     # === Validation ===
 
