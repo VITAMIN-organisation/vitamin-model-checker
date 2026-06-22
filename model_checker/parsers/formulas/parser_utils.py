@@ -9,6 +9,7 @@ from typing import Any, Optional, Sequence, Set
 from model_checker.parsers.syntax_patterns import (
     AGENT_LIST,
     ATOMIC_PROPOSITION_NAME_RE,
+    EMPTY_COALITION_RE,
     NATATL_CAPACITY_RE,
     NEGATIVE_AGENT_IN_COALITION_RE,
     PROPOSITION_FULL_RE,
@@ -55,11 +56,11 @@ def verify_token(
 def validate_coalition(coalition_str: str, max_coalition: int) -> None:
     """Check ATL-style coalitions like "<1,2,3>".
 
-    "<>" is allowed (empty coalition). Each agent index must be from 1 to
-    max_coalition. Raises CoalitionValueError on failure.
+    Each agent index must be from 1 to max_coalition. Raises CoalitionValueError
+    on failure.
     """
-    if coalition_str == "<>":
-        return
+    if coalition_str == "<>" or EMPTY_COALITION_RE.fullmatch(coalition_str):
+        raise CoalitionValueError("Empty coalition '<>' is not allowed")
     if coalition_str.endswith(",>"):
         raise CoalitionValueError("Trailing comma in coalition is not allowed")
 
@@ -225,6 +226,8 @@ def run_common_prechecks(
         return False, "Formula contains binary null character"
 
     if coalition_required:
+        if EMPTY_COALITION_RE.search(formula):
+            return False, "Empty coalition '<>' is not allowed"
         if TRAILING_COALITION_COMMA_RE.search(formula):
             return False, "Trailing comma in coalition is not allowed"
         if not allow_negative_agents and NEGATIVE_AGENT_IN_COALITION_RE.search(

@@ -100,7 +100,7 @@ class RBATLParser(BaseLogicParser):
         valid, err = run_common_prechecks(
             formula,
             allow_hash_at=True,
-            coalition_required=False,
+            coalition_required=True,
             allow_negative_agents=False,
             allowed_operators=None,
         )

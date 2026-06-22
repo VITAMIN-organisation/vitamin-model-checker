@@ -29,8 +29,9 @@ This document provides a comprehensive knowledge base for all temporal logics im
 14. [IATL - Intuitionistic ATL](#iatl---intuitionistic-atl)
 15. [TCTL - Timed CTL](#tctl---timed-ctl)
 16. [TOL - Timed Obligation Logic](#tol---timed-obligation-logic)
-17. [Atomic Proposition Policy](#atomic-proposition-policy)
-18. [Model Syntax](#model-syntax)
+17. [Empty Coalition Policy](#empty-coalition-policy)
+18. [Atomic Proposition Policy](#atomic-proposition-policy)
+19. [Model Syntax](#model-syntax)
 
 ---
 
@@ -116,6 +117,7 @@ CTL is a branching-time logic defined over computation trees. Formulas are evalu
 
 **Validation Rules:**
 - **Quantifier Requirement**: In CTL, every temporal operator (X, F, G, U) MUST be preceded by a path quantifier (A or E).
+- **No coalition brackets**: CTL uses `E` / `A`, not ATL-style `<...>` coalitions. For existential reachability use `EF p`, not `<> F p` (empty `<>` is rejected in coalition logics and is not valid CTL syntax).
 - **Propositions**: Cannot match reserved keywords like `and`, `or`, `exists`, etc.
 
 **Formula Examples:**
@@ -171,6 +173,7 @@ LTL is a linear-time logic evaluated over single infinite paths (sequences of st
 
 **Validation Rules:**
 - LTL formulas are checked for linear temporal structure.
+- **No coalitions or path quantifiers**: `<> F p` and other `<...>` coalition forms are invalid in LTL. Use `F p` for eventually on a single path.
 - Propositions must follow the standard letter-start identifier pattern.
 
 **Formula Examples:**
@@ -202,7 +205,6 @@ ATL extends CTL with coalition operators `[A]` (in VITAMIN written as `<A>`) to 
 **Standard Syntax:**
 - **Coalition Operators:**
     - `<{1,2}> p`: Coalition of agents 1 and 2 has a strategy to ensure p.
-    - `<{ }> p`: The empty coalition (equivalent to CTL quantifier `A`).
 - **Temporal Operators (same as CTL):** `X`, `F`, `G`, `U`.
 
 **Semantics:**
@@ -221,7 +223,7 @@ ATL extends CTL with coalition operators `[A]` (in VITAMIN written as `<A>`) to 
 1.  **Coalition Syntax**: `<1,2>` (Angle brackets, comma-separated agent indices). Braces `{ }` are NOT used in the implementation's surface syntax for plain ATL.
 2.  **Operators**: `X`, `F`, `G`, `U`.
 3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
-4.  **Validation**: Agent indices must be in range `[1, n_agent]`.
+4.  **Validation**: Agent indices must be in range `[1, n_agent]`. Empty coalition `<>` is rejected.
 
 **Formula Examples:**
 ```text
@@ -848,6 +850,38 @@ Linear-style timed logic with demonic cost prefixes over `timedCGS` models.
 **Model type:** `timedCGS`. Shares the `timed_cgs` parser with TCTL.
 
 **Deep dive:** [TOL/algorithm.md](TOL/algorithm.md)
+
+---
+
+<a id="empty-coalition-policy"></a>
+## Empty Coalition Policy
+
+VITAMIN does **not** support an empty strategic coalition written as `<>`. In ATL literature an empty coalition can be related to opponent-only or path-level reasoning; in this implementation that overlaps CTL existential quantification (`E`, `EF`, ...) without making the logic explicit.
+
+**Policy:** reject `<> ...` in every logic. Use the correct surface for the property:
+
+| Intent | Use | Do not use |
+| :--- | :--- | :--- |
+| Existential path reachability (CTL) | `EF p` | `<> F p` |
+| Strategic coalition (ATL) | `<1> F p`, `<1,2> G p` | `<> F p` |
+| Linear path eventually (LTL) | `F p` | `<> F p` |
+| Resource-bounded strategy (RBATL / OATL) | `<1><5> F p` | `<> F p`, `<1> F p` without bound |
+| Capacity-bound strategy (NatATL / CapATL) | `<{1}, 5> F p` | `<> F p` |
+| IATL universal coalition | `[1] G p` | `[] G p` (empty `[]` rejected) |
+
+**Where rejection is enforced:**
+
+| Logic | Coalition form | Empty coalition |
+| :--- | :--- | :--- |
+| ATL / ATLF | `<1>`, `<1,2>` | `<> ` rejected (precheck + parser) |
+| IATL | `<1>` exist, `[1]` forall | `<> ` and `[]` rejected |
+| NatATL | `<{1,2}, k>` | `<\s*>` rejected |
+| CapATL | `<{1,2}, k>` | `<\s*>` rejected |
+| OATL / COTL | `<1><5>` | `<\s*>` rejected; bound required |
+| RBATL / RABATL | `<1><5>` or `<1><2,2>` | `<\s*>` rejected; bound required |
+| OL | `<J5>` (cost, not agents) | N/A |
+| Wallet_ATL | `<<1>>` | `<<>>` invalid (lexer) |
+| CTL / LTL | `E` / `A` or none | `<> ` invalid syntax |
 
 ---
 

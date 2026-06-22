@@ -12,7 +12,8 @@ ATOMIC_PROPOSITION_NAME_RE = PROPOSITION_FULL_RE
 
 # Agent indices inside coalitions.
 AGENT_LIST = r"\d+(?:,\d+)*"
-COALITION_ATL_TOKEN = rf"<>|<{AGENT_LIST}>"
+COALITION_ATL_TOKEN = rf"<{AGENT_LIST}>"
+EMPTY_COALITION_RE = re.compile(r"<\s*>")
 
 # NatATL capacity coalitions: <{1,2}, 5>.
 NATATL_CAPACITY_RE = re.compile(rf"<\{{({AGENT_LIST})\}},\s*(\d+)>")
