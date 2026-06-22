@@ -1,11 +1,10 @@
 """Helpers for CGS: proposition validation, graph edges, and action list parsing."""
 
-import re
 from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
-ATOMIC_PROPOSITION_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+from model_checker.parsers.syntax_patterns import ATOMIC_PROPOSITION_NAME_RE
 
 
 def proposition_index(atomic_propositions, element) -> Optional[int]:
@@ -20,8 +19,8 @@ def validate_atomic_proposition_name(name: str) -> None:
     """Reject proposition names that formula parsers cannot reference."""
     if not ATOMIC_PROPOSITION_NAME_RE.match(str(name)):
         raise ValueError(
-            f"Atomic proposition {name!r} is invalid: expected lowercase "
-            "identifier matching [a-z][a-z0-9_]*."
+            f"Atomic proposition {name!r} is invalid: expected identifier matching "
+            "[a-zA-Z][a-zA-Z0-9_]*."
         )
 
 

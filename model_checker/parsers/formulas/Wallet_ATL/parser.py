@@ -9,6 +9,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 
 from model_checker.parsers.formulas.parser_utils import verify_token
+from model_checker.parsers.syntax_patterns import PROPOSITION_TOKEN
 
 # Error flags for robust error tracking
 _LEXER_HAS_ERROR = False
@@ -44,7 +45,7 @@ t_AND = r"&&|\&|and"
 t_OR = r"\|\||\||or"
 t_NOT = r"!|not"
 t_IMPLIES = r"->|>|implies"
-t_PROP = r"[a-z][a-z_\d]*"
+t_PROP = PROPOSITION_TOKEN
 t_UNTIL = r"U|until"
 t_GLOBALLY = r"G|globally|always"
 t_NEXT = r"X|next"

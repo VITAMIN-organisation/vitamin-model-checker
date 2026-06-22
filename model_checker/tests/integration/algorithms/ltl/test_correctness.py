@@ -24,7 +24,7 @@ class TestLTLErrorHandling:
 
     def test_ltl_invalid_formula_syntax(self, cgs_simple_parser):
         """Test LTL with invalid formula syntax."""
-        result = model_checking("INVALID_FORMULA", cgs_simple_parser.filename)
+        result = model_checking("F p &", cgs_simple_parser.filename)
         assert "error" in result or "Syntax error" in result.get("res", "")
 
     def test_ltl_nonexistent_atomic_proposition(self, cgs_simple_parser):

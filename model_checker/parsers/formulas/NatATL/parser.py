@@ -19,7 +19,12 @@ Behavior:
 import re
 from typing import Optional
 
+from model_checker.parsers.syntax_patterns import (
+    NATATL_COALITION_TOKEN,
+    PROPOSITION_TOKEN,
+)
 from ..parser_utils import (
+    PROPOSITION_AST_PATTERN,
     run_common_prechecks,
     validate_natatl_coalition,
 )
@@ -43,8 +48,8 @@ class NatATLParser(BaseLogicParser):
         self.build()
 
     # Canonical NatATL coalition: <{agents}, bound>
-    t_COALITION = r"<\{(?:\d+,)*\d+\},\s*\d+>"
-    t_PROP = r"[a-z][a-z0-9_]*"
+    t_COALITION = NATATL_COALITION_TOKEN
+    t_PROP = PROPOSITION_TOKEN
 
     # --- Grammar Rules ---
 
@@ -75,14 +80,11 @@ class NatATLParser(BaseLogicParser):
         return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
-        _ALLOWED_UPPERCASE = {"U", "G", "X", "F"}
-
         valid, err = run_common_prechecks(
             formula,
             coalition_required=False,
             allow_hash_at=False,
             allow_negative_agents=False,
-            allowed_uppercase=_ALLOWED_UPPERCASE,
             allowed_operators=set("<>(),{}!&|->"),
         )
         if not valid:
@@ -101,7 +103,7 @@ class NatATLParser(BaseLogicParser):
             return False
 
         if isinstance(result, str):
-            if not re.match(r"^[a-z][a-z\d_]*$", result):
+            if not PROPOSITION_AST_PATTERN.match(result):
                 return False
             if re.search(r"[UGXF]", formula):
                 return False

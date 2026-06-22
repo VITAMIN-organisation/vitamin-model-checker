@@ -23,7 +23,7 @@ def _initial_state_satisfied(result) -> bool:
         ("<J1> F nonexistent", True),
         ("<JF r", True),
         ("F r", True),
-        ("<J0> F r", True),
+        ("<2> F r", True),
     ],
 )
 def test_ol_rejects_invalid_input(test_data_dir, formula, expect_error):
@@ -70,6 +70,7 @@ def test_ol_medium_fixture_reachability(test_data_dir, formula, expected):
         ("<J30> !goal U goal", True),
         ("<J30> safe R goal", False),
         ("<J30> !goal W goal", False),
+        ("<J0> F (safe && goal)", False),
     ],
 )
 def test_ol_testvitamin_cost_bounded_operators(test_data_dir, formula, expected):

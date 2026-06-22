@@ -11,6 +11,7 @@ import re
 from typing import Optional
 
 from ..parser_utils import (
+    PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_ast,
     validate_coalition,
@@ -42,8 +43,8 @@ class ATLParser(BaseLogicParser):
         return verify_token(self.lexer, token_name, string, case_sensitive=False)
 
     # --- ATL Specific Tokens ---
-    t_COALITION = r"<\d+(?:,\d+)*>"
-    t_PROP = r"[a-z][a-z\d_]*"
+    t_COALITION = r"<>|<\d+(?:,\d+)*>"
+    t_PROP = PROPOSITION_TOKEN_PATTERN
 
     # --- Grammar Rules ---
     # Binary boolean operators are inherited from BaseLogicParser
@@ -52,7 +53,8 @@ class ATLParser(BaseLogicParser):
         """expression : COALITION expression UNTIL expression
         | COALITION LPAREN expression UNTIL expression RPAREN"""
         coalition_str = p[1]
-        validate_coalition(coalition_str, self.n_agent)
+        if coalition_str != "<>":
+            validate_coalition(coalition_str, self.n_agent)
         # Handle both forms: <coalition>expr1 U expr2 and <coalition>(expr1 U expr2)
         if len(p) == 5:
             p[0] = (p[1] + p[3], p[2], p[4])
@@ -64,7 +66,8 @@ class ATLParser(BaseLogicParser):
         | COALITION NEXT expression
         | COALITION EVENTUALLY expression"""
         coalition_str = p[1]
-        validate_coalition(coalition_str, self.n_agent)
+        if coalition_str != "<>":
+            validate_coalition(coalition_str, self.n_agent)
         p[0] = (p[1] + p[2], p[3])
 
     # --- Validation and Overrides ---
@@ -74,14 +77,11 @@ class ATLParser(BaseLogicParser):
         return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
-        _ALLOWED_UPPERCASE_CHARS = {"U", "G", "X", "F"}
-
         return run_common_prechecks(
             formula,
             allow_hash_at=False,
             coalition_required=True,
             allow_negative_agents=False,
-            allowed_uppercase=_ALLOWED_UPPERCASE_CHARS,
             allowed_operators=None,
         )
 
@@ -109,7 +109,7 @@ class ATLParser(BaseLogicParser):
         }
 
         _COALITION_OPERATOR_PATTERN = re.compile(
-            r"^<\d+(?:,\d+)*>(U|G|X|F|UNTIL|GLOBALLY|NEXT|EVENTUALLY)$",
+            r"^<>(U|G|X|F|UNTIL|GLOBALLY|NEXT|EVENTUALLY)$|^<\d+(?:,\d+)*>(U|G|X|F|UNTIL|GLOBALLY|NEXT|EVENTUALLY)$",
             re.IGNORECASE,
         )
 

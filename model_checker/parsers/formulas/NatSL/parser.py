@@ -10,6 +10,7 @@ Behavior:
 
 from typing import Optional
 
+from model_checker.parsers.syntax_patterns import PROPOSITION_TOKEN
 from ..parser_utils import run_common_prechecks
 from ..shared_parser import BaseLogicParser
 
@@ -56,7 +57,6 @@ class NatSLParser(BaseLogicParser):
         return t
 
     def t_PROP(self, t):
-        r"[a-z][a-z0-9_]*"
         reserved = {
             "eventually": "EVENTUALLY",
             "not": "NOT",
@@ -129,6 +129,8 @@ class NatSLParser(BaseLogicParser):
             formula,
             coalition_required=False,
             allow_negative_agents=False,
-            allowed_uppercase={"E", "A", "F"},
             allowed_operators=set(":(),!{}"),
         )
+
+
+NatSLParser.t_PROP.__doc__ = PROPOSITION_TOKEN

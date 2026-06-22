@@ -72,33 +72,41 @@ class TestParseCgsFile:
 
     def test_minimal_content_fills_instance(self):
         lines = _minimal_cgs_lines()
-        instance = CGS()
-        cgs_parser.parse_cgs_file(lines, instance)
+        cgs_parser.parse_cgs_file(lines, CGS())
 
-        assert len(instance.states) == 2
-        assert instance.states[0] == "s0" and instance.states[1] == "s1"
-        assert instance.initial_state == "s0"
-        assert instance.number_of_agents == 2
-        assert instance.get_number_of_agents() == 2
-        assert len(instance.atomic_propositions) == 1
-        assert instance.atomic_propositions[0] == "p"
-        assert len(instance.graph) == 2
-        assert len(instance.matrix_prop) == 2
-        assert instance.actions is not None
+        assert len(CGS().states) == 2
+        assert CGS().states[0] == "s0" and CGS().states[1] == "s1"
+        assert CGS().initial_state == "s0"
+        assert CGS().number_of_agents == 2
+        assert CGS().get_number_of_agents() == 2
+        assert len(CGS().atomic_propositions) == 1
+        assert CGS().atomic_propositions[0] == "p"
+        assert len(CGS().graph) == 2
+        assert len(CGS().matrix_prop) == 2
+        assert CGS().actions is not None
 
     def test_invalid_atomic_proposition_name_raises(self):
         lines = _minimal_cgs_lines()
         for i, line in enumerate(lines):
             if line == "p":
-                lines[i] = "A_w"
+                lines[i] = "1goal"
                 break
 
-        instance = CGS()
         with pytest.raises(
             ValueError,
-            match=r"Atomic proposition 'A_w' is invalid",
+            match=r"Atomic proposition '1goal' is invalid",
         ):
-            cgs_parser.parse_cgs_file(lines, instance)
+            cgs_parser.parse_cgs_file(lines, CGS())
+
+    def test_uppercase_atomic_proposition_name_is_accepted(self):
+        lines = _minimal_cgs_lines()
+        for i, line in enumerate(lines):
+            if line == "p":
+                lines[i] = "Goal"
+                break
+
+        cgs_parser.parse_cgs_file(lines, CGS())
+        assert "Goal" in CGS().atomic_propositions
 
     def test_invalid_number_of_agents_raises(self):
         lines = _minimal_cgs_lines()
@@ -107,37 +115,34 @@ class TestParseCgsFile:
                 lines = lines[:i] + ["not_an_int"] + lines[i + 1 :]
                 break
 
-        instance = CGS()
         with pytest.raises(
             ValueError,
             match="Invalid value for Number_of_agents.*Expected a valid integer",
         ):
-            cgs_parser.parse_cgs_file(lines, instance)
+            cgs_parser.parse_cgs_file(lines, CGS())
 
     def test_extension_section_skipped(self):
         lines = _minimal_cgs_lines()
         insert_at = next(i for i, L in enumerate(lines) if L == "Atomic_propositions")
         lines = lines[:insert_at] + ["Capacities", "cap1"] + lines[insert_at:]
 
-        instance = CGS()
-        cgs_parser.parse_cgs_file(lines, instance)
+        cgs_parser.parse_cgs_file(lines, CGS())
 
-        assert instance.initial_state == "s0"
-        assert instance.number_of_agents == 2
-        assert len(instance.atomic_propositions) == 1
+        assert CGS().initial_state == "s0"
+        assert CGS().number_of_agents == 2
+        assert len(CGS().atomic_propositions) == 1
 
     def test_duplicate_section_warns(self):
         lines = _minimal_cgs_lines()
         idx = next(i for i, L in enumerate(lines) if L == "Initial_State")
         lines = lines[: idx + 1] + ["Initial_State", "s1"] + lines[idx + 2 :]
 
-        instance = CGS()
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            cgs_parser.parse_cgs_file(lines, instance)
+            cgs_parser.parse_cgs_file(lines, CGS())
 
         assert any("Duplicate 'Initial_State'" in str(m.message) for m in w)
-        assert instance.initial_state == "s1"
+        assert CGS().initial_state == "s1"
 
     def test_empty_transition_yields_empty_graph(self):
         lines = [
@@ -152,12 +157,11 @@ class TestParseCgsFile:
             "Number_of_agents",
             "1",
         ]
-        instance = CGS()
-        cgs_parser.parse_cgs_file(lines, instance)
+        cgs_parser.parse_cgs_file(lines, CGS())
 
-        assert instance.graph == []
-        assert instance.states is not None and len(instance.states) == 1
-        assert instance.number_of_agents == 1
+        assert CGS().graph == []
+        assert CGS().states is not None and len(CGS().states) == 1
+        assert CGS().number_of_agents == 1
 
 
 @pytest.mark.unit

@@ -8,7 +8,7 @@ What it handles:
 import re
 from typing import Optional
 
-from ..parser_utils import run_common_prechecks
+from ..parser_utils import PROPOSITION_AST_PATTERN, PROPOSITION_TOKEN_PATTERN, run_common_prechecks
 from ..shared_parser import BaseLogicParser
 
 
@@ -24,7 +24,7 @@ class LTLParser(BaseLogicParser):
         self.tokens.extend(["PROP"])
         self.build()
 
-    t_PROP = r"[a-z][a-z0-9_]*"
+    t_PROP = PROPOSITION_TOKEN_PATTERN
 
     # --- Grammar Rules ---
 
@@ -45,7 +45,6 @@ class LTLParser(BaseLogicParser):
             formula,
             allow_hash_at=False,
             coalition_required=False,
-            allowed_uppercase={"X", "G", "F", "U", "R", "W"},
         )
 
     def _post_validation(self, formula, result):
@@ -75,7 +74,7 @@ class LTLParser(BaseLogicParser):
             if isinstance(r, str):
                 if r in _VALID_OPERATORS or r.upper() in _VALID_OPERATORS:
                     return True
-                if not re.match(r"^[a-z][a-z0-9_]*$", r):
+                if not PROPOSITION_AST_PATTERN.match(r):
                     return False
             elif isinstance(r, tuple):
                 for item in r:

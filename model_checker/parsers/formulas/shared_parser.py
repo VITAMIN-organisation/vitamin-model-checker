@@ -36,22 +36,22 @@ class BaseLogicParser:
     t_RPAREN = r"\)"
 
     def t_UNTIL(self, t):
-        r"U|until\b"
+        r"U(?![a-zA-Z0-9_])|until\b"
         t.value = "U"
         return t
 
     def t_GLOBALLY(self, t):
-        r"G|globally\b|always\b"
+        r"G(?![a-zA-Z0-9_])|globally\b|always\b"
         t.value = "G"
         return t
 
     def t_NEXT(self, t):
-        r"X|next\b"
+        r"X(?![a-zA-Z0-9_])|next\b"
         t.value = "X"
         return t
 
     def t_EVENTUALLY(self, t):
-        r"F|eventually\b"
+        r"F(?![a-zA-Z0-9_])|eventually\b"
         t.value = "F"
         return t
 

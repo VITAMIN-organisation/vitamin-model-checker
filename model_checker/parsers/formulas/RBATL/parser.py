@@ -17,6 +17,7 @@ import re
 from typing import Optional
 
 from ..parser_utils import (
+    PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_coalition_bound_token,
     verify_token,
@@ -50,7 +51,7 @@ class RBATLParser(BaseLogicParser):
         self.bound_limit = 1_000_000
         self.build()
 
-    t_PROP = r"[a-z][a-z0-9_]*"
+    t_PROP = PROPOSITION_TOKEN_PATTERN
     t_COALITION_BOUND = r"<\d+(?:,\d+)*><\d+(?:,\d+)*>"
 
     def t_RELEASE(self, t):
@@ -96,13 +97,11 @@ class RBATLParser(BaseLogicParser):
         return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
-        _ALLOWED_UPPERCASE = {"F", "G", "X", "U", "R", "W"}
         valid, err = run_common_prechecks(
             formula,
             allow_hash_at=True,
             coalition_required=False,
             allow_negative_agents=False,
-            allowed_uppercase=_ALLOWED_UPPERCASE,
             allowed_operators=None,
         )
         if not valid:

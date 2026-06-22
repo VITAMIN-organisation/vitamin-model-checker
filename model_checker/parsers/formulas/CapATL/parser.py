@@ -24,6 +24,7 @@ import re
 from typing import Optional
 
 from ..parser_utils import (
+    PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_ast,
     validate_coalition,
@@ -87,7 +88,7 @@ class CapATLParser(BaseLogicParser):
         return t
 
     t_AGENT = r"\d+"
-    t_PROP = r"[a-z][a-z0-9_]*"
+    t_PROP = PROPOSITION_TOKEN_PATTERN
 
     # === Grammar rules ===
     def p_expression_binary(self, p):
@@ -142,14 +143,11 @@ class CapATLParser(BaseLogicParser):
         return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
-        _ALLOWED_UPPERCASE_CHARS = {"U", "R", "X", "F", "G", "K", "I", "S"}
-
         valid, err = run_common_prechecks(
             formula,
             allow_hash_at=False,
             coalition_required=True,
             allow_negative_agents=False,
-            allowed_uppercase=_ALLOWED_UPPERCASE_CHARS,
             allowed_operators=set("<>(),!&|->{}"),
         )
         if not valid:

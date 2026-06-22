@@ -10,6 +10,13 @@ logger = logging.getLogger(__name__)
 _CAPACITY_PATTERN = r"(!?|not)?<\{((?:\d+,)*\d+)\},\s*(\d+)>"
 
 
+def _normalize_ctl_spacing(ctl_formula: str) -> str:
+    """Insert spaces so CTL path/temporal operators are not glued to propositions."""
+    ctl_formula = re.sub(r"([AE])([FGXU])", r"\1 \2", ctl_formula)
+    ctl_formula = re.sub(r"([FGXU])(?=[a-zA-Z])", r"\1 ", ctl_formula)
+    return ctl_formula
+
+
 def natatl_to_ctl(natatl_formula: str) -> str:
     """
     Transform a NatATL formula into a CTL formula (using "FORALL" path quantifier).
@@ -24,6 +31,7 @@ def natatl_to_ctl(natatl_formula: str) -> str:
 
     negation = match.group(1)
     ctl_formula = re.sub(pattern, "A", natatl_formula)
+    ctl_formula = _normalize_ctl_spacing(ctl_formula)
 
     if negation:
         ctl_formula = f"!({ctl_formula})"

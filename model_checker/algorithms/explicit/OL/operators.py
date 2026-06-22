@@ -15,9 +15,10 @@ from model_checker.algorithms.explicit.OL.preimage import (
     states_with_next_in,
     states_within_cost,
 )
+from model_checker.parsers.syntax_patterns import OL_DEMONIC_BOUND_PREFIX_RE
 from model_checker.utils.literals import parse_state_set_literal
 
-_OL_BOUND_RE = re.compile(r"^<J(\d+)>")
+_OL_BOUND_RE = OL_DEMONIC_BOUND_PREFIX_RE
 
 
 def extract_bound(formula_node_value: str) -> int:

@@ -5,17 +5,22 @@ Supported:
 - Boolean connectives (&&, ||, !, ->) and temporal ops (U, R, W, G, X, F).
 
 Rejects:
-- Missing or malformed demonic costs (e.g., `<J>F p`, `<J0>F p`, `<1>F p`).
+- Numeric-only prefixes (e.g. `<5>F p`) and bare temporal operators (e.g. `F p`).
+- Missing or malformed demonic costs (e.g., `<J>F p`).
 - Empty formulas, non-ASCII, nulls, or disallowed special characters.
 
 Returns:
 - AST tuple on success, or None on invalid input.
 """
 
-import re
 from typing import Optional
 
+from model_checker.parsers.syntax_patterns import (
+    OL_DEMONIC_BOUND_FULL_RE,
+    OL_DEMONIC_TOKEN,
+)
 from ..parser_utils import (
+    PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     verify_token,
 )
@@ -50,8 +55,8 @@ class OLParser(BaseLogicParser):
         self.build()
 
     # === Tokens ===
-    t_PROP = r"[a-z][a-z0-9_]*"
-    t_DEMONIC = r"<J[1-9]\d*>"
+    t_PROP = PROPOSITION_TOKEN_PATTERN
+    t_DEMONIC = OL_DEMONIC_TOKEN
 
     def t_RELEASE(self, t):
         r"R|release\b"
@@ -82,7 +87,7 @@ class OLParser(BaseLogicParser):
 
     def _validate_demonic(self, demonic_str):
         """Validate and extract cost value from demonic token like <J5>."""
-        match = re.match(r"<J([1-9]\d*)>", demonic_str)
+        match = OL_DEMONIC_BOUND_FULL_RE.match(demonic_str)
         if not match:
             raise DemonicValueError(f"Invalid demonic token: {demonic_str}")
         return match.group(1)
@@ -100,11 +105,9 @@ class OLParser(BaseLogicParser):
             formula,
             allow_hash_at=True,
             coalition_required=False,
-            allowed_uppercase={"F", "G", "X", "U", "R", "W", "J"},
             extra_invalid_regexes=(
-                r"<J0>",  # zero cost
-                r"<J>(?!\d)",  # missing cost
-                r"(?<!J)<\d+>",  # numeric coalition without J prefix
+                r"<J>(?!\d)",  # missing cost after J
+                r"<(?!J)\d+>",  # numeric-only prefix without J
             ),
         )
 

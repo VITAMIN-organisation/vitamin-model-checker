@@ -12,6 +12,7 @@ from typing import Optional
 
 from model_checker.parsers.formulas.parser_utils import (
     CoalitionValueError,
+    PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_ast,
     validate_coalition,
@@ -52,7 +53,7 @@ class IATLParser(BaseLogicParser):
 
     t_COALITION = r"<\d+(?:,\d+)*>"
     t_COALITION_UNIVERSAL = r"\[\d+(?:,\d+)*\]"
-    t_PROP = r"[a-z][a-z\d_]*"
+    t_PROP = PROPOSITION_TOKEN_PATTERN
 
     def p_expression_ternary(self, p):
         """expression : COALITION expression UNTIL expression
@@ -97,7 +98,6 @@ class IATLParser(BaseLogicParser):
             allow_hash_at=False,
             coalition_required=True,
             allow_negative_agents=False,
-            allowed_uppercase=set("UGXFR"),
             allowed_operators=set("<>(),!&|->[]"),
         )
 

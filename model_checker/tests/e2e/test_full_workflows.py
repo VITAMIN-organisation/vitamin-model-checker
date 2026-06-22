@@ -70,7 +70,7 @@ class TestBasicModelCheckingWorkflow:
             str(test_data_dir / "capCGS/CapATL/capatl_1agent_4states_capacities.txt"),
         )
         ol_result = ol_check(
-            "<5>F p",
+            "<J5> F p",
             str(test_data_dir / "costCGS/OL/ol_2agents_medium_6states_costs.txt"),
         )
         rbatl_result = rbatl_check(

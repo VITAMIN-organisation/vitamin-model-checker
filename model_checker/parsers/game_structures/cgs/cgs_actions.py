@@ -23,7 +23,9 @@ def format_agents(agents: List[int]) -> Set[int]:
 
 def get_agents_from_coalition(coalition: str) -> Set[str]:
     """Split a comma-separated coalition string (e.g. "1,2,3") into a set of agent ids."""
-    return set(coalition.split(","))
+    if not coalition or not coalition.strip():
+        return set()
+    return {value for value in coalition.split(",") if value}
 
 
 JOINT_CHOICE_SEPARATOR = ","

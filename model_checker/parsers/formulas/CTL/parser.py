@@ -18,7 +18,7 @@ Behavior:
 import re
 from typing import Optional
 
-from ..parser_utils import run_common_prechecks
+from ..parser_utils import PROPOSITION_AST_PATTERN, PROPOSITION_TOKEN_PATTERN, run_common_prechecks
 from ..shared_parser import BaseLogicParser
 
 
@@ -38,7 +38,7 @@ class CTLParser(BaseLogicParser):
     # --- CTL Specific Tokens ---
     t_LBRACKET = r"\["
     t_RBRACKET = r"\]"
-    t_PROP = r"[a-z][a-z0-9_]*"
+    t_PROP = PROPOSITION_TOKEN_PATTERN
 
     def t_FORALL(self, t):
         r"A|forall"
@@ -83,7 +83,6 @@ class CTLParser(BaseLogicParser):
             coalition_required=False,
             allow_hash_at=False,
             allow_negative_agents=False,
-            allowed_uppercase=None,  # uppercase allowed for operators/quantifiers
             allowed_operators=set("<>(),[]!&|->"),
         )
         if not valid:
@@ -146,7 +145,7 @@ class CTLParser(BaseLogicParser):
             if isinstance(r, str):
                 if r in _VALID_OPERATORS or r.upper() in _VALID_OPERATORS:
                     return True
-                return bool(re.match(r"^[a-z][a-z0-9_]*$", r))
+                return bool(PROPOSITION_AST_PATTERN.match(r))
             if isinstance(r, tuple):
                 return all(_validate_result(item) for item in r)
             return False

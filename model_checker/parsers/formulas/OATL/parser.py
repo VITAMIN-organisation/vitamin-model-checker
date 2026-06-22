@@ -17,6 +17,7 @@ import re
 from typing import Optional
 
 from ..parser_utils import (
+    PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_coalition_bound_token,
     verify_token,
@@ -50,7 +51,7 @@ class OATLParser(BaseLogicParser):
         self.build()
 
     # === Tokens ===
-    t_PROP = r"[a-z][a-z0-9_]*"
+    t_PROP = PROPOSITION_TOKEN_PATTERN
     t_COALITION_DEMONIC = r"<\d+(?:,\d+)*><[1-9]\d*>"
 
     def t_RELEASE(self, t):
@@ -96,7 +97,6 @@ class OATLParser(BaseLogicParser):
             formula,
             allow_hash_at=True,
             coalition_required=True,
-            allowed_uppercase={"F", "G", "X", "U", "R", "W"},
             extra_invalid_regexes=(),
         )
         if not valid:

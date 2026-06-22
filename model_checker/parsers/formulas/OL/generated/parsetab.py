@@ -27,12 +27,12 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> DEMONIC expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',68),
-  ('expression -> DEMONIC expression WEAK expression','expression',4,'p_expression_ternary','parser.py',69),
-  ('expression -> DEMONIC expression RELEASE expression','expression',4,'p_expression_ternary','parser.py',70),
-  ('expression -> DEMONIC GLOBALLY expression','expression',3,'p_expression_unary','parser.py',76),
-  ('expression -> DEMONIC NEXT expression','expression',3,'p_expression_unary','parser.py',77),
-  ('expression -> DEMONIC EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',78),
+  ('expression -> DEMONIC expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',73),
+  ('expression -> DEMONIC expression WEAK expression','expression',4,'p_expression_ternary','parser.py',74),
+  ('expression -> DEMONIC expression RELEASE expression','expression',4,'p_expression_ternary','parser.py',75),
+  ('expression -> DEMONIC GLOBALLY expression','expression',3,'p_expression_unary','parser.py',81),
+  ('expression -> DEMONIC NEXT expression','expression',3,'p_expression_unary','parser.py',82),
+  ('expression -> DEMONIC EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',83),
   ('expression -> expression AND expression','expression',3,'p_expression_binary','shared_parser.py',109),
   ('expression -> expression OR expression','expression',3,'p_expression_binary','shared_parser.py',110),
   ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','shared_parser.py',111),
