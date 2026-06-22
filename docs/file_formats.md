@@ -195,8 +195,8 @@ Common boolean operators:
 ## Practical Rules
 
 - End every formula with `;`.
-- Keep proposition names lowercase when possible, for example `ready` or
-  `goal_reached`.
+- Keep proposition names readable and letter-led, for example `ready`,
+  `Goal`, or `goal_reached`. Mixed case is allowed.
 - Avoid reserved words such as `and`, `or`, `F`, `G`, and `exists`.
 - Comments are allowed with `#` or `//`.
 - Multi-line formulas are fine as long as the final formula has a semicolon.

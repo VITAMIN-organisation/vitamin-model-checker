@@ -111,7 +111,7 @@ CTL is a branching-time logic defined over computation trees. Formulas are evalu
 **Supported Syntax:**
 1.  **Quantifiers**: `E` (exist), `A` (forall).
 2.  **Operators**: `X` (next), `F` (eventually), `G` (globally/always), `U` (until).
-3.  **Propositions**: `[a-z][a-z0-9_]*` (Lowercase start, then alphanumerics/underscores).
+3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*` (Letter start, then alphanumerics/underscores).
 4.  **Grouping**: Parentheses `()` and square brackets `[]` are both supported. (Note: `[]` is unique to CTL).
 
 **Validation Rules:**
@@ -135,7 +135,7 @@ E (p U [q && AG r])
 | **Temporal Ops** | X, F, G, U | `X`, `F`, `G`, `U` (also `next`, `eventually`, etc.) |
 | **Boolean Ops** | AND, OR, NOT, IMPLIES | `&&`, `\|\|`, `!`, `->` (plus keywords) |
 | **Grouping** | ( ) | `( )` and `[ ]` |
-| **State Props** | p, q | `[a-z][a-z0-9_]*` |
+| **State Props** | p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
 
 ---
 
@@ -166,12 +166,12 @@ LTL is a linear-time logic evaluated over single infinite paths (sequences of st
 
 **Supported Syntax:**
 1.  **Operators**: `X`, `F`, `G`, `U`, `R`, `W` (and their keyword aliases).
-2.  **Propositions**: `[a-z][a-z0-9_]*`.
+2.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 3.  **No Quantifiers**: Path quantifiers (A/E) are NOT allowed in LTL formulas in VITAMIN.
 
 **Validation Rules:**
 - LTL formulas are checked for linear temporal structure.
-- Propositions must follow the standard lowercase identifier pattern.
+- Propositions must follow the standard letter-start identifier pattern.
 
 **Formula Examples:**
 ```text
@@ -220,7 +220,7 @@ ATL extends CTL with coalition operators `[A]` (in VITAMIN written as `<A>`) to 
 **Supported Syntax:**
 1.  **Coalition Syntax**: `<1,2>` (Angle brackets, comma-separated agent indices). Braces `{ }` are NOT used in the implementation's surface syntax for plain ATL.
 2.  **Operators**: `X`, `F`, `G`, `U`.
-3.  **Propositions**: `[a-z][a-z0-9_]*`.
+3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 4.  **Validation**: Agent indices must be in range `[1, n_agent]`.
 
 **Formula Examples:**
@@ -236,7 +236,7 @@ ATL extends CTL with coalition operators `[A]` (in VITAMIN written as `<A>`) to 
 | :--- | :--- | :--- |
 | **Coalition** | <{1,2}> | `<1,2>` |
 | **Temporal Ops** | X, F, G, U | `X`, `F`, `G`, `U` |
-| **Propositions** | p, q | `[a-z][a-z0-9_]*` |
+| **Propositions** | p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
 | **Valuation** | Binary (ATL) / [0,1] (ATLF) | Handled by model checker |
 
 ---
@@ -260,7 +260,7 @@ NatATL extends ATL with explicit capacity constraints on coalitions, allowing re
 **Supported Syntax:**
 1.  **Canonical Form**: `<{1,2}, 3>` (Angle brackets, curly braces for agent set, comma, then positive integer bound).
 2.  **Operators**: `X`, `F`, `G`, `U`.
-3.  **Propositions**: `[a-z][a-z0-9_]*`.
+3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 
 **Validation Rules:**
 - **Braces Required**: Unlike standard ATL, NatATL MUST use curly braces for the agent set `<{...}, k>`.
@@ -279,7 +279,7 @@ NatATL extends ATL with explicit capacity constraints on coalitions, allowing re
 | **Coalition** | <{A}, k> | `<{A}, k>` (Braces required) |
 | **Bound k** | Positive integer | Mandatory integer |
 | **Temporal Ops** | X, F, G, U | `X`, `F`, `G`, `U` |
-| **Propositions** | p, q | `[a-z][a-z0-9_]*` |
+| **Propositions** | p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
 
 ### Memory Models and Variants
 
@@ -387,7 +387,7 @@ OATL extends ATL with demonic cost bounds. It assesses whether a coalition can a
 **Supported Syntax:**
 1.  **Format**: `<coalition><bound>` (e.g., `<1,2><10>`).
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W` (and their keywords).
-3.  **Propositions**: `[a-z][a-z0-9_]*`.
+3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 4.  **Boolean Constants**: Supports `true` and `false`.
 
 **Validation Rules:**
@@ -408,7 +408,7 @@ OATL extends ATL with demonic cost bounds. It assesses whether a coalition can a
 | **Coalition** | <A> | `<1,2>` (Indices) |
 | **Cost Bound** | <k> | `<k>` (Mandatory) |
 | **Temporal Ops**| X, F, G, U | `X`, `F`, `G`, `U`, `R`, `W` |
-| **Propositions**| p, q | `[a-z][a-z0-9_]*` |
+| **Propositions**| p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
 
 > [!NOTE]
 > **Operator Support (R, W):** While some theoretical papers for OATL/OL define only a minimal set of operators (`X, F, G, U`), the VITAMIN implementation includes **`R` (Release)** and **`W` (Weak Until)** for practical expressivity and duality. This allows users to write more complex properties without manual conversion to negated forms.
@@ -437,11 +437,11 @@ OL is the linear-time counterpart to OATL. It evaluates cost-bounded formulas ov
 **Supported Syntax:**
 1.  **Format**: `<Jk>` (e.g., `<J5>`). Note the mandatory `J` within the angle brackets.
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W`.
-3.  **Propositions**: `[a-z][a-z0-9_]*`.
+3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 
 **Validation Rules:**
 - **Mandatory 'J'**: OL prefixes MUST include the letter `J` after the opening angle bracket (e.g., `<J10>`). A numeric-only prefix (e.g., `<10>`) is rejected.
-- **Bound Requirement**: Every temporal operator must be prefixed.
+- **Bound Requirement**: Every temporal operator must be prefixed with `<Jk>`. Bare `F p` and numeric-only `<5> F p` are rejected.
 
 **Formula Examples:**
 ```text
@@ -505,7 +505,7 @@ RABATL extends ATL with recursive strategies and double bounds:
    - Same as OATL: `&&`, `||`, `!`, `->`
 
 4. **Propositions:**
-   - Same as OATL: `[a-z][a-z0-9_]*`
+   - Same as OATL: `[a-zA-Z][a-zA-Z0-9_]*`
 
 **Formula Examples:**
 ```
@@ -563,7 +563,7 @@ Resource-Bounded ATL (RBATL) and its recursive variant (RABATL) reason about coa
 1.  **Format**: `<coalition><bound1,bound2,...>` (e.g., `<1><10,5>`).
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W`.
 3.  **Multi-Resource Bounds**: Resources MUST be comma-separated within the second set of angle brackets.
-4.  **Propositions**: Standard `[a-z][a-z0-9_]*`.
+4.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 
 **Formula Examples:**
 ```text
@@ -579,7 +579,7 @@ Resource-Bounded ATL (RBATL) and its recursive variant (RABATL) reason about coa
 | **Coalition** | <A> | `<1,2>` (Indices) |
 | **Vector Bound** | <b1, b2, ...> | `<10,5>` (Comma-separated) |
 | **Temporal Ops** | X, F, G, U | `X`, `F`, `G`, `U`, `R`, `W` |
-| **Propositions** | p, q | `[a-z][a-z0-9_]*` |
+| **Propositions** | p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
 
 > [!NOTE]
 > **Duality & Completeness:** Similarly to OATL, the RBATL implementation supports a full set of temporal operators (`U, R, W, G, X, F`) to ensure syntactic completeness and ease of use for complex resource-bounded specifications.
@@ -711,7 +711,7 @@ Coalitional Optimal Temporal Logic (COTL) is designed for reasoning about optima
 **Supported Syntax:**
 1.  **Format**: `<coalition><bound>` (e.g., `<1,2><5>`).
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W`.
-3.  **Propositions**: Standard `[a-z][a-z0-9_]*`.
+3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 
 **Formula Examples:**
 ```text
@@ -727,7 +727,7 @@ Coalitional Optimal Temporal Logic (COTL) is designed for reasoning about optima
 | **Coalition** | <J> | `<1,2>` (Indices) |
 | **Cost Bound** | <k> | `<5>` (Integer) |
 | **Temporal Ops**| X, F, G, U | `X`, `F`, `G`, `U`, `R`, `W` |
-| **Propositions**| p, q | `[a-z][a-z0-9_]*` |
+| **Propositions**| p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
 
 > [!NOTE]
 > **Implementation Note**: COTL in VITAMIN currently utilizes the same syntactic parser as **OATL**. The distinction lies in the underlying verification engine's handling of cost-optimal strategy synthesis.
@@ -857,12 +857,9 @@ Linear-style timed logic with demonic cost prefixes over `timedCGS` models.
 Atomic identifiers for propositions and variables must avoid clashing with reserved keywords (e.g., `and`, `or`, `exists`, `forall`, `F`, `G`).
 
 **Naming Conventions:**
-- **Standard**: `[a-z][a-z0-9_]*`
-    - Logic: CTL, LTL, ATL, NatATL, OATL, OL, RBATL, CapATL, COTL, ICTL, IATL, Wallet_ATL, TCTL, TOL.
-    - Rule: Lowercase start, then alphanumerics or underscores.
-- **Extended (NatSL)**: `[A-Za-z_][A-Za-z0-9_]*`
-    - Logic: NatSL.
-    - Rule: Can start with uppercase or underscores, and use uppercase/lowercase internally.
+- **Standard**: `[a-zA-Z][a-zA-Z0-9_]*`
+    - Logic: CTL, LTL, ATL, NatATL, NatSL, OATL, OL, RBATL, CapATL, COTL, ICTL, IATL, Wallet_ATL, TCTL, TOL.
+    - Rule: Letter start (upper or lower), then alphanumerics or underscores. Examples: `p`, `Goal`, `safe_1`.
 
 ---
 
