@@ -41,6 +41,10 @@ def detect_model_type_from_content(content: str) -> str:
     Returns:
         One of CGS, costCGS, or capCGS.
     """
+    if "Wallets" in content:
+        return "WalletCGS"
+    if "Clocks" in content or "Clock_constraints" in content:
+        return "timedCGS"
     if "Transition_With_Costs" in content or "Costs_for_actions" in content:
         return "costCGS"
     if "Capacities" in content or "Capacities_assignment" in content:

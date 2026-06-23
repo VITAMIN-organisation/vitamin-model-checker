@@ -111,7 +111,7 @@ def universal_natatl_recall(
 
 
 def existential_natatl_sequential(
-    model_path: str, formula: str
+    model_path: str, formula: str, *, allow_direct_solution: bool = True
 ) -> Tuple[bool, List[Any], int, Any]:
     """
     Search for existential strategies and collect pruned trees (Sequential).
@@ -149,7 +149,10 @@ def existential_natatl_sequential(
             if pruning(
                 cgs, tree_copy, height, filename, CTLformula, *collective_strategy
             ):
-                return (True, [], height, cgs)
+                if allow_direct_solution:
+                    return (True, [], height, cgs)
+                pruned_trees.append(tree_copy)
+                continue
             pruned_trees.append(tree_copy)
         i += 1
 
@@ -159,7 +162,7 @@ def existential_natatl_sequential(
 def existential_natatl_alternated(
     model_path: str,
     existential_formula: str,
-    universal_formula: str,
+    universal_formulas,
     start_time: float,
 ) -> bool:
     """
@@ -175,6 +178,9 @@ def existential_natatl_alternated(
         filename,
         cgs,
     ) = initialize(model_path, existential_formula)
+
+    if isinstance(universal_formulas, str):
+        universal_formulas = [universal_formulas]
 
     height = max(3, k)
     found_solution = False
@@ -199,8 +205,11 @@ def existential_natatl_alternated(
             ):
                 return True
 
-            if universal_natatl_recall(
-                [tree_copy], model_path, universal_formula, 1, height, start_time, cgs
+            if all(
+                universal_natatl_recall(
+                    [tree_copy], model_path, uf, 1, height, start_time, cgs
+                )
+                for uf in universal_formulas
             ):
                 return True
         i += 1

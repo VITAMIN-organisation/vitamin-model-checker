@@ -9,11 +9,7 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
-from model_checker.algorithms.explicit.NatATL.NatATLtoCTL import (
-    get_agents_from_natatl,
-    get_k_value,
-    natatl_to_ctl,
-)
+from model_checker.algorithms.explicit.NatATL.NatATLtoCTL import prepare_natatl_formula
 from model_checker.models.model_factory import (
     create_model_parser_for_logic,
 )
@@ -72,15 +68,13 @@ def initialize(
         cgs_validation.validate_nat_idle_requirements(model_parser.graph, n)
         cgs_validation.validate_recall_structure(model_parser.graph, n)
 
-    CTLformula = natatl_to_ctl(formula)
+    CTLformula, agents, k = prepare_natatl_formula(
+        formula, model_parser.get_number_of_agents()
+    )
     logger.debug("NatATL formula: %s", formula)
     logger.debug("Converted CTL formula: %s", CTLformula)
-
-    k = get_k_value(formula)
     logger.debug("States: %s", model_parser.states)
     logger.debug("Proposition matrix: %s", model_parser.matrix_prop)
-
-    agents = get_agents_from_natatl(formula)
     logger.debug("Involved agents: %s", agents)
 
     cgs_actions.validate_agent_numbers(agents, model_parser.get_number_of_agents())

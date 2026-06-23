@@ -24,17 +24,33 @@ ICTL_PROPOSITION_TOKEN = (
 # TCTL / TOL: same lexer constraint as ICTL (single-letter E/A/F/G/U/X/R/W stay operators).
 TCTL_TOL_PROPOSITION_TOKEN = ICTL_PROPOSITION_TOKEN
 
-# NatSL temporal atoms after F / !F (single letters a-h only).
-NATSL_TEMPORAL_PROPOSITION_TOKEN = r"[a-h]"
+# Reserved words that must not be used as atomic proposition names (case-insensitive).
+FORMULA_RESERVED_WORDS = frozenset(
+    {
+        "and",
+        "or",
+        "not",
+        "implies",
+        "until",
+        "release",
+        "globally",
+        "next",
+        "eventually",
+        "always",
+        "forall",
+        "exist",
+    }
+)
+
+# NatSL quantifier tokens; uppercase E/A cannot be temporal atoms (lexer ambiguity).
+NATSL_QUANTIFIER_TOKENS = frozenset({"E", "A"})
 
 # NatATL capacity coalitions: <{1,2}, 5>.
 NATATL_CAPACITY_RE = re.compile(rf"<\{{({AGENT_LIST})\}},\s*(\d+)>")
-NATATL_COALITION_TOKEN = rf"<\{{(?:\d+,)*\d+\}},\s*\d+>"
+NATATL_COALITION_TOKEN = r"<\{(?:\d+,)*\d+\},\s*\d+>"
 
 # OATL / RBATL coalition-bound suffix: <1,2><3>.
-COALITION_BOUND_INNER_RE = re.compile(
-    rf"<({AGENT_LIST})><({AGENT_LIST})>"
-)
+COALITION_BOUND_INNER_RE = re.compile(rf"<({AGENT_LIST})><({AGENT_LIST})>")
 
 TRAILING_COALITION_COMMA_RE = re.compile(r"<\d+,>")
 NEGATIVE_AGENT_IN_COALITION_RE = re.compile(r"<-\d+>")

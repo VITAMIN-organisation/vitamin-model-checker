@@ -21,11 +21,9 @@ from model_checker.algorithms.explicit.Wallet_ATL.Wallet_ATL import (
 from model_checker.parsers.formulas.IATL.parser import IATLParser as IATLParser
 from model_checker.parsers.formulas.ICTL.parser import ICTLParser as ICTLParser
 from model_checker.parsers.formulas.TCTL.parser import TCTLParser as TCTLParser
-from model_checker.parsers.formulas.TOL.parser_wrapper import (
-    TOLParserWrapper as TOLParser,
-)
-from model_checker.parsers.formulas.Wallet_ATL.parser_wrapper import (
-    Wallet_ATLParserWrapper as Wallet_ATLParser,
+from model_checker.parsers.formulas.TOL.parser import TOLParser as TOLParser
+from model_checker.parsers.formulas.Wallet_ATL.parser import (
+    Wallet_ATLParser as Wallet_ATLParser,
 )
 
 __all__ = [

@@ -3,6 +3,8 @@
 What it handles:
 - NatSL formulas with quantifier lists, optional bounds, bindings, and simple
   temporal expressions (F, !F).
+- Strategy variables and temporal atoms use the shared atomic proposition policy
+  (same alphabet as CGS models and NatATL).
 
 Behavior:
 - Returns an AST tuple on success; logs syntax issues at debug level.
@@ -10,13 +12,13 @@ Behavior:
 
 from typing import Optional
 
-import re
+from model_checker.parsers.syntax_patterns import PROPOSITION_TOKEN
 
-from model_checker.parsers.syntax_patterns import (
-    NATSL_TEMPORAL_PROPOSITION_TOKEN,
-    PROPOSITION_TOKEN,
+from ..parser_utils import (
+    natsl_temporal_atom_from_parsed_formula,
+    run_common_prechecks,
+    validate_natsl_temporal_atom,
 )
-from ..parser_utils import run_common_prechecks
 from ..shared_parser import BaseLogicParser
 
 
@@ -132,15 +134,12 @@ class NatSLParser(BaseLogicParser):
     def _post_validation(self, formula, result):
         if result is None:
             return False
-        tail = formula.split(":", 1)[-1].strip()
-        match = re.search(r"!?F\s+(\w+)\s*$", tail)
-        if not match:
+        atom = natsl_temporal_atom_from_parsed_formula(result)
+        if atom is None:
             return True
-        atom = match.group(1)
-        if not re.fullmatch(NATSL_TEMPORAL_PROPOSITION_TOKEN, atom):
-            self.errors.append(
-                f"NatSL temporal atom must be a single letter a-h, got '{atom}'"
-            )
+        valid, err = validate_natsl_temporal_atom(atom)
+        if not valid:
+            self.errors.append(err)
             return False
         return True
 

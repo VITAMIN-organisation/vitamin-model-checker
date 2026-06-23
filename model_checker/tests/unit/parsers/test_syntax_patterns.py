@@ -5,7 +5,6 @@ import pytest
 from model_checker.parsers.syntax_patterns import (
     NATATL_CAPACITY_RE,
     PROPOSITION_FULL_RE,
-    PROPOSITION_TOKEN,
 )
 
 
@@ -22,4 +21,3 @@ def test_natatl_capacity_pattern_matches_canonical_form():
     assert match
     assert match.group(1) == "1,2"
     assert match.group(2) == "5"
-

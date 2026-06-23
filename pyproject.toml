@@ -85,7 +85,7 @@ exclude = ["model_checker/tests*"]
 ATL = "model_checker.parsers.formulas.ATL.parser:ATLParser"
 ATLF = "model_checker.parsers.formulas.ATLF.parser:ATLFParser"
 CapATL = "model_checker.parsers.formulas.CapATL.parser:CapATLParser"
-COTL = "model_checker.parsers.formulas.OATL.parser:OATLParser"
+COTL = "model_checker.parsers.formulas.OATL.parser:COTLParser"
 CTL = "model_checker.parsers.formulas.CTL.parser:CTLParser"
 LTL = "model_checker.parsers.formulas.LTL.parser:LTLParser"
 NatATL = "model_checker.parsers.formulas.NatATL.parser:NatATLParser"
@@ -129,6 +129,9 @@ OL = "model_checker.algorithms.explicit.OL.OL:model_checking"
 RABATL = "model_checker.algorithms.explicit.RABATL.RABATL:model_checking"
 RBATL = "model_checker.algorithms.explicit.RBATL.RBATL:model_checking"
 Wallet_ATL = "model_checker.algorithms.explicit.Wallet_ATL.Wallet_ATL:model_checking"
+TCTL = "model_checker.algorithms.explicit.TCTL.TCTL:model_checking"
+TOL = "model_checker.algorithms.explicit.TOL.TOL:model_checking"
+ICTL = "model_checker.algorithms.explicit.ICTL.ICTL:model_checking"
 IATL = "model_checker.algorithms.explicit.IATL.IATL:model_checking"
 
 [project.entry-points."vitamin.metadata"]
@@ -155,7 +158,7 @@ ICTL = "model_checker.parsers.formulas.ICTL:METADATA"
 IATL = "model_checker.parsers.formulas.IATL:METADATA"
 
 [tool.pytest.ini_options]
-testpaths = ["model_checker/tests/unit", "model_checker/tests/integration", "model_checker/tests/e2e"]
+testpaths = ["model_checker/tests/unit", "model_checker/tests/integration", "model_checker/tests/e2e", "model_checker/tests/performance"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"

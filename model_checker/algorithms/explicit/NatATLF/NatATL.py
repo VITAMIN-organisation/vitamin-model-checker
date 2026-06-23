@@ -53,9 +53,10 @@ def model_checking(formula: str, model: str) -> Dict[str, Any]:
             model,
         )
 
-        # NatATLF uses a specific result format for 'res'
+        # NatATLF result fields align with memoryless NatATL (not literal state placeholders).
         is_satisfied = result.get("Satisfiability", False)
-        result["res"] = f"Result: {'{satisfied}' if is_satisfied else '{}'}"
+        result["res"] = f"Result: {is_satisfied}"
+        result["initial_state"] = f"Initial state {cgs.initial_state}: {is_satisfied}"
 
         return result
     except FileNotFoundError:

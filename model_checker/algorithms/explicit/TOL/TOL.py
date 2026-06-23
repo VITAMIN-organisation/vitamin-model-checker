@@ -11,7 +11,7 @@ from model_checker.algorithms.explicit.shared.result_formatters import (
     verify_initial_state,
 )
 from model_checker.algorithms.explicit.TOL.solver import solve_tree
-from model_checker.parsers.formulas.TOL.tol_ply_parser import do_parsing
+from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
@@ -20,9 +20,11 @@ def _core_model_checking(formula: str, filename: str) -> Dict[str, Any]:
     if not formula.strip():
         return {"res": "Error: formula not entered", "initial_state": ""}
 
-    ast = do_parsing(formula.strip())
+    parser = FormulaParserFactory.get_parser_instance("TOL")
+    ast = parser.parse(formula.strip())
     if ast is None:
-        return {"res": "Syntax Error", "initial_state": ""}
+        err = parser.errors[0] if parser.errors else "Syntax Error"
+        return {"res": err, "initial_state": ""}
 
     tcgs = TimedCGS()
     tcgs.read_file(filename)

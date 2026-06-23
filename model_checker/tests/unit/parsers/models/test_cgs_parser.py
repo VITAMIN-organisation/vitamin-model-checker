@@ -63,6 +63,7 @@ class TestCgsParserConstants:
             "Clocks",
             "Clock_constraints",
             "Invariants",
+            "Wallets",
         }
         assert cgs_parser.EXTENSION_SECTION_HEADERS == expected
 
@@ -90,7 +91,9 @@ class TestParseCgsFile:
     def test_agent_labels_section_parsed(self):
         lines = _minimal_cgs_lines()
         idx = next(i for i, line in enumerate(lines) if line == "Number_of_agents")
-        lines = lines[: idx + 2] + ["Agent_labels", "Tianji Opponent"] + lines[idx + 2 :]
+        lines = (
+            lines[: idx + 2] + ["Agent_labels", "Tianji Opponent"] + lines[idx + 2 :]
+        )
 
         cgs = CGS()
         cgs_parser.parse_cgs_file(lines, cgs)

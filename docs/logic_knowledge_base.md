@@ -9,6 +9,8 @@ This document provides a comprehensive knowledge base for all temporal logics im
 3.  **Comparison**: Mapping between formal theory and implementation.
 4.  **Model Syntax**: Requirements for writing models compatible with the logic.
 
+**Logic names:** Full names are used only for logics defined in the VITAMIN paper and standard references (CTL, LTL, ATL). Other implemented logics (OATL, OL, COTL, etc.) are listed by acronym only; their expansions are not fixed in the project literature.
+
 ---
 
 ## Table of Contents
@@ -17,18 +19,18 @@ This document provides a comprehensive knowledge base for all temporal logics im
 2.  [CTL - Computation Tree Logic](#ctl---computation-tree-logic)
 3.  [LTL - Linear Temporal Logic](#ltl---linear-temporal-logic)
 4.  [ATL / ATLF - Alternating-time Temporal Logic](#atl--atlf---alternating-time-temporal-logic)
-5.  [NatATL / NatATLF - Natural ATL](#natatl--natatlf---natural-atl)
-6.  [NatSL - Natural Strategy Logic](#natsl---natural-strategy-logic)
-7.  [OATL - One-sided ATL](#oatl---one-sided-atl)
-8.  [OL - One-sided LTL](#ol---one-sided-ltl)
-9.  [RBATL / RABATL - Resource-Bounded ATL](#rbatl--rabatl---resource-bounded-atl)
-10. [CapATL - Capacity ATL](#capatl---capacity-atl)
-11. [COTL - Coalitional Optimal Temporal Logic](#cotl---coalitional-optimal-temporal-logic)
-12. [Wallet_ATL - Wallet ATL](#wallet_atl---wallet-atl)
-13. [ICTL - Intuitionistic CTL](#ictl---intuitionistic-ctl)
-14. [IATL - Intuitionistic ATL](#iatl---intuitionistic-atl)
-15. [TCTL - Timed CTL](#tctl---timed-ctl)
-16. [TOL - Timed Obligation Logic](#tol---timed-obligation-logic)
+5.  [NatATL / NatATLF](#natatl--natatlf---natural-atl)
+6.  [NatSL](#natsl---natural-strategy-logic)
+7.  [OATL](#oatl)
+8.  [OL](#ol)
+9.  [RBATL / RABATL](#rbatl--rabatl)
+10. [CapATL](#capatl)
+11. [COTL](#cotl)
+12. [Wallet_ATL](#wallet_atl)
+13. [ICTL](#ictl---intuitionistic-ctl)
+14. [IATL](#iatl---intuitionistic-atl)
+15. [TCTL](#tctl---timed-ctl)
+16. [TOL](#tol---timed-obligation-logic)
 17. [Empty Coalition Policy](#empty-coalition-policy)
 18. [Atomic Proposition Policy](#atomic-proposition-policy)
 19. [Model Syntax](#model-syntax)
@@ -111,7 +113,7 @@ CTL is a branching-time logic defined over computation trees. Formulas are evalu
 
 **Supported Syntax:**
 1.  **Quantifiers**: `E` (exist), `A` (forall).
-2.  **Operators**: `X` (next), `F` (eventually), `G` (globally/always), `U` (until).
+2.  **Operators**: `X` (next), `F` (eventually), `G` (globally/always), `U` (until). Release (`AR`/`ER`) is **not** in the CTL surface syntax.
 3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*` (Letter start, then alphanumerics/underscores).
 4.  **Grouping**: Parentheses `()` and square brackets `[]` are both supported. (Note: `[]` is unique to CTL).
 
@@ -142,56 +144,40 @@ E (p U [q && AG r])
 ---
 
 <a id="ltl---linear-temporal-logic"></a>
-## LTL - Linear Temporal Logic
+## LTL
 
 ### Theoretical Background
 
-LTL is a linear-time logic evaluated over single infinite paths (sequences of states). Unlike CTL, there are no path quantifiers.
-
-**Standard Syntax:**
-- **Temporal Operators:**
-    - `X`: Next state
-    - `F`: Eventually
-    - `G`: Globally
-    - `U`: Until
-    - `R`: Release (Dual of Until)
-    - `W`: Weak Until
-
-**Standard Examples:**
-- `G p`: p is always true along the path.
-- `F (G p)`: p eventually becomes true and stays true forever.
-- `G (request -> F grant)`: Every request is eventually followed by a grant.
+In VITAMIN, LTL is implemented as **game-theoretic sure-win checking** over CGS models: the checker searches for a strategy profile that guarantees the formula on all plays consistent with that strategy (via strategy pruning and CTL-backed evaluation), not classical path-by-path LTL model checking on a single linear trace.
 
 ### Current Implementation
 
 **Parser Location:** `model_checker/parsers/formulas/LTL/parser.py`
 
 **Supported Syntax:**
-1.  **Operators**: `X`, `F`, `G`, `U`, `R`, `W` (and their keyword aliases).
+1.  **Operators**: `X`, `F`, `G`, `U` (and keyword aliases).
 2.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
-3.  **No Quantifiers**: Path quantifiers (A/E) are NOT allowed in LTL formulas in VITAMIN.
+3.  **No quantifiers**: `E`/`A` and coalition brackets are rejected.
 
 **Validation Rules:**
-- LTL formulas are checked for linear temporal structure.
-- **No coalitions or path quantifiers**: `<> F p` and other `<...>` coalition forms are invalid in LTL. Use `F p` for eventually on a single path.
-- Propositions must follow the standard letter-start identifier pattern.
+- No coalitions or path quantifiers.
+- `R` and `W` are **not** in the LTL surface syntax.
 
 **Formula Examples:**
 ```text
 G p
 F (p && G q)
 p U q
-G (request -> (request R grant))
 ```
 
 ### Comparison: Theory vs Implementation
 
-| Aspect | Theory | Implementation |
+| Aspect | Classical path-LTL | VITAMIN implementation |
 | :--- | :--- | :--- |
-| **Path Quantifiers**| None | None (Strictly enforced) |
-| **Temporal Ops** | X, F, G, U, R, W | `X`, `F`, `G`, `U`, `R`, `W` |
-| **Boolean Ops** | AND, OR, NOT, IMPLIES | `&&`, `\|\|`, `!`, `->` |
-| **Release/Weak** | Supported | Fully Supported |
+| **Semantics** | Single infinite path | Sure-win / strategy-based over CGS |
+| **Path quantifiers** | None | None (enforced) |
+| **Temporal ops** | X, F, G, U, R, W | `X`, `F`, `G`, `U` only |
+| **Release / Weak** | R, W | Not supported |
 
 ---
 
@@ -244,16 +230,16 @@ ATL extends CTL with coalition operators `[A]` (in VITAMIN written as `<A>`) to 
 ---
 
 <a id="natatl--natatlf---natural-atl"></a>
-## NatATL / NatATLF - Natural ATL
+## NatATL / NatATLF
 
 ### Theoretical Background
 
-NatATL extends ATL with explicit capacity constraints on coalitions, allowing reasoning about how many agents from a set are needed to achieve a goal. The **NatATLF** variant uses a specific fixed-point verification pipeline to solve these constraints.
+NatATL extends ATL with a bound `k` on **strategy complexity** (maximum condition-token depth in synthesized strategies), not on how many agents may act at once. **NatATLF** uses the same syntax and delegates to the NatATL Memoryless solver.
 
 **Standard Syntax:**
 - **Capacity Operator**: `<{A}, k> p`
     - `A`: A set of agents.
-    - `k`: A positive integer bound on how many agents from `A` can act.
+    - `k`: Positive integer bound on strategy complexity.
 
 ### Current Implementation
 
@@ -279,7 +265,7 @@ NatATL extends ATL with explicit capacity constraints on coalitions, allowing re
 | Aspect | Theory | Implementation |
 | :--- | :--- | :--- |
 | **Coalition** | <{A}, k> | `<{A}, k>` (Braces required) |
-| **Bound k** | Positive integer | Mandatory integer |
+| **Bound k** | Strategy complexity | Mandatory integer (condition-token depth) |
 | **Temporal Ops** | X, F, G, U | `X`, `F`, `G`, `U` |
 | **Propositions** | p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
 
@@ -294,13 +280,15 @@ The behavior of agents in NatATL depends on the **Memory Model** selected during
     - Agents can remember the full history of the path taken.
     - History-dependent strategies are often essential for satisfying complex capacity constraints that apply over multiple steps.
 3.  **NatATL Recall Filter**:
-    - A performance-optimized version of the Recall variant.
-    - It uses a standard ATL check (which is much faster) as a **pre-filter**. If the property cannot be achieved even without capacity bounds, the system skips the more expensive NatATL Recall verification.
+    - Runs the same recall verification as NatATL Recall.
+    - An ATL conversion step may run for diagnostics; **recall verification always runs**. ATL UNSAT does not short-circuit recall checking.
+
+**Return contract:** NatATL Memoryless, Recall, and NatATLF report boolean `Satisfiability` plus `res` / `initial_state` (not CTL-style winning state sets).
 
 ---
 
 <a id="natsl---natural-strategy-logic"></a>
-## NatSL - Natural Strategy Logic
+## NatSL
 
 ### Theoretical Background
 
@@ -319,15 +307,17 @@ NatSL is a strategy logic incorporating natural language bindings and strategy q
 **Parser Location:** `model_checker/parsers/formulas/NatSL/parser.py`
 
 **Improved Logic Support:**
-- **Flexible Identifiers**: Variables (e.g., `x`, `y`, `strat1`) and Propositions (e.g., `p`, `win`, `state_a`) now support any alphanumeric name starting with a letter or underscore: `[A-Za-z_][A-Za-z0-9_]*`.
-- **Temporal Constraint**: In current versions, the temporal expression is limited to `F` (Eventually) or `!F` (Not Eventually).
+- **Identifiers**: Strategy variables and temporal atoms use the shared atomic proposition alphabet `[a-zA-Z][a-zA-Z0-9_]*` (same as CGS models and NatATL). Examples: `p`, `Goal`, `safe_1`, `win`.
+- **Temporal operators**: The temporal expression is limited to `F` (Eventually) or `!F` (Not Eventually).
 
     > [!NOTE]
-    > **Why the restriction?** NatSL is currently implemented by reducing formulas to **NatATL**. While NatATL supports `G` (Globally) and `X` (Next), the NatSL engine is optimized for reachability properties.
+    > **Why only F / !F?** NatSL is currently implemented by reducing formulas to **NatATL**. While NatATL supports `G` (Globally) and `X` (Next), the NatSL engine is optimized for reachability properties.
     >
     > **Extensibility**:
     > - Support for **`G`** and **`X`** can be added in future versions as they map directly to single NatATL operators.
     > - Full **LTL** (nested operators like `G(p -> F q)`) is NOT currently planned for NatSL due to the extreme computational complexity (P-SPACE) and the memory-intensive nature of strategy logic verification. For complex temporal requirements, use the standard **LTL** or **CTL** logic types.
+    >
+    > **Parser edge case**: Temporal atoms cannot be the single uppercase letters `E` or `A` (NatSL quantifier tokens), and cannot match reserved keywords (`eventually`, `not`, etc.). All other valid model proposition names are accepted after `F` / `!F`.
 
 
 **Syntax Components:**
@@ -348,7 +338,7 @@ E{2}myVar : (myVar, 1) !F fail
 | :--- | :--- | :--- |
 | **Quantifiers** | Ex, Ax | `E{bound}x`, `A{bound}x` |
 | **Variables** | Any identifier | `[A-Za-z_][A-Za-z0-9_]*` |
-| **Propositions**| Any identifier | `[A-Za-z_][A-Za-z0-9_]*` |
+| **Propositions**| Any identifier | `[A-Za-z_][A-Za-z0-9_]*` (same rule for temporal atoms after `F` / `!F`) |
 | **Temporal** | Full LTL/CTL | Only `F` or `!F` currently |
 | **Reduced Form**| RED(SL) -> NatATL | Automatic conversion |
 
@@ -366,8 +356,8 @@ NatSL supports two distinct semantic interpretations of strategy quantification 
 
 ---
 
-<a id="oatl---one-sided-atl"></a>
-## OATL - One-sided ATL
+<a id="oatl"></a>
+## OATL
 
 ### Theoretical Background
 
@@ -413,38 +403,38 @@ OATL extends ATL with demonic cost bounds. It assesses whether a coalition can a
 | **Propositions**| p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
 
 > [!NOTE]
-> **Operator Support (R, W):** While some theoretical papers for OATL/OL define only a minimal set of operators (`X, F, G, U`), the VITAMIN implementation includes **`R` (Release)** and **`W` (Weak Until)** for practical expressivity and duality. This allows users to write more complex properties without manual conversion to negated forms.
+> **Operator Support (R, W):** Release (`R`) and Weak Until (`W`) are **rejected at parse time** for OATL. Use dual forms (for example `!<1><5> (!p U !q)`) or use COTL when R/W operators are required.
+
+> **Cost bound semantics:** Bound `k` limits the cost of each individual transition (per-step affordability), not the cumulative sum along a play.
 >
 > **Example:** A property like `<1><5> (p R q)` would otherwise need to be written as `<1><5> !(!p U !q)` or `(<1><5> (q U (p && q)) || <1><5> G q)`, which is significantly less readable.
 
 
 ---
 
-<a id="ol---one-sided-ltl"></a>
-## OL - One-sided LTL
+<a id="ol"></a>
+## OL
 
 ### Theoretical Background
 
-OL is the linear-time counterpart to OATL. It evaluates cost-bounded formulas over linear paths.
+OL is the linear-time cost-bounded logic paired with OATL on `costCGS` models. Formulas use a demonic cost prefix `<Jk>` before temporal operators.
 
 **Standard Syntax:**
-- **Demonic Modality**: `<Jk> p`
-    - `k`: A positive integer cost bound.
-    - `J`: Indicates a demonic cost prefix in linear time.
+- **Cost prefix**: `<Jk> phi` where `k` is a positive integer bound.
 
 ### Current Implementation
 
 **Parser Location:** `model_checker/parsers/formulas/OL/parser.py`
 
 **Supported Syntax:**
-1.  **Format**: `<Jk>` (e.g., `<J5>`). Note the mandatory `J` within the angle brackets.
+1.  **Format**: `<Jk>` (e.g., `<J5>`). The letter `J` is mandatory inside the angle brackets.
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W`.
 3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 
 **Validation Rules:**
-- **Mandatory 'J'**: OL prefixes MUST include the letter `J` after the opening angle bracket (e.g., `<J10>`). A numeric-only prefix (e.g., `<10>`) is rejected.
-- **Bound Requirement**: Every temporal operator must be prefixed with `<Jk>`. Bare `F p` and numeric-only `<5> F p` are rejected.
-- **Positive bound**: `k` must be at least 1; `<J0>` is rejected (lexer and validation).
+- **Mandatory `J`**: OL prefixes must use `<Jk>`, not bare `<k>`.
+- **Bound requirement**: Every temporal operator must be prefixed with `<Jk>`.
+- **Positive bound**: `k >= 1`; `<J0>` is rejected.
 
 **Formula Examples:**
 ```text
@@ -457,154 +447,78 @@ OL is the linear-time counterpart to OATL. It evaluates cost-bounded formulas ov
 
 | Aspect | Theory | Implementation |
 | :--- | :--- | :--- |
-| **Cost Prefix (OL)** | <k> | `<Jk>` (Requires 'J') |
-| **Coalition (OATL)** | <A><k> | `<A><k>` (Double brackets) |
-| **Bound Format** | Positive k | Integer >= 1, no leading zeros |
-| **Temporal Ops** | X, F, G, U | X, F, G, U, W, R |
+| **Cost prefix** | `<Jk>` | `<Jk>` (requires `J`) |
+| **Temporal ops** | X, F, G, U | X, F, G, U, R, W |
+| **Cost semantics (F/G/U/R/W)** | Path budget | **Accumulated** path cost `<= k` |
+| **Cost semantics (X)** | Step budget | **Per-step** transition cost `<= k` |
 
-**Key Differences:**
-1. **Letter `J` in syntax**: The implementation requires `J` inside the angle brackets so the lexer can distinguish OL prefixes from other `<...>` uses.
-2. **Bound validation**: Same numeric rules as other cost logics (>=1, no leading zeros).
-
----
-
-## RABATL
-
-### Theoretical Background
-
-**Standard Syntax (Academic Notation):**
-
-RABATL extends ATL with recursive strategies and double bounds:
-
-- **Recursive Coalition**:
-  - `<A><B> p`: Coalition A with recursive bound B can achieve p
-  - Double bounds for nested strategic reasoning
-
-**Semantics:**
-- Recursive strategies allow nested strategic reasoning
-- Double bounds control both coalition and recursive depth
-- More expressive than standard ATL
-
-**Standard Academic Examples:**
-- `<1><2>F p`: Agent 1 with recursive bound 2 can eventually achieve p.
-- `<1,2><3>G safe`: Agents 1, 2 with recursive bound 3 can maintain safety.
-
-### Current Implementation
-
-**Parser Location:** `model_checker/parsers/formulas/RABATL/parser.py`
-
-**Supported Syntax:**
-
-1. **Recursive Coalition:**
-   - Format: `<coalition><bound>`
-   - Example: `<1><2,2>`, `<1,2><3,3>`
-   - **Double angle brackets**: First for coalition, second for recursive bound
-   - **Multi-resource bounds use commas**: write vectors as `<2,2>`, not `<2:2>`
-
-2. **Temporal Operators:**
-   - `X`, `F`, `G`, `U`, `W`, `R` (same as OATL)
-
-3. **Boolean Operators:**
-   - Same as OATL: `&&`, `||`, `!`, `->`
-
-4. **Propositions:**
-   - Same as OATL: `[a-zA-Z][a-zA-Z0-9_]*`
-
-**Formula Examples:**
-```
-<1><2,2>F p
-<1><3,3>G p
-<1,2><5,5>F p
-<1,2><10,10>p U q
-```
-
-**Grammar Structure:**
-- Coalition-bound pattern: `<\d+(?:,\d+)*><\d+(?:,\d+)*>`
-- Distinction is semantic (model checking), not syntactic
-
-**Validation Rules:**
-- Coalition and bound are required
-- Multi-resource bounds use commas inside the second bracket
-
-### Comparison: Theory vs Implementation
-
-| Aspect | Theory | Implementation |
-|--------|--------|----------------|
-| **Syntax** | `<A><B>` | `<A><B>` with comma-separated vectors for multi-resource bounds |
-| **Semantics** | Recursive strategies | Handled in model checking |
-| **Parser** | Separate syntax | **RABATL** reuses the `RBATLParser` class |
-
-**Key Differences:**
-1. **Bound Format**: Multi-resource bounds are written with commas, e.g. `<1><2,2>F p`
-2. **Semantic Distinction**: Difference is in model checking semantics relative to RBATL
-3. **Model Type**: Requires costCGS model
+> [!NOTE]
+> **Cost bound semantics:** For `F`, `G`, `U`, `R`, and `W`, bound `k` limits the **sum of transition costs along the considered path**. For `X`, `k` limits only the **next** transition. This differs from OATL, where every operator uses per-step affordability.
 
 ---
 
-<a id="rbatl--rabatl---resource-bounded-atl"></a>
-## RBATL / RABATL - Resource-Bounded ATL
+<a id="rbatl--rabatl"></a>
+## RBATL / RABATL
 
 ### Theoretical Background
 
-Resource-Bounded ATL (RBATL) and its recursive variant (RABATL) reason about coalitions with multiple resource types, where strategies are constrained by a vector of available resources.
+RBATL and RABATL extend ATL with vector cost bounds on coalition strategies over `costCGS` models.
 
 **Standard Syntax:**
-- **Vector Bounded Coalition**: `<A><b1, b2, ...> p`
-    - `A`: Coalitional agents.
-    - `b1, b2, ...`: A vector of bounds for different resources (e.g., energy, time, money).
-
-**Semantics:**
-- `<A><b1, ..., bn> p` means coalition `A` has a strategy to ensure `p` such that for every possible outcome, the total consumption of resource `i` does not exceed `bi`.
-- **RBATL**: Standard resource-bounded semantics.
-- **RABATL**: Introduces recursive strategic reasoning, allowing for nested modalities where the remaining resources are passed to sub-formulas.
+- **Vector bounded coalition**: `<A><b1, b2, ...> phi`
+    - `A`: coalition agents.
+    - `b1, b2, ...`: per-resource bounds.
 
 ### Current Implementation
 
-**Parser Location:** `model_checker/parsers/formulas/RBATL/parser.py` (Used for both variants).
+**Parser locations:** `RBATL/parser.py`, `RABATL/parser.py` (same surface syntax).
 
 **Supported Syntax:**
 1.  **Format**: `<coalition><bound1,bound2,...>` (e.g., `<1><10,5>`).
-2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W`.
-3.  **Multi-Resource Bounds**: Resources MUST be comma-separated within the second set of angle brackets.
-4.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
+2.  **Temporal Operators**: `X`, `F`, `G`, `U` (`R`/`W` rejected at parser).
+3.  **Multi-resource bounds**: comma-separated inside the second angle-bracket group.
+
+**Cost models:**
+- **RBATL** uses flat `Costs_for_actions` entries (`agent$cost:cost`).
+- **RABATL** uses `Costs_for_actions_split` and sums coalition members' cost components when checking a joint action.
+
+**Semantics (both):** On each coalition-controlled transition, resource `i` consumed must satisfy `cost_i <= b_i` (per-step affordability, not cumulative path totals).
 
 **Formula Examples:**
 ```text
 <1><100,50> F goal
 <1,2><10,10,10> G safe
 <1><5> (p U q)
-<1><2,2> (p R q)
 ```
+
 ### Comparison: Theory vs Implementation
 
 | Aspect | Theory | Implementation |
 | :--- | :--- | :--- |
-| **Coalition** | <A> | `<1,2>` (Indices) |
-| **Vector Bound** | <b1, b2, ...> | `<10,5>` (Comma-separated) |
-| **Temporal Ops** | X, F, G, U | `X`, `F`, `G`, `U`, `R`, `W` |
-| **Propositions** | p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
+| **Coalition** | `<A>` | `<1,2>` (indices) |
+| **Vector bound** | `<b1, b2, ...>` | `<10,5>` (comma-separated) |
+| **Temporal ops** | X, F, G, U | `X`, `F`, `G`, `U` (R/W rejected at parser) |
+| **RBATL costs** | Flat action costs | `Costs_for_actions` |
+| **RABATL costs** | Split / coalition-sum | `Costs_for_actions_split` |
 
 > [!NOTE]
-> **Duality & Completeness:** Similarly to OATL, the RBATL implementation supports a full set of temporal operators (`U, R, W, G, X, F`) to ensure syntactic completeness and ease of use for complex resource-bounded specifications.
->
-> **Conversion Example:** Without the `R` operator, a standard release property like `<1><10,5> (p R q)` would require the use of its dual: `<1><10,5> !(!p U !q)`.
+> **RABATL is not a separate recursive-modality engine** in VITAMIN. It shares `bounded_atl_solver` with RBATL and differs only in how action costs are derived from the model file. Winning sets can differ from RBATL on the same formula when coalition-sum costs disagree with flat costs.
 
-
----
-
+> [!NOTE]
+> **Operator Support (R, W):** Release (`R`) and Weak Until (`W`) are rejected at parse time for RBATL/RABATL.
 
 **Validation Rules:**
-- **Comma Separation**: Using colons or other separators for resource vectors is not supported in the current grammar.
-- **Resource Count**: The number of bounds in the vector should ideally match the resource count in the `costCGS` model.
+- **Comma separation**: resource vectors use commas, not colons.
+- **Resource count**: bound vector length should match the cost dimension in the model.
 
 ---
 
-<a id="capatl---capacity-atl"></a>
-## CapATL - Capacity ATL
+<a id="capatl"></a>
+## CapATL
 
 ### Theoretical Background
 
-Capacity ATL (CapATL) is designed for models with explicit capacity constraints (`capCGS`), often involving knowledge (capability) and agent-scoped properties.
+CapATL is designed for models with explicit capacity constraints (`capCGS`), often involving knowledge (capability) and agent-scoped properties.
 
 **Standard Syntax:**
 - **Capacity Operator**: `<{A}, k> p`
@@ -621,15 +535,11 @@ Capacity ATL (CapATL) is designed for models with explicit capacity constraints 
 1.  **Coalition**: `<{agent1,agent2,...}, k>` (Must use curly braces).
 2.  **Capability**: `K1(p)`, `K2(K3 p)`.
 3.  **Agent Properties**: `1 is active`, `2 is critical`.
-4.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`.
+4.  **Temporal Operators**: `X`, `F`, `G`, `U` only.
 
 **Validation Rules:**
 > [!NOTE]
-> **Operator Support (W, R):**
-> - **Weak Until (`W`) is currently NOT supported** in the CapATL parser; however, this is a syntactic limitation rather than a semantic one.
-> - **Technical Rationale**: CapATL uses a specialized "Pointed Knowledge" solver engine. While `W` is mathematically valid, its direct calculation requires a specific greatest fixpoint handler that is currently being prioritized for a future engine update.
-> - **Future Extensibility**: The system is designed to allow future support for `W` and `R` through a "Normalization Phase" that will automatically expand these operators into their core dual forms (e.g., `p W q` into `(p U q) || G p`) before verification.
-> - **Current Workaround**: Users can manually express Weak Until properties using the equivalent `(p U q) || G p` syntax.
+> **Operator Support (W, R):** Weak Until (`W`) and Release (`R`) are **rejected at parse time**. The CapATL solver evaluates `X`, `F`, `G`, and `U` only.
 - **Model Requirement**: Can only be verified against `capCGS` models.
 
 **Formula Examples:**
@@ -646,105 +556,65 @@ Capacity ATL (CapATL) is designed for models with explicit capacity constraints 
 | **Coalition** | <{A}, k> | `<{A}, k>` (Braces required) |
 | **Capability** | Ki p | `Ki (agent is p)` or `Ki(Ki agent is p)` |
 | **Agent Prop** | i is p | `i is p` |
-| **Temporal** | Full | `X, F, G, U, R` (`W` excluded) |
+| **Temporal** | Full | `X, F, G, U` (`R`, `W` rejected at parser) |
 
 
 ---
 
-## Model Syntax
-
-VITAMIN supports five model formats. The parser picks the type from the
-sections present in the file.
-
-### CGS (Concurrent Game Structure)
-The base model for CTL, LTL, ATL, NatATL, NatSL, ICTL, and IATL.
-
-**File Sections:**
-1.  **Transition**: Matrix (States x States) containing joint action strings (e.g., `AC,AD`). Use `*` for wildcards and `0` for no transition.
-2.  **Unknown_Transition_by**: Typically zeroed matrix for experimental uncertainty.
-3.  **Name_State**: Space-separated list of state names.
-4.  **Initial_State**: The starting state identifier.
-5.  **Atomic_propositions**: Space-separated list of available propositions.
-6.  **Labelling**: Binary labelling matrix (States x Propositions).
-7.  **Number_of_agents**: Total count of agents in the system.
-8.  **Agent_labels** (optional): Whitespace-separated display names for agents
-    1..n. Formulas use `<1>`, `<2>`, ...; labels are metadata only.
-
-**Example Action Format:**
-For 2 agents: `AC` means Agent 1 performs action `A` and Agent 2 performs action `C`.
-
-### costCGS (CGS with Costs)
-Used for OATL, OL, RBATL, and RABATL.
-- **Section**: `Transition_With_Costs`
-- **Format**: Same dimensions as the transition matrix. Cells contain cost vectors separated by colons (e.g., `1:2:0` for 3 agents).
-
-### capCGS (CGS with Capacities)
-Used for CapATL.
-- **Section**: `Capacities` (list of capacity names).
-- **Section**: `Capacities_assignment` (mapping matrix: Agents x Capacities).
-- **Section**: `Actions_for_capacities` (maps resources directly to actions that consume/replenish them).
-
-### WalletCGS (CGS with Wallets)
-Used for Wallet_ATL.
-- **Section**: `Wallets` - one line per state, `state: balance1 balance2 ...`.
-- Extends standard CGS sections. Actions can encode wallet operations (for example `D20`, `B50`).
-
-### timedCGS (Timed costCGS)
-Used for TOL and TCTL. Includes all costCGS sections plus:
-- **Section**: `Clocks` - clock variable names.
-- **Section**: `Clock_constraints` - bounds and resets on transitions.
-- **Section**: `Invariants` - clock invariants per state.
-
----
-
-<a id="cotl---coalitional-optimal-temporal-logic"></a>
-## COTL - Coalitional Optimal Temporal Logic
+<a id="cotl"></a>
+## COTL
 
 ### Theoretical Background
 
-Coalitional Optimal Temporal Logic (COTL) is designed for reasoning about optimal strategies in cost-aware game structures (`costCGS`). While OATL focuses on bound satisfaction, COTL is often used for synthesizing strategies that minimize or maximize resource consumption while achieving a goal.
-
-**Standard Syntax:**
-- **Optimal Operator**: `<J><k> phi`
-    - `J`: Coalition of agents.
-    - `k`: A scalar cost constraint or optimization target.
+COTL is the cost-bounded ATL logic used with `costCGS` models. Formulas share the OATL surface syntax `<A><k> phi` but are checked by a dedicated fixpoint engine (`COTL/COTL.py`), not by OATL per-step filtering.
 
 ### Current Implementation
 
-**Parser Location:** `model_checker/algorithms/explicit/COTL/COTL.py` (Reuses the **OATL** parser).
+**Parser:** `COTLParser` (`model_checker/parsers/formulas/COTL/parser.py`), same `<coalition><bound>` shape as OATL.
 
 **Supported Syntax:**
 1.  **Format**: `<coalition><bound>` (e.g., `<1,2><5>`).
-2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W`.
+2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W` (R/W implemented in the COTL solver).
 3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
+
+**Semantics:** Coalition `<A><k>` requires that coalition `A` can enforce the sub-formula while keeping transition costs within bound `k` under the COTL cost interpretation (cost-bounded strategy synthesis via least/greatest fixpoints, not OATL per-step filtering).
 
 **Formula Examples:**
 ```text
 <1><10> F goal
 <1,2><5> (p U q)
 <1><2> G safe
+<1><5> (p R q)
 ```
 
 ### Comparison: Theory vs Implementation
 
 | Aspect | Theory | Implementation |
 | :--- | :--- | :--- |
-| **Coalition** | <J> | `<1,2>` (Indices) |
-| **Cost Bound** | <k> | `<5>` (Integer) |
-| **Temporal Ops**| X, F, G, U | `X`, `F`, `G`, `U`, `R`, `W` |
-| **Propositions**| p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
+| **Coalition** | `<A>` | `<1,2>` (indices) |
+| **Cost bound** | `<k>` | `<5>` (integer) |
+| **Temporal ops** | X, F, G, U | `X`, `F`, `G`, `U`, `R`, `W` |
+| **Engine** | Cost-bounded ATL | Dedicated COTL fixpoints (not OATL solver) |
 
 > [!NOTE]
-> **Implementation Note**: COTL in VITAMIN currently utilizes the same syntactic parser as **OATL**. The distinction lies in the underlying verification engine's handling of cost-optimal strategy synthesis.
+> **COTL vs OATL:** Same parser shape, different checker. OATL uses per-step affordability in `OATL/preimage.py` and rejects R/W. COTL uses its own fixpoint operators and accepts R/W.
 
 ---
 
-<a id="wallet_atl---wallet-atl"></a>
-## Wallet_ATL - Wallet ATL
+<a id="wallet_atl"></a>
+## Wallet_ATL
 
 ATL with wallet-aware coalitions over `WalletCGS` models.
 
-**Coalition syntax:** `<<agents[:wallet constraints]>>` followed by a temporal formula.
+**Coalition syntax:** `<<agents[:wallet constraints]>>` followed by a temporal formula. The `<<>>` prefix is **mandatory** before `X`, `F`, `G`, or `U`; bare temporal operators without a coalition are rejected.
+
+> [!NOTE]
+> **Why `<<>>` instead of `<>`?** Plain ATL uses `<1>` for coalitions only. Wallet_ATL
+> embeds optional balance guards (`:wallet(agent, op, value)`) inside the same prefix,
+> so the grammar uses a dedicated `<< ... >>` token. That avoids clashing with other
+> bracket conventions in VITAMIN: OATL/RBATL `<1><5>` (coalition then cost bound),
+> NatATL/CapATL `<{1}, k>`, and OL `<Jk>`. OATL's two bracket groups are separate tokens;
+> Wallet's double brackets are one nested delimiter around agents plus guards.
 
 **Examples:**
 ```text
@@ -759,7 +629,7 @@ ATL with wallet-aware coalitions over `WalletCGS` models.
 ---
 
 <a id="ictl---intuitionistic-ctl"></a>
-## ICTL - Intuitionistic CTL
+## ICTL
 
 Intuitionistic branching-time logic over **birelational models**: a preorder `P`
 (information growth) and a serial transition relation `R` (system evolution) on
@@ -775,8 +645,14 @@ matrix with cell labels `0`, `R`, `P`, `P,R`.
 EX e
 EF e
 AG (p -> EF q)
+AG Goal
 E p R q
 ```
+
+**Proposition lexer note:** ICTL uses a dedicated proposition pattern so path-operator
+tokens such as `EX` and `AG` are not parsed as atomic names. Mixed-case identifiers
+like `Goal` are supported. Single uppercase letters (for example `P`) are not valid
+proposition tokens; use `p` or a mixed-case name such as `Prop` instead.
 
 **Model type:** birelational matrix (loaded by `ICTL/util/graph.read_file`).
 Metadata entry point lists `CGS` for VMI compatibility; see
@@ -788,7 +664,7 @@ model-checking algorithm.
 ---
 
 <a id="iatl---intuitionistic-atl"></a>
-## IATL - Intuitionistic ATL
+## IATL
 
 Coalition logic with intuitionistic existential and universal coalitions.
 
@@ -813,7 +689,7 @@ Coalition logic with intuitionistic existential and universal coalitions.
 ---
 
 <a id="tctl---timed-ctl"></a>
-## TCTL - Timed CTL
+## TCTL
 
 Timed extension of CTL over `timedCGS` models with clock constraints.
 
@@ -835,7 +711,7 @@ AG (x <= 10 -> safe)
 ---
 
 <a id="tol---timed-obligation-logic"></a>
-## TOL - Timed Obligation Logic
+## TOL
 
 Linear-style timed logic with demonic cost prefixes over `timedCGS` models.
 
@@ -868,7 +744,7 @@ VITAMIN does **not** support an empty strategic coalition written as `<>`. In AT
 | Existential path reachability (CTL) | `EF p` | `<> F p` |
 | Strategic coalition (ATL) | `<1> F p`, `<1,2> G p` | `<> F p` |
 | Linear path eventually (LTL) | `F p` | `<> F p` |
-| Resource-bounded strategy (RBATL / OATL) | `<1><5> F p` | `<> F p`, `<1> F p` without bound |
+| Cost-bounded strategy (OATL / RBATL) | `<1><5> F p` | `<> F p`, `<1> F p` without bound |
 | Capacity-bound strategy (NatATL / CapATL) | `<{1}, 5> F p` | `<> F p` |
 | IATL universal coalition | `[1] G p` | `[] G p` (empty `[]` rejected) |
 
@@ -891,12 +767,22 @@ VITAMIN does **not** support an empty strategic coalition written as `<>`. In AT
 <a id="atomic-proposition-policy"></a>
 ## Atomic Proposition Policy
 
-Atomic identifiers for propositions and variables must avoid clashing with reserved keywords (e.g., `and`, `or`, `exists`, `forall`, `F`, `G`).
+Atomic identifiers for propositions and variables must follow a shared alphabet and must not clash with reserved syntax keywords.
 
-**Naming Conventions:**
-- **Standard**: `[a-zA-Z][a-zA-Z0-9_]*`
-    - Logic: CTL, LTL, ATL, NatATL, NatSL, OATL, OL, RBATL, CapATL, COTL, ICTL, IATL, Wallet_ATL, TCTL, TOL.
-    - Rule: Letter start (upper or lower), then alphanumerics or underscores. Examples: `p`, `Goal`, `safe_1`.
+**Standard alphabet (models and most logics):**
+- Pattern: `[a-zA-Z][a-zA-Z0-9_]*`
+- Logics: CTL, LTL, ATL, NatATL, NatSL, OATL, OL, RBATL, CapATL, COTL, IATL, Wallet_ATL
+- Examples: `p`, `Goal`, `safe_1`
+- Validation: `validate_proposition_identifier()` in `model_checker/parsers/formulas/parser_utils.py` (CGS models and Family-B formula AST post-validation via `validate_ast()`)
+
+**Reserved keywords (case-insensitive):** `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`
+
+**Lexer-specific proposition patterns (modal compound disambiguation):**
+- **ICTL, TCTL, TOL**: `[a-z][a-zA-Z0-9_]*` or `[A-Z][a-z][a-zA-Z0-9_]*` so tokens like `EX`, `EF`, and `AG` are not read as proposition names. Mixed-case names such as `Goal` are supported; all-caps operator-shaped names and single uppercase letters (for example `P`) are not.
+- **NatSL temporal atoms**: Use the standard alphabet above. Single uppercase `E` / `A` are rejected after `F` / `!F` because they are quantifier tokens in the NatSL lexer.
+- **CTL pre-validation**: Bare temporal operators at formula start are detected with token-boundary rules, so proposition names such as `Goal` or `Flux` are not mistaken for `G` / `F` operators.
+
+**Known limitation (CTL, LTL, ATL, NatATL, and related logics):** A proposition whose name is exactly a modal operator token (for example `F`, `E`, or `EX`) may be unparseable in some positions because the lexer reads it as syntax. Prefer descriptive names (`Goal`, `safe_1`) over single-letter operator aliases.
 
 ---
 
@@ -906,25 +792,76 @@ Atomic identifiers for propositions and variables must avoid clashing with reser
 | Logic | Path Type | Key Operators | Coalitions / Bounds | Model Type |
 | :--- | :--- | :--- | :--- | :--- |
 | **CTL** | Branching | `AX`, `EF`, `AG`, `E(p U q)` | `A`, `E` (Quantifiers) | CGS |
-| **LTL** | Linear | `X`, `F`, `G`, `U`, `R`, `W` | None | CGS |
+| **LTL** | Linear (sure-win) | `X`, `F`, `G`, `U` | None | CGS |
 | **ATL** | Branching | `<A>X`, `<A>F`, `<A>G`, `<A>U` | `<1,2>` | CGS |
 | **ATLF** | Branching | `<A>X`, `<A>F`, `<A>G`, `<A>U` | `<1,2>` | CGS (Fixed-point) |
-| **NatATL (ML)** | Branching | `<A,k>X`, `<A,k>F`, `<A,k>G`, `<A,k>U` | `<{1,2}, 3>` (Memoryless) | CGS |
-| **NatATL (Rec)** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, 3>` (Full Recall) | CGS |
-| **NatATLF** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, 3>` | CGS (Fixed-point) |
+| **NatATL (ML)** | Branching | `<A,k>X`, `<A,k>F`, `<A,k>G`, `<A,k>U` | `<{1,2}, k>` (k = strategy complexity) | CGS |
+| **NatATL (Rec)** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` (k = strategy complexity) | CGS |
+| **NatATLF** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` | CGS (delegates to memoryless) |
 | **NatSL (Seq)** | Branching | `Ex`, `Ax`, `F`, `!F` | `Ex:{k}x:(x,1)` (Sequential) | CGS |
 | **NatSL (Alt)** | Branching | `Ex`, `Ax`, `F`, `!F` | `Ex:{k}x:(x,1)` (Alternated) | CGS |
-| **OATL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><5>` (Cost) | costCGS |
+| **OATL** | Branching | `<A><k>X`, `F`, `G`, `U` | `<1,2><5>` (per-step cost bound) | costCGS |
 | **OL** | Linear | `<Jk>X`, `F`, `G`, `U`, `R`, `W` | `<J5>` (Demonic) | costCGS |
-| **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U`, `R`, `W` | `<1><10,5>` (Vectors) | costCGS |
-| **CapATL** | Branching | `<A,k>X`, `F`, `G`, `U`, `R`, `Ki`, `i is p` | `<{1,2}, k>` | capCGS |
-| **COTL** | Branching | `<J><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><k>` (Optimal) | costCGS |
+| **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U` | `<1><10,5>` (Vectors) | costCGS |
+| **CapATL** | Branching | `<A,k>X`, `F`, `G`, `U`, `Ki`, `i is p` | `<{1,2}, k>` | capCGS |
+| **COTL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><k>` (cost-bounded) | costCGS |
 | **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
-| **ICTL** | Branching | `EX`, `AX`, `EF`, `AG`, `EU` | `E`, `A` | CGS |
-| **IATL** | Branching | `<A>X`, `F`, `G`, `U` | `<1>` exist, `[1]` forall | CGS |
+| **ICTL** | Branching | `EX`, `AX`, `EF`, `AG`, `EU` | `E`, `A` | BCGS (birelational) |
+| **IATL** | Branching | `<A>X`, `F`, `G`, `U` | `<1>` exist, `[1]` forall | BCGS |
 | **TCTL** | Branching | `EF`, `AG`, clock bounds | `A`, `E` + clocks | timedCGS |
 | **TOL** | Linear | `{Jk}X`, `F`, `G`, `U` | `{J5}` demonic bound | timedCGS |
 
+
+---
+
+<a id="model-syntax"></a>
+## Model Syntax
+
+VITAMIN supports six model formats. The parser picks the type from the
+sections present in the file. Canonical details also appear in [file_formats.md](file_formats.md).
+
+### CGS (Concurrent Game Structure)
+The base model for CTL, LTL, ATL, NatATL, and NatSL.
+
+**File Sections:**
+1.  **Transition**: Matrix (States x States) containing joint action strings (e.g., `AC,AD`). Use `*` for wildcards and `0` for no transition.
+2.  **Unknown_Transition_by**: Typically zeroed matrix for experimental uncertainty.
+3.  **Name_State**: Space-separated list of state names.
+4.  **Initial_State**: The starting state identifier.
+5.  **Atomic_propositions**: Space-separated list of available propositions.
+6.  **Labelling**: Binary labelling matrix (States x Propositions).
+7.  **Number_of_agents**: Total count of agents in the system.
+8.  **Agent_labels** (optional): Whitespace-separated display names for agents
+    1..n. Formulas use `<1>`, `<2>`, ...; labels are metadata only.
+
+**Example Action Format:**
+For 2 agents: `AC` means Agent 1 performs action `A` and Agent 2 performs action `C`.
+
+### BCGS (Birelational CGS)
+Used for ICTL and IATL. Includes a `Preorder` matrix with edge labels (`P`, `R`, `P,R`).
+Loader: `model_checker/parsers/game_structures/birelational/`.
+
+### costCGS (CGS with Costs)
+Used for OATL, OL, RBATL, RABATL, and COTL.
+- **Section**: `Transition_With_Costs`
+- **Format**: Same dimensions as the transition matrix. Cells contain cost vectors separated by colons (e.g., `1:2:0` for 3 agents).
+
+### capCGS (CGS with Capacities)
+Used for CapATL.
+- **Section**: `Capacities` (list of capacity names).
+- **Section**: `Capacities_assignment` (mapping matrix: Agents x Capacities).
+- **Section**: `Actions_for_capacities` (maps resources directly to actions that consume/replenish them).
+
+### WalletCGS (CGS with Wallets)
+Used for Wallet_ATL.
+- **Section**: `Wallets` - one line per state, `state: balance1 balance2 ...`.
+- Extends standard CGS sections. Actions can encode wallet operations (for example `D20`, `B50`).
+
+### timedCGS (Timed costCGS)
+Used for TOL and TCTL. Includes all costCGS sections plus:
+- **Section**: `Clocks` - clock variable names.
+- **Section**: `Clock_constraints` - bounds and resets on transitions.
+- **Section**: `Invariants` - clock invariants per state.
 
 ---
 

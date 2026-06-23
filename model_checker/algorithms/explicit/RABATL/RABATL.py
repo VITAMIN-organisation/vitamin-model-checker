@@ -1,4 +1,4 @@
-"""RABATL (Resource-Aware Bounded ATL) model checker entry point."""
+"""RABATL model checker entry point."""
 
 from functools import partial
 

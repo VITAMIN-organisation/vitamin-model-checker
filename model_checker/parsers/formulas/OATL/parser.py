@@ -19,10 +19,33 @@ from typing import Optional
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
+    validate_ast,
     validate_coalition_bound_token,
+    validate_release_weak_rejected,
     verify_token,
 )
 from ..shared_parser import BaseLogicParser
+
+_OATL_COALITION_OPERATOR_PATTERN = re.compile(
+    r"^<\d+(?:,\d+)*><[1-9]\d*>(F|G|X|U|UNTIL|NEXT|EVENTUALLY|GLOBALLY)$",
+    re.IGNORECASE,
+)
+_OATL_VALID_OPERATORS = frozenset(
+    {
+        "U",
+        "X",
+        "F",
+        "G",
+        "&&",
+        "AND",
+        "NOT",
+        "UNTIL",
+        "NEXT",
+        "EVENTUALLY",
+        "GLOBALLY",
+        "!",
+    }
+)
 
 
 class OATLParser(BaseLogicParser):
@@ -92,16 +115,7 @@ class OATLParser(BaseLogicParser):
         self.max_coalition = n_agent
         return super().parse(formula, **kwargs)
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
-        valid, err = run_common_prechecks(
-            formula,
-            allow_hash_at=True,
-            coalition_required=True,
-            extra_invalid_regexes=(),
-        )
-        if not valid:
-            return False, err
-
+    def _coalition_bound_pre_validation(self, formula) -> tuple[bool, Optional[str]]:
         coalition_temporal_match = re.search(
             r"<\d+(?:,\d+)*><(?P<bound>\d+)>\s*(?P<op>[FGXURW])", formula
         )
@@ -127,5 +141,61 @@ class OATLParser(BaseLogicParser):
             )
         return True, None
 
+    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+        valid, err = run_common_prechecks(
+            formula,
+            allow_hash_at=True,
+            coalition_required=True,
+            extra_invalid_regexes=(),
+        )
+        if not valid:
+            return False, err
+
+        valid, err = validate_release_weak_rejected(formula, "OATL")
+        if not valid:
+            return False, err
+
+        return self._coalition_bound_pre_validation(formula)
+
+    def _post_validation(self, formula, result):
+        if result is None:
+            return False
+        return validate_ast(
+            result,
+            _OATL_VALID_OPERATORS,
+            coalition_pattern=_OATL_COALITION_OPERATOR_PATTERN,
+        )
+
     def verify(self, token_name, string):
         return verify_token(self.lexer, token_name, string)
+
+
+_COTL_COALITION_OPERATOR_PATTERN = re.compile(
+    r"^<\d+(?:,\d+)*><[1-9]\d*>(F|G|X|U|R|W|UNTIL|RELEASE|WEAK|NEXT|EVENTUALLY|GLOBALLY)$",
+    re.IGNORECASE,
+)
+_COTL_VALID_OPERATORS = _OATL_VALID_OPERATORS | frozenset({"R", "W", "RELEASE", "WEAK"})
+
+
+class COTLParser(OATLParser):
+    """OATL syntax with R/W allowed; used by the COTL model checker."""
+
+    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+        valid, err = run_common_prechecks(
+            formula,
+            allow_hash_at=True,
+            coalition_required=True,
+            extra_invalid_regexes=(),
+        )
+        if not valid:
+            return False, err
+        return self._coalition_bound_pre_validation(formula)
+
+    def _post_validation(self, formula, result):
+        if result is None:
+            return False
+        return validate_ast(
+            result,
+            _COTL_VALID_OPERATORS,
+            coalition_pattern=_COTL_COALITION_OPERATOR_PATTERN,
+        )

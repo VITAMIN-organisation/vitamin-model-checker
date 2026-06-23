@@ -1,4 +1,4 @@
-"""RBATL (Resource-Bounded ATL) model checker entry point."""
+"""RBATL model checker entry point."""
 
 from functools import partial
 

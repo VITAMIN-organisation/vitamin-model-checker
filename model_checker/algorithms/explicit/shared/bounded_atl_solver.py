@@ -18,6 +18,7 @@ from model_checker.algorithms.explicit.shared.bounded_atl_operators import (
 from model_checker.algorithms.explicit.shared.bounded_atl_preimage import CostFilter
 from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,
+    verify_initial_state,
 )
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.utils.error_handler import create_semantic_error, create_syntax_error
@@ -119,5 +120,5 @@ def run_bounded_atl_checking(cgs, formula, cost_filter: CostFilter, logic: str):
 
     solve_tree(cgs, root, cost_filter=cost_filter, logic=logic)
 
-    is_satisfied = cgs.initial_state in {str(s) for s in root.value}
+    is_satisfied = verify_initial_state(cgs.initial_state, root.value)
     return format_model_checking_result(root.value, cgs.initial_state, is_satisfied)

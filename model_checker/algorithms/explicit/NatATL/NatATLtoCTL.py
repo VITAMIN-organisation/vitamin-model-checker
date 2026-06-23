@@ -1,86 +1,45 @@
-import logging
-import re
-from typing import List, Set
+"""NatATL to CTL conversion and coalition extraction (parser-backed)."""
 
-from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+import logging
+from typing import List
+
+from model_checker.algorithms.explicit.NatATL.natatl_ast import (
+    analyze_natatl_formula,
+    get_agents_from_ast,
+    get_k_value_from_ast,
+    natatl_ast_to_ctl,
+    parse_natatl_formula,
+)
 
 logger = logging.getLogger(__name__)
 
 
-_CAPACITY_PATTERN = r"(!?|not)?<\{((?:\d+,)*\d+)\},\s*(\d+)>"
-
-
-def _normalize_ctl_spacing(ctl_formula: str) -> str:
-    """Insert spaces so CTL path/temporal operators are not glued to propositions."""
-    ctl_formula = re.sub(r"([AE])([FGXU])", r"\1 \2", ctl_formula)
-    ctl_formula = re.sub(r"([FGXU])(?=[a-zA-Z])", r"\1 ", ctl_formula)
-    return ctl_formula
-
-
-def natatl_to_ctl(natatl_formula: str) -> str:
+def natatl_to_ctl(natatl_formula: str, n_agent: int = 0) -> str:
     """
-    Transform a NatATL formula into a CTL formula (using "FORALL" path quantifier).
+    Transform a NatATL formula into a CTL formula (FORALL path quantifier).
 
-    Accepts canonical NatATL syntax only: <{1,2}, k> Op phi.
+    Uses NatATLParser AST when n_agent > 0; otherwise parses with n_agent=0
+    (coalition range checks apply only when n_agent is set).
     """
-    pattern = _CAPACITY_PATTERN
-
-    match = re.search(pattern, natatl_formula)
-    if not match:
-        raise ValueError(f"Invalid NatATL formula format: {natatl_formula}")
-
-    negation = match.group(1)
-    ctl_formula = re.sub(pattern, "A", natatl_formula)
-    ctl_formula = _normalize_ctl_spacing(ctl_formula)
-
-    if negation:
-        ctl_formula = f"!({ctl_formula})"
-
-    # Early validation: ensure resulting CTL is syntactically correct
-    ctl_parser = FormulaParserFactory.get_parser_instance("CTL")
-    if ctl_parser.parse(ctl_formula) is None:
-        err_detail = (
-            ctl_parser.errors[0] if ctl_parser.errors else "syntactically invalid"
-        )
-        raise ValueError(f"Resulting CTL formula '{ctl_formula}' is {err_detail}")
-
-    return ctl_formula
+    ast = parse_natatl_formula(natatl_formula, n_agent=n_agent)
+    return natatl_ast_to_ctl(ast)
 
 
-def get_agents_from_natatl(natatl_formula: str) -> List[int]:
-    """
-    Extract all unique agents involved in NatATL coalitions from the formula.
-
-    Uses canonical <{agents}, k> syntax only.
-    """
-    pattern = _CAPACITY_PATTERN
-    index = 2  # coalition group in capacity pattern
-
-    matches = re.findall(pattern, natatl_formula)
-
-    agents: Set[int] = set()
-    for match in matches:
-        agents_str = match[index - 1] if len(match) >= index else ""
-        if not agents_str:
-            continue
-        agents.update(int(agent) for agent in agents_str.split(",") if agent)
-
-    return sorted(agents)
+def get_agents_from_natatl(natatl_formula: str, n_agent: int = 0) -> List[int]:
+    """Extract agent indices from coalition modalities in a NatATL formula."""
+    ast = parse_natatl_formula(natatl_formula, n_agent=n_agent)
+    return get_agents_from_ast(ast)
 
 
-def get_k_value(natatl_formula: str) -> int:
-    """
-    Return the complexity bound 'k' from canonical <{A}, k> NatATL syntax.
-    """
-    match = re.search(_CAPACITY_PATTERN, natatl_formula)
-    if match:
-        try:
-            return int(match.group(3))
-        except (TypeError, ValueError):
-            logger.debug(
-                "Failed to parse NatATL capacity bound from %r", natatl_formula
-            )
-            return 1
-    raise ValueError(
-        f"NatATL formula must use <{{agents}}, k> syntax: {natatl_formula!r}"
-    )
+def get_k_value(natatl_formula: str, n_agent: int = 0) -> int:
+    """Return strategy-complexity bound k from a NatATL formula."""
+    ast = parse_natatl_formula(natatl_formula, n_agent=n_agent)
+    return get_k_value_from_ast(ast)
+
+
+def prepare_natatl_formula(natatl_formula: str, n_agent: int):
+    """Parse NatATL once and return CTL string, agents, and k."""
+    _, ctl_formula, agents, k = analyze_natatl_formula(natatl_formula, n_agent)
+    logger.debug("NatATL formula: %s", natatl_formula)
+    logger.debug("Converted CTL formula: %s", ctl_formula)
+    return ctl_formula, agents, k

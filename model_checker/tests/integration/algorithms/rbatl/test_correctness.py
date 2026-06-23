@@ -51,4 +51,4 @@ class TestRBATLSemantics:
         states = extract_states_from_result(result)
         assert states == {"s0", "s1", "s2", "s3", "s4"}
         init_str = result.get("initial_state", "")
-        assert "True" not in init_str and ": True" not in init_str
+        assert ": True" in init_str

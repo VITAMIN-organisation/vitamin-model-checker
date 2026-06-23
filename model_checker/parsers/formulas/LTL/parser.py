@@ -2,14 +2,36 @@
 
 What it handles:
 - LTL formulas with temporal operators (X, F, G, U) and boolean connectives.
-- Propositions matching [a-z][a-z0-9_]*.
+- Propositions matching [a-zA-Z][a-zA-Z0-9_]*.
 """
 
-import re
 from typing import Optional
 
-from ..parser_utils import PROPOSITION_AST_PATTERN, PROPOSITION_TOKEN_PATTERN, run_common_prechecks
+from ..parser_utils import (
+    PROPOSITION_TOKEN_PATTERN,
+    run_common_prechecks,
+    validate_ast,
+)
 from ..shared_parser import BaseLogicParser
+
+_LTL_VALID_OPERATORS = {
+    "U",
+    "G",
+    "F",
+    "X",
+    "!",
+    "&&",
+    "||",
+    "->",
+    "AND",
+    "OR",
+    "NOT",
+    "IMPLIES",
+    "UNTIL",
+    "GLOBALLY",
+    "NEXT",
+    "EVENTUALLY",
+}
 
 
 class LTLParser(BaseLogicParser):
@@ -50,36 +72,4 @@ class LTLParser(BaseLogicParser):
     def _post_validation(self, formula, result):
         if result is None:
             return False
-
-        _VALID_OPERATORS = {
-            "U",
-            "G",
-            "F",
-            "X",
-            "!",
-            "&&",
-            "||",
-            "->",
-            "AND",
-            "OR",
-            "NOT",
-            "IMPLIES",
-            "UNTIL",
-            "GLOBALLY",
-            "NEXT",
-            "EVENTUALLY",
-        }
-
-        def validate_result(r):
-            if isinstance(r, str):
-                if r in _VALID_OPERATORS or r.upper() in _VALID_OPERATORS:
-                    return True
-                if not PROPOSITION_AST_PATTERN.match(r):
-                    return False
-            elif isinstance(r, tuple):
-                for item in r:
-                    if not validate_result(item):
-                        return False
-            return True
-
-        return validate_result(result)
+        return validate_ast(result, _LTL_VALID_OPERATORS)

@@ -102,7 +102,10 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
             )
         else:
             solution = existentialNatATL(
-                model_path, existential_natatl[0], universal_natatl[0], start_time
+                model_path,
+                existential_natatl[0],
+                universal_natatl,
+                start_time,
             )
 
         result["Satisfiability"] = solution

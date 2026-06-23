@@ -11,7 +11,7 @@ from model_checker.algorithms.explicit.shared.result_formatters import (
     verify_initial_state,
 )
 from model_checker.algorithms.explicit.TCTL.solver import solve_tree
-from model_checker.parsers.formulas.TCTL import do_parsingTCTL
+from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
@@ -23,10 +23,12 @@ def _core_model_checking(formula: str, filename: str) -> Dict[str, Any]:
     tcgs = TimedCGS()
     tcgs.read_file(filename)
 
-    ast = do_parsingTCTL(formula.strip())
+    parser = FormulaParserFactory.get_parser_instance("TCTL")
+    ast = parser.parse(formula.strip())
     if ast is None:
+        err = parser.errors[0] if parser.errors else "Syntax error in formula"
         return {
-            "res": "Syntax error in formula or the atom doesn't exist",
+            "res": err,
             "initial_state": "",
         }
 

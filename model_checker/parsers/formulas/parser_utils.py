@@ -10,22 +10,154 @@ from model_checker.parsers.syntax_patterns import (
     AGENT_LIST,
     ATOMIC_PROPOSITION_NAME_RE,
     EMPTY_COALITION_RE,
+    FORMULA_RESERVED_WORDS,
     NATATL_CAPACITY_RE,
+    NATSL_QUANTIFIER_TOKENS,
     NEGATIVE_AGENT_IN_COALITION_RE,
     PROPOSITION_FULL_RE,
     PROPOSITION_TOKEN,
     TRAILING_COALITION_COMMA_RE,
 )
 
-# Backward-compatible names used by logic parsers.
 PROPOSITION_TOKEN_PATTERN = PROPOSITION_TOKEN
 PROPOSITION_AST_PATTERN = PROPOSITION_FULL_RE
+
+_INVALID_PROPOSITION_MSG = "expected identifier matching [a-zA-Z][a-zA-Z0-9_]*"
+
+# Modal/path tokens must not be substrings of proposition identifiers (Goal, Flux).
+_MODAL_TOKEN_PREFIX = r"(?:^|(?<![a-zA-Z0-9_]))"
+_MODAL_TOKEN_SUFFIX = r"(?![a-zA-Z0-9_])"
 
 
 class CoalitionValueError(Exception):
     """Bad coalition syntax or an agent index outside the allowed range."""
 
     pass
+
+
+def validate_proposition_identifier(
+    name: str,
+    *,
+    reserved_words: frozenset[str] = FORMULA_RESERVED_WORDS,
+) -> tuple[bool, Optional[str]]:
+    """Return (True, None) when name is a valid atomic proposition identifier.
+
+    Applies the shared model/formula alphabet and rejects reserved keywords.
+    """
+    if not PROPOSITION_FULL_RE.match(name):
+        return (
+            False,
+            f"Atomic proposition {name!r} is invalid: {_INVALID_PROPOSITION_MSG}.",
+        )
+    if name.lower() in reserved_words:
+        return (
+            False,
+            f"Atomic proposition {name!r} clashes with reserved keyword.",
+        )
+    return True, None
+
+
+def validate_natsl_temporal_atom(atom: str) -> tuple[bool, Optional[str]]:
+    """Validate the proposition after F/!F in a NatSL formula."""
+    valid, err = validate_proposition_identifier(atom)
+    if not valid:
+        return False, err
+    if atom in NATSL_QUANTIFIER_TOKENS:
+        return (
+            False,
+            f"NatSL temporal atom {atom!r} clashes with quantifier token {atom!r}.",
+        )
+    return True, None
+
+
+def natsl_temporal_atom_from_parsed_formula(parsed_formula) -> Optional[str]:
+    """Extract the temporal proposition from a parsed NatSL AST tuple."""
+    if not isinstance(parsed_formula, tuple) or len(parsed_formula) != 3:
+        return None
+    temporal_expr = parsed_formula[2]
+    if not isinstance(temporal_expr, tuple):
+        return None
+    if len(temporal_expr) == 2:
+        return temporal_expr[1]
+    if len(temporal_expr) == 3 and temporal_expr[0] == "!":
+        return temporal_expr[2]
+    return None
+
+
+def validate_release_weak_rejected(
+    formula: str, logic_name: str
+) -> tuple[bool, Optional[str]]:
+    """Reject Release (R) and Weak Until (W) when the logic solver does not evaluate them."""
+    if re.search(
+        r"(?:<\d+(?:,\d+)*>)+\s*(?:[RW]\b|release\b|weak\b)",
+        formula,
+        re.IGNORECASE,
+    ):
+        return (
+            False,
+            f"{logic_name} does not support Release (R) or Weak Until (W) operators",
+        )
+    if re.search(
+        r"<\{[\d,]+\},\s*\d+>\s*(?:[RW]\b|release\b|weak\b)",
+        formula,
+        re.IGNORECASE,
+    ):
+        return (
+            False,
+            f"{logic_name} does not support Release (R) or Weak Until (W) operators",
+        )
+    return True, None
+
+
+def validate_ctl_path_quantifiers(formula: str) -> tuple[bool, Optional[str]]:
+    """Reject CTL formulas whose temporal operators are not path-quantified.
+
+    Uses token-boundary checks so proposition names such as Goal or Flux are not
+    mistaken for bare G/F/X operators.
+    """
+    stripped = formula.strip()
+    if not stripped:
+        return True, None
+
+    if re.match(
+        _MODAL_TOKEN_PREFIX + r"(?:X|F|G)" + _MODAL_TOKEN_SUFFIX,
+        stripped,
+    ):
+        return (
+            False,
+            "Temporal operators (X, F, G) must be preceded by a quantifier (A or E)",
+        )
+
+    if re.match(_MODAL_TOKEN_PREFIX + r"U" + _MODAL_TOKEN_SUFFIX, stripped):
+        return (
+            False,
+            "UNTIL operator (U) must be preceded by a quantifier (A or E)",
+        )
+
+    has_temporal = bool(
+        re.search(
+            _MODAL_TOKEN_PREFIX + r"(?:X|F|G|U)" + _MODAL_TOKEN_SUFFIX,
+            stripped,
+        )
+    )
+    has_quantifier = bool(
+        re.search(
+            _MODAL_TOKEN_PREFIX
+            + r"(?:A|E)"
+            + _MODAL_TOKEN_SUFFIX
+            + r"|"
+            + _MODAL_TOKEN_PREFIX
+            + r"(?:forall|exist)\b",
+            stripped,
+            re.IGNORECASE,
+        )
+    )
+    if has_temporal and not has_quantifier:
+        return (
+            False,
+            "Temporal operators must be preceded by a path quantifier (A or E) in CTL",
+        )
+    return True, None
 
 
 def verify_token(
@@ -142,7 +274,7 @@ def validate_natatl_coalition(
 
     for value in agent_list:
         agent_num = int(value)
-        if agent_num <= 0 or agent_num > int(max_coalition):
+        if max_coalition > 0 and (agent_num <= 0 or agent_num > int(max_coalition)):
             raise CoalitionValueError(
                 f"Invalid coalition value {value}: must be between 1 and {max_coalition}"
             )
@@ -230,9 +362,7 @@ def run_common_prechecks(
             return False, "Empty coalition '<>' is not allowed"
         if TRAILING_COALITION_COMMA_RE.search(formula):
             return False, "Trailing comma in coalition is not allowed"
-        if not allow_negative_agents and NEGATIVE_AGENT_IN_COALITION_RE.search(
-            formula
-        ):
+        if not allow_negative_agents and NEGATIVE_AGENT_IN_COALITION_RE.search(formula):
             return False, "Negative agent indices are not allowed"
 
     valid, err = validate_formula_unicode(formula)
@@ -269,7 +399,10 @@ def validate_ast(
 
     def _walk(node):
         if isinstance(node, str):
-            return _is_valid_atom(node) or bool(PROPOSITION_AST_PATTERN.match(node))
+            if _is_valid_atom(node):
+                return True
+            valid, _ = validate_proposition_identifier(node)
+            return valid
         if isinstance(node, tuple):
             return all(_walk(child) for child in node)
         return False
@@ -283,10 +416,15 @@ __all__ = [
     "CoalitionValueError",
     "PROPOSITION_AST_PATTERN",
     "PROPOSITION_TOKEN_PATTERN",
+    "natsl_temporal_atom_from_parsed_formula",
     "run_common_prechecks",
     "validate_ast",
     "validate_coalition",
     "validate_coalition_bound_token",
+    "validate_ctl_path_quantifiers",
+    "validate_natsl_temporal_atom",
     "validate_natatl_coalition",
+    "validate_proposition_identifier",
+    "validate_release_weak_rejected",
     "verify_token",
 ]

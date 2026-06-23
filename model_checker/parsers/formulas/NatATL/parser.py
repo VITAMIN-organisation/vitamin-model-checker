@@ -3,13 +3,13 @@
 What it handles:
 - NatATL formulas with canonical coalition syntax <{1,2}, k> on U/G/X/F
   operators and boolean connectives.
-- Propositions matching [a-z][a-z0-9_]*.
+- Propositions matching [a-zA-Z][a-zA-Z0-9_]*.
 
 What it rejects:
 - Invalid coalition shapes (empty, trailing commas).
-- Uppercase letters outside modal operators U/G/X/F.
 - Missing coalitions for temporal operators.
 - ATL-style coalitions <1,2> without explicit bound.
+- Reserved words and invalid proposition identifiers in the AST.
 
 Behavior:
 - Returns AST tuple/string on success or None on invalid input; raises
@@ -23,14 +23,39 @@ from model_checker.parsers.syntax_patterns import (
     NATATL_COALITION_TOKEN,
     PROPOSITION_TOKEN,
 )
+
 from ..parser_utils import (
-    PROPOSITION_AST_PATTERN,
     run_common_prechecks,
+    validate_ast,
     validate_natatl_coalition,
 )
 from ..shared_parser import BaseLogicParser
 
 MAX_PROP_LEN_POST_VALIDATION = 1000
+
+_NATATL_VALID_OPERATORS = {
+    "U",
+    "G",
+    "F",
+    "X",
+    "!",
+    "&&",
+    "||",
+    "->",
+    "AND",
+    "OR",
+    "NOT",
+    "IMPLIES",
+    "UNTIL",
+    "GLOBALLY",
+    "NEXT",
+    "EVENTUALLY",
+}
+
+_NATATL_COALITION_OPERATOR_PATTERN = re.compile(
+    r"^<\{[\d,]+\},\s*\d+>(?:U|G|X|F|UNTIL|GLOBALLY|NEXT|EVENTUALLY)$",
+    re.IGNORECASE,
+)
 
 
 class NatATLParser(BaseLogicParser):
@@ -102,16 +127,14 @@ class NatATLParser(BaseLogicParser):
         if result is None:
             return False
 
-        if isinstance(result, str):
-            if not PROPOSITION_AST_PATTERN.match(result):
-                return False
-            if re.search(r"[UGXF]", formula):
-                return False
-
         if isinstance(result, str) and len(result) > MAX_PROP_LEN_POST_VALIDATION:
             return False
 
-        return True
+        return validate_ast(
+            result,
+            _NATATL_VALID_OPERATORS,
+            coalition_pattern=_NATATL_COALITION_OPERATOR_PATTERN,
+        )
 
     def p_error(self, p):
         super().p_error(p)

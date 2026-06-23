@@ -1,6 +1,6 @@
 # Wallet_ATL
 
-Wallet ATL extends standard ATL with per-agent wallet balances. Coalitions can
+Wallet_ATL extends standard ATL with per-agent wallet balances. Coalitions can
 include wallet constraints on which strategies are feasible.
 
 ## Model type
@@ -17,7 +17,7 @@ Coalitions use double angle brackets. Optional wallet guards come after `:`.
 <<1,2:wallet(1, >= 50) && wallet(2, <= 100)>>G safe
 ```
 
-Temporal operators: `X`, `F`, `G`, `U` (same family as ATL).
+Temporal operators: `X`, `F`, `G`, `U`. Every temporal formula must begin with a `<<>>` coalition prefix.
 
 Wallet guards use `wallet(agent, operator, value)` where operator is
 `>=`, `<=`, `>`, `<`, or `==`.

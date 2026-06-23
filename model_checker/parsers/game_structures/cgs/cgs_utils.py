@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
-from model_checker.parsers.syntax_patterns import ATOMIC_PROPOSITION_NAME_RE
+from model_checker.parsers.formulas.parser_utils import validate_proposition_identifier
 
 
 def proposition_index(atomic_propositions, element) -> Optional[int]:
@@ -18,11 +18,9 @@ def proposition_index(atomic_propositions, element) -> Optional[int]:
 
 def validate_atomic_proposition_name(name: str) -> None:
     """Reject proposition names that formula parsers cannot reference."""
-    if not ATOMIC_PROPOSITION_NAME_RE.match(str(name)):
-        raise ValueError(
-            f"Atomic proposition {name!r} is invalid: expected identifier matching "
-            "[a-zA-Z][a-zA-Z0-9_]*."
-        )
+    valid, err = validate_proposition_identifier(str(name))
+    if not valid:
+        raise ValueError(err)
 
 
 AGENT_LABEL_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")

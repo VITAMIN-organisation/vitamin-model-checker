@@ -15,11 +15,46 @@ Behavior:
   user-facing parse errors.
 """
 
-import re
 from typing import Optional
 
-from ..parser_utils import PROPOSITION_AST_PATTERN, PROPOSITION_TOKEN_PATTERN, run_common_prechecks
+from ..parser_utils import (
+    PROPOSITION_TOKEN_PATTERN,
+    run_common_prechecks,
+    validate_ast,
+    validate_ctl_path_quantifiers,
+)
 from ..shared_parser import BaseLogicParser
+
+_CTL_VALID_OPERATORS = {
+    "EX",
+    "AX",
+    "EF",
+    "AF",
+    "EG",
+    "AG",
+    "EU",
+    "AU",
+    "E",
+    "A",
+    "U",
+    "G",
+    "F",
+    "X",
+    "!",
+    "&&",
+    "||",
+    "->",
+    "AND",
+    "OR",
+    "NOT",
+    "IMPLIES",
+    "UNTIL",
+    "GLOBALLY",
+    "NEXT",
+    "EVENTUALLY",
+    "FORALL",
+    "EXIST",
+}
 
 
 class CTLParser(BaseLogicParser):
@@ -88,66 +123,9 @@ class CTLParser(BaseLogicParser):
         if not valid:
             return False, err
 
-        if re.match(r"^\s*[XFG]", formula):
-            return (
-                False,
-                "Temporal operators (X, F, G) must be preceded by a quantifier (A or E)",
-            )
-        if re.match(r"^\s*U\b", formula):
-            return False, "UNTIL operator (U) must be preceded by a quantifier (A or E)"
-
-        has_temporal = re.search(r"(X|F|G|U)", formula)
-        has_quantifier = re.search(r"(A|E|forall|exist)", formula, re.IGNORECASE)
-        if has_temporal and not has_quantifier:
-            return (
-                False,
-                "Temporal operators must be preceded by a path quantifier (A or E) in CTL",
-            )
-
-        return True, None
+        return validate_ctl_path_quantifiers(formula)
 
     def _post_validation(self, formula, result):
         if result is None:
             return False
-
-        _VALID_OPERATORS = {
-            "EX",
-            "AX",
-            "EF",
-            "AF",
-            "EG",
-            "AG",
-            "EU",
-            "AU",
-            "E",
-            "A",
-            "U",
-            "G",
-            "F",
-            "X",
-            "!",
-            "&&",
-            "||",
-            "->",
-            "AND",
-            "OR",
-            "NOT",
-            "IMPLIES",
-            "UNTIL",
-            "GLOBALLY",
-            "NEXT",
-            "EVENTUALLY",
-            "FORALL",
-            "EXIST",
-        }
-
-        def _validate_result(r):
-            if isinstance(r, str):
-                if r in _VALID_OPERATORS or r.upper() in _VALID_OPERATORS:
-                    return True
-                return bool(PROPOSITION_AST_PATTERN.match(r))
-            if isinstance(r, tuple):
-                return all(_validate_result(item) for item in r)
-            return False
-
-        return _validate_result(result)
+        return validate_ast(result, _CTL_VALID_OPERATORS)

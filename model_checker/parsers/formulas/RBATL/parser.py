@@ -19,10 +19,33 @@ from typing import Optional
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
+    validate_ast,
     validate_coalition_bound_token,
+    validate_release_weak_rejected,
     verify_token,
 )
 from ..shared_parser import BaseLogicParser
+
+_RBATL_COALITION_OPERATOR_PATTERN = re.compile(
+    r"^<\d+(?:,\d+)*><\d+(?:,\d+)*>(F|G|X|U|UNTIL|NEXT|EVENTUALLY|GLOBALLY)$",
+    re.IGNORECASE,
+)
+_RBATL_VALID_OPERATORS = frozenset(
+    {
+        "U",
+        "X",
+        "F",
+        "G",
+        "&&",
+        "AND",
+        "NOT",
+        "UNTIL",
+        "NEXT",
+        "EVENTUALLY",
+        "GLOBALLY",
+        "!",
+    }
+)
 
 
 class RBATLParser(BaseLogicParser):
@@ -107,6 +130,10 @@ class RBATLParser(BaseLogicParser):
         if not valid:
             return False, err
 
+        valid, err = validate_release_weak_rejected(formula, "RBATL")
+        if not valid:
+            return False, err
+
         if re.search(r"<\d+(?:,\d+)*>\s*[FGXURW]", formula) and not re.search(
             r"<\d+(?:,\d+)*><\d+(?:,\d+)*>", formula
         ):
@@ -115,6 +142,15 @@ class RBATLParser(BaseLogicParser):
                 "RBATL requires a resource bound (e.g., <1><5>) for temporal operators",
             )
         return True, None
+
+    def _post_validation(self, formula, result):
+        if result is None:
+            return False
+        return validate_ast(
+            result,
+            _RBATL_VALID_OPERATORS,
+            coalition_pattern=_RBATL_COALITION_OPERATOR_PATTERN,
+        )
 
     def verify(self, token_name, string):
         return verify_token(self.lexer, token_name, string)

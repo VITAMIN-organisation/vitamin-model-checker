@@ -4,7 +4,6 @@ OL operator handlers for formula tree evaluation.
 Unary: NOT, <Jn>X, <Jn>F, <Jn>G. Binary: OR, AND, IMPLIES, <Jn>U, <Jn>R, <Jn>W.
 """
 
-import re
 from typing import Callable, Set
 
 from model_checker.algorithms.explicit.OL.preimage import (

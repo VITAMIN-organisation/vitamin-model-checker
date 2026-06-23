@@ -20,6 +20,15 @@ from model_checker.tests.helpers.model_helpers import assert_parse_structure
         ("RBATL", "<1><5>F p", "<1>F p", 2),
         ("NatSL", "E{3}x:(x,1)F a", "E{3}x:Fa", None),
         ("CapATL", "<{1}, 5>X p", "<{1}, 5>X", 2),
+        ("RABATL", "<1><5>F p", "<1>F p", 2),
+        ("ATLF", "<1>F p", "<1>F", 2),
+        ("NatATLF", "<{1}, 1>F p", "<{1}, 1>F", 2),
+        ("COTL", "<1><5>F p", "<1>F p", 2),
+        ("ICTL", "AG p", "AG EX", None),
+        ("IATL", "<1>F p", "<1>F", 2),
+        ("TCTL", "EF p", "EF", None),
+        ("TOL", "{J1}F p", "{J1}F", None),
+        ("Wallet_ATL", "<<1>>F p", "<<>> p", 2),
     ],
 )
 def test_formula_parser_valid_and_invalid(
@@ -42,6 +51,24 @@ def test_formula_parser_valid_and_invalid(
             "model_checker.parsers.formulas.CapATL.parser",
             "CapATLParser",
         ),
+        "RABATL": (
+            "model_checker.parsers.formulas.RABATL.parser",
+            "RABATLParser",
+        ),
+        "ATLF": ("model_checker.parsers.formulas.ATLF.parser", "ATLFParser"),
+        "NatATLF": (
+            "model_checker.parsers.formulas.NatATLF.parser",
+            "NatATLFParser",
+        ),
+        "COTL": ("model_checker.parsers.formulas.OATL.parser", "COTLParser"),
+        "ICTL": ("model_checker.parsers.formulas.ICTL.parser", "ICTLParser"),
+        "IATL": ("model_checker.parsers.formulas.IATL.parser", "IATLParser"),
+        "TCTL": ("model_checker.parsers.formulas.TCTL.parser", "TCTLParser"),
+        "TOL": ("model_checker.parsers.formulas.TOL.parser", "TOLParser"),
+        "Wallet_ATL": (
+            "model_checker.parsers.formulas.Wallet_ATL.parser",
+            "Wallet_ATLParser",
+        ),
     }
     mod_path, class_name = parser_module[logic]
     mod = importlib.import_module(mod_path)
@@ -50,7 +77,8 @@ def test_formula_parser_valid_and_invalid(
     kwargs = {} if n_agent is None else {"n_agent": n_agent}
     result_valid = parser.parse(valid_formula, **kwargs)
     assert result_valid is not None, f"{logic} valid formula should parse"
-    assert_parse_structure(result_valid, description=logic)
+    if logic not in ("TOL", "TCTL", "ICTL", "Wallet_ATL"):
+        assert_parse_structure(result_valid, description=logic)
     result_invalid = parser.parse(invalid_formula, **kwargs)
     assert result_invalid is None, f"{logic} invalid formula should not parse"
 

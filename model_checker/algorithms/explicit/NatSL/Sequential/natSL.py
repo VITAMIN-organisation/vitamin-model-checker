@@ -112,17 +112,20 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
         logger.debug("Existential NatATL formula: %s", existential_natatl)
         logger.debug("Universal NatATL formula: %s", universal_natatl)
 
+        has_universal = bool(universal_natatl)
         solution, trees, height, cgs = existentialNatATL(
-            model_path, existential_natatl[0]
+            model_path,
+            existential_natatl[0],
+            allow_direct_solution=not has_universal,
         )
 
-        if solution:
+        if solution and not has_universal:
             elapsed = time.time() - start_time
             logger.info("Direct existential solution found in %.3f seconds", elapsed)
             result["Satisfiability"] = solution
             return result
 
-        if not universal_natatl:
+        if not has_universal:
             logger.info(
                 "No direct solution and no universal quantifiers; formula is unsatisfiable"
             )
@@ -130,18 +133,22 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
             return result
 
         logger.info(
-            "No direct solution. Checking %d candidate trees against universal strategies",
+            "Checking %d candidate trees against %d universal formula(s)",
             len(trees),
+            len(universal_natatl),
         )
 
-        result["Satisfiability"] = universalNatATL(
-            trees,
-            model_path,
-            universal_natatl[0],
-            n_universal,
-            height,
-            start_time,
-            cgs,
+        result["Satisfiability"] = all(
+            universalNatATL(
+                trees,
+                model_path,
+                universal_formula,
+                n_universal,
+                height,
+                start_time,
+                cgs,
+            )
+            for universal_formula in universal_natatl
         )
 
         elapsed = time.time() - start_time

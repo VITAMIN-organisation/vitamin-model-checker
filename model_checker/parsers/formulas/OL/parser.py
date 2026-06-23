@@ -13,18 +13,47 @@ Returns:
 - AST tuple on success, or None on invalid input.
 """
 
+import re
 from typing import Optional
 
 from model_checker.parsers.syntax_patterns import (
     OL_DEMONIC_BOUND_FULL_RE,
     OL_DEMONIC_TOKEN,
 )
+
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
+    validate_ast,
     verify_token,
 )
 from ..shared_parser import BaseLogicParser
+
+_OL_DEMONIC_OPERATOR_PATTERN = re.compile(
+    r"^<J[1-9]\d*>(F|G|X|U|R|W|UNTIL|RELEASE|WEAK|NEXT|EVENTUALLY|GLOBALLY)$",
+    re.IGNORECASE,
+)
+_OL_VALID_OPERATORS = frozenset(
+    {
+        "U",
+        "R",
+        "W",
+        "X",
+        "F",
+        "G",
+        "&&",
+        "AND",
+        "NOT",
+        "UNTIL",
+        "RELEASE",
+        "WEAK",
+        "NEXT",
+        "EVENTUALLY",
+        "GLOBALLY",
+        "!",
+        "->",
+    }
+)
 
 
 class DemonicValueError(Exception):
@@ -114,6 +143,15 @@ class OLParser(BaseLogicParser):
                 r"<J>(?!\d)",  # missing cost after J
                 r"<(?!J)\d+>",  # numeric-only prefix without J
             ),
+        )
+
+    def _post_validation(self, formula, result):
+        if result is None:
+            return False
+        return validate_ast(
+            result,
+            _OL_VALID_OPERATORS,
+            coalition_pattern=_OL_DEMONIC_OPERATOR_PATTERN,
         )
 
     def verify(self, token_name, string):

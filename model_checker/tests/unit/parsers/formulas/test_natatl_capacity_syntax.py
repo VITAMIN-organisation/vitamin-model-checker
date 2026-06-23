@@ -51,9 +51,9 @@ class TestNatATLCapacityConversion:
         """Capacity syntax must drive CTL conversion, agents, and k consistently."""
         formula = "<{1,2}, 5>F p"
 
-        ctl = natatl_to_ctl(formula)
-        agents = get_agents_from_natatl(formula)
-        k = get_k_value(formula)
+        ctl = natatl_to_ctl(formula, n_agent=2)
+        agents = get_agents_from_natatl(formula, n_agent=2)
+        k = get_k_value(formula, n_agent=2)
 
         assert ctl == "A F p"
         assert agents == [1, 2]

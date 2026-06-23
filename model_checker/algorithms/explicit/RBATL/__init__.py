@@ -1,1 +1,1 @@
-"""RBATL (Resource-Bounded ATL) explicit algorithm package."""
+"""RBATL explicit algorithm package."""

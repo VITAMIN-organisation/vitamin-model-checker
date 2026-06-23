@@ -12,9 +12,6 @@ import os
 import time
 from typing import Any, Dict
 
-from model_checker.algorithms.explicit.ATL.ATL import (
-    model_checking as atl_model_checking,
-)
 from model_checker.algorithms.explicit.NatATL.NatATLtoATL import (
     natatl_to_atl,
 )
@@ -71,17 +68,9 @@ def preprocess_and_verify(model: str, formula: str) -> Dict[str, Any]:
     )
     logger.debug("ATL parsing result: %s", res_parsing)
 
-    # Fast ATL check
-    result = atl_model_checking(atlformula, model)
-    logger.debug("ATL verification result: %s", result)
-
-    if result.get("initial_state") == f"Initial state {cgs.initial_state}: True":
-        logger.info("ATL satisfied, proceeding with NatATL verification")
-        res = _run_natatl_recall(model, formula)
-    else:
-        logger.info("ATL not satisfied, NatATL must also fail (early termination)")
-        res["Satisfiability"] = False
-        res["Complexity Bound"] = None
+    # Recall strategies are more expressive than memoryless ATL; ATL failure does
+    # not imply recall failure, so always run full recall verification.
+    res = _run_natatl_recall(model, formula)
 
     end_time = time.time()
     elapsed_time = end_time - start_time

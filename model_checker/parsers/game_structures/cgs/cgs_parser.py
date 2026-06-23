@@ -35,6 +35,7 @@ EXTENSION_SECTION_HEADERS = frozenset(
         "Clocks",
         "Clock_constraints",
         "Invariants",
+        "Wallets",
     }
 )
 

@@ -62,13 +62,29 @@ def _convert_structures_to_natatl_separated(
     return existential_formulas, universal_formulas
 
 
+def _temporal_operator_and_proposition(temporal_expr):
+    """Extract temporal operator and proposition from F or !F parse nodes."""
+    if (
+        isinstance(temporal_expr, tuple)
+        and len(temporal_expr) == 3
+        and temporal_expr[0] == "!"
+    ):
+        return temporal_expr[1], temporal_expr[2], True
+    temporal_operator, proposition = temporal_expr
+    return temporal_operator, proposition, False
+
+
 def convert_parsed_natsl_to_natatl_separated(
     parsed_formula, fully_negated=False, original_formula=""
 ):
     """Convert an already parsed NatSL formula to separated NatATL formulas."""
-    negate_prefix = fully_negated or original_formula.startswith("!")
     quantifiers, binding_pairs, temporal_expr = parsed_formula
-    temporal_operator, proposition = temporal_expr
+    temporal_operator, proposition, negated_temporal = (
+        _temporal_operator_and_proposition(temporal_expr)
+    )
+    negate_prefix = (
+        fully_negated or original_formula.startswith("!") or negated_temporal
+    )
     var_to_agent = {var: int(agent) for var, agent in binding_pairs}
     existential_vars = [(q, var, bound) for q, var, bound in quantifiers if q == "E"]
     universal_vars = [(q, var, bound) for q, var, bound in quantifiers if q == "A"]

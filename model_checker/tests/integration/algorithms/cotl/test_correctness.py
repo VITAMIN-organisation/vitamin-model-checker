@@ -13,6 +13,12 @@ from model_checker.tests.integration.algorithms.cotl import (
 
 CORRECTNESS_CASES = [
     ("example", "<1><5>F g", {"s0", "s2", "s3", "s4", "s5"}, True),
+    ("example", "<1><5>G g", set(), False),
+    ("example", "<1><5>X g", {"s0"}, True),
+    ("example", "<1><3>G g", set(), False),
+    ("example", "<1><5>g U h", {"s4", "s5"}, False),
+    ("example", "<1><5>g R h", {"s4", "s5"}, False),
+    ("example", "<1><5>g W h", {"s4", "s5"}, False),
 ]
 
 

@@ -13,7 +13,7 @@ from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,
     verify_initial_state,
 )
-from model_checker.parsers.formulas.ICTL.ictl_ply_parser import do_parsingICTL
+from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 
 def run_model_checking(formula: str, checker: ICTLModelChecker) -> Dict[str, Any]:
@@ -21,9 +21,11 @@ def run_model_checking(formula: str, checker: ICTLModelChecker) -> Dict[str, Any
     if not formula.strip():
         return {"res": "Error: formula not entered", "initial_state": ""}
 
-    parsed = do_parsingICTL(formula)
+    parser = FormulaParserFactory.get_parser_instance("ICTL")
+    parsed = parser.parse(formula)
     if parsed is None:
-        return {"res": "Syntax Error", "initial_state": ""}
+        err = parser.errors[0] if parser.errors else "Syntax Error"
+        return {"res": err, "initial_state": ""}
 
     root = checker.build_tree(parsed)
     if root is None:

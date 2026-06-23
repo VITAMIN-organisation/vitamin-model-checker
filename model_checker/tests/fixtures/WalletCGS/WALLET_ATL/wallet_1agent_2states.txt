@@ -1,0 +1,23 @@
+# MODEL: One-agent wallet model with 2 states (s0, s1)
+
+# PURPOSE: Minimal WalletCGS fixture for Wallet_ATL integration tests.
+
+# LOGIC: Wallet_ATL
+
+Transition
+A *
+0 0
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p q
+Labelling
+1 0
+0 1
+Number_of_agents
+1
+Wallets
+s0: 5
+s1: 5

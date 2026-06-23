@@ -1,1 +1,1 @@
-METADATA = {"model_type": "CGS"}
+METADATA = {"model_type": "BCGS"}

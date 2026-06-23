@@ -4,11 +4,7 @@ import logging
 import os
 from typing import Dict, List, Optional, Tuple
 
-from model_checker.algorithms.explicit.NatATL.NatATLtoCTL import (
-    get_agents_from_natatl,
-    get_k_value,
-    natatl_to_ctl,
-)
+from model_checker.algorithms.explicit.NatATL.NatATLtoCTL import prepare_natatl_formula
 from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
 
 logger = logging.getLogger(__name__)
@@ -38,23 +34,16 @@ def initialize(
     except Exception as e:
         logger.warning("NatATL compliance validation warning: %s", e)
 
-    # Transform NatATL formula into CTL formula for underlying model checking
     try:
-        CTLformula = natatl_to_ctl(formula)
-        logger.debug("NatATL formula: %s", formula)
-        logger.debug("Converted CTL formula: %s", CTLformula)
-    except Exception as e:
-        logger.error("Failed to convert NatATL to CTL: %s", e)
+        CTLformula, agents, k = prepare_natatl_formula(
+            formula, cgs.get_number_of_agents()
+        )
+    except ValueError as e:
+        logger.error("Failed to parse or convert NatATL: %s", e)
         raise ValueError(f"Invalid NatATL formula format: {str(e)}") from e
 
-    # Extract complexity bound from formula
-    k = get_k_value(formula)
-
-    # Get involved agents from the coalition operator
-    agents = get_agents_from_natatl(formula)
     logger.debug("Involved agents: %s", agents)
 
-    # Get available actions for each agent
     cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
     actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
     logger.debug("Actions per agent: %s", actions_per_agent)

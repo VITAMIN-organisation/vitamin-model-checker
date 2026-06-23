@@ -37,11 +37,7 @@ def _oatl_unary_key(parser_instance, val):
     if parser_instance.verify("NOT", val):
         return "NOT"
     if parser_instance.verify("COALITION_DEMONIC", val):
-        if (
-            parser_instance.verify("GLOBALLY", val)
-            or parser_instance.verify("RELEASE", val)
-            or parser_instance.verify("WEAK", val)
-        ):
+        if parser_instance.verify("GLOBALLY", val):
             return "COALITION_GLOBALLY"
         if parser_instance.verify("NEXT", val):
             return "COALITION_NEXT"

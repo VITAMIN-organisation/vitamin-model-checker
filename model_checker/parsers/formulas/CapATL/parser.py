@@ -28,6 +28,7 @@ from ..parser_utils import (
     run_common_prechecks,
     validate_ast,
     validate_coalition,
+    validate_release_weak_rejected,
     verify_token,
 )
 from ..shared_parser import BaseLogicParser
@@ -160,6 +161,10 @@ class CapATLParser(BaseLogicParser):
                 False,
                 "CapATL requires either capacity bounds <{coalition}, bound> or knowledge operators K(agent)",
             )
+
+        valid, err = validate_release_weak_rejected(formula, "CapATL")
+        if not valid:
+            return False, err
 
         return True, None
 

@@ -1,9 +1,9 @@
 """
-OATL Model Checker.
+OATL model checker.
 
 This module implements model checking for OATL formulas over cost-CGS models.
-OATL extends ATL with cost bounds and one-sided strategies: <J><n> means
-"coalition J can achieve the goal with cost at most n."
+Coalition modalities `<A><k>` require coalition `A` to enforce the sub-formula
+while each chosen transition has cost at most `k`.
 """
 
 import logging

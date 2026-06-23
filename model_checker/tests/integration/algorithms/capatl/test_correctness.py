@@ -46,13 +46,12 @@ class TestCapATLErrorHandling:
 class TestCapATLSemantics:
     """Result format and winning states for CapATL."""
 
-    def test_capatl_result_has_initial_state_and_winning_states(self, capatl_model):
-        """Result includes initial_state key and res with winning state set."""
+    def test_capatl_exact_winning_states(self, capatl_model):
+        """<{1},5>F g holds only at q2 on the example capCGS model."""
         result = _core_capatl_checking(capatl_model, "<{1},5>F g")
         assert "error" not in result
         assert "res" in result
         assert "initial_state" in result
         states = extract_states_from_result(result)
-        assert states is not None
-        assert len(states) >= 1, "At least one winning state expected for <{1},5>F g"
-        assert "q2" in states, "q2 is a winning state for F g on this model"
+        assert states == {"q2"}
+        assert ": False" in result.get("initial_state", "")
