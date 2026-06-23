@@ -63,6 +63,19 @@ class NatSLParser(BaseLogicParser):
         r"A"
         return t
 
+    def t_AND(self, t):
+        # NatSL has no boolean connectives; treat word 'and' as a proposition candidate.
+        r"&&|\&"
+        return t
+
+    def t_OR(self, t):
+        r"\|\||\|"
+        return t
+
+    def t_IMPLIES(self, t):
+        r"->|>"
+        return t
+
     def t_PROP(self, t):
         reserved = {
             "eventually": "EVENTUALLY",
