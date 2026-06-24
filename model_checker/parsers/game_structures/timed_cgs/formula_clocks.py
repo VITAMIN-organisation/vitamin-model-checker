@@ -1,18 +1,6 @@
-"""Formula clocks J for TOL (disjoint from automaton clocks X)."""
+"""Formula clocks Y for timed logics (disjoint from automaton clocks X)."""
 
 import re
-
-from model_checker.parsers.formulas.TOL.tol_ply_parser import (
-    AtomicProp,
-    Binary,
-    ClockExpr,
-    DemonicBinary,
-    DemonicOp,
-    Expr,
-    FreezeExpr,
-    SimpleTimeExpr,
-    Unary,
-)
 
 _CLOCK_BOUND_RE = re.compile(r"^([a-zA-Z][a-zA-Z0-9_]*)(?:<=|>=|<|>)")
 
@@ -22,8 +10,16 @@ def _clock_from_constraint(text: str) -> str | None:
     return match.group(1) if match else None
 
 
-def collect_formula_clocks(node: Expr | None, model_clocks: set[str]) -> tuple[str, ...]:
-    """Collect formula clock names from the AST that are not automaton clocks."""
+def _is_freeze_node(node) -> bool:
+    return (
+        type(node).__name__ == "FreezeExpr"
+        and getattr(node, "clock", None) is not None
+        and getattr(node, "operand", None) is not None
+    )
+
+
+def collect_formula_clocks(node, model_clocks: set[str]) -> tuple[str, ...]:
+    """Collect formula clock names from a timed-logic AST."""
     if node is None:
         return ()
     found: set[str] = set()
@@ -31,22 +27,20 @@ def collect_formula_clocks(node: Expr | None, model_clocks: set[str]) -> tuple[s
     return tuple(sorted(found))
 
 
-def _walk_formula_clocks(
-    node: Expr, model_clocks: set[str], found: set[str]
-) -> None:
-    if isinstance(node, FreezeExpr):
+def _walk_formula_clocks(node, model_clocks: set[str], found: set[str]) -> None:
+    if _is_freeze_node(node):
         if node.clock not in model_clocks:
             found.add(node.clock)
-    elif isinstance(node, SimpleTimeExpr):
+    elif type(node).__name__ == "SimpleTimeExpr":
         clock = _clock_from_constraint("".join(node.constraints))
         if clock and clock not in model_clocks:
             found.add(clock)
-    elif isinstance(node, ClockExpr):
+    elif type(node).__name__ == "ClockExpr":
         clock = _clock_from_constraint(node.constraints)
         if clock and clock not in model_clocks:
             found.add(clock)
 
-    for attr in ("operand", "left", "right", "subject"):
+    for attr in ("operand", "left", "right", "formula", "subject"):
         child = getattr(node, attr, None)
         if child is not None:
             _walk_formula_clocks(child, model_clocks, found)

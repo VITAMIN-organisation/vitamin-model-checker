@@ -1,12 +1,13 @@
-"""TCTL formula evaluation."""
+"""TCTL formula evaluation (region-level rsat)."""
 
 from typing import TYPE_CHECKING
 
-from model_checker.algorithms.explicit.shared.timed_ast_operators import (
+from model_checker.algorithms.explicit.TCTL.evaluators import (
     eval_atomic_prop,
     eval_simple_time_expr,
     handle_and,
     handle_clock_expr,
+    handle_freeze,
     handle_implies,
     handle_not,
     handle_or,
@@ -25,6 +26,7 @@ from model_checker.parsers.formulas.TCTL import (
     Binary,
     ClockExpr,
     Expr,
+    FreezeExpr,
     QuantifiedPath,
     SimpleTimeExpr,
     Unary,
@@ -37,9 +39,9 @@ if TYPE_CHECKING:
 
 
 def solve_tree(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: Expr) -> None:
-    """Bottom-up AST evaluation."""
+    """Bottom-up regional satisfiability (rsat)."""
     if isinstance(node, AtomicProp):
-        eval_atomic_prop(tcgs, node)
+        eval_atomic_prop(tcgs, zone_graph, node)
         return
 
     if isinstance(node, SimpleTimeExpr):
@@ -49,16 +51,18 @@ def solve_tree(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: Expr) -> None:
     solve_ast_children(tcgs, zone_graph, node, solve_tree)
 
     if isinstance(node, Unary):
-        handle_not(tcgs, node)
+        handle_not(zone_graph, node)
     elif isinstance(node, ClockExpr):
-        handle_clock_expr(node)
+        handle_clock_expr(tcgs, zone_graph, node)
+    elif isinstance(node, FreezeExpr):
+        handle_freeze(tcgs, zone_graph, node)
     elif isinstance(node, Binary):
         if verifyTCTL("OR", node.op):
             handle_or(node)
         elif verifyTCTL("AND", node.op):
             handle_and(node)
         elif verifyTCTL("IMPLIES", node.op):
-            handle_implies(tcgs, node)
+            handle_implies(zone_graph, node)
     elif isinstance(node, QuantifiedPath):
         if verifyTCTL("EXIST", node.quantifier) and verifyTCTL(
             "EVENTUALLY", node.quantifier
@@ -67,11 +71,11 @@ def solve_tree(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: Expr) -> None:
         elif verifyTCTL("FORALL", node.quantifier) and verifyTCTL(
             "EVENTUALLY", node.quantifier
         ):
-            handle_af(tcgs, node)
+            handle_af(tcgs, zone_graph, node)
         elif verifyTCTL("EXIST", node.quantifier) and verifyTCTL(
             "GLOBALLY", node.quantifier
         ):
-            handle_eg(tcgs, node)
+            handle_eg(tcgs, zone_graph, node)
         elif verifyTCTL("FORALL", node.quantifier) and verifyTCTL(
             "GLOBALLY", node.quantifier
         ):
@@ -79,8 +83,8 @@ def solve_tree(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: Expr) -> None:
         elif verifyTCTL("EXIST", node.quantifier) and verifyTCTL(
             "UNTIL", node.formula.op
         ):
-            handle_eu(tcgs, node)
+            handle_eu(tcgs, zone_graph, node)
         elif verifyTCTL("FORALL", node.quantifier) and verifyTCTL(
             "UNTIL", node.formula.op
         ):
-            handle_au(tcgs, node)
+            handle_au(tcgs, zone_graph, node)

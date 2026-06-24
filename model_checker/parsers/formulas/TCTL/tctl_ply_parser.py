@@ -12,7 +12,7 @@ _PARSER_HAS_ERROR = False
 
 class Expr:
     def __init__(self):
-        self.satisfying_states = set()
+        self.satisfying_regions = set()
         self.constraints = None
 
 
@@ -59,7 +59,17 @@ class QuantifiedPath(Expr):
         return f"{self.quantifier}({self.formula})"
 
 
-class ClockExpr(Expr):  # Clock constraints of the form ap: x~c
+class FreezeExpr(Expr):
+    def __init__(self, clock: str, operand: Expr):
+        super().__init__()
+        self.clock = clock
+        self.operand = operand
+
+    def __repr__(self):
+        return f"{self.clock}.({self.operand})"
+
+
+class ClockExpr(Expr):
     def __init__(self, subject: Expr, constraints: Expr):
         super().__init__()
         self.subject = subject
@@ -106,6 +116,7 @@ tokens = (
     "GEQ",
     "CONST",
     "TIME_SEP",
+    "DOT",
 )
 
 # Regular expressions for tokens
@@ -127,6 +138,7 @@ t_GREATER = r"\>"
 t_LESS = r"\<"
 t_CONST = r"\d+"
 t_TIME_SEP = r":"
+t_DOT = r"\."
 t_ignore = " \t\n"
 precedence = (("right", "NOT"),)
 
@@ -156,8 +168,13 @@ def p_expression_binary(p):
 
 def p_expression_ternary(p):
     """expression : FORALL expression UNTIL expression
-    | EXIST expression UNTIL expression"""
-    p[0] = QuantifiedPath(p[1], Binary(p[3], p[2], p[4]))
+    | EXIST expression UNTIL expression
+    | FORALL LPAREN expression UNTIL expression RPAREN
+    | EXIST LPAREN expression UNTIL expression RPAREN"""
+    if len(p) == 5:
+        p[0] = QuantifiedPath(p[1], Binary(p[3], p[2], p[4]))
+    else:
+        p[0] = QuantifiedPath(p[1], Binary(p[4], p[3], p[5]))
 
 
 def p_expression_unary(p):
@@ -178,15 +195,14 @@ def p_expression_group(p):
     p[0] = p[2]
 
 
-def p_expression_clock_prop(p):
-    """expression : PROP TIME_SEP expression"""
-    p[0] = ClockExpr(AtomicProp(p[1]), p[3])
+def p_expression_freeze(p):
+    """expression : PROP DOT expression"""
+    p[0] = FreezeExpr(p[1], p[3])
 
 
-def p_expression_clock_group(p):
-    """expression : LPAREN expression RPAREN TIME_SEP expression"""
-    # Only binary and not expressions over props are supported inside parentheses
-    p[0] = ClockExpr(AtomicProp(p[2]), p[5])
+def p_expression_clock_constraint_on_expr(p):
+    """expression : expression TIME_SEP expression"""
+    p[0] = ClockExpr(p[1], p[3])
 
 
 def p_expression_prop(p):

@@ -1,4 +1,4 @@
-"""TCTL temporal operators."""
+"""TCTL temporal operators (region-level rsat)."""
 
 from typing import TYPE_CHECKING
 
@@ -6,11 +6,13 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
     least_fixpoint,
 )
-from model_checker.algorithms.explicit.TCTL.preimage import pre_image_exist
 from model_checker.parsers.formulas.TCTL import QuantifiedPath
+from model_checker.parsers.game_structures.timed_cgs.regions import (
+    all_regions,
+    timed_predecessors,
+)
 from model_checker.parsers.game_structures.timed_cgs.semantics import (
     extract_closest_constraint,
-    zone_graph_pre_image_states,
 )
 
 if TYPE_CHECKING:
@@ -19,75 +21,67 @@ if TYPE_CHECKING:
 
 
 def handle_ef(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -> None:
-    constraint = extract_closest_constraint(node.formula)
-    target = node.formula.satisfying_states
-    node.satisfying_states = least_fixpoint(
+    guard = extract_closest_constraint(node.formula)
+    target = node.formula.satisfying_regions
+    node.satisfying_regions = least_fixpoint(
         target,
-        lambda states: states
-        | zone_graph_pre_image_states(tcgs, zone_graph, states, constraint),
+        lambda regions: regions | timed_predecessors(zone_graph, tcgs, regions, guard),
     )
 
 
-def handle_af(tcgs: "TimedCGS", node: QuantifiedPath) -> None:
-    all_states = set(tcgs.states)
-    constraint = extract_closest_constraint(node.formula)
-    target = all_states - node.formula.satisfying_states
+def handle_af(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -> None:
+    universe = all_regions(zone_graph)
+    guard = extract_closest_constraint(node.formula)
+    target = universe - node.formula.satisfying_regions
     unreachable = least_fixpoint(
         target,
-        lambda states: states | pre_image_exist(tcgs, states, constraints=constraint),
+        lambda regions: regions | timed_predecessors(zone_graph, tcgs, regions, guard),
     )
-    node.satisfying_states = all_states - unreachable
+    node.satisfying_regions = universe - unreachable
 
 
-def handle_eg(tcgs: "TimedCGS", node: QuantifiedPath) -> None:
-    all_states = set(tcgs.states)
-    constraint = extract_closest_constraint(node.formula)
-    target = node.formula.satisfying_states
-    node.satisfying_states = greatest_fixpoint(
-        all_states,
-        lambda states: target.intersection(
-            pre_image_exist(tcgs, states, constraints=constraint)
-        ),
+def handle_eg(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -> None:
+    universe = all_regions(zone_graph)
+    guard = extract_closest_constraint(node.formula)
+    target = node.formula.satisfying_regions
+    node.satisfying_regions = greatest_fixpoint(
+        universe,
+        lambda regions: target & timed_predecessors(zone_graph, tcgs, regions, guard),
     )
 
 
 def handle_ag(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -> None:
-    all_states = set(tcgs.states)
-    constraint = extract_closest_constraint(node.formula)
-    target = all_states - node.formula.satisfying_states
+    universe = all_regions(zone_graph)
+    guard = extract_closest_constraint(node.formula)
+    target = universe - node.formula.satisfying_regions
     unreachable = least_fixpoint(
         target,
-        lambda states: states
-        | zone_graph_pre_image_states(tcgs, zone_graph, states, constraint),
+        lambda regions: regions | timed_predecessors(zone_graph, tcgs, regions, guard),
     )
-    node.satisfying_states = all_states - unreachable
+    node.satisfying_regions = universe - unreachable
 
 
-def handle_eu(tcgs: "TimedCGS", node: QuantifiedPath) -> None:
-    constraint = extract_closest_constraint(node.formula)
-    states_phi = node.formula.left.satisfying_states
-    states_psi = node.formula.right.satisfying_states
-    node.satisfying_states = least_fixpoint(
-        states_psi,
-        lambda states: states
-        | states_phi.intersection(
-            pre_image_exist(tcgs, states, constraints=constraint)
-        ),
+def handle_eu(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -> None:
+    guard = extract_closest_constraint(node.formula)
+    sat_phi = node.formula.left.satisfying_regions
+    sat_psi = node.formula.right.satisfying_regions
+    node.satisfying_regions = least_fixpoint(
+        sat_psi,
+        lambda regions: sat_psi
+        | (sat_phi & timed_predecessors(zone_graph, tcgs, regions, guard)),
     )
 
 
-def handle_au(tcgs: "TimedCGS", node: QuantifiedPath) -> None:
-    all_states = set(tcgs.states)
-    constraint = extract_closest_constraint(node.formula)
-    states_phi = node.formula.left.satisfying_states
-    states_psi = node.formula.right.satisfying_states
-    not_phi = all_states - states_phi
-    not_psi = all_states - states_psi
+def handle_au(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -> None:
+    universe = all_regions(zone_graph)
+    guard = extract_closest_constraint(node.formula)
+    sat_phi = node.formula.left.satisfying_regions
+    sat_psi = node.formula.right.satisfying_regions
+    not_phi = universe - sat_phi
+    not_psi = universe - sat_psi
     unreachable = least_fixpoint(
         not_psi,
-        lambda states: states
-        | not_phi.intersection(
-            not_psi.intersection(pre_image_exist(tcgs, states, constraints=constraint))
-        ),
+        lambda regions: not_psi
+        | (not_phi & not_psi & timed_predecessors(zone_graph, tcgs, regions, guard)),
     )
-    node.satisfying_states = all_states - unreachable
+    node.satisfying_regions = universe - unreachable

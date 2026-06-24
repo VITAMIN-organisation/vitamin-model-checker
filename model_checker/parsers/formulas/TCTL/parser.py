@@ -39,7 +39,7 @@ class TCTLParser(BaseLogicParser):
             allow_hash_at=False,
             coalition_required=False,
             allow_negative_agents=False,
-            allowed_operators=set("<>(),!&|->:= "),
+            allowed_operators=set("<>(),!&|->:=. "),
         )
 
     def _post_validation(self, formula, result):

@@ -691,20 +691,26 @@ Coalition logic with intuitionistic existential and universal coalitions.
 <a id="tctl---timed-ctl"></a>
 ## TCTL
 
-Timed extension of CTL over `timedCGS` models with clock constraints.
+Timed CTL over `timedCGS` models. Checking uses a zone graph as the symbolic RTS
+and the `rsat` regional labelling algorithm.
 
-**Quantifiers:** `A`, `E` with `F`, `G`, `U` (no `X` or release in the parser).
+**Quantifiers:** `A`, `E` with `F`, `G`, `U` (no `X` or release).
 
-**Clock constraints:** attach bounds to propositions, for example `x <= 5` or `t: formula`.
+**Clocks:**
+
+- Automaton clocks `X` from the model `Clocks` section.
+- Formula clocks `Y` via **FREEZE** `j.phi` (reset `j` to `0`, paper `j.reset(phi)`).
+- Guards: standalone `x <= 5` or attachment `phi : x <= c` on subformulas.
 
 **Examples:**
 ```text
 AG a
 EF crossing
-AG (x <= 10 -> safe)
+EF (p : x<=1)
+j.(j<=7 U goal)
 ```
 
-**Model type:** `timedCGS` (loaded by `TimedCGS.read_file`).
+**Model type:** `timedCGS` (`TimedCGS.read_file`).
 
 **Deep dive:** [TCTL/algorithm.md](TCTL/algorithm.md)
 

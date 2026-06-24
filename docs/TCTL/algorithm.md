@@ -1,27 +1,84 @@
 # TCTL - Implementation Reference
 
-This document describes how TCTL (Timed Computation Tree Logic) is model-checked
-in `model_checker/algorithms/explicit/TCTL/`. It is the normative reference for
-behaviour in this codebase.
+This document describes how **Timed Computation Tree Logic (TCTL)** is
+model-checked in `model_checker/algorithms/explicit/TCTL/`. It follows Chapter 6
+(regional transition system, TCTL-minus fragment, satisfaction relation, and the
+`rsat` labelling algorithm).
 
 ## Overview
 
-TCTL extends CTL with clock constraints over **timedCGS** models. The checker
-combines:
+TCTL is checked over **timedCGS** models using a **zone graph** as a symbolic
+representation of the regional transition system (RTS).
 
 | Piece | Role |
 |-------|------|
-| Discrete CGS transitions | State jumps via joint actions |
-| Clocks / invariants | Zone-based real-time semantics |
-| Zone graph | Reachability in location-zone space |
-| TCTL AST | Formula with optional clock guards (`x<=3`, `p: x<=1`) |
+| timedCGS | Locations, transitions, automaton clocks `X`, guards, resets, invariants |
+| Formula clocks `Y` | Collected from the AST; disjoint from `X`; extend the zone graph |
+| Zone graph | Symbolic regions `(location, zone)` with delay and discrete edges |
+| `rsat` labelling | Bottom-up evaluation into `satisfying_regions` per subformula |
 
-Path quantifiers are `E` and `A`. Temporal operators are `F`, `G`, and `U` (no
-`X` or release in the parser grammar).
+Path quantifiers are `E` and `A`. Temporal operators are `F`, `G`, and `U`. There is
+no `X` operator (timed systems do not have an untimed next step).
+
+API results project regions to **location names** where at least one region
+satisfies the formula. Initial-state satisfaction holds when any region at the
+initial location is satisfying.
+
+## TCTL-minus syntax (paper)
+
+Clock sets:
+
+- `X`: automaton clocks from the model `Clocks` section,
+- `Y`: formula clocks from FREEZE and guards in the property.
+
+```text
+phi ::= p | gamma | !phi | phi && psi | phi || psi
+      | y.reset(phi)                    -- FREEZE (VITAMIN: y.phi)
+      | A[phi U psi]_gamma | E[phi U psi]_gamma
+```
+
+VITAMIN surface syntax:
+
+```text
+phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
+      | x <= c | x < c | x >= c | x > c
+      | j . phi                         -- FREEZE
+      | phi : clock_expr                -- guard attachment (paper subscript gamma)
+      | E F phi | A F phi | E G phi | A G phi
+      | E (phi U psi) | A (phi U psi)
+      | E phi U psi   | A phi U psi     -- same AST as parenthesized form
+```
+
+Sugar: `F` / `G` / `U` / `until` / `eventually` / `globally`.
+
+Standard reductions:
+
+- `EF phi`  ~ `E[true U phi]`
+- `AF phi`  ~ `A[true U phi]`
+- `EG phi`  ~ `!A[!phi U true]`
+- `AG phi`  ~ `!E[!phi U true]`
+
+Bounded until (paper encoding via FREEZE):
+
+```text
+A[phi U psi]_<=c  ~  y.reset(phi && A[true U (y<=c && psi)])   with fresh y in Y
+```
+
+## Satisfaction and `rsat`
+
+- Atoms label all regions at locations where the proposition holds.
+- Clock constraints label regions whose zones satisfy the guard (with invariants).
+- **FREEZE** `y.phi`: region `r` satisfies `y.phi` when `r` with formula clock `y`
+  reset to `0` satisfies `phi`.
+- **Until** uses region-level fixpoints with timed backward steps. Because
+  formulae are evaluated on each zone-graph node, prefix obligations correspond to
+  the paper's `phi@i` requirement along delay and discrete edges.
+- Boolean connectives are union, intersection, and complement over all regions in
+  the zone graph.
 
 ## timedCGS models
 
-Models extend costCGS/CGS with three timed sections (see `TimedCGS.read_file` in
+Models extend costCGS/CGS with timed sections (`TimedCGS.read_file` in
 `parsers/game_structures/timed_cgs/timed_cgs.py`):
 
 ```text
@@ -33,111 +90,65 @@ Invariants
 ...
 ```
 
-- `Clock_constraints`: per-transition guard/reset strings on the state matrix.
-- `Invariants`: per-state clock bounds (e.g. `x<=2`).
-
 Base sections (`Transition`, `Name_State`, `Initial_State`, `Atomic_propositions`,
 `Labelling`, `Number_of_agents`) match costCGS/CGS.
-
-Empty lines inside timed sections are ignored when loading (blank lines previously
-cleared the `Clocks` list).
-
-## Formula language
-
-Parser: `parsers/formulas/TCTL/tctl_ply_parser.py` (AST classes on the same module).
-
-### Propositional and clocks
-
-```text
-phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
-      | x <= c | x < c | x >= c | x > c
-      | phi : clock_expr
-```
-
-- Atoms: lowercase identifiers (`p`, `safe_1`) or mixed-case names with a lowercase
-  second letter (`Goal`). Single-letter uppercase tokens (`E`, `A`, `F`, `G`, `U`)
-  remain path/temporal operators. Clock names such as `x` in `x<=3` use the same
-  token class as propositions.
-
-- `phi : x<=3` attaches a clock guard to a subformula (used during backward
-  reachability).
-- Standalone `x<=3` matches states whose zones satisfy the constraint.
-
-### Temporal (CTL fragment)
-
-```text
-phi ::= E F phi | A F phi | E G phi | A G phi | E (phi U psi) | A (phi U psi)
-```
-
-Sugar: `F`/`G`/`U`/`until`/`eventually`/`globally`.
 
 ## Model-checking pipeline
 
 ```mermaid
 flowchart TD
+    parse["TCTLParser.parse"]
     load["TimedCGS.read_file"]
-    parse["do_parsingTCTL"]
+    clocks["collect_formula_clocks + extend_timed_cgs_clocks"]
     zones["ZoneGraph(tcgs)"]
-    solve["solve_tree"]
+    solve["solve_tree (rsat)"]
+    project["project_regions_to_locations"]
     result["model_checking result dict"]
 
-    load --> parse --> zones --> solve --> result
+    parse --> load --> clocks --> zones --> solve --> project --> result
 ```
 
 Entry point: `model_checking(formula, filename)` in `TCTL/TCTL.py`.
 
-### Evaluation (`solve_tree`)
+### Timed backward step `Pre`
 
-The parser returns an AST (`AtomicProp`, `Unary`, `Binary`, `QuantifiedPath`,
-`ClockExpr`, `SimpleTimeExpr`). Each node carries `satisfying_states: set[str]`.
+All temporal operators share `timed_predecessors` in
+`parsers/game_structures/timed_cgs/regions.py`: one reverse step in the zone graph
+(delay and discrete edges). An optional clock guard filters predecessor zones.
 
-Shared helpers live in `parsers/game_structures/timed_cgs/semantics.py`:
+### Fixpoints (region sets)
 
-- `states_where_prop_holds`
-- `extract_closest_constraint`
-- `states_with_time_constraints`
-- `zone_graph_pre_image_states` (timed backward step via zone graph)
-
-### Pre-images
-
-| Function | When used |
-|----------|-----------|
-| `discrete_pre_image_states` | No clock guard on the subformula |
-| `pre_image_exist` | `EF`, `EG`, `EU`, `AF` (DBM backward step) |
-| `zone_graph_pre_image_states` | `EF`/`AG` variants using zone-graph paths |
-
-### Operator summary
-
-| Operator | Idea |
-|----------|------|
-| `EF phi` | Least fixpoint: target union timed pre-image |
-| `AF phi` | Complement of `EG` on complement |
-| `EG phi` | Greatest fixpoint: phi intersect timed pre-image |
-| `AG phi` | Complement of `EF` on complement |
-| `E(phi U psi)` | Least fixpoint with phi cap pre-image |
+| Operator | Definition |
+|----------|------------|
+| `EF phi` | `lfp Z . Sat(phi) union Pre(Z)` |
+| `AF phi` | `All \\ lfp Z . (All \\ Sat(phi)) union Pre(Z)` |
+| `EG phi` | `gfp Z . Sat(phi) intersect Pre(Z)` |
+| `AG phi` | `All \\ lfp Z . (All \\ Sat(phi)) union Pre(Z)` |
+| `E(phi U psi)` | `lfp Z . Sat(psi) union (Sat(phi) intersect Pre(Z))` |
 | `A(phi U psi)` | Dual least fixpoint on complements |
 
-`IMPLIES` is classical (`!phi or psi`), not intuitionistic.
+`All` is the set of all `(location, zone)` nodes in the zone graph.
 
 ## Code map
 
 | Path | Role |
 |------|------|
-| `TCTL/TCTL.py` | VMI `model_checking` entry |
+| `TCTL/TCTL.py` | Entry: parse, extend clocks, zone graph, solve, project |
 | `TCTL/solver.py` | AST traversal and handler dispatch |
-| `TCTL/operators.py` | Temporal operator semantics |
-| `TCTL/preimage.py` | DBM backward pre-image (`pre_image_exist`) |
-| `shared/timed_ast_operators.py` | Shared boolean/leaf handlers for TCTL and TOL |
+| `TCTL/evaluators.py` | Leaf, boolean, FREEZE, and clock-guard handlers |
+| `TCTL/operators.py` | Temporal fixpoints on regions |
+| `timed_cgs/regions.py` | Region sets, `timed_predecessors`, projection |
+| `timed_cgs/formula_clocks.py` | Collect `Y` from AST; extend `TimedCGS` |
+| `timed_cgs/zone_graph.py` | Zone graph construction |
 | `parsers/formulas/TCTL/` | Parser and AST types |
-| `parsers/game_structures/timed_cgs/` | `TimedCGS`, `ZoneGraph`, `DBM`, `semantics` |
 
 ## Tests
 
 | Path | Coverage |
 |------|----------|
-| `tests/integration/algorithms/tctl/test_smoke.py` | Pinned semantics on minimal timedCGS |
-| `tests/integration/algorithms/tctl/test_correctness.py` | AF, EG, clock guards, until on minimal fixture |
-| `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared fixture with TOL |
+| `tests/integration/algorithms/tctl/test_correctness.py` | Temporal ops, guards, FREEZE |
+| `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared timedCGS with TOL |
+| `parsers/game_structures/timed_cgs/tests/test_zone_graph.py` | Zone graph paths and guards |
 
 ## Related documentation
 
