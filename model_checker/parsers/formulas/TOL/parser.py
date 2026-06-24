@@ -29,7 +29,7 @@ _TOL_VALID_OPERATORS = frozenset(
     }
 )
 
-_TOL_ALLOWED_OPERATORS = set("<>(),!&|->{} ")
+_TOL_ALLOWED_OPERATORS = set("<>(),!&|->{}. ")
 
 
 class TOLParser(BaseLogicParser):

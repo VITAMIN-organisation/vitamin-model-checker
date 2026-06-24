@@ -73,6 +73,16 @@ class DemonicBinary(Expr):
         return f"{self.demonic_cost}{self.op}({self.left},{self.right})"
 
 
+class FreezeExpr(Expr):
+    def __init__(self, clock: str, operand: Expr):
+        super().__init__()
+        self.clock = clock
+        self.operand = operand
+
+    def __repr__(self):
+        return f"{self.clock}.({self.operand})"
+
+
 class ClockExpr(Expr):
     def __init__(self, subject: Expr, constraints: Expr):
         super().__init__()
@@ -132,6 +142,7 @@ tokens = (
     "GEQ",
     "CONST",
     "TIME_SEP",
+    "DOT",
 )
 
 # Regular expressions for tokens
@@ -157,6 +168,7 @@ t_GREATER = r"\>"
 t_GEQ = r"\>\="
 t_CONST = r"\d+"
 t_TIME_SEP = r":|,|with"
+t_DOT = r"\."
 t_ignore = " \t\n"
 
 precedence = (("right", "NOT"),)
@@ -231,6 +243,11 @@ def p_expression_boolean(p):
     """expression : FALSE
     | TRUE"""
     p[0] = p[1]
+
+
+def p_expression_freeze(p):
+    """expression : PROP DOT expression"""
+    p[0] = FreezeExpr(p[1], p[3])
 
 
 def p_expression_clock_constraint_on_expr(p):

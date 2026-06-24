@@ -74,3 +74,8 @@ def handle_implies(tcgs: "TimedCGS", node) -> None:
 
 def handle_clock_expr(node) -> None:
     node.satisfying_states = node.subject.satisfying_states
+
+
+def handle_freeze(node) -> None:
+    """j.phi: Sat(j.phi) <- Sat(phi) with formula clock j in ZG(A, phi) (Algorithm 1)."""
+    node.satisfying_states = set(node.operand.satisfying_states)

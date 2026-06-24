@@ -34,10 +34,13 @@ def pre_timed_indices(
     return {int(tcgs.get_index_by_state_name(name)) for name in pre_names}
 
 
-def triangle(tcgs: TimedCGS, source_idx: int, bound: int, excluded: set[int]) -> bool:
+def triangle(
+    tcgs: TimedCGS, source_idx: int, bound: int, inside_indices: set[int]
+) -> bool:
+    """True when deactivation cost to block all edges leaving inside_indices is <= bound."""
     total = 0
     for target_idx, _ in enumerate(tcgs.graph[source_idx]):
-        if target_idx in excluded:
+        if target_idx in inside_indices:
             continue
         total += _transition_cost(tcgs, source_idx, target_idx)
     return total <= bound
@@ -51,10 +54,9 @@ def triangle_down(
     constraints=None,
 ) -> set[str]:
     state_indices = {int(tcgs.get_index_by_state_name(name)) for name in state_names}
-    excluded = {idx for idx in range(len(tcgs.graph)) if idx not in state_indices}
     if constraints:
         predecessors = pre_timed_indices(tcgs, zone_graph, state_indices, constraints)
     else:
         predecessors = pre_indices(tcgs, state_indices)
-    result = {idx for idx in predecessors if triangle(tcgs, idx, bound, excluded)}
+    result = {idx for idx in predecessors if triangle(tcgs, idx, bound, state_indices)}
     return {str(tcgs.get_state_name_by_index(idx)) for idx in result}

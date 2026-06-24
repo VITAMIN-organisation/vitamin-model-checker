@@ -21,27 +21,27 @@ def _states_from_result(result):
 
 
 class TestCostBoundedSemantics:
-    """{Jk} operators with non-zero Transition_With_Costs cells."""
+    """{Jk} operators with non-zero Transition_With_Costs cells (paper ▼ semantics)."""
 
     @pytest.mark.parametrize(
         ("formula", "expected_states", "initial_true"),
         [
             ("p", {"s1"}, False),
             ("q", {"s0"}, True),
-            ("{J2}X p", set(), False),
+            ("{J2}X p", {"s0"}, True),
             ("{J3}X p", {"s0"}, True),
             ("{J5}X p", {"s0"}, True),
-            ("{J1}X q", set(), False),
+            ("{J1}X q", {"s1"}, False),
             ("{J4}X q", {"s1"}, False),
-            ("{J2}F p", {"s1"}, False),
+            ("{J2}F p", {"s0", "s1"}, True),
             ("{J3}F p", {"s0", "s1"}, True),
             ("{J5}F p", {"s0", "s1"}, True),
             ("{J5}G p", set(), False),
-            ("{J2} q U p", {"s1"}, False),
+            ("{J2} q U p", {"s0", "s1"}, True),
             ("{J3} q U p", {"s0", "s1"}, True),
             ("{J3} q R p", set(), False),
             ("{J5} q R p", set(), False),
-            ("{J2} q W p", {"s1"}, False),
+            ("{J2} q W p", {"s0", "s1"}, True),
             ("{J3} q W p", {"s0", "s1"}, True),
             ("{J5} q W p", {"s0", "s1"}, True),
         ],

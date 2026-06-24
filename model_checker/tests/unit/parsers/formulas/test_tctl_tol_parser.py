@@ -30,7 +30,18 @@ def test_tctl_parser_accepts_mixed_case_propositions(formula):
         "{J1}G Goal",
         "Goal && safe_1",
         "x<=1",
+        "j.Goal",
     ],
 )
 def test_tol_parser_accepts_mixed_case_propositions(formula):
     assert do_parsing(formula) is not None
+
+
+@pytest.mark.unit
+def test_tol_parser_freeze_expression():
+    ast = do_parsing("j.Goal")
+    assert ast is not None
+    from model_checker.parsers.formulas.TOL.tol_ply_parser import FreezeExpr
+
+    assert isinstance(ast, FreezeExpr)
+    assert ast.clock == "j"

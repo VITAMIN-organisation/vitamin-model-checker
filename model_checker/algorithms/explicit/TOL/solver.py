@@ -7,6 +7,7 @@ from model_checker.algorithms.explicit.shared.timed_ast_operators import (
     eval_simple_time_expr,
     handle_and,
     handle_clock_expr,
+    handle_freeze,
     handle_implies,
     handle_not,
     handle_or,
@@ -27,6 +28,7 @@ from model_checker.parsers.formulas.TOL.tol_ply_parser import (
     DemonicBinary,
     DemonicOp,
     Expr,
+    FreezeExpr,
     SimpleTimeExpr,
     Unary,
     verify,
@@ -74,3 +76,5 @@ def solve_tree(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: Expr) -> None:
             handle_weak(tcgs, zone_graph, node)
     elif isinstance(node, ClockExpr):
         handle_clock_expr(node)
+    elif isinstance(node, FreezeExpr):
+        handle_freeze(node)

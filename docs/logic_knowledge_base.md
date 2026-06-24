@@ -30,7 +30,7 @@ This document provides a comprehensive knowledge base for all temporal logics im
 13. [ICTL](#ictl---intuitionistic-ctl)
 14. [IATL](#iatl---intuitionistic-atl)
 15. [TCTL](#tctl---timed-ctl)
-16. [TOL](#tol---timed-obligation-logic)
+16. [TOL](#tol---timed-obstruction-logic)
 17. [Empty Coalition Policy](#empty-coalition-policy)
 18. [Atomic Proposition Policy](#atomic-proposition-policy)
 19. [Model Syntax](#model-syntax)
@@ -710,21 +710,30 @@ AG (x <= 10 -> safe)
 
 ---
 
-<a id="tol---timed-obligation-logic"></a>
+<a id="tol---timed-obstruction-logic"></a>
 ## TOL
 
-Linear-style timed logic with demonic cost prefixes over `timedCGS` models.
+Linear-style **Timed Obstruction Logic** with demonic cost prefixes over `timedCGS`
+models (AAMAS 2025). At each step the Demon may deactivate outgoing transitions
+whose total cost is at most `k`; the Adversary chooses a remaining edge.
 
-**Demonic prefix:** `{Jk}` where `k` is a positive integer cost bound.
+**Demonic prefix:** `{Jk}` where `k` is a positive integer (paper notation `⟨k⟩`).
 
 **Examples:**
 ```text
 {J5}F a
 {J10}G safe
 {J3}(p U q)
+j.(j<=7 U goal)
 ```
 
-**Temporal operators:** `X`, `F`, `G`, `U`, `R`, `W`.
+**Temporal operators:** `F`, `G`, `U`, `R`, `W` (paper); `X` (VITAMIN extension).
+
+**Cost semantics:** `k` is a **per-position** demonic deactivation budget (paper
+obstruction game), not cumulative path cost. This differs from OL (`<Jk>` uses
+accumulated cost for `F`/`G`/`U`/`R`/`W`).
+
+**Freeze:** `j.phi` resets formula clock `j` to `0` at the current state.
 
 **Model type:** `timedCGS`. Shares the `timed_cgs` parser with TCTL.
 
@@ -809,7 +818,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **ICTL** | Branching | `EX`, `AX`, `EF`, `AG`, `EU` | `E`, `A` | BCGS (birelational) |
 | **IATL** | Branching | `<A>X`, `F`, `G`, `U` | `<1>` exist, `[1]` forall | BCGS |
 | **TCTL** | Branching | `EF`, `AG`, clock bounds | `A`, `E` + clocks | timedCGS |
-| **TOL** | Linear | `{Jk}X`, `F`, `G`, `U` | `{J5}` demonic bound | timedCGS |
+| **TOL** | Linear | `{Jk}X`, `F`, `G`, `U`, `R`, `W` | `{J5}` per-step obstruction | timedCGS |
 
 
 ---
