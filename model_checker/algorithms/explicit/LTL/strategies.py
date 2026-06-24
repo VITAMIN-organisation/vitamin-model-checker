@@ -2,7 +2,7 @@
 
 import itertools
 import logging
-from typing import Dict, Generator, List, Optional, Tuple, Union
+from collections.abc import Generator
 
 from model_checker.algorithms.explicit.shared import strategies_base
 from model_checker.parsers.formulas.LTL.ltl_to_ctl import ltl_to_ctl
@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 
 def generate_strategies(
-    cartesian_products: Dict[str, List[Tuple[str, str]]],
+    cartesian_products: dict[str, list[tuple[str, str]]],
     k: int,
-    agents: List[int],
-    found_solution: Union[bool, List[bool]],
-) -> Generator[List[Dict], None, None]:
+    agents: list[int],
+    found_solution: bool | list[bool],
+) -> Generator[list[dict], None, None]:
     """Yield strategy profiles at complexity k; stop early when found_solution is set."""
     strategies = [[] for _ in range(len(agents))]
 
@@ -75,8 +75,8 @@ def generate_strategies(
 
 
 def initialize(
-    model_path: str, formula: str, k: int, agents: List[int]
-) -> Tuple[Dict[str, List[str]], List[List[str]], List[str], str, List[int], CGS, int]:
+    model_path: str, formula: str, k: int, agents: list[int]
+) -> tuple[dict[str, list[str]], list[list[str]], list[str], str, list[int], CGS, int]:
     """Load the model, convert LTL to CTL, and collect actions and propositions."""
     import os
 
@@ -125,11 +125,11 @@ def initialize(
 
 
 def generate_deviations_for_agent(
-    single_strategy: Dict,
+    single_strategy: dict,
     k: int,
-    agent_actions_for_agent: List[str],
-    atomic_propositions: List[str],
-) -> List[Dict]:
+    agent_actions_for_agent: list[str],
+    atomic_propositions: list[str],
+) -> list[dict]:
     import itertools
 
     C = ["and", "or"]
@@ -163,12 +163,12 @@ def generate_deviations_for_agent(
 
 
 def generate_single_strategy(
-    selected_agents: List[int],
+    selected_agents: list[int],
     k: int,
-    agent_actions: Dict[str, List[str]],
-    actions_list: List[List[str]],
-    atomic_propositions: List[str],
-) -> Optional[List[Dict]]:
+    agent_actions: dict[str, list[str]],
+    actions_list: list[list[str]],
+    atomic_propositions: list[str],
+) -> list[dict] | None:
     """Return the first strategy profile at complexity k, or None."""
     found_solution = False
     cartesian_products = strategies_base.generate_guarded_action_pairs(
@@ -184,11 +184,11 @@ def generate_single_strategy(
 
 
 def generate_single_strategy_random(
-    selected_agents: List[int],
+    selected_agents: list[int],
     k: int,
-    agent_actions: Dict[str, List[str]],
-    atomic_propositions: List[str],
-) -> Optional[List[Dict]]:
+    agent_actions: dict[str, list[str]],
+    atomic_propositions: list[str],
+) -> list[dict] | None:
     """Build one strategy from the first (condition, action) per agent at complexity k.
 
     Returns None after 100 failed attempts.

@@ -5,7 +5,7 @@ concrete parser classes. Any object that implements these methods
 satisfies the protocol.
 """
 
-from typing import Any, List, Optional, Protocol, Set
+from typing import Any, Protocol
 
 
 class CGSProtocol(Protocol):
@@ -22,12 +22,12 @@ class CGSProtocol(Protocol):
         ...
 
     @property
-    def number_of_agents(self) -> Optional[int]:
+    def number_of_agents(self) -> int | None:
         """Number of agents; None if not set."""
         ...
 
     @property
-    def actions(self) -> List[Any]:
+    def actions(self) -> list[Any]:
         """Action data (structure is parser-specific)."""
         ...
 
@@ -47,7 +47,7 @@ class CGSProtocol(Protocol):
         ...
 
     @property
-    def all_states_set(self) -> Set[str]:
+    def all_states_set(self) -> set[str]:
         """Set of all state names."""
         ...
 

@@ -1,9 +1,9 @@
 """Cost-bounded pre-image computation for OATL."""
 
-from typing import Any, Dict, Set
+from typing import Any
 
-_cost_cache: Dict[tuple, float] = {}
-_base_action_cache: Dict[tuple, str] = {}
+_cost_cache: dict[tuple, float] = {}
+_base_action_cache: dict[tuple, str] = {}
 
 
 def _cost_to_scalar(costs: Any) -> float:
@@ -38,7 +38,7 @@ def _get_cached_cost(cgs, action: str, state_name: str) -> float:
     return cost
 
 
-def calculate_cost(cgs, actions: Set[str], state_name: str) -> float:
+def calculate_cost(cgs, actions: set[str], state_name: str) -> float:
     """Return sum of costs for actions from state_name."""
     if not hasattr(cgs, "get_cost_for_action"):
         return 0.0
@@ -50,7 +50,7 @@ def calculate_cost(cgs, actions: Set[str], state_name: str) -> float:
 
 
 def has_affordable_action(
-    cgs, actions: Set[str], state_name: str, max_cost: float
+    cgs, actions: set[str], state_name: str, max_cost: float
 ) -> bool:
     """Return True if some action has cost <= max_cost; True if model has no cost function."""
     if not hasattr(cgs, "get_cost_for_action"):
@@ -63,7 +63,7 @@ def has_affordable_action(
     return False
 
 
-def min_action_cost(cgs, actions: Set[str], state_name: str) -> float:
+def min_action_cost(cgs, actions: set[str], state_name: str) -> float:
     """Return minimum cost over actions from state_name; 0.0 if no cost or empty set."""
     if not hasattr(cgs, "get_cost_for_action") or not actions:
         return 0.0

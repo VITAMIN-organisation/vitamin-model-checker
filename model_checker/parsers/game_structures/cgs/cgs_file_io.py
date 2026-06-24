@@ -1,15 +1,16 @@
 """Writing CGS files: updated transition matrix or full update from a tree (NatATL)."""
 
-from typing import Any, List
+from typing import Any
 
 
 def write_updated_file(
-    input_filename: str, modified_graph: List[List], output_filename: str
+    input_filename: str, modified_graph: list[list], output_filename: str
 ) -> None:
     """Copy the input file to output, replacing only the Transition section with the modified graph."""
-    with open(input_filename, encoding="utf-8") as input_file, open(
-        output_filename, "w", encoding="utf-8"
-    ) as output_file:
+    with (
+        open(input_filename, encoding="utf-8") as input_file,
+        open(output_filename, "w", encoding="utf-8") as output_file,
+    ):
         current_section = None
         matrix_row = 0
 
@@ -39,26 +40,26 @@ def update_cgs_file(
     input_file: str,
     modified_file: str,
     tree: Any,
-    tree_states: List[str],
-    unwinded_CGS: List[List],
+    tree_states: list[str],
+    unwinded_CGS: list[list],
 ) -> None:
     """Write a new CGS file from the input, with transitions/states/labelling taken from the unwound tree.
 
     Used by NatATL Recall. tree must have label_row on nodes and a children list.
     """
 
-    def read_input_file(file_path: str) -> List[str]:
+    def read_input_file(file_path: str) -> list[str]:
         with open(file_path, encoding="utf-8") as file:
             return file.readlines()
 
-    def write_output_file(file_path: str, lines: List[str]) -> None:
+    def write_output_file(file_path: str, lines: list[str]) -> None:
         with open(file_path, "w", encoding="utf-8") as file:
             file.writelines(lines)
 
-    def _splice(lines: List[str], start: int, end: int, new: List[str]) -> List[str]:
+    def _splice(lines: list[str], start: int, end: int, new: list[str]) -> list[str]:
         return lines[:start] + new + lines[end:]
 
-    def update_transitions(lines: List[str], new_transitions: List[str]) -> List[str]:
+    def update_transitions(lines: list[str], new_transitions: list[str]) -> list[str]:
         try:
             transition_start = lines.index("Transition\n") + 1
         except ValueError as err:
@@ -77,7 +78,7 @@ def update_cgs_file(
 
         return _splice(lines, transition_start, transition_end, new_transitions)
 
-    def update_name_state(lines: List[str], states: List[str]) -> List[str]:
+    def update_name_state(lines: list[str], states: list[str]) -> list[str]:
         try:
             name_state_start = lines.index("Name_State\n") + 1
         except ValueError as err:
@@ -95,7 +96,7 @@ def update_cgs_file(
         states_line = " ".join(states) + "\n"
         return _splice(lines, name_state_start, initial_state_index, [states_line])
 
-    def update_labelling(lines: List[str], labelling: List[str]) -> List[str]:
+    def update_labelling(lines: list[str], labelling: list[str]) -> list[str]:
         try:
             labelling_start = lines.index("Labelling\n") + 1
         except ValueError as err:

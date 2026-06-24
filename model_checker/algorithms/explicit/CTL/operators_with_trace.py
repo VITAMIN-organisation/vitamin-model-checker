@@ -1,12 +1,9 @@
 """
-CTL operator handlers with witness/counterexample generation.
+CTL operator handlers extended with witness/counterexample trace generation.
 
-This module extends the standard CTL operators to generate traces that demonstrate
-why formulas hold or don't hold. These traces are essential for debugging and
-understanding verification results.
+Extends standard CTL operators to produce execution traces that demonstrate
+why formulas hold or fail, aiding debugging and result interpretation.
 """
-
-from typing import Dict, List, Set, Tuple
 
 from model_checker.algorithms.explicit.CTL.fixpoint import (
     least_fixpoint,
@@ -39,14 +36,14 @@ class OperatorWithTrace:
     """
 
     def __init__(self):
-        self.result_states: Set[str] = set()
-        self.predecessors: Dict[str, str] = {}
+        self.result_states: set[str] = set()
+        self.predecessors: dict[str, str] = {}
         self.trace_type: TraceType = TraceType.WITNESS
         self.description: str = ""
 
 
 def handle_ex_with_trace(
-    cgs, node, cached_edges: List[Tuple[str, str]]
+    cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
     """
     Handle EX operator with trace generation.
@@ -68,7 +65,7 @@ def handle_ex_with_trace(
 
 
 def handle_ef_with_trace(
-    cgs, node, cached_edges: List[Tuple[str, str]]
+    cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
     """
     Handle EF operator with trace generation.
@@ -94,7 +91,7 @@ def handle_ef_with_trace(
 
 
 def handle_ax_with_trace(
-    cgs, node, cached_edges: List[Tuple[str, str]]
+    cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
     """
     Handle AX operator with trace generation.
@@ -130,7 +127,7 @@ def handle_ax_with_trace(
 
 
 def handle_af_with_trace(
-    cgs, node, cached_edges: List[Tuple[str, str]]
+    cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
     """
     Handle AF operator with trace generation.
@@ -149,7 +146,7 @@ def handle_af_with_trace(
 
 
 def handle_eg_with_trace(
-    cgs, node, cached_edges: List[Tuple[str, str]]
+    cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
     """
     Handle EG operator with trace generation.
@@ -176,7 +173,7 @@ def handle_eg_with_trace(
 
 
 def handle_ag_with_trace(
-    cgs, node, cached_edges: List[Tuple[str, str]]
+    cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
     """
     Handle AG operator with trace generation.
@@ -188,7 +185,7 @@ def handle_ag_with_trace(
     phi_states = parse_state_set_literal(node.left.value)
     not_phi = all_states - {str(s) for s in phi_states}
 
-    def update(T: Set[str]) -> Set[str]:
+    def update(T: set[str]) -> set[str]:
         return T.union(pre_image_exist(cached_edges, T))
 
     ef_not_phi = least_fixpoint(not_phi, update)
@@ -208,7 +205,7 @@ def handle_ag_with_trace(
 
 
 def handle_eu_with_trace(
-    cgs, node, cached_edges: List[Tuple[str, str]]
+    cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
     """
     Handle EU operator with trace generation.
@@ -240,7 +237,7 @@ def handle_eu_with_trace(
 
 
 def handle_au_with_trace(
-    cgs, node, cached_edges: List[Tuple[str, str]]
+    cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
     """
     Handle AU operator with trace generation.

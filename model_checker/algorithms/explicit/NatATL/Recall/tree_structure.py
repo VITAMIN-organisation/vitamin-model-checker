@@ -1,57 +1,31 @@
-"""
-Tree node structure for NatATL Recall model checker.
-
-This module defines the Node class representing states in execution traces
-and basic tree operations like renaming and state extraction.
-"""
-
-from typing import List, Optional
+"""Node class for NatATL Recall execution traces and basic tree operations."""
 
 from model_checker.parsers.game_structures.cgs import CGS
 
 
 class Node:
-    """
-    Tree node representing a state in an execution trace.
-
-    Each node corresponds to a state in the CGS model and contains:
-    - State identifier (name)
-    - Label information (which atomic propositions hold)
-    - Children with corresponding action labels
-    - Predecessor path (for history-aware verification)
-
-    Attributes:
-        cgs: Reference to the CGS model
-        state: State name (e.g., 's0', 's1')
-        action: Action that led to this node (from parent)
-        children: List of child nodes (successors)
-        predecessors: List of state names on path from root
-        label_row: Proposition values for this state
-        actions: List of action tuples for each child edge
-        old_state: Original state name (before renaming)
-        pruned: Flag indicating if node has been pruned
-    """
+    """Recall tree node. ``state`` is the pruned-model name; ``old_state`` is the CGS location."""
 
     def __init__(
         self,
         name: str,
         cgs: CGS,
-        action: Optional[str] = None,
-        predecessors: Optional[List[str]] = None,
+        action: str | None = None,
+        predecessors: list[str] | None = None,
     ):
         self.cgs = cgs
         self.state = str(name)
         self.action = action
-        self.children: List[Node] = []
+        self.children: list[Node] = []
         self.predecessors = (
             [str(p) for p in predecessors] if predecessors is not None else []
         )
         self.label_row = self.get_label_row_list(cgs.states, cgs.matrix_prop)
-        self.actions: List[str] = []
+        self.actions: list[str] = []
         self.old_state = name
         self.pruned = False
 
-    def add_child(self, child: "Node", action: Optional[str] = None) -> None:
+    def add_child(self, child: "Node", action: str | None = None) -> None:
         """Add a child node with an optional action label."""
         self.children.append(child)
         if action:
@@ -80,8 +54,8 @@ class Node:
         return ret
 
     def get_label_row_list(
-        self, states: List[str], label_matrix: List[List]
-    ) -> Optional[List]:
+        self, states: list[str], label_matrix: list[list]
+    ) -> list | None:
         """Get proposition values for this state from the label matrix."""
         for i, state in enumerate(states):
             if self.state == state:
@@ -90,16 +64,7 @@ class Node:
 
 
 def rename_nodes(tree: Node) -> None:
-    """
-    Rename all nodes in the tree with sequential state names.
-
-    After pruning, state names may be duplicated or inconsistent.
-    This function assigns fresh sequential names (s1, s2, s3, ...)
-    to all nodes except the root (which stays s0).
-
-    Args:
-        tree: Root node of the tree to rename
-    """
+    """After pruning, rename children to s1, s2, ... (root stays s0)."""
 
     def rename(node: Node, counter: int) -> int:
         for child in node.children:
@@ -111,17 +76,9 @@ def rename_nodes(tree: Node) -> None:
     rename(tree, 1)
 
 
-def get_states_from_tree(root: Node) -> List[str]:
-    """
-    Extract all unique state names from the tree.
-
-    Args:
-        root: Root node of the tree
-
-    Returns:
-        List of state names in DFS order
-    """
-    states: List[str] = []
+def get_states_from_tree(root: Node) -> list[str]:
+    """Unique state names in DFS order."""
+    states: list[str] = []
 
     def traverse(node: Node) -> None:
         if node.state not in states:
@@ -134,31 +91,14 @@ def get_states_from_tree(root: Node) -> List[str]:
 
 
 def reset_pruned_flag(node: Node) -> None:
-    """
-    Reset pruned flag for all nodes in the tree.
-
-    Called between agent pruning passes to allow re-pruning.
-
-    Args:
-        node: Root node of the tree
-    """
+    """Clear ``pruned`` on all nodes (between agent pruning passes)."""
     node.pruned = False
     for child in node.children:
         reset_pruned_flag(child)
 
 
 def are_all_nodes_pruned(tree: Node) -> bool:
-    """
-    Check if all nodes in the tree have been pruned.
-
-    A fully pruned tree indicates that the strategy covers all states.
-
-    Args:
-        tree: Root node of the tree
-
-    Returns:
-        True if all nodes have pruned=True, False otherwise
-    """
+    """Whether every node has ``pruned=True``."""
     if tree.pruned is False:
         return False
     for child in tree.children:

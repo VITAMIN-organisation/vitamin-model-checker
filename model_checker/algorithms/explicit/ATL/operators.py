@@ -1,9 +1,4 @@
-"""
-ATL operator handlers for formula tree evaluation.
-
-This module contains handler functions for all ATL operators, both unary
-(NOT, <A>X, <A>F, <A>G) and binary (OR, AND, IMPLIES, <A>U).
-"""
+"""Handler functions for all ATL operators (unary: NOT/<A>X/<A>F/<A>G; binary: OR/AND/IMPLIES/<A>U)."""
 
 from model_checker.algorithms.explicit.ATL.preimage import pre
 from model_checker.algorithms.explicit.shared.fixpoint_iter import (

@@ -1,7 +1,7 @@
 """ICTL model checking on birelational CGS models."""
 
 from functools import partial
-from typing import Any, Dict
+from typing import Any
 
 from model_checker.algorithms.explicit.ICTL.checker import ICTLModelChecker
 from model_checker.algorithms.explicit.ICTL.solver import solve_tree
@@ -16,7 +16,7 @@ from model_checker.algorithms.explicit.shared.result_formatters import (
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 
-def run_model_checking(formula: str, checker: ICTLModelChecker) -> Dict[str, Any]:
+def run_model_checking(formula: str, checker: ICTLModelChecker) -> dict[str, Any]:
     """Parse formula, evaluate on checker, return standard result dict."""
     if not formula.strip():
         return {"res": "Error: formula not entered", "initial_state": ""}

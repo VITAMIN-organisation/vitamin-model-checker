@@ -1,7 +1,6 @@
 """NatATL to CTL conversion and coalition extraction (parser-backed)."""
 
 import logging
-from typing import List
 
 from model_checker.algorithms.explicit.NatATL.natatl_ast import (
     analyze_natatl_formula,
@@ -25,7 +24,7 @@ def natatl_to_ctl(natatl_formula: str, n_agent: int = 0) -> str:
     return natatl_ast_to_ctl(ast)
 
 
-def get_agents_from_natatl(natatl_formula: str, n_agent: int = 0) -> List[int]:
+def get_agents_from_natatl(natatl_formula: str, n_agent: int = 0) -> list[int]:
     """Extract agent indices from coalition modalities in a NatATL formula."""
     ast = parse_natatl_formula(natatl_formula, n_agent=n_agent)
     return get_agents_from_ast(ast)

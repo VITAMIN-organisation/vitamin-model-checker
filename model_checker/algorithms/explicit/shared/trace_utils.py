@@ -1,16 +1,15 @@
 """Build witness and counterexample paths from predecessor maps."""
 
 from collections import deque
-from typing import Dict, List, Optional, Set, Tuple
 
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
 MAX_TRACE_LENGTH = 100
 
 
-def _build_adjacency(edges: List[Tuple[str, str]]) -> Dict[str, List[str]]:
+def _build_adjacency(edges: list[tuple[str, str]]) -> dict[str, list[str]]:
     """Build a forward adjacency list from an edge list."""
-    adjacency: Dict[str, List[str]] = {}
+    adjacency: dict[str, list[str]] = {}
     for source, target in edges:
         adjacency.setdefault(source, []).append(target)
     return adjacency
@@ -18,10 +17,10 @@ def _build_adjacency(edges: List[Tuple[str, str]]) -> Dict[str, List[str]]:
 
 def reconstruct_trace_from_predecessors(
     initial_state: str,
-    target_states: Set[str],
-    predecessors: Dict[str, str],
+    target_states: set[str],
+    predecessors: dict[str, str],
     max_length: int = MAX_TRACE_LENGTH,
-) -> Optional[List[str]]:
+) -> list[str] | None:
     """Walk backward from a target state to the initial state using predecessors."""
     if not target_states:
         return None
@@ -51,11 +50,11 @@ def reconstruct_trace_from_predecessors(
 
 
 def reconstruct_trace_bfs(
-    edges: List[Tuple[str, str]],
+    edges: list[tuple[str, str]],
     initial_state: str,
-    target_states: Set[str],
+    target_states: set[str],
     max_length: int = MAX_TRACE_LENGTH,
-) -> Optional[List[str]]:
+) -> list[str] | None:
     """Shortest path from the initial state to any target, using forward BFS."""
     if not target_states:
         return None
@@ -85,14 +84,14 @@ def reconstruct_trace_bfs(
 
 
 def build_predecessor_map_bfs(
-    edges: List[Tuple[str, str]], target_states: Set[str]
-) -> Dict[str, str]:
+    edges: list[tuple[str, str]], target_states: set[str]
+) -> dict[str, str]:
     """Map each state to one predecessor, searching backward from targets."""
-    reverse_adj: Dict[str, List[str]] = {}
+    reverse_adj: dict[str, list[str]] = {}
     for source, target in edges:
         reverse_adj.setdefault(target, []).append(source)
 
-    predecessors: Dict[str, str] = {}
+    predecessors: dict[str, str] = {}
     queue = deque(target_states)
     visited = set(target_states)
 
@@ -178,11 +177,11 @@ def collect_backward_paths(
 
 
 def build_predecessor_map_forward(
-    edges: List[Tuple[str, str]], initial_state: str
-) -> Dict[str, str]:
+    edges: list[tuple[str, str]], initial_state: str
+) -> dict[str, str]:
     """Map each reachable state to the predecessor found by forward BFS."""
     adjacency = _build_adjacency(edges)
-    predecessors: Dict[str, str] = {}
+    predecessors: dict[str, str] = {}
     queue = deque([initial_state])
     visited = {initial_state}
 
@@ -199,11 +198,11 @@ def build_predecessor_map_forward(
 
 def extract_shortest_trace(
     initial_state: str,
-    target_states: Set[str],
-    all_states: Set[str],
-    edges: List[Tuple[str, str]],
+    target_states: set[str],
+    all_states: set[str],
+    edges: list[tuple[str, str]],
     max_length: int = MAX_TRACE_LENGTH,
-) -> Optional[List[str]]:
+) -> list[str] | None:
     """Shortest path to a valid target state, or None if there is no path."""
     # Validate inputs
     if initial_state not in all_states:
@@ -222,7 +221,7 @@ def extract_shortest_trace(
 
 
 def format_trace_with_properties(
-    trace: List[str], cgs: CGSProtocol, highlight_props: Optional[List[str]] = None
+    trace: list[str], cgs: CGSProtocol, highlight_props: list[str] | None = None
 ) -> str:
     """Format a path as ``state [props] -> ...``."""
     if not trace:
@@ -241,7 +240,7 @@ def format_trace_with_properties(
     return " -> ".join(result)
 
 
-def _get_props_at_state(cgs, state: str) -> List[str]:
+def _get_props_at_state(cgs, state: str) -> list[str]:
     """Return proposition names that hold in the given state."""
     try:
         state_idx = cgs.get_index_by_state_name(state)

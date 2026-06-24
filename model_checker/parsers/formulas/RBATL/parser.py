@@ -14,7 +14,6 @@ Returns:
 """
 
 import re
-from typing import Optional
 
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
@@ -119,7 +118,7 @@ class RBATLParser(BaseLogicParser):
 
         return super().parse(formula, **kwargs)
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         valid, err = run_common_prechecks(
             formula,
             allow_hash_at=True,

@@ -1,0 +1,30 @@
+# MODEL: Two-state timedCGS for TCTL AF vs AG regression
+#
+# PURPOSE: s0 is forced to s1 (no self-loop); p holds only at s1.
+#          AF p = {s0, s1}  (s0 must reach s1 where p holds)
+#          AG p = {s1}      (s0 does not satisfy p itself)
+#
+# LOGIC: TCTL
+
+Transition
+0 a
+0 *
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+0
+1
+Number_of_agents
+1
+Clocks
+x
+Clock_constraints
+x<=1 x<=1
+x<=1 x<=1
+Invariants
+x<=2
+x<=2

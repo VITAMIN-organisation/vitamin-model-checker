@@ -4,8 +4,6 @@ Extends CGS with capacity assignments and action capacities; used by CapATL
 and other capacity-based logics.
 """
 
-from typing import List
-
 import numpy as np
 
 from model_checker.parsers.game_structures.cgs import cgs_parser
@@ -164,7 +162,7 @@ class CapCGS(CGS):
 
     # --- Capacity Accessor Methods ---
 
-    def get_capacities_assignment(self) -> List[List[str]]:
+    def get_capacities_assignment(self) -> list[list[str]]:
         """Return capacities assignment formatted by agent.
 
         Returns:
@@ -186,7 +184,7 @@ class CapCGS(CGS):
 
         return result
 
-    def get_action_capacities(self) -> List[List[str]]:
+    def get_action_capacities(self) -> list[list[str]]:
         """Return the action-capacity mapping (one list per row from Actions_for_capacities).
 
         Returns:
@@ -194,7 +192,7 @@ class CapCGS(CGS):
         """
         return self.action_capacities
 
-    def get_capacities(self) -> List[str]:
+    def get_capacities(self) -> list[str]:
         """Return the list of capacity names from the Capacities section.
 
         Returns:

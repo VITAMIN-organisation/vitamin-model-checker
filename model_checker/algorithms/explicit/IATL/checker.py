@@ -1,6 +1,6 @@
 """IATL model checker state and formula tree construction."""
 
-from typing import Any, Dict, Optional, Set
+from typing import Any
 
 import numpy as np
 
@@ -21,9 +21,9 @@ from model_checker.utils.formula_tree import FormulaTreeNode, build_formula_tree
 class IATLModelChecker:
     """IATL checker over a BCGS model dict loaded from file I/O."""
 
-    def __init__(self, model: Dict[str, Any]) -> None:
+    def __init__(self, model: dict[str, Any]) -> None:
         self.data = model
-        self._transition_caches: Dict[str, TransitionCache] = {}
+        self._transition_caches: dict[str, TransitionCache] = {}
         states = self.data["states"]
         preorder_edges = labeled_pairs(
             self.data["preorder"], states, lambda cell: cell == 1
@@ -31,10 +31,10 @@ class IATLModelChecker:
         self.upward_closure = get_preorder(preorder_edges, states)
 
     @property
-    def states_set(self) -> Set[str]:
+    def states_set(self) -> set[str]:
         return {str(state) for state in self.data["states"]}
 
-    def states_with_upset_in(self, target: Set[str]) -> Set[str]:
+    def states_with_upset_in(self, target: set[str]) -> set[str]:
         """States whose P-upset is contained in target."""
         closures = self.upward_closure
         return {
@@ -53,7 +53,7 @@ class IATLModelChecker:
             self._transition_caches[coalition] = cache
         return cache
 
-    def pre_exists(self, coalition: str, target: Set[str]) -> Set[str]:
+    def pre_exists(self, coalition: str, target: set[str]) -> set[str]:
         """Coalition existential pre-image Pre_d(A, target)."""
         return pre_image_exists(
             self.data["graph"],
@@ -64,7 +64,7 @@ class IATLModelChecker:
             transition_cache=self.transition_cache_for(coalition),
         )
 
-    def pre_forall(self, coalition: str, target: Set[str]) -> Set[str]:
+    def pre_forall(self, coalition: str, target: set[str]) -> set[str]:
         """Coalition universal pre-image Pre_f(A, target)."""
         return pre_image_forall(
             self.data["graph"],
@@ -75,10 +75,10 @@ class IATLModelChecker:
             transition_cache=self.transition_cache_for(coalition),
         )
 
-    def build_tree(self, parsed_formula) -> Optional[FormulaTreeNode]:
+    def build_tree(self, parsed_formula) -> FormulaTreeNode | None:
         """Build a formula tree with atoms resolved to state sets."""
 
-        def resolve_atom(atom) -> Optional[str]:
+        def resolve_atom(atom) -> str | None:
             prop_idx = proposition_index(self.data["atomic_propositions"], str(atom))
             if prop_idx is None:
                 return None

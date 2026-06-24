@@ -1,14 +1,14 @@
 """Core registries for built-in VITAMIN logics and model types."""
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from model_checker.discovery import discover_logic_resource
 
 logger = logging.getLogger(__name__)
 
 
-def _load_logic_metadata(logic_type: str) -> Optional[dict[str, Any]]:
+def _load_logic_metadata(logic_type: str) -> dict[str, Any] | None:
     """Return vitamin.metadata entry for a logic, or None when unavailable."""
     try:
         metadata = discover_logic_resource(
@@ -25,7 +25,7 @@ def _load_logic_metadata(logic_type: str) -> Optional[dict[str, Any]]:
     return None
 
 
-def get_expected_model_type(logic_type: str) -> Optional[str]:
+def get_expected_model_type(logic_type: str) -> str | None:
     """Detect the expected model type for a given logic name.
 
     Uses standard entry points discoverable via 'vitamin.metadata'.

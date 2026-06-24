@@ -1,7 +1,8 @@
 """Operator handlers for IATL model checking."""
 
 import re
-from typing import TYPE_CHECKING, Callable, Set
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
     from model_checker.algorithms.explicit.IATL.checker import IATLModelChecker
     from model_checker.utils.formula_tree import FormulaTreeNode
 
-_CoalitionPreimage = Callable[[str, Set[str]], Set[str]]
+_CoalitionPreimage = Callable[[str, set[str]], set[str]]
 
 _COALITION_FROM_NODE = re.compile(r"^([<\[])([\d,]+)([>\]])")
 
@@ -28,10 +29,10 @@ def coalition_from_node(node_value: str) -> str:
 def _greatest_g_states(
     checker: "IATLModelChecker",
     coalition: str,
-    phi_states: Set[str],
+    phi_states: set[str],
     pre_image: _CoalitionPreimage,
-) -> Set[str]:
-    def update(current: Set[str]) -> Set[str]:
+) -> set[str]:
+    def update(current: set[str]) -> set[str]:
         return pre_image(coalition, current) & phi_states
 
     return greatest_fixpoint(checker.states_set.copy(), update)
@@ -40,10 +41,10 @@ def _greatest_g_states(
 def _least_f_states(
     checker: "IATLModelChecker",
     coalition: str,
-    phi_states: Set[str],
+    phi_states: set[str],
     pre_image: _CoalitionPreimage,
-) -> Set[str]:
-    def update(current: Set[str]) -> Set[str]:
+) -> set[str]:
+    def update(current: set[str]) -> set[str]:
         return current | pre_image(coalition, current)
 
     return least_fixpoint(phi_states, update)
@@ -52,11 +53,11 @@ def _least_f_states(
 def _least_until_states(
     checker: "IATLModelChecker",
     coalition: str,
-    states1: Set[str],
-    states2: Set[str],
+    states1: set[str],
+    states2: set[str],
     pre_image: _CoalitionPreimage,
-) -> Set[str]:
-    def update(accumulated: Set[str]) -> Set[str]:
+) -> set[str]:
+    def update(accumulated: set[str]) -> set[str]:
         return accumulated | (pre_image(coalition, accumulated) & states1)
 
     return least_fixpoint(states2, update)
@@ -65,11 +66,11 @@ def _least_until_states(
 def _greatest_release_states(
     checker: "IATLModelChecker",
     coalition: str,
-    states1: Set[str],
-    states2: Set[str],
+    states1: set[str],
+    states2: set[str],
     pre_image: _CoalitionPreimage,
-) -> Set[str]:
-    def update(current: Set[str]) -> Set[str]:
+) -> set[str]:
+    def update(current: set[str]) -> set[str]:
         return states2 & (states1 | pre_image(coalition, current))
 
     return greatest_fixpoint(checker.states_set.copy(), update)

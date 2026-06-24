@@ -1,6 +1,6 @@
 """Least and greatest fixpoint iteration for set-based model checkers."""
 
-from typing import Callable, Dict, Set, Tuple
+from collections.abc import Callable
 
 
 def _iterate_fixpoint(previous, current, update_func):
@@ -35,17 +35,17 @@ def greatest_fixpoint(initial_set, update_func):
 
 
 def least_fixpoint_with_trace(
-    initial_set: Set[str],
-    update_func_with_trace: Callable[[Set[str]], Tuple[Set[str], Dict[str, str]]],
+    initial_set: set[str],
+    update_func_with_trace: Callable[[set[str]], tuple[set[str], dict[str, str]]],
     normalize_state_set_func=None,
-) -> Tuple[Set[str], Dict[str, str]]:
+) -> tuple[set[str], dict[str, str]]:
     """Least fixpoint that also records one predecessor per state for traces."""
     T = (
         normalize_state_set_func(set(initial_set))
         if normalize_state_set_func
         else set(initial_set)
     )
-    complete_predecessors: Dict[str, str] = {}
+    complete_predecessors: dict[str, str] = {}
 
     while True:
         new_T, new_predecessors = update_func_with_trace(T)

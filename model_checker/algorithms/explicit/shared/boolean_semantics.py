@@ -1,14 +1,12 @@
 """Shared boolean set semantics for explicit algorithms."""
 
-from typing import Optional, Set
-
 
 def compute_boolean_result(
     operator_name: str,
-    left_states: Set[str],
-    right_states: Optional[Set[str]] = None,
-    all_states: Optional[Set[str]] = None,
-) -> Set[str]:
+    left_states: set[str],
+    right_states: set[str] | None = None,
+    all_states: set[str] | None = None,
+) -> set[str]:
     """Evaluate boolean operator semantics over state sets."""
     if operator_name == "NOT":
         if all_states is None:

@@ -1,6 +1,6 @@
 """ICTL model checker state and formula tree construction."""
 
-from typing import Any, Dict, Optional, Set
+from typing import Any
 
 from model_checker.algorithms.explicit.ICTL.util.graph import get_preorder
 from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
@@ -8,7 +8,7 @@ from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_inde
 from model_checker.utils.formula_tree import FormulaTreeNode, build_formula_tree
 
 
-def states_where_prop_holds(prop: str, prop_matrix, propositions) -> Optional[Set[int]]:
+def states_where_prop_holds(prop: str, prop_matrix, propositions) -> set[int] | None:
     """Return state indices where prop holds, or None if the atom is unknown."""
     index = proposition_index(propositions, prop)
     if index is None:
@@ -21,7 +21,7 @@ def states_where_prop_holds(prop: str, prop_matrix, propositions) -> Optional[Se
 class ICTLModelChecker:
     """ICTL checker over a birelational model dict loaded from graph I/O."""
 
-    def __init__(self, model: Dict[str, Any]) -> None:
+    def __init__(self, model: dict[str, Any]) -> None:
         self.data = model
         graph = self.data["graph"]
         states = self.data["states"]
@@ -32,18 +32,18 @@ class ICTLModelChecker:
         self.upward_closure = get_preorder(self.preorder_edges, states)
 
     @property
-    def states_set(self) -> Set[str]:
+    def states_set(self) -> set[str]:
         return {str(s) for s in self.data["states"]}
 
-    def states_with_upset_in(self, target: Set[str]) -> Set[str]:
+    def states_with_upset_in(self, target: set[str]) -> set[str]:
         """States whose P-upset is contained in target (paper ^up operator)."""
         closures = self.upward_closure
         return {state for state in self.states_set if closures[state].issubset(target)}
 
-    def build_tree(self, parsed_formula) -> Optional[FormulaTreeNode]:
+    def build_tree(self, parsed_formula) -> FormulaTreeNode | None:
         """Build a formula tree with atoms resolved to state sets."""
 
-        def resolve_atom(atom) -> Optional[str]:
+        def resolve_atom(atom) -> str | None:
             indices = states_where_prop_holds(
                 str(atom), self.data["matrix_prop"], self.data["atomic_propositions"]
             )

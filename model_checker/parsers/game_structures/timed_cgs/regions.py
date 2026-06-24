@@ -1,6 +1,6 @@
 """Region-level helpers for TCTL rsat on the zone graph."""
 
-from typing import TYPE_CHECKING, Set
+from typing import TYPE_CHECKING
 
 from model_checker.algorithms.explicit.shared.trace_utils import reverse_adjacency
 from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
     from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
-RegionSet = Set[TimeState]
+RegionSet = set[TimeState]
 
 
 def all_regions(zone_graph: "ZoneGraph") -> RegionSet:
@@ -24,7 +24,7 @@ def regions_at_location(zone_graph: "ZoneGraph", location: str) -> RegionSet:
     return {state for state in zone_graph.states if state.location == location}
 
 
-def project_regions_to_locations(regions: RegionSet) -> Set[str]:
+def project_regions_to_locations(regions: RegionSet) -> set[str]:
     return {state.location for state in regions}
 
 

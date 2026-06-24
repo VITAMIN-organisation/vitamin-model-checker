@@ -1,6 +1,6 @@
 """Formula tree solver for Wallet_ATL model checking."""
 
-from typing import Any, Optional
+from typing import Any
 
 from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_and,
@@ -32,7 +32,7 @@ _BINARY = {
 }
 
 
-def _walletatl_unary_key(parser_instance: Any, val: Any) -> Optional[str]:
+def _walletatl_unary_key(parser_instance: Any, val: Any) -> str | None:
     if parser_instance.verify("NOT", val):
         return "NOT"
     if is_wallet_coalition_operator(val):
@@ -45,7 +45,7 @@ def _walletatl_unary_key(parser_instance: Any, val: Any) -> Optional[str]:
     return None
 
 
-def _walletatl_binary_key(parser_instance: Any, val: Any) -> Optional[str]:
+def _walletatl_binary_key(parser_instance: Any, val: Any) -> str | None:
     if parser_instance.verify("OR", val):
         return "OR"
     if is_wallet_coalition_operator(val) and parser_instance.verify("UNTIL", val):
@@ -57,7 +57,7 @@ def _walletatl_binary_key(parser_instance: Any, val: Any) -> Optional[str]:
     return None
 
 
-def solve_tree(cgs, node, transition_cache: Optional[dict] = None) -> None:
+def solve_tree(cgs, node, transition_cache: dict | None = None) -> None:
     """Recursively solve Wallet_ATL formula tree bottom-up."""
     if node.left is not None:
         solve_tree(cgs, node.left, transition_cache)

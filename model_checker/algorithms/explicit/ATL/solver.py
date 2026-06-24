@@ -1,11 +1,6 @@
-"""
-Formula tree solver for ATL model checking.
+"""Bottom-up formula tree solver for ATL model checking."""
 
-This module contains the solve_tree function that recursively evaluates
-ATL formula trees using bottom-up evaluation.
-"""
-
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any
 
 from model_checker.algorithms.explicit.ATL.operators import (
     handle_coalition_eventually,
@@ -38,7 +33,7 @@ _BINARY = {
 }
 
 
-def _atl_unary_key(parser_instance: Any, val: Any) -> Optional[str]:
+def _atl_unary_key(parser_instance: Any, val: Any) -> str | None:
     if parser_instance.verify("NOT", val):
         return "NOT"
     if parser_instance.verify("COALITION", val) and parser_instance.verify(
@@ -54,7 +49,7 @@ def _atl_unary_key(parser_instance: Any, val: Any) -> Optional[str]:
     return None
 
 
-def _atl_binary_key(parser_instance: Any, val: Any) -> Optional[str]:
+def _atl_binary_key(parser_instance: Any, val: Any) -> str | None:
     if parser_instance.verify("OR", val):
         return "OR"
     if parser_instance.verify("COALITION", val) and parser_instance.verify(
@@ -69,7 +64,7 @@ def _atl_binary_key(parser_instance: Any, val: Any) -> Optional[str]:
 
 
 def solve_tree(
-    cgs: "CGS", node: Any, transition_cache: Optional[Dict[str, Any]] = None
+    cgs: "CGS", node: Any, transition_cache: dict[str, Any] | None = None
 ) -> None:
     """Evaluate the formula tree bottom-up, storing satisfying states at each node."""
     if node.left is not None:

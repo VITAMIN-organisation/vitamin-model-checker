@@ -1,6 +1,6 @@
 """Formula tree solver for CTL model checking."""
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from model_checker.algorithms.explicit.CTL.operators import (
     handle_af,
@@ -54,7 +54,7 @@ _BINARY = {
 }
 
 
-def _ctl_unary_key(parser_instance: Any, val: Any) -> Optional[str]:
+def _ctl_unary_key(parser_instance: Any, val: Any) -> str | None:
     if parser_instance.verify("NOT", val):
         return "NOT"
     if parser_instance.verify("EXIST", val) and parser_instance.verify("NEXT", val):
@@ -80,7 +80,7 @@ def _ctl_unary_key(parser_instance: Any, val: Any) -> Optional[str]:
     return None
 
 
-def _ctl_binary_key(parser_instance: Any, val: Any) -> Optional[str]:
+def _ctl_binary_key(parser_instance: Any, val: Any) -> str | None:
     if parser_instance.verify("OR", val):
         return "OR"
     if parser_instance.verify("AND", val):
@@ -97,13 +97,13 @@ def _ctl_binary_key(parser_instance: Any, val: Any) -> Optional[str]:
 
 
 def _dispatch(
-    key: Optional[str],
+    key: str | None,
     handlers: dict,
     cgs: "CGS",
     node: Any,
     generate_trace: bool,
     cached_edges: list,
-) -> Optional[Any]:
+) -> Any | None:
     if key is None or key not in handlers:
         return None
     h = handlers[key]
@@ -116,7 +116,7 @@ def _dispatch(
 
 def solve_tree_with_trace(
     cgs: "CGS", node: Any, generate_trace: bool = True
-) -> Optional[OperatorWithTrace]:
+) -> OperatorWithTrace | None:
     """Evaluate the formula tree bottom-up, optionally recording trace data."""
     if node.left is not None:
         solve_tree_with_trace(cgs, node.left, generate_trace)
@@ -145,9 +145,9 @@ def extract_trace_for_result(
     cgs: "CGS",
     result_states_str: str,
     initial_state: str,
-    operator_trace: Optional[OperatorWithTrace],
+    operator_trace: OperatorWithTrace | None,
     is_satisfied: bool,
-) -> Optional[StateTrace]:
+) -> StateTrace | None:
     """Build a witness or counterexample trace from the verification result."""
     if operator_trace is None:
         return None

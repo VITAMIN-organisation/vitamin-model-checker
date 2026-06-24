@@ -1,6 +1,6 @@
 """Coalition operator handlers shared by RABATL and RBATL."""
 
-from typing import Callable
+from collections.abc import Callable
 
 from model_checker.algorithms.explicit.shared.bound_utils import (
     extract_coalition_and_bound,
@@ -32,7 +32,9 @@ def _accumulate_over_bound_allocations(
     curr_bound_p = [0] * len(bound)
     zero_bound = [0] * len(bound)
     while True:
-        remaining_bound = [max(0, x - y) for x, y in zip(bound, curr_bound_p)]
+        remaining_bound = [
+            max(0, x - y) for x, y in zip(bound, curr_bound_p, strict=True)
+        ]
         reachable = (
             compute_pre_states(
                 cgs,

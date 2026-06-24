@@ -1,11 +1,6 @@
-"""
-Formula tree solver for CapATL model checking.
+"""CapATL formula tree builder and bottom-up solver with knowledge-based reasoning."""
 
-This module contains functions for building and solving CapATL formula trees
-using bottom-up evaluation with knowledge-based reasoning.
-"""
-
-from typing import Any, Optional
+from typing import Any
 
 from model_checker.algorithms.explicit.CapATL.knowledge import Node_PK
 from model_checker.algorithms.explicit.CapATL.operators import (
@@ -40,7 +35,7 @@ def _extract_coalition(val_str):
     return val_str[start : end + 1]
 
 
-def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Optional[Node_PK]:
+def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Node_PK | None:
     """Build the CapATL formula tree from a parsed formula tuple."""
     parser = FormulaParserFactory.get_parser_instance("CapATL")
     if isinstance(tpl, tuple):
@@ -93,7 +88,7 @@ def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Optional[Node_PK]:
     return root
 
 
-def solve_tree(cgs: CapCGSProtocol, node: Optional[Node_PK]) -> None:
+def solve_tree(cgs: CapCGSProtocol, node: Node_PK | None) -> None:
     """Evaluate the CapATL formula tree bottom-up."""
     if node is None:
         return set()

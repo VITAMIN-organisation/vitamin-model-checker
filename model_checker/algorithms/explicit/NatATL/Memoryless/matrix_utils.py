@@ -1,19 +1,18 @@
 """Transition matrix updates for NatATL memoryless strategy pruning."""
 
 import logging
-from typing import List, Set
 
 logger = logging.getLogger(__name__)
 
 
 def modify_matrix(
-    graph: List[List],
-    label_matrix: List[List[str]],
-    states: Set[str],
+    graph: list[list],
+    label_matrix: list[list[str]],
+    states: set[str],
     action: str,
     agent_index: int,
-    agents: List[int],
-) -> List[List]:
+    agents: list[int],
+) -> list[list]:
     """Keep only transitions where one agent plays action in the given states."""
     new_graph = [row.copy() for row in graph]
 

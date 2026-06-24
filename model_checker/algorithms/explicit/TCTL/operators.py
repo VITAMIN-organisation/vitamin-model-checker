@@ -30,14 +30,14 @@ def handle_ef(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -
 
 
 def handle_af(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -> None:
+    # AF phi = !EG(!phi) = universe \ gfp Z. (!phi & Pre(Z))
     universe = all_regions(zone_graph)
     guard = extract_closest_constraint(node.formula)
-    target = universe - node.formula.satisfying_regions
-    unreachable = least_fixpoint(
-        target,
-        lambda regions: regions | timed_predecessors(zone_graph, tcgs, regions, guard),
+    not_phi = universe - node.formula.satisfying_regions
+    node.satisfying_regions = universe - greatest_fixpoint(
+        universe,
+        lambda regions: not_phi & timed_predecessors(zone_graph, tcgs, regions, guard),
     )
-    node.satisfying_regions = universe - unreachable
 
 
 def handle_eg(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -> None:
@@ -73,6 +73,8 @@ def handle_eu(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -
 
 
 def handle_au(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -> None:
+    # A[phi U psi] = universe \ lfp Z. !psi | (!phi & !psi & AX(Z))
+    # AX(Z) = universe \ Pre_exists(universe \ Z)  (universal backward step)
     universe = all_regions(zone_graph)
     guard = extract_closest_constraint(node.formula)
     sat_phi = node.formula.left.satisfying_regions
@@ -82,6 +84,13 @@ def handle_au(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -
     unreachable = least_fixpoint(
         not_psi,
         lambda regions: not_psi
-        | (not_phi & not_psi & timed_predecessors(zone_graph, tcgs, regions, guard)),
+        | (
+            not_phi
+            & not_psi
+            & (
+                universe
+                - timed_predecessors(zone_graph, tcgs, universe - regions, guard)
+            )
+        ),
     )
     node.satisfying_regions = universe - unreachable

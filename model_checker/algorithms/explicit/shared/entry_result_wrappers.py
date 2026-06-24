@@ -1,15 +1,16 @@
 """Entry-point result wrappers for explicit algorithms."""
 
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
-from model_checker.utils.error_handler import create_system_error
+from model_checker.utils.error_handler import create_error_response
 
 
 def wrap_explicit_entry_result(
-    raw_result: Dict[str, Any],
+    raw_result: dict[str, Any],
     formula: str,
     filename: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Add formula and model fields for VMI callers."""
     res_str = raw_result.get("res", "")
     if not res_str.startswith("Result"):
@@ -23,14 +24,16 @@ def wrap_explicit_entry_result(
 
 
 def run_explicit_entry_model_checking(
-    check_fn: Callable[[str, str], Dict[str, Any]],
+    check_fn: Callable[[str, str], dict[str, Any]],
     formula: str,
     filename: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Call check_fn and wrap errors for explicit entry points."""
     try:
         return wrap_explicit_entry_result(
             check_fn(formula, filename), formula, filename
         )
     except Exception as exc:
-        return create_system_error(f"Error during model checking: {str(exc)}")
+        return create_error_response(
+            "system", f"Error during model checking: {str(exc)}"
+        )

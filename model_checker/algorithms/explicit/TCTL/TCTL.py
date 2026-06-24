@@ -1,7 +1,7 @@
 """TCTL model checking."""
 
 from functools import partial
-from typing import Any, Dict
+from typing import Any
 
 from model_checker.algorithms.explicit.shared.entry_result_wrappers import (
     run_explicit_entry_model_checking,
@@ -25,7 +25,7 @@ from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
 
-def _core_model_checking(formula: str, filename: str) -> Dict[str, Any]:
+def _core_model_checking(formula: str, filename: str) -> dict[str, Any]:
     if not formula.strip():
         return {"res": "Error: no formula specified", "initial_state": ""}
 

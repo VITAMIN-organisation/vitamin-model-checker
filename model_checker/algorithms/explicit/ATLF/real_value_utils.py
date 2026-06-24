@@ -1,9 +1,4 @@
-"""
-Real-valued utilities for ATLF model checking.
-
-This module provides functions to manipulate real-valued state lists
-(tuples of state, value) where values are in [0,1] range.
-"""
+"""Real-valued state list utilities for ATLF (state, value) tuples in [0, 1]."""
 
 
 def set_value_tuple_list(cgs, value):

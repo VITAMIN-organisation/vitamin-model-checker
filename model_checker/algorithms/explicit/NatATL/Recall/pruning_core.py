@@ -1,17 +1,11 @@
-"""
-Core pruning orchestration for NatATL Recall model checker.
-
-This module implements the main pruning function that coordinates boolean
-and regex pruning, validates strategies, and performs CTL verification.
-"""
+"""Prune recall trees per strategy and verify the CTL encoding."""
 
 import logging
-from typing import Dict, Set
 
 from model_checker.algorithms.explicit.CTL.CTL import model_checking
 from model_checker.algorithms.explicit.NatATL.Recall.boolean_pruning import (
     boolean_pruning,
-    idle_pruning,
+    prune_tree_nodes,
 )
 from model_checker.algorithms.explicit.NatATL.Recall.condition_cache import (
     ctl_model_checking_cached,
@@ -51,10 +45,7 @@ def legit_strategy_check(
     model_path: str,
 ) -> bool:
     """
-    Verify that a strategy is valid before applying pruning.
-
-    Checks that for every state matching the condition, the agent has the
-    required action available in at least one transition.
+    Check that ``action`` is available on every state where ``condition`` holds.
     """
     condition_type = is_regex_or_boolean_formula(condition)
 
@@ -86,12 +77,14 @@ def legit_strategy_check(
         return True
 
     def check_action_exists(
-        node: Node, state_set: Set[str], action: str, strategy_index: int
+        node: Node, state_set: set[str], action: str, strategy_index: int
     ) -> bool:
         """Check if at least one matching action exists in matching states."""
         if node.state in state_set:
             action_exists = False
-            for _i, (_child, actions) in enumerate(zip(node.children, node.actions)):
+            for _i, (_child, actions) in enumerate(
+                zip(node.children, node.actions, strict=False)
+            ):
                 if strategy_index - 1 < len(actions):
                     if actions[strategy_index - 1] == action:
                         action_exists = True
@@ -114,25 +107,9 @@ def pruning(
     height: int,
     model_path: str,
     CTLformula: str,
-    *strategies: Dict,
+    *strategies: dict,
 ) -> bool:
-    """
-    Main pruning function for recall NatATL: apply all strategies and verify formula.
-
-    Applies each agent's strategy to prune the execution tree, then converts
-    the pruned tree back to a CGS and runs CTL model checking.
-
-    Args:
-        cgs: CGS model object
-        tree: Root node of execution tree
-        height: Maximum tree height
-        model_path: Path to model file
-        CTLformula: CTL formula to verify (converted from NatATL)
-        *strategies: Strategy dicts, one per agent
-
-    Returns:
-        True if formula holds in initial state, False otherwise
-    """
+    """Apply all agent strategies, rebuild a CGS from the tree, run CTL."""
     pruning_flag = 0
 
     for strategy_index, strategy in enumerate(strategies, start=1):
@@ -168,9 +145,7 @@ def pruning(
                 return False
 
         if pruning_flag == 0:
-            pruning_flag = idle_pruning(
-                cgs, tree, set(cgs.states), "I", strategy_index, model_path
-            )
+            pruning_flag = prune_tree_nodes(tree, set(cgs.states), "I", strategy_index)
 
         reset_pruned_flag(tree)
 

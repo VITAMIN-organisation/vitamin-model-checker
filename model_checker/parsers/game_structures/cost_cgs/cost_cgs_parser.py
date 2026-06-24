@@ -1,11 +1,11 @@
 """costCGS file parsing."""
 
-from typing import Any, List
+from typing import Any
 
 from model_checker.parsers.game_structures.cgs import cgs_parser
 
 
-def parse_cost_sections(lines: List[str], instance: Any) -> None:
+def parse_cost_sections(lines: list[str], instance: Any) -> None:
     current_section = None
 
     cost_section_headers = {
@@ -81,7 +81,7 @@ def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None
         instance.cost_for_action.update({key: costs})
 
 
-def parse_common_sections(lines: List[str], instance: Any) -> None:
+def parse_common_sections(lines: list[str], instance: Any) -> None:
     sections_to_skip = {
         "Transition",
         "Transition_With_Costs",
@@ -94,7 +94,7 @@ def parse_common_sections(lines: List[str], instance: Any) -> None:
     cgs_parser.parse_cgs_file(filtered_lines, instance)
 
 
-def extract_transition_rows(lines: List[str], instance: Any) -> List[Any]:
+def extract_transition_rows(lines: list[str], instance: Any) -> list[Any]:
     current_section = None
     rows_graph = []
 
@@ -118,7 +118,7 @@ def extract_transition_rows(lines: List[str], instance: Any) -> List[Any]:
     return rows_graph
 
 
-def parse_transitions(lines: List[str], instance: Any) -> None:
+def parse_transitions(lines: list[str], instance: Any) -> None:
     rows_graph = extract_transition_rows(lines, instance)
     if not rows_graph:
         return
@@ -134,8 +134,8 @@ def parse_transitions(lines: List[str], instance: Any) -> None:
 
 
 def process_transition_row_with_costs(
-    row: List[Any], actions: List[Any], instance: Any
-) -> List[Any]:
+    row: list[Any], actions: list[Any], instance: Any
+) -> list[Any]:
     """One transition row: numeric costs or CGS actions."""
     if instance.usesCostsInsteadOfActions:
         return [0 if item == "0" else str(item) for item in row]

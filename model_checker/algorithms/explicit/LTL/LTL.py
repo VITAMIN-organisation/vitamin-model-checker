@@ -1,15 +1,15 @@
-"""LTL model checking with game-theoretic solution concepts.
+"""
+LTL model checking with game-theoretic solution concepts.
 
-This module provides LTL model checking extended with game-theoretic notions:
-sure-win strategies (coalition can force the formula to hold), Nash equilibria,
-and checks for "win/lose in some Nash". Formulas are converted to CTL and
-evaluated on the model; strategies are enumerated by complexity and the
-model is pruned under each strategy before verification.
+Extends LTL verification with sure-win strategies (coalition can force the
+formula to hold), Nash equilibria, and "win/lose in some Nash" checks.
+Formulas are converted to CTL; strategies are enumerated by complexity and
+the model is pruned under each candidate strategy before verification.
 """
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from model_checker.algorithms.explicit.LTL.pruning import pruning
 from model_checker.algorithms.explicit.LTL.strategies import (
@@ -43,31 +43,29 @@ LTL_KEYWORDS = {
 }
 
 
-def _validate_ltl_input(
-    formula: str, filename: Optional[str]
-) -> Optional[Dict[str, Any]]:
+def _validate_ltl_input(formula: str, filename: str | None) -> dict[str, Any] | None:
     """Return an error dict if formula or filename is missing; otherwise None."""
-    from model_checker.utils.error_handler import create_validation_error
+    from model_checker.utils.error_handler import create_error_response
 
     if not formula or not formula.strip():
-        return create_validation_error("Formula not entered")
+        return create_error_response("validation", "Formula not entered")
     if not filename:
-        return create_validation_error("Model file not specified")
+        return create_error_response("validation", "Model file not specified")
     return None
 
 
-def _parse_ltl_formula(formula: str) -> Tuple[Any, Optional[Dict[str, Any]]]:
+def _parse_ltl_formula(formula: str) -> tuple[Any, dict[str, Any] | None]:
     """Parse LTL formula. Returns (parsed, None) or (None, error_dict)."""
     from model_checker.parsers.formula_parser_factory import (
         FormulaParserFactory,
     )
-    from model_checker.utils.error_handler import create_syntax_error
+    from model_checker.utils.error_handler import create_error_response
 
     parser = FormulaParserFactory.get_parser_instance("LTL")
     parsed = parser.parse(formula)
     if parsed is None:
         error_msg = parser.errors[0] if parser.errors else "Syntax error in LTL formula"
-        return None, create_syntax_error(error_msg)
+        return None, create_error_response("syntax", error_msg)
     return parsed, None
 
 
@@ -83,17 +81,18 @@ def _load_ltl_model(filename: str) -> Any:
 
 
 def _validate_formula_propositions(
-    formula: str, atomic_propositions: List[str]
-) -> Optional[Dict[str, Any]]:
+    formula: str, atomic_propositions: list[str]
+) -> dict[str, Any] | None:
     """Return an error dict if the formula uses undeclared propositions; otherwise None."""
-    from model_checker.utils.error_handler import create_validation_error
+    from model_checker.utils.error_handler import create_error_response
 
     formula_props = set(re.findall(r"\b([a-z]+)\b", formula)) - LTL_KEYWORDS
     invalid = formula_props - set(atomic_propositions)
     if invalid:
-        return create_validation_error(
+        return create_error_response(
+            "validation",
             f"Atomic proposition(s) {', '.join(sorted(invalid))} "
-            f"do not exist in the model"
+            f"do not exist in the model",
         )
     return None
 
@@ -102,9 +101,9 @@ def _run_sure_win_and_format_result(
     filename: str,
     formula: str,
     k: int,
-    agents: List[int],
+    agents: list[int],
     cgs: CGSProtocol,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Run sure-win check and return the standard result dict with ``res`` and ``initial_state``."""
     initial_state = cgs.initial_state
     result = model_checking_sure_win(filename, formula, k, agents)
@@ -120,8 +119,8 @@ def _run_sure_win_and_format_result(
 
 
 def model_checking_sure_win(
-    model: Any, formula: str, k: int, agents: List[int]
-) -> Dict[str, Any]:
+    model: Any, formula: str, k: int, agents: list[int]
+) -> dict[str, Any]:
     """Search for a sure-win strategy up to complexity k.
 
     Returns Satisfiability and the complexity bound where a strategy was found.
@@ -185,8 +184,8 @@ def model_checking_is_not_nash(
     formula: str,
     k: int,
     natural_strategies: Any,
-    selected_agents: List[int],
-) -> Dict[str, Any]:
+    selected_agents: list[int],
+) -> dict[str, Any]:
     """Test whether natural_strategies is Nash.
 
     Satisfiability is False if some agent can improve by deviating alone.
@@ -235,8 +234,8 @@ def model_checking_is_not_nash(
 
 
 def model_checking_exists_nash(
-    model: Any, formula: str, k: int, agents: List[int]
-) -> Dict[str, Any]:
+    model: Any, formula: str, k: int, agents: list[int]
+) -> dict[str, Any]:
     """Search for a Nash equilibrium up to complexity k."""
     (
         agent_actions,
@@ -284,14 +283,14 @@ def model_checking_exists_nash(
 def model_checking_wins_some_nash(
     cgs: CGSProtocol,
     model: str,
-    agents: List[int],
+    agents: list[int],
     CTLformula: Any,
     current_strategy: Any,
     bound: int,
     agent_actions: Any,
     atomic_propositions: Any,
     target_agent: int,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Test one strategy profile for a single agent.
 
     Satisfiability is False when the target agent meets the CTL goal on the play
@@ -322,14 +321,14 @@ def model_checking_wins_some_nash(
 def model_checking_lose_some_nash(
     cgs: CGSProtocol,
     model: str,
-    agents: List[int],
+    agents: list[int],
     CTLformula: Any,
     current_strategy: Any,
     bound: int,
     agent_actions: Any,
     atomic_propositions: Any,
     target_agent: int,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Test one strategy profile for a single agent (lose case).
 
     Satisfiability is True when the target agent misses the CTL goal and the
@@ -356,12 +355,9 @@ def model_checking_lose_some_nash(
     return result
 
 
-def model_checking(formula: str, filename: str) -> Dict[str, Any]:
+def model_checking(formula: str, filename: str) -> dict[str, Any]:
     """Main entry point for LTL sure-win checking (k=5, all agents)."""
-    from model_checker.utils.error_handler import (
-        create_model_error,
-        create_system_error,
-    )
+    from model_checker.utils.error_handler import create_error_response
 
     err = _validate_ltl_input(formula, filename)
     if err is not None:
@@ -383,11 +379,11 @@ def model_checking(formula: str, filename: str) -> Dict[str, Any]:
         return _run_sure_win_and_format_result(filename, formula, k, agents, cgs)
 
     except FileNotFoundError:
-        return create_system_error(f"Model file not found: {filename}")
+        return create_error_response("system", f"Model file not found: {filename}")
     except ValueError as e:
         error_msg = str(e)
         if "index" in error_msg.lower() or "dimension" in error_msg.lower():
-            return create_model_error(error_msg)
-        return create_system_error(error_msg)
+            return create_error_response("model", error_msg)
+        return create_error_response("system", error_msg)
     except Exception as e:
-        return create_system_error(f"Error during model checking: {str(e)}")
+        return create_error_response("system", f"Error during model checking: {str(e)}")

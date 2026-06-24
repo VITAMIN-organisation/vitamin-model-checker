@@ -1,6 +1,6 @@
 """Builders for structured verification results."""
 
-from typing import Any, Optional, Set
+from typing import Any
 
 from model_checker.algorithms.explicit.shared.verification_result import (
     VerificationResult,
@@ -8,10 +8,10 @@ from model_checker.algorithms.explicit.shared.verification_result import (
 
 
 def create_verification_result(
-    states: Set[str],
+    states: set[str],
     initial_state: str,
-    trace: Optional[Any] = None,
-    strategy: Optional[Any] = None,
+    trace: Any | None = None,
+    strategy: Any | None = None,
     **metadata: Any,
 ) -> VerificationResult:
     """VerificationResult from a state set."""

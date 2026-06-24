@@ -1,6 +1,7 @@
 """ATL prefilter for resource-bounded logics (OATL, RBATL, RABATL)."""
 
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 from model_checker.algorithms.explicit.ATL.ATL import _core_atl_checking
 from model_checker.algorithms.explicit.shared.resource_bounded_to_atl import (
@@ -12,8 +13,8 @@ from model_checker.engine.execution import execute_model_checking_with_parser
 def run_atl_prefilter(
     formula: str,
     filename: str,
-    full_checking: Callable[[str, str], Dict[str, Any]],
-) -> Dict[str, Any]:
+    full_checking: Callable[[str, str], dict[str, Any]],
+) -> dict[str, Any]:
     """Run unbounded ATL first; skip the full checker when the formula is already false."""
     atl_result = execute_model_checking_with_parser(
         resource_bounded_atl_to_atl(formula),

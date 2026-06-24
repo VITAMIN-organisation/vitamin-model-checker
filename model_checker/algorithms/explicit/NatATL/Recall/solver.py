@@ -1,14 +1,14 @@
 """
-Solver module for NatATL Recall verification.
+NatATL Recall solver: strategy enumeration and verification loop.
 
-This module orchestrates the strategy enumeration and verification loop for
-recall strategies, which use tree-based pruning instead of matrix-based pruning.
+Enumerates recall strategies using tree-based pruning rather than
+matrix-based pruning, returning the first winning strategy found.
 """
 
 import copy
 import logging
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 from model_checker.algorithms.explicit.NatATL.Recall.condition_generation import (  # noqa: E501
     create_reg_exp,
@@ -31,22 +31,20 @@ INITIAL_HEIGHT = 4
 
 def solve_natatl_recall(
     k: int,
-    agent_actions: Dict[str, List[str]],
-    actions_list: List[List[str]],
-    atomic_propositions: List[str],
+    agent_actions: dict[str, list[str]],
+    actions_list: list[list[str]],
+    atomic_propositions: list[str],
     CTLformula: str,
-    agents: List[int],
+    agents: list[int],
     model_parser: Any,
     filename: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Solve NatATL Recall verification by enumerating and checking strategies.
 
-    This function implements the core verification loop for recall strategies:
-    1. Iterate through complexity bounds from 1 to k
-    2. For each bound, generate all possible strategies (with regex conditions)
-    3. For each strategy, apply tree-based pruning and verify the formula
-    4. Return the first winning strategy found (early termination)
+    Iterates complexity bounds from 1 to k, generates all strategies (with
+    regex conditions), applies tree-based pruning, and returns the first
+    winning strategy found.
 
     Key differences from Memoryless:
     - Uses tree-based pruning instead of matrix-based
@@ -68,7 +66,7 @@ def solve_natatl_recall(
     """
     start_time = time.time()
     found_solution = False
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
 
     i = 1
     height = INITIAL_HEIGHT

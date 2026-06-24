@@ -1,6 +1,6 @@
 """Shared transition-cache helpers for resource-bounded ATL pre-images."""
 
-from typing import Dict, List, Literal, Set, TypedDict, Union
+from typing import Literal, TypedDict
 
 from model_checker.algorithms.explicit.RABATL.preimage import (
     get_good_actions as rabatl_get_good_actions,
@@ -18,12 +18,12 @@ from model_checker.algorithms.explicit.shared.state_utils import (
 from model_checker.parsers.game_structures.cgs import CostCGSProtocol, cgs_actions
 
 CostFilter = Literal["rbatl", "rabatl"]
-TransitionCache = Dict[int, "StateTransitionData"]
+TransitionCache = dict[int, "StateTransitionData"]
 
 
 class StateTransitionData(TypedDict):
-    profiles_by_dest: Dict[int, List[str]]
-    opponent_moves_by_column: List[frozenset]
+    profiles_by_dest: dict[int, list[str]]
+    opponent_moves_by_column: list[frozenset]
 
 
 def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCache:
@@ -34,8 +34,8 @@ def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCa
     cache: TransitionCache = {}
 
     for state_idx, row in enumerate(cgs.graph):
-        profiles_by_dest: Dict[int, List[str]] = {}
-        opponent_moves_by_column: List[frozenset] = []
+        profiles_by_dest: dict[int, list[str]] = {}
+        opponent_moves_by_column: list[frozenset] = []
 
         for dest_idx, mask in enumerate(row):
             if mask == 0:
@@ -66,14 +66,14 @@ def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCa
 def _collect_good_actions(
     cgs: CostCGSProtocol,
     source_idx: int,
-    target_indices: Set[int],
-    profiles_by_dest: Dict[int, List[str]],
+    target_indices: set[int],
+    profiles_by_dest: dict[int, list[str]],
     agents,
-    bound: List[int],
+    bound: list[int],
     cost_filter: CostFilter,
-) -> Set[str]:
+) -> set[str]:
     """Gather coalition actions that lead toward target_indices within the cost bound."""
-    available: Set[str] = set()
+    available: set[str] = set()
     for target_idx in target_indices:
         profiles = profiles_by_dest.get(target_idx)
         if not profiles:
@@ -91,8 +91,8 @@ def _action_forces_all_to_target(
     action: str,
     formatted_agents,
     num_agents: int,
-    opponent_moves_by_column: List[frozenset],
-    target_indices: Set[int],
+    opponent_moves_by_column: list[frozenset],
+    target_indices: set[int],
     target_bits,
     use_bit_vector: bool,
 ) -> bool:
@@ -119,11 +119,11 @@ def _action_forces_all_to_target(
 def compute_pre_states(
     cgs: CostCGSProtocol,
     coalition: str,
-    state_set: Union[Set[str], str],
-    bound: List[int],
+    state_set: set[str] | str,
+    bound: list[int],
     transition_cache: TransitionCache,
     cost_filter: CostFilter,
-) -> Set[str]:
+) -> set[str]:
     """Return state names where coalition can force state_set in one step within bound."""
     agents = cgs_actions.get_agents_from_coalition(coalition)
     formatted_agents = cgs_actions.format_agents(agents)
@@ -136,7 +136,7 @@ def compute_pre_states(
         BitVectorStateSet(num_states, target_indices) if use_bit_vector else None
     )
 
-    pre_states: Set[int] = set()
+    pre_states: set[int] = set()
     for source_idx in range(num_states):
         state_data = transition_cache[source_idx]
         available_actions = _collect_good_actions(

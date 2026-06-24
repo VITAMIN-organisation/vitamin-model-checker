@@ -1,11 +1,12 @@
 """State set helpers used by several model checkers."""
 
-from typing import Any, Iterable, Set
+from collections.abc import Iterable
+from typing import Any
 
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
 
-def state_names_to_indices(cgs: CGSProtocol, state_names: Iterable[Any]) -> Set[int]:
+def state_names_to_indices(cgs: CGSProtocol, state_names: Iterable[Any]) -> set[int]:
     """Map state names to their indices; unknown names are skipped."""
     indices = set()
     for name in state_names:
@@ -18,7 +19,7 @@ def state_names_to_indices(cgs: CGSProtocol, state_names: Iterable[Any]) -> Set[
     return indices
 
 
-def state_indices_to_names(cgs: CGSProtocol, state_indices: Iterable[int]) -> Set[str]:
+def state_indices_to_names(cgs: CGSProtocol, state_indices: Iterable[int]) -> set[str]:
     """Map state indices to names; invalid indices are skipped."""
     names = set()
     for idx in state_indices:

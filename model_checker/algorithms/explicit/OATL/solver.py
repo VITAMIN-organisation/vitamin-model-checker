@@ -1,9 +1,4 @@
-"""
-Formula tree solver for OATL model checking.
-
-This module contains the solve_tree function that recursively evaluates
-OATL formula trees using bottom-up evaluation.
-"""
+"""Bottom-up formula tree solver for OATL model checking."""
 
 from model_checker.algorithms.explicit.OATL.operators import (
     handle_coalition_eventually,

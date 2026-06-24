@@ -1,19 +1,17 @@
 """Resource-aware bounded pre-image computation for RABATL."""
 
-from typing import List, Set
-
 from model_checker.parsers.game_structures.cgs import CostCGSProtocol
 
 
 def get_good_actions(
     cgs: CostCGSProtocol,
-    actions: List[str],
+    actions: list[str],
     state_idx: int,
-    agents: Set[str],
-    bound: List[int],
-) -> Set[str]:
+    agents: set[str],
+    bound: list[int],
+) -> set[str]:
     """Return actions at state_idx whose coalition cost fits within bound."""
-    good_actions: Set[str] = set()
+    good_actions: set[str] = set()
     state_name = cgs.get_state_name_by_index(state_idx)
 
     for action in actions:

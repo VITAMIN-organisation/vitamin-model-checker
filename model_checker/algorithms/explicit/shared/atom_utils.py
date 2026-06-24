@@ -1,6 +1,7 @@
 """Resolve atomic propositions to sets of states."""
 
-from typing import Any, Callable, Optional, Protocol, Set, runtime_checkable
+from collections.abc import Callable
+from typing import Any, Protocol, runtime_checkable
 
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
@@ -15,13 +16,13 @@ class AtomicModel(Protocol):
     matrix_prop: Any
 
 
-def states_where_prop_holds(cgs: CGSProtocol, prop: str) -> Optional[Set[str]]:
+def states_where_prop_holds(cgs: CGSProtocol, prop: str) -> set[str] | None:
     """Return states where prop holds, or None if the proposition is unknown."""
     idx = proposition_index(cgs.atomic_propositions, prop)
     if idx is None:
         return None
 
-    matching: Set[str] = set()
+    matching: set[str] = set()
     prop_matrix = cgs.matrix_prop
     for state_idx, row in enumerate(prop_matrix):
         if row[int(idx)] == 1:
@@ -29,7 +30,7 @@ def states_where_prop_holds(cgs: CGSProtocol, prop: str) -> Optional[Set[str]]:
     return matching
 
 
-def resolve_atom(cgs: AtomicModel, atom: str) -> Optional[Set[str]]:
+def resolve_atom(cgs: AtomicModel, atom: str) -> set[str] | None:
     """Return the states where ``atom`` is true, or None if the atom is not in the model."""
     states = states_where_prop_holds(cgs, str(atom))
     if states is None:
@@ -39,7 +40,7 @@ def resolve_atom(cgs: AtomicModel, atom: str) -> Optional[Set[str]]:
 
 def resolve_atom_with_constants(
     cgs: AtomicModel, atom: str, parser: Any
-) -> Optional[Set[str]]:
+) -> set[str] | None:
     """Resolve an atom, treating TRUE as all states and FALSE as none."""
     s = str(atom)
     if parser.verify("FALSE", s):
@@ -55,19 +56,19 @@ def build_resolved_formula_tree(
     cgs: AtomicModel,
     tpl: Any,
     parser: Any = None,
-    atom_resolver: Optional[Callable[[Any], Any]] = None,
+    atom_resolver: Callable[[Any], Any] | None = None,
 ) -> Any:
     """Build a formula tree with leaf atoms resolved from the model."""
     if atom_resolver is not None:
         return build_formula_tree(tpl, atom_resolver)
     if parser is not None:
 
-        def resolve_with_constants(atom: Any) -> Optional[Set[str]]:
+        def resolve_with_constants(atom: Any) -> set[str] | None:
             return resolve_atom_with_constants(cgs, atom, parser)
 
         return build_formula_tree(tpl, resolve_with_constants)
 
-    def resolve_proposition(atom: Any) -> Optional[Set[str]]:
+    def resolve_proposition(atom: Any) -> set[str] | None:
         return resolve_atom(cgs, str(atom))
 
     return build_formula_tree(tpl, resolve_proposition)

@@ -1,12 +1,11 @@
 """
-Boolean pruning for NatATL Recall model checker.
+Boolean (propositional) pruning for NatATL Recall.
 
-This module implements pruning based on propositional (boolean) conditions
-using CTL model checking to determine which states satisfy the condition.
+Uses CTL model checking to determine which states satisfy propositional
+conditions, then prunes the execution tree accordingly.
 """
 
 import logging
-from typing import Set
 
 from model_checker.algorithms.explicit.NatATL.Recall.condition_cache import (
     ctl_model_checking_cached,
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def prune_tree_nodes(
     node: Node,
-    state_set: Set[str],
+    state_set: set[str],
     action: str,
     strategy_index: int,
     current_level: int = 0,
@@ -32,7 +31,9 @@ def prune_tree_nodes(
 
     if node.state in state_set:
         children_to_remove = []
-        for i, (_child, actions) in enumerate(zip(node.children, node.actions)):
+        for i, (_child, actions) in enumerate(
+            zip(node.children, node.actions, strict=False)
+        ):
             if strategy_index - 1 < len(actions):
                 if (actions[strategy_index - 1] != action) and (not node.pruned):
                     children_to_remove.append(i)
@@ -85,18 +86,4 @@ def boolean_pruning(
         "States where '%s' holds: %s (count: %d)", condition, state_set, len(state_set)
     )
 
-    return prune_tree_nodes(tree, state_set, action, strategy_index)
-
-
-def idle_pruning(
-    cgs: CGS,
-    tree: Node,
-    state_set: Set[str],
-    action: str,
-    strategy_index: int,
-    model_path: str,
-) -> int:
-    """
-    Prune tree with idle action for states not covered by other conditions.
-    """
     return prune_tree_nodes(tree, state_set, action, strategy_index)

@@ -75,6 +75,6 @@ def solve_tree(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: Expr) -> None:
         elif verify("WEAK", node.op):
             handle_weak(tcgs, zone_graph, node)
     elif isinstance(node, ClockExpr):
-        handle_clock_expr(node)
+        handle_clock_expr(tcgs, zone_graph, node)
     elif isinstance(node, FreezeExpr):
-        handle_freeze(node)
+        handle_freeze(tcgs, zone_graph, node)

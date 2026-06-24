@@ -5,7 +5,6 @@ instantiates the correct parser.
 """
 
 import os
-from typing import Union
 
 from model_checker.discovery import discover_logic_resource
 from model_checker.parsers.game_structures.bcgs.bcgs import BCGS
@@ -56,7 +55,7 @@ def detect_model_type_from_content(content: str) -> str:
 
 def create_model_parser(
     filename: str, expected_type: str = None
-) -> Union[BCGS, CGS, CostCGS, CapCGS]:
+) -> BCGS | CGS | CostCGS | CapCGS:
     """Create appropriate model parser instance based on model file content.
 
     Detects the game structure type or uses the expected type to resolve
@@ -78,7 +77,7 @@ def create_model_parser(
 
 def create_model_parser_for_logic(
     filename: str, logic_type: str = None
-) -> Union[BCGS, CGS, CostCGS, CapCGS]:
+) -> BCGS | CGS | CostCGS | CapCGS:
     """Create appropriate model parser instance based on formula type requirements.
 
     Args:

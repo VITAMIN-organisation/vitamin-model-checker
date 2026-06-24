@@ -1,13 +1,13 @@
 """Transition cost resolution for costCGS models."""
 
-from typing import Any, Optional, Tuple
+from typing import Any
 
 from model_checker.algorithms.explicit.shared.coalition_constraints import (
     parse_coalition_and_scalar_constraint,
 )
 
 
-def extract_coalition_and_cost(formula_node_value: str) -> Tuple[str, int]:
+def extract_coalition_and_cost(formula_node_value: str) -> tuple[str, int]:
     """Parse ``<J><n>`` into coalition string and cost bound."""
     coalition, scalar = parse_coalition_and_scalar_constraint(formula_node_value)
     if isinstance(scalar, float) and not scalar.is_integer():
@@ -33,7 +33,7 @@ def cost_to_scalar(costs: Any) -> float:
     return float(costs)
 
 
-def numeric_cell_cost(cell: object) -> Optional[float]:
+def numeric_cell_cost(cell: object) -> float | None:
     """Return cost when the cell is numeric (Transition_With_Costs); else None."""
     if cell is None or cell in (0, "0"):
         return 0.0
@@ -47,7 +47,7 @@ def numeric_cell_cost(cell: object) -> Optional[float]:
     return None
 
 
-def _lookup_action_cost(cgs, action: str, state_name: str) -> Optional[float]:
+def _lookup_action_cost(cgs, action: str, state_name: str) -> float | None:
     """Return transition cost for action at state, or None when lookup fails."""
     try:
         costs = cgs.get_cost_for_action(action, state_name)

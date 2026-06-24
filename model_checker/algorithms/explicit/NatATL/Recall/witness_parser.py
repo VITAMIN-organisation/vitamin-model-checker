@@ -1,9 +1,8 @@
 """
-Witness parser for NatATL Recall regex patterns.
+Witness word generation for NatATL Recall regex patterns.
 
-This module generates witness words (sequences of atomic propositions) that
-match regex patterns used in recall strategies. It handles patterns with
-Kleene star (*) and concatenation (.) operators.
+Generates sequences of atomic propositions that match regex patterns used
+in recall strategies, supporting Kleene star (*) and concatenation (.).
 """
 
 

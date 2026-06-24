@@ -1,6 +1,6 @@
 """Formula tree solver for ICTL."""
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from model_checker.algorithms.explicit.ICTL.operators import (
     handle_af,
@@ -25,9 +25,7 @@ if TYPE_CHECKING:
     from model_checker.utils.formula_tree import FormulaTreeNode
 
 
-def _unary_handler(
-    checker: "ICTLModelChecker", node: "FormulaTreeNode"
-) -> Optional[Any]:
+def _unary_handler(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> Any | None:
     val = node.value
     if verifyICTL("NOT", val):
         return handle_not
@@ -46,9 +44,7 @@ def _unary_handler(
     return None
 
 
-def _binary_handler(
-    checker: "ICTLModelChecker", node: "FormulaTreeNode"
-) -> Optional[Any]:
+def _binary_handler(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> Any | None:
     val = node.value
     if verifyICTL("OR", val):
         return handle_or

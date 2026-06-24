@@ -1,16 +1,9 @@
-"""
-PrefilterATL optimization for NatATL Recall verification.
-
-This module provides a performance optimization by first checking if the
-formula is satisfied as standard ATL (ignoring complexity bounds). If ATL
-fails, NatATL must also fail, so we can return early without running the
-expensive NatATL verification.
-"""
+"""NatATL Recall entry point."""
 
 import logging
 import os
 import time
-from typing import Any, Dict
+from typing import Any
 
 from model_checker.algorithms.explicit.NatATL.NatATLtoATL import (
     natatl_to_atl,
@@ -29,25 +22,10 @@ from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 logger = logging.getLogger(__name__)
 
 
-def preprocess_and_verify(model: str, formula: str) -> Dict[str, Any]:
-    """
-    Prefilter optimization: check ATL first, then NatATL if needed.
-
-    This function implements a performance optimization:
-    1. Convert NatATL formula to ATL (removes complexity bounds)
-    2. Check if ATL formula is satisfied (fast check)
-    3. If ATL fails, NatATL must also fail (early return)
-    4. If ATL succeeds, run full NatATL verification to find bounded strategy
-
-    Args:
-        model: Path to model file
-        formula: NatATL formula string
-
-    Returns:
-        Dictionary with verification result
-    """
+def preprocess_and_verify(model: str, formula: str) -> dict[str, Any]:
+    """ATL parse-check (bounds stripped), then full recall verification."""
     start_time = time.time()
-    res: Dict[str, Any] = {}
+    res: dict[str, Any] = {}
 
     if not os.path.isfile(model):
         raise FileNotFoundError(f"No such file or directory: {model}")
@@ -62,14 +40,12 @@ def preprocess_and_verify(model: str, formula: str) -> Dict[str, Any]:
     cgs = create_model_parser_for_logic(model, "NatATL_Recall")
     cgs.read_file(model)
 
-    # Parse ATL formula for validation
+    # Parse ATL surface syntax only (bounds already stripped); no ATL model check.
     res_parsing = FormulaParserFactory.parse_formula(
         "ATL", atlformula, n_agent=cgs.get_number_of_agents()
     )
     logger.debug("ATL parsing result: %s", res_parsing)
 
-    # Recall strategies are more expressive than memoryless ATL; ATL failure does
-    # not imply recall failure, so always run full recall verification.
     res = _run_natatl_recall(model, formula)
 
     end_time = time.time()
@@ -79,20 +55,8 @@ def preprocess_and_verify(model: str, formula: str) -> Dict[str, Any]:
     return res
 
 
-def _run_natatl_recall(model: str, formula: str) -> Dict[str, Any]:
-    """
-    Execute NatATL Recall verification (called after ATL prefilter succeeds).
-
-    This function runs the full NatATL verification using the solver module.
-    It's called by preprocess_and_verify after confirming ATL is satisfied.
-
-    Args:
-        model: Path to model file
-        formula: NatATL formula string
-
-    Returns:
-        Dictionary with Satisfiability, Complexity Bound, and Winning Strategy
-    """
+def _run_natatl_recall(model: str, formula: str) -> dict[str, Any]:
+    """Initialize and call ``solve_natatl_recall``."""
     # Initialize model and parse formula
     (
         k,

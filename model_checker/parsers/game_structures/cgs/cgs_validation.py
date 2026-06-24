@@ -3,8 +3,6 @@
 Checks states, agents, transition matrix, labelling matrix, and NatATL/tree rules.
 """
 
-from typing import List
-
 from . import cgs_actions
 
 
@@ -14,8 +12,8 @@ def get_num_states(states) -> int:
 
 
 def validate_transition_matrix_dimensions(
-    graph: List[List], num_states: int
-) -> List[str]:
+    graph: list[list], num_states: int
+) -> list[str]:
     """Check that the transition matrix has the right shape for the given number of states.
 
     Returns a list of error messages; empty if everything is fine.
@@ -51,8 +49,8 @@ def validate_transition_matrix_dimensions(
 
 
 def validate_labelling_matrix_dimensions(
-    matrix_prop: List[List], num_states: int, num_props: int, states
-) -> List[str]:
+    matrix_prop: list[list], num_states: int, num_props: int, states
+) -> list[str]:
     """Check that the labelling matrix has one row per state and one column per proposition.
 
     Returns a list of error messages; empty if valid. Uses states only for clearer error text.
@@ -84,7 +82,7 @@ def validate_labelling_matrix_dimensions(
     return errors
 
 
-def validate_nat_idle_requirements(graph: List[List], n_agents: int) -> None:
+def validate_nat_idle_requirements(graph: list[list], n_agents: int) -> None:
     """Check that every row has at least one idle joint action for each agent position.
 
     Required for NatATL. A row is valid if there exists at least one joint action in that row
@@ -118,7 +116,7 @@ def validate_nat_idle_requirements(graph: List[List], n_agents: int) -> None:
             )
 
 
-def collect_model_structure_errors(cgs) -> List[str]:
+def collect_model_structure_errors(cgs) -> list[str]:
     """Run all structure checks on a CGS instance and return a list of error messages.
 
     Covers states, number of agents, initial state, transition matrix, and labelling.
@@ -179,7 +177,7 @@ def collect_model_structure_errors(cgs) -> List[str]:
     return errors
 
 
-def validate_recall_structure(graph: List[List], n_agents: int) -> None:
+def validate_recall_structure(graph: list[list], n_agents: int) -> None:
     """Check Recall semantics: idle rules, s0 has at least one transition, and connectivity from s0 (no forest)."""
     validate_nat_idle_requirements(graph, n_agents)
 

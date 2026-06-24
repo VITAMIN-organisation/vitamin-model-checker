@@ -1,21 +1,19 @@
 """
 Condition generation utilities for NatATL Recall strategies.
 
-This module provides functions for generating boolean conditions, negated conditions,
-stories (regex patterns with Kleene star), and composed regular expressions used
-in recall strategy conditions.
+Generates boolean conditions, negated conditions, stories (regex patterns with
+Kleene star), and composed regular expressions for recall strategy conditions.
 """
 
 import logging
 from itertools import product
-from typing import List, Set
 
 logger = logging.getLogger(__name__)
 
 
 def generate_conditions(
-    atomic_props: List[str], connectives: List[str], max_complexity: int
-) -> List[str]:
+    atomic_props: list[str], connectives: list[str], max_complexity: int
+) -> list[str]:
     """
     Generate boolean conditions by combining atomic propositions with connectives.
 
@@ -30,9 +28,9 @@ def generate_conditions(
     Returns:
         List of condition strings
     """
-    conditions: Set[str] = set()
+    conditions: set[str] = set()
 
-    def generate_condition(k: int, condition: List[str]) -> None:
+    def generate_condition(k: int, condition: list[str]) -> None:
         if k == 0:
             condition_str = " && ".join(condition)
             conditions.add(condition_str)
@@ -62,14 +60,14 @@ def generate_conditions(
 
 
 def generate_negated_conditions(
-    conditions: List[str], max_complexity: int
-) -> List[str]:
+    conditions: list[str], max_complexity: int
+) -> list[str]:
     """
     Generate all negation variants of conditions within complexity bounds.
 
     For recall strategies, also considers Kleene star (*) in complexity calculation.
     """
-    negated_conditions: Set[str] = set()
+    negated_conditions: set[str] = set()
     for condition in conditions:
         atomic_props = condition.split(" && ")
         for combo in product(["", "!"], repeat=len(atomic_props)):
@@ -87,7 +85,7 @@ def generate_negated_conditions(
     return list(negated_conditions)
 
 
-def generate_stories(conditions: List[str], max_complexity: int) -> List[str]:
+def generate_stories(conditions: list[str], max_complexity: int) -> list[str]:
     """
     Generate "story" patterns - regex sequences with Kleene star.
 
@@ -102,7 +100,7 @@ def generate_stories(conditions: List[str], max_complexity: int) -> List[str]:
     Returns:
         List of story patterns containing at least one Kleene star
     """
-    stories: Set[str] = set()
+    stories: set[str] = set()
     for condition in conditions:
         atomic_props = condition.split(" && ")
         for combo in product(["", "*"], repeat=len(atomic_props)):
@@ -122,8 +120,8 @@ def generate_stories(conditions: List[str], max_complexity: int) -> List[str]:
 
 
 def generate_regular_expressions(
-    patterns: Set[str], composition_ops: List[str], max_complexity: int
-) -> List[str]:
+    patterns: set[str], composition_ops: list[str], max_complexity: int
+) -> list[str]:
     """
     Generate composed regular expressions from patterns.
 
@@ -138,9 +136,9 @@ def generate_regular_expressions(
     Returns:
         List of composed regular expression strings
     """
-    expressions: Set[str] = set()
+    expressions: set[str] = set()
 
-    def generate_expression(k: int, expression: List[str]) -> None:
+    def generate_expression(k: int, expression: list[str]) -> None:
         if k == 0:
             condition_str = " && ".join(expression)
             expressions.add(condition_str)
@@ -171,7 +169,7 @@ def generate_regular_expressions(
     return list(expressions)
 
 
-def create_reg_exp(max_complexity: int, atomic_propositions: List[str]) -> List[str]:
+def create_reg_exp(max_complexity: int, atomic_propositions: list[str]) -> list[str]:
     """
     Create regular expressions for recall strategy conditions.
 

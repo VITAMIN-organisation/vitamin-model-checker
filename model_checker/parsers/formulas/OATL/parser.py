@@ -14,7 +14,6 @@ Returns:
 """
 
 import re
-from typing import Optional
 
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
@@ -115,7 +114,7 @@ class OATLParser(BaseLogicParser):
         self.max_coalition = n_agent
         return super().parse(formula, **kwargs)
 
-    def _coalition_bound_pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _coalition_bound_pre_validation(self, formula) -> tuple[bool, str | None]:
         coalition_temporal_match = re.search(
             r"<\d+(?:,\d+)*><(?P<bound>\d+)>\s*(?P<op>[FGXURW])", formula
         )
@@ -141,7 +140,7 @@ class OATLParser(BaseLogicParser):
             )
         return True, None
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         valid, err = run_common_prechecks(
             formula,
             allow_hash_at=True,
@@ -180,7 +179,7 @@ _COTL_VALID_OPERATORS = _OATL_VALID_OPERATORS | frozenset({"R", "W", "RELEASE", 
 class COTLParser(OATLParser):
     """OATL syntax with R/W allowed; used by the COTL model checker."""
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         valid, err = run_common_prechecks(
             formula,
             allow_hash_at=True,

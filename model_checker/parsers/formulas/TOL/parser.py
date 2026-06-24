@@ -1,6 +1,6 @@
 """TOL parser entry point (BaseLogicParser with Expr AST from tol_ply_parser)."""
 
-from typing import Any, Optional
+from typing import Any
 
 from model_checker.parsers.formulas.parser_utils import (
     run_common_prechecks,
@@ -35,7 +35,7 @@ _TOL_ALLOWED_OPERATORS = set("<>(),!&|->{}. ")
 class TOLParser(BaseLogicParser):
     """Parser for TOL formulas over timedCGS models."""
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         return run_common_prechecks(
             formula,
             allow_hash_at=False,

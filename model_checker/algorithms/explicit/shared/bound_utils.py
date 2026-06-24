@@ -4,14 +4,12 @@ Bound vector utilities for resource-bounded logics (RABATL, RBATL).
 Parses <J><b1,b2,...>Op and provides lexicographic increment/difference for bound vectors.
 """
 
-from typing import List, Tuple
-
 from model_checker.algorithms.explicit.shared.coalition_constraints import (
     parse_coalition_and_bound_vector,
 )
 
 
-def inc_bound(current_bound: List[int], max_bound: List[int]) -> bool:
+def inc_bound(current_bound: list[int], max_bound: list[int]) -> bool:
     """Increment current_bound lexicographically; return False when past max_bound."""
     for i in range(len(current_bound)):
         if max_bound[i] == 0:
@@ -24,7 +22,7 @@ def inc_bound(current_bound: List[int], max_bound: List[int]) -> bool:
     return False
 
 
-def extract_coalition_and_bound(formula_node_value: str) -> Tuple[str, List[int]]:
+def extract_coalition_and_bound(formula_node_value: str) -> tuple[str, list[int]]:
     """Parse <J><b1,b2,...> into (coalition_str, [b1,b2,...]).
 
     Raises ValueError with a descriptive message when the format is invalid.

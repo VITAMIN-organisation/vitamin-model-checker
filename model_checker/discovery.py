@@ -3,12 +3,12 @@
 import logging
 from importlib.metadata import entry_points
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def get_entry_points(group: str) -> List[Any]:
+def get_entry_points(group: str) -> list[Any]:
     """Gets entry points for the specified group in a cross-version way."""
     eps = entry_points()
     if hasattr(eps, "select"):

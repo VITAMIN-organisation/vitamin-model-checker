@@ -1,6 +1,7 @@
 """Boolean operators on formula tree nodes (AND, OR, NOT, IMPLIES)."""
 
-from typing import TYPE_CHECKING, Any, Callable, Set
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from model_checker.algorithms.explicit.shared.boolean_semantics import (
     compute_boolean_result,
@@ -17,7 +18,7 @@ def _set_node_state_set(node: Any, state_set) -> None:
 
 
 def _binary_state_set(
-    node: Any, combine: Callable[[Set[str], Set[str]], Set[str]]
+    node: Any, combine: Callable[[set[str], set[str]], set[str]]
 ) -> None:
     left = parse_state_set_literal(node.left.value)
     right = parse_state_set_literal(node.right.value)

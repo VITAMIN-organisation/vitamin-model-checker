@@ -1,10 +1,10 @@
 """Action combination helpers for CapATL (no dependency on utils or pre-image)."""
 
 import itertools
-from typing import Any, List, Tuple
+from typing import Any
 
 
-def find_combinations(lists: List[List[Any]]) -> List[Tuple[Any, ...]]:
+def find_combinations(lists: list[list[Any]]) -> list[tuple[Any, ...]]:
     """Cartesian product of the given lists; returns list of tuples."""
     if not lists:
         return []

@@ -1,6 +1,6 @@
 """IATL model checking on BCGS models."""
 
-from typing import Any, Dict
+from typing import Any
 
 from model_checker.algorithms.explicit.IATL.checker import IATLModelChecker
 from model_checker.algorithms.explicit.IATL.solver import solve_tree
@@ -10,10 +10,10 @@ from model_checker.algorithms.explicit.shared.result_formatters import (
 )
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.utils.error_handler import create_semantic_error, create_syntax_error
+from model_checker.utils.error_handler import create_error_response
 
 
-def _core_iatl_checking(parser, formula: str) -> Dict[str, Any]:
+def _core_iatl_checking(parser, formula: str) -> dict[str, Any]:
     """Run IATL model checking on a loaded BCGS parser."""
     checker = IATLModelChecker(parser.data)
 
@@ -25,11 +25,13 @@ def _core_iatl_checking(parser, formula: str) -> Dict[str, Any]:
             if formula_parser.errors
             else "Syntax error in formula"
         )
-        return create_syntax_error(error_msg)
+        return create_error_response("syntax", error_msg)
 
     root = checker.build_tree(parsed)
     if root is None:
-        return create_semantic_error("Syntax Error: the atom does not exist")
+        return create_error_response(
+            "semantic", "Syntax Error: the atom does not exist"
+        )
 
     solve_tree(checker, root)
     init_state = str(checker.data["initial_state"])

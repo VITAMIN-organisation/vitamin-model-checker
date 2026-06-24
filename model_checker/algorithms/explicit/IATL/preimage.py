@@ -7,18 +7,18 @@ Semantics follow Bozzelli et al. (KR 2025), Proposition 2:
   target set consistent with that decision.
 """
 
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from collections.abc import Callable
 
 from model_checker.parsers.game_structures.cgs import cgs_actions
 
-MovesByCoalition = Dict[Tuple, List[Tuple[Tuple, int]]]
-TransitionCache = Dict[int, MovesByCoalition]
+MovesByCoalition = dict[tuple, list[tuple[tuple, int]]]
+TransitionCache = dict[int, MovesByCoalition]
 
 
 def group_moves_by_coalition(
     graph_row,
     num_agents: int,
-    formatted_agents: Set[int],
+    formatted_agents: set[int],
 ) -> MovesByCoalition:
     """Group outgoing transitions from one state by coalition move."""
     moves_by_coalition: MovesByCoalition = {}
@@ -41,8 +41,8 @@ def group_moves_by_coalition(
 
 
 def _all_opponent_moves_lead_to_target(
-    transitions: List[Tuple[Tuple, int]],
-    target_indices: Set[int],
+    transitions: list[tuple[tuple, int]],
+    target_indices: set[int],
 ) -> bool:
     """Return True if every opponent response lands in the target set."""
     opponent_moves = {move for move, _ in transitions}
@@ -72,13 +72,13 @@ def _coalition_pre_image(
     graph_matrix,
     state_list,
     coalition: str,
-    target_states: Set[str],
+    target_states: set[str],
     num_agents: int,
-    transition_cache: Optional[TransitionCache],
-    qualifies: Callable[[MovesByCoalition, Set[int]], bool],
-) -> Set[str]:
+    transition_cache: TransitionCache | None,
+    qualifies: Callable[[MovesByCoalition, set[int]], bool],
+) -> set[str]:
     """Return states that reach target_states in one coalition step."""
-    result: Set[str] = set()
+    result: set[str] = set()
     targets = {str(state) for state in target_states}
     target_idx = {idx for idx, state in enumerate(state_list) if str(state) in targets}
     if not target_idx:
@@ -103,7 +103,7 @@ def _coalition_pre_image(
 
 def _state_in_exists_pre_image(
     moves_by_coalition: MovesByCoalition,
-    target_idx: Set[int],
+    target_idx: set[int],
 ) -> bool:
     """Every opponent response from that move lands in the target for each coalition move"""
     for transitions in moves_by_coalition.values():
@@ -116,10 +116,10 @@ def pre_image_exists(
     graph_matrix,
     state_list,
     coalition: str,
-    target_states: Set[str],
+    target_states: set[str],
     num_agents: int,
     transition_cache: TransitionCache = None,
-) -> Set[str]:
+) -> set[str]:
     """
     exists: Some coalition choice + All opponent responses -> target
     Pre_d(A, X): existential coalition pre-image (<A>X)."""
@@ -136,7 +136,7 @@ def pre_image_exists(
 
 def _state_in_forall_pre_image(
     moves_by_coalition: MovesByCoalition,
-    target_idx: Set[int],
+    target_idx: set[int],
 ) -> bool:
     """Some successor from that move is in target for each coalition move"""
     if not moves_by_coalition:
@@ -152,10 +152,10 @@ def pre_image_forall(
     graph_matrix,
     state_list,
     coalition: str,
-    target_states: Set[str],
+    target_states: set[str],
     num_agents: int,
     transition_cache: TransitionCache = None,
-) -> Set[str]:
+) -> set[str]:
     """
     forall: All coalition choices + Some opponent successor -> target
     Pre_f(A, X): universal coalition pre-image ([A]X)."""

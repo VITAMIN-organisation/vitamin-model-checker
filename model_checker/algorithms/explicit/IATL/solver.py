@@ -1,6 +1,6 @@
 """Formula tree solver for IATL."""
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from model_checker.algorithms.explicit.IATL.operators import (
     handle_and,
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 def _unary_handler(
     parser_instance: Any, checker: "IATLModelChecker", node: "FormulaTreeNode"
-) -> Optional[Any]:
+) -> Any | None:
     val = node.value
     if parser_instance.verify("NOT", val):
         return handle_not
@@ -56,7 +56,7 @@ def _unary_handler(
     return None
 
 
-def _binary_handler(parser_instance: Any, node: "FormulaTreeNode") -> Optional[Any]:
+def _binary_handler(parser_instance: Any, node: "FormulaTreeNode") -> Any | None:
     val = node.value
     if parser_instance.verify("OR", val):
         return handle_or

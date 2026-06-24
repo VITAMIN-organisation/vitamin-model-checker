@@ -1,11 +1,4 @@
-"""
-Tree traversal and path matching for NatATL Recall model checker.
-
-This module provides functions for tree pruning, depth-first search,
-and regex pattern matching on execution tree paths.
-"""
-
-from typing import Dict, List, Optional, Set
+"""Tree pruning, depth-first search, and regex pattern matching for NatATL Recall execution trees."""
 
 from model_checker.algorithms.explicit.NatATL.Recall.regex_parser import (
     check_prop_holds_in_label_row,
@@ -20,29 +13,18 @@ from model_checker.parsers.game_structures.cgs import CGSProtocol
 
 def prune_tree(
     node: Node,
-    valid_actions: Dict[str, List[str]],
-    input_nodes: List[str],
+    valid_actions: dict[str, list[str]],
+    input_nodes: list[str],
     index: int,
-    path: List[str],
+    path: list[str],
     height: int,
     current_depth: int = 0,
-    visited: Optional[Set[int]] = None,
+    visited: set[int] | None = None,
 ) -> None:
     """
-    Prune tree to only allow valid actions at specified nodes.
+    Drop child edges whose agent action is not allowed at nodes on ``path``.
 
-    For nodes matching the input_nodes list and current path position,
-    removes children whose edge action doesn't match valid_actions.
-
-    Args:
-        node: Current node being processed
-        valid_actions: Dict mapping agent keys to allowed action lists
-        input_nodes: List of node names to consider for pruning
-        index: Agent index for action lookup
-        path: Expected path sequence for validation
-        height: Maximum tree height
-        current_depth: Current recursion depth
-        visited: Set of visited node ids (for cycle detection; avoids pruning distinct branches that revisit the same state)
+    ``visited`` tracks node ids so shared subtrees are not pruned twice.
     """
     if visited is None:
         visited = set()
@@ -55,7 +37,9 @@ def prune_tree(
 
     if node.state in input_nodes and node.state == path[current_depth]:
         to_remove = []
-        for i, (child, actions) in enumerate(zip(node.children, node.actions)):
+        for i, (child, actions) in enumerate(
+            zip(node.children, node.actions, strict=False)
+        ):
             updated_actions = []
             for action in actions:
                 valid_action_found = False
@@ -102,23 +86,8 @@ def depth_first_search(
     pattern: str,
     length: int,
     max_depth: int = 2,
-) -> Optional[List[str]]:
-    """
-    Find a path in the tree matching a regex pattern.
-
-    Uses regex witness generation to enumerate possible matching words,
-    then verifies each against the tree structure.
-
-    Args:
-        cgs: CGS model object
-        node: Root node to search from
-        pattern: Regex pattern to match
-        length: Expected witness length
-        max_depth: Maximum search depth
-
-    Returns:
-        List of state names forming a matching path, or None if no match
-    """
+) -> list[str] | None:
+    """Enumerate regex witnesses and return the first path that matches the tree."""
     generator = RegexWitnessGenerator(pattern, length)
     word = generator.next_word()
 
@@ -134,25 +103,12 @@ def depth_first_search(
 def dfs_verify_word(
     cgs: CGSProtocol,
     node: Node,
-    word: List[str],
-    predecessors: List[str],
+    word: list[str],
+    predecessors: list[str],
     depth: int,
     max_depth: int,
-) -> Optional[List[str]]:
-    """
-    Verify if a word (sequence of propositions) matches a tree path.
-
-    Args:
-        cgs: CGS model object
-        node: Current node in DFS
-        word: Sequence of proposition conditions to match
-        predecessors: Path of states visited so far
-        depth: Current position in word
-        max_depth: Maximum search depth
-
-    Returns:
-        Complete path if word matches, None otherwise
-    """
+) -> list[str] | None:
+    """DFS check that ``word`` labels a path from ``node``; return the path or None."""
     if depth == len(word):
         return predecessors
 

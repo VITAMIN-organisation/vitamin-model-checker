@@ -17,7 +17,6 @@ Behavior:
 """
 
 import re
-from typing import Optional
 
 from model_checker.parsers.syntax_patterns import (
     NATATL_COALITION_TOKEN,
@@ -104,7 +103,7 @@ class NatATLParser(BaseLogicParser):
         self.max_coalition = n_agent
         return super().parse(formula, **kwargs)
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         valid, err = run_common_prechecks(
             formula,
             coalition_required=False,

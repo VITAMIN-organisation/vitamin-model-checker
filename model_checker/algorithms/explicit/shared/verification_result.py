@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 
 class TraceType(str, Enum):
@@ -14,7 +14,7 @@ class TraceType(str, Enum):
 class StateTrace:
     """A path through the model (witness or counterexample)."""
 
-    states: List[str]
+    states: list[str]
     trace_type: TraceType  # "witness" or "counterexample"
     description: str = ""
 
@@ -34,7 +34,7 @@ class StateTrace:
             result += f"\n  Description: {self.description}"
         return result
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert trace to dictionary format for API responses."""
         return {
             "states": self.states,
@@ -48,8 +48,8 @@ class StateTrace:
 class StrategyTrace:
     """Coalition strategy as state-action pairs, with an optional path."""
 
-    agent_strategies: Dict[str, List[tuple]]  # agent -> [(state, action), ...]
-    trace: Optional[StateTrace] = None
+    agent_strategies: dict[str, list[tuple]]  # agent -> [(state, action), ...]
+    trace: StateTrace | None = None
     description: str = ""
 
     def __str__(self) -> str:
@@ -65,7 +65,7 @@ class StrategyTrace:
             result += f"\nDescription: {self.description}"
         return result
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert strategy to dictionary format for API responses."""
         return {
             "agent_strategies": {
@@ -81,12 +81,12 @@ class StrategyTrace:
 class VerificationResult:
     """Model-checking outcome: satisfying states plus optional trace or strategy."""
 
-    states: Set[str]
+    states: set[str]
     satisfied: bool
     initial_state: str
-    trace: Optional[StateTrace] = None
-    strategy: Optional[StrategyTrace] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    trace: StateTrace | None = None
+    strategy: StrategyTrace | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:
         """Format result for human-readable output."""
@@ -106,7 +106,7 @@ class VerificationResult:
 
         return result
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert result to dictionary format for API responses.
 
@@ -123,7 +123,7 @@ class VerificationResult:
             "metadata": self.metadata,
         }
 
-    def to_compact_dict(self) -> Dict[str, str]:
+    def to_compact_dict(self) -> dict[str, str]:
         """
         Convert result to compact dictionary format.
 

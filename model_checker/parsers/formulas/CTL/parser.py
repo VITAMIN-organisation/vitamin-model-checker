@@ -15,8 +15,6 @@ Behavior:
   user-facing parse errors.
 """
 
-from typing import Optional
-
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
@@ -112,7 +110,7 @@ class CTLParser(BaseLogicParser):
 
     # --- Validation ---
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         valid, err = run_common_prechecks(
             formula,
             coalition_required=False,

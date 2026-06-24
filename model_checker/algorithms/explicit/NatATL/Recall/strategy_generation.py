@@ -1,23 +1,22 @@
 """
-Strategy generation for NatATL Recall model checker.
+Recall strategy generation for NatATL.
 
-This module provides the core strategy generation logic for recall strategies,
-including lazy enumeration of collective strategies and duplicate detection.
+Lazy enumeration of collective strategies with duplicate detection.
 """
 
 import logging
+from collections.abc import Generator
 from itertools import combinations, product
-from typing import Dict, Generator, List, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 def generate_strategies(
-    cartesian_products: Dict[str, List[Tuple[str, str]]],
+    cartesian_products: dict[str, list[tuple[str, str]]],
     complexity_bound: int,
-    agents: List[int],
+    agents: list[int],
     found_solution: bool,
-) -> Generator[List[Dict], None, None]:
+) -> Generator[list[dict], None, None]:
     """
     Generate collective strategies for all agents via lazy enumeration.
 
@@ -28,10 +27,10 @@ def generate_strategies(
     strategies = [[] for _ in range(len(agents))]
 
     def search_solution(
-        strategies: List[List[Dict]],
-        current_strategy: List[Dict],
+        strategies: list[list[dict]],
+        current_strategy: list[dict],
         depth: int,
-    ) -> Generator[List[Dict], None, None]:
+    ) -> Generator[list[dict], None, None]:
         """Recursively enumerate all collective strategy combinations."""
         if depth == len(agents):
             yield list(current_strategy)
@@ -68,7 +67,7 @@ def generate_strategies(
         return
 
 
-def is_duplicate(existing_strategies: List[Dict], new_strategy: Dict) -> bool:
+def is_duplicate(existing_strategies: list[dict], new_strategy: dict) -> bool:
     """Check if strategy already exists to prevent duplicates."""
     for existing_strategy in existing_strategies:
         if (
@@ -81,8 +80,8 @@ def is_duplicate(existing_strategies: List[Dict], new_strategy: Dict) -> bool:
 
 
 def generate_guarded_action_pairs(
-    regex_list: List[str], agent_actions: List[List[str]]
-) -> Dict[str, List[Tuple[str, str]]]:
+    regex_list: list[str], agent_actions: list[list[str]]
+) -> dict[str, list[tuple[str, str]]]:
     """
     Generate cartesian product of regex conditions and actions per agent.
 

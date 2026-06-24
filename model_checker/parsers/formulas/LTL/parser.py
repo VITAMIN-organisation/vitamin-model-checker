@@ -5,8 +5,6 @@ What it handles:
 - Propositions matching [a-zA-Z][a-zA-Z0-9_]*.
 """
 
-from typing import Optional
-
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
@@ -62,7 +60,7 @@ class LTLParser(BaseLogicParser):
 
     # --- Validation ---
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         return run_common_prechecks(
             formula,
             allow_hash_at=False,

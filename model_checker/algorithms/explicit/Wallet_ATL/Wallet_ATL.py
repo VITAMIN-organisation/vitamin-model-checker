@@ -1,6 +1,7 @@
-"""Wallet_ATL model checker.
+"""
+Wallet_ATL model checker.
 
-This module ports Wallet_ATL to the same explicit-algorithm structure used by ATL:
+Uses the same explicit-algorithm structure as ATL:
 - parser via FormulaParserFactory
 - tree building via utils.formula_tree.build_formula_tree
 - operator solving via dedicated solver/operators modules
@@ -8,7 +9,7 @@ This module ports Wallet_ATL to the same explicit-algorithm structure used by AT
 """
 
 import re
-from typing import Any, Dict, List
+from typing import Any
 
 from model_checker.algorithms.explicit.ATL.preimage import (
     build_transition_cache,
@@ -20,10 +21,7 @@ from model_checker.algorithms.explicit.shared import (
 )
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.utils.error_handler import (
-    create_semantic_error,
-    create_syntax_error,
-)
+from model_checker.utils.error_handler import create_error_response
 from model_checker.utils.formula_tree import build_formula_tree
 
 from .solver import solve_tree
@@ -64,7 +62,7 @@ def _normalize_operator(operator: Any) -> str:
     raise ValueError(f"Unsupported operator '{operator}' in Wallet_ATL formula")
 
 
-def _serialize_constraints(constraints: List[Dict[str, Any]]) -> str:
+def _serialize_constraints(constraints: list[dict[str, Any]]) -> str:
     serialized = []
     for item in constraints:
         agent = int(item["agent"])
@@ -75,7 +73,7 @@ def _serialize_constraints(constraints: List[Dict[str, Any]]) -> str:
 
 
 def _build_coalition_prefix(
-    agents: List[int], constraints: List[Dict[str, Any]]
+    agents: list[int], constraints: list[dict[str, Any]]
 ) -> str:
     if not agents:
         raise ValueError("Wallet_ATL coalition cannot be empty")
@@ -159,25 +157,27 @@ def _extract_state_name(initial_state: str) -> str:
     return match.group(1) if match else str(initial_state).strip()
 
 
-def _core_walletatl_checking(cgs, formula: str) -> Dict[str, Any]:
+def _core_walletatl_checking(cgs, formula: str) -> dict[str, Any]:
     """Core Wallet_ATL model checking logic."""
     parser = FormulaParserFactory.get_parser_instance("Wallet_ATL")
     res_parsing = parser.parse(formula, max_coalition=cgs.get_number_of_agents())
     if res_parsing is None:
         error_msg = parser.errors[0] if parser.errors else "Syntax error in formula"
-        return create_syntax_error(error_msg)
+        return create_error_response("syntax", error_msg)
 
     try:
         normalized_ast = _convert_wallet_ast(res_parsing)
     except ValueError as exc:
-        return create_syntax_error(str(exc))
+        return create_error_response("syntax", str(exc))
 
     root = build_formula_tree(
         normalized_ast,
         lambda atom: resolve_atom(cgs, atom),
     )
     if root is None:
-        return create_semantic_error("One or more atoms do not exist in the model")
+        return create_error_response(
+            "semantic", "One or more atoms do not exist in the model"
+        )
 
     transition_cache = build_transition_cache(cgs)
     solve_tree(cgs, root, transition_cache)

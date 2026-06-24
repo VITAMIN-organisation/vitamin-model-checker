@@ -1,12 +1,6 @@
-"""
-Regex pruning for NatATL Recall model checker.
-
-This module implements pruning based on regex patterns that match execution
-history paths in the tree.
-"""
+"""Regex-pattern pruning for NatATL Recall execution history paths."""
 
 import logging
-from typing import List
 
 from model_checker.algorithms.explicit.NatATL.Recall.tree_structure import Node
 from model_checker.algorithms.explicit.NatATL.Recall.tree_traversal import (
@@ -37,7 +31,7 @@ def regex_pruning(
 
     def prune_nodes_along_path(
         node: Node,
-        path: List[str],
+        path: list[str],
         action: str,
         strategy_index: int,
         current_level: int,
@@ -47,7 +41,9 @@ def regex_pruning(
 
         if current_level < len(path) and node.state == path[current_level]:
             children_to_remove = []
-            for i, (_child, actions) in enumerate(zip(node.children, node.actions)):
+            for i, (_child, actions) in enumerate(
+                zip(node.children, node.actions, strict=False)
+            ):
                 if strategy_index - 1 < len(actions):
                     if (actions[strategy_index - 1] != action) and (not node.pruned):
                         children_to_remove.append(i)

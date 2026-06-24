@@ -18,17 +18,13 @@ from model_checker.algorithms.explicit.shared.result_formatters import (
 )
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.utils.error_handler import (
-    create_model_error,
-    create_semantic_error,
-    create_syntax_error,
-)
+from model_checker.utils.error_handler import create_error_response
 
 
 def _validate_capatl_model(cgs):
     """Validate CapATL model structure."""
     if hasattr(cgs, "validity_model") and cgs.validity_model() is False:
-        return create_model_error("Incorrect model structure")
+        return create_error_response("model", "Incorrect model structure")
     return None
 
 
@@ -44,14 +40,14 @@ def _core_capatl_checking(cgs, formula):
     res_parsing = parser.parse(formula, n_agent=cgs.get_number_of_agents())
     if res_parsing is None:
         error_msg = parser.errors[0] if parser.errors else "Syntax error in formula"
-        return create_syntax_error(error_msg)
+        return create_error_response("syntax", error_msg)
 
     build_state_cache(cgs)
 
     root = build_tree(cgs, res_parsing)
     if root is None:
-        return create_semantic_error(
-            "One or more atoms or capacities do not exist in the model"
+        return create_error_response(
+            "semantic", "One or more atoms or capacities do not exist in the model"
         )
 
     solve_tree(cgs, root)

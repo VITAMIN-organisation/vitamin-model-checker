@@ -1,19 +1,15 @@
 """
-Pruning module for NatATL Memoryless model checker.
+Matrix-based pruning for NatATL Memoryless verification.
 
-This module implements the matrix-based pruning algorithm for verifying
-memoryless strategies. The approach:
-1. Takes a strategy (condition-action mappings) for each agent
-2. Modifies the transition matrix to only allow actions matching the strategy
-3. Runs CTL model checking on the pruned model to verify the formula
-
-The key insight is that a memoryless strategy restricts transitions based
-on the current state only, so we can prune the transition matrix directly.
+Applies condition-action strategies to restrict the CGS transition matrix,
+then runs CTL model checking on the pruned model. A memoryless strategy
+restricts transitions based on the current state, so the matrix can be
+pruned directly without tree expansion.
 """
 
 import copy
 import logging
-from typing import Any, Dict, List, Set
+from typing import Any
 
 from model_checker.algorithms.explicit.CTL.CTL import model_checking
 from model_checker.algorithms.explicit.NatATL.Memoryless.matrix_utils import (
@@ -26,14 +22,14 @@ logger = logging.getLogger(__name__)
 
 
 def process_transition_matrix_data_fixed(
-    cgs: CGS, model_path: str, agents: List[int], *strategies: Dict[str, Any]
-) -> List[List]:
+    cgs: CGS, model_path: str, agents: list[int], *strategies: dict[str, Any]
+) -> list[list]:
     """Pruning with corrected state coverage logic."""
     graph = cgs.graph
     label_matrix = cgs.create_label_matrix(graph)
 
     for strategy_index, strategy in enumerate(strategies, start=1):
-        covered_states: Set[str] = set()
+        covered_states: set[str] = set()
 
         for _iteration, (condition, action) in enumerate(
             strategy["condition_action_pairs"]
@@ -51,7 +47,7 @@ def process_transition_matrix_data_fixed(
                 states_result = cgs._condition_cache[cache_key]
             res_str = states_result.get("res", "")
 
-            state_set: Set[str] = set()
+            state_set: set[str] = set()
             if ": " in res_str:
                 state_set = parse_state_set_literal(res_str.split(": ")[1])
 
@@ -80,7 +76,7 @@ def process_transition_matrix_data_fixed(
 
 
 def pruning(
-    cgs: CGS, model_path: str, agents: List[int], formula: str, current_agents: List
+    cgs: CGS, model_path: str, agents: list[int], formula: str, current_agents: list
 ) -> bool:
     """Prune the model to a strategy profile and run CTL on the result.
 

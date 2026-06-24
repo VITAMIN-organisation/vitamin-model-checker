@@ -2,16 +2,16 @@
 
 import itertools
 import logging
-from typing import Dict, Generator, List, Set, Tuple
+from collections.abc import Generator
 
 logger = logging.getLogger(__name__)
 
 
 def _search_strategy_profiles(
-    strategies: List[List[Dict]],
-    current_strategy: List[Dict],
+    strategies: list[list[dict]],
+    current_strategy: list[dict],
     depth: int,
-) -> Generator[List[Dict], None, None]:
+) -> Generator[list[dict], None, None]:
     """Enumerate collective strategies by depth-first combination over agents."""
     if depth == len(strategies):
         yield current_strategy.copy()
@@ -24,12 +24,12 @@ def _search_strategy_profiles(
 
 
 def generate_conditions(
-    atomic_props: List[str], connectives: List[str], max_complexity: int
+    atomic_props: list[str], connectives: list[str], max_complexity: int
 ) -> Generator[str, None, None]:
     """Yield boolean conditions over atoms up to a given token count."""
-    condition_set: Set[str] = set()
+    condition_set: set[str] = set()
 
-    def generate_condition(k: int, condition: List[str]) -> Generator[str, None, None]:
+    def generate_condition(k: int, condition: list[str]) -> Generator[str, None, None]:
         if k == 0:
             condition_str = " && ".join(condition)
             if condition_str not in condition_set:
@@ -59,7 +59,7 @@ def generate_conditions(
 
 
 def generate_negated_conditions(
-    conditions: List[str], max_complexity: int
+    conditions: list[str], max_complexity: int
 ) -> Generator[str, None, None]:
     """Yield each condition with every choice of negated atoms, within max_complexity."""
     for condition in conditions:
@@ -77,11 +77,11 @@ def generate_negated_conditions(
 
 
 def generate_strategies(
-    cartesian_products: Dict[str, List[Tuple[str, str]]],
+    cartesian_products: dict[str, list[tuple[str, str]]],
     complexity_bound: int,
-    agents: List[int],
+    agents: list[int],
     found_solution: bool,
-) -> Generator[List[Dict], None, None]:
+) -> Generator[list[dict], None, None]:
     """Yield strategy profiles (one guarded mapping per agent) at complexity_bound.
 
     Stops yielding when found_solution is True.
@@ -115,7 +115,7 @@ def generate_strategies(
                     yield from _search_strategy_profiles(strategies, [], 0)
 
 
-def is_duplicate(existing_strategies: List[Dict], new_strategy: Dict) -> bool:
+def is_duplicate(existing_strategies: list[dict], new_strategy: dict) -> bool:
     """Return True if new_strategy has the same condition_action_pairs as one already listed."""
     for existing_strategy in existing_strategies:
         if (
@@ -127,8 +127,8 @@ def is_duplicate(existing_strategies: List[Dict], new_strategy: Dict) -> bool:
 
 
 def generate_cartesian_products(
-    actions_list: List[List[str]], conditions: List[str]
-) -> Dict[str, List[Tuple[str, str]]]:
+    actions_list: list[list[str]], conditions: list[str]
+) -> dict[str, list[tuple[str, str]]]:
     """Pair every condition with every action for each agent (actions_agent1, ...)."""
     cartesian_products = {}
     for i, actions in enumerate(actions_list, start=1):
@@ -142,17 +142,17 @@ def generate_cartesian_products(
 
 def generate_guarded_action_pairs(
     complexity_bound: int,
-    agent_actions: Dict[str, List[str]],
-    actions_list: List[List[str]],
-    atomic_propositions: List[str],
-) -> Dict[str, List[Tuple[str, str]]]:
+    agent_actions: dict[str, list[str]],
+    actions_list: list[list[str]],
+    atomic_propositions: list[str],
+) -> dict[str, list[tuple[str, str]]]:
     """Build all (condition, action) pairs per agent up to complexity_bound.
 
     Returns an empty dict on error.
     """
     connectives = ["and", "or"]
     try:
-        cartesian_products: Dict[str, List[Tuple[str, str]]] = {}
+        cartesian_products: dict[str, list[tuple[str, str]]] = {}
         for _agent_key in agent_actions.keys():
             conditions = list(
                 generate_conditions(atomic_propositions, connectives, complexity_bound)
@@ -176,7 +176,7 @@ def generate_guarded_action_pairs(
         return {}
 
 
-def agent_combinations(new_combinations: List) -> Generator[Tuple, None, None]:
+def agent_combinations(new_combinations: list) -> Generator[tuple, None, None]:
     """Yield all ordered pairs from new_combinations."""
     for agent1 in new_combinations:
         for agent2 in new_combinations:

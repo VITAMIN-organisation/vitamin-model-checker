@@ -1,6 +1,6 @@
 """Index-space pre-image helpers shared by OATL (aligned with COTL)."""
 
-from typing import Any, Dict, List, Set
+from typing import Any
 
 from model_checker.algorithms.explicit.shared.bit_vector import (
     BIT_VECTOR_THRESHOLD,
@@ -11,10 +11,10 @@ from model_checker.algorithms.explicit.shared.state_utils import (
 )
 from model_checker.parsers.game_structures.cgs import CostCGSProtocol, cgs_actions
 
-SolveContext = Dict[str, Any]
+SolveContext = dict[str, Any]
 
 
-def build_pre_by_index(graph) -> List[Set[int]]:
+def build_pre_by_index(graph) -> list[set[int]]:
     """Build target index -> set of source indices from the graph."""
     num_states = len(graph)
     pre_by_index = [set() for _ in range(num_states)]
@@ -25,9 +25,9 @@ def build_pre_by_index(graph) -> List[Set[int]]:
     return pre_by_index
 
 
-def pre_indices(state_set_index: Set[int], pre_by_index: List[Set[int]]) -> Set[int]:
+def pre_indices(state_set_index: set[int], pre_by_index: list[set[int]]) -> set[int]:
     """Return predecessor state indices in one step."""
-    result: Set[int] = set()
+    result: set[int] = set()
     for target_idx in state_set_index:
         result.update(pre_by_index[target_idx])
     return result
@@ -35,16 +35,16 @@ def pre_indices(state_set_index: Set[int], pre_by_index: List[Set[int]]) -> Set[
 
 def check_if_action_is_extension(action: str, extension_action: str) -> bool:
     """Return True if extension_action is a consistent extension of action."""
-    for coalition_char, extension_char in zip(action, extension_action):
+    for coalition_char, extension_char in zip(action, extension_action, strict=True):
         if coalition_char != "-" and coalition_char != extension_char:
             return False
     return True
 
 
-def next_states(cgs, action_profile: str, state_idx: int, graph=None) -> Set[int]:
+def next_states(cgs, action_profile: str, state_idx: int, graph=None) -> set[int]:
     """Return indices reachable from state_idx when the coalition plays action_profile."""
     outgoing = cgs.graph[state_idx] if graph is None else graph[state_idx]
-    reachable: Set[int] = set()
+    reachable: set[int] = set()
     for next_idx, label in enumerate(outgoing):
         if label == 0 or label == "0":
             continue
@@ -57,7 +57,7 @@ def next_states(cgs, action_profile: str, state_idx: int, graph=None) -> Set[int
     return reachable
 
 
-def get_cached_base_action(cgs, action: str, agents_set: Set[str], cache: Dict) -> str:
+def get_cached_base_action(cgs, action: str, agents_set: set[str], cache: dict) -> str:
     """Return base coalition action for (action, agents_set), using cache when possible."""
     key = (action, tuple(sorted(agents_set)))
     if key not in cache:
@@ -72,11 +72,11 @@ def get_cached_base_action(cgs, action: str, agents_set: Set[str], cache: Dict) 
 def dominant_action_indices(
     cgs,
     source_idx: int,
-    safe_indices: Set[int],
-    agents_set: Set[str],
+    safe_indices: set[int],
+    agents_set: set[str],
     graph,
-    base_action_cache: Dict,
-) -> Set[str]:
+    base_action_cache: dict,
+) -> set[str]:
     """Return dominant coalition actions that keep the next state in safe_indices."""
     num_states = len(graph)
     use_bit_vector = num_states >= BIT_VECTOR_THRESHOLD
@@ -85,7 +85,7 @@ def dominant_action_indices(
     else:
         unsafe_indices = set(range(num_states)) - safe_indices
 
-    winning_actions: Set[str] = set()
+    winning_actions: set[str] = set()
     for _dest_idx, cell in enumerate(graph[source_idx]):
         if cell == 0 or cell == "0":
             continue
@@ -109,17 +109,17 @@ def cross_indices(
     cgs: CostCGSProtocol,
     max_cost: int,
     coalition: str,
-    target_indices: Set[int],
+    target_indices: set[int],
     solve_context: SolveContext,
-    base_action_cache: Dict,
+    base_action_cache: dict,
     has_affordable_action_fn,
-) -> Set[int]:
+) -> set[int]:
     """Cost-bounded pre-image in index space."""
     graph = solve_context["graph"]
     pre_by_index = solve_context["pre_by_index"]
     agents_set = cgs_actions.get_agents_from_coalition(coalition)
     candidate_sources = pre_indices(target_indices, pre_by_index)
-    result: Set[int] = set()
+    result: set[int] = set()
 
     for source_idx in candidate_sources:
         actions = dominant_action_indices(
@@ -143,12 +143,12 @@ def cross_state_names(
     cgs: CostCGSProtocol,
     max_cost: int,
     coalition: str,
-    target_states: Set[str],
+    target_states: set[str],
     solve_context: SolveContext,
-    base_action_cache: Dict,
+    base_action_cache: dict,
     has_affordable_action_fn,
-    early_stop: Set[str] = None,
-) -> Set[str]:
+    early_stop: set[str] = None,
+) -> set[str]:
     """State-name wrapper around index-space cost-bounded pre-image."""
     target_indices = state_names_to_indices(cgs, target_states)
     pre_state_indices = cross_indices(

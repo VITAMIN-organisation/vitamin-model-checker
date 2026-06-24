@@ -8,13 +8,11 @@ Operator meaning under demonic linear cost bounds:
   R: dual of (not phi) U (not psi); W: psi R (phi or psi).
 """
 
-from typing import List, Set
-
 from model_checker.algorithms.explicit.shared.cost_utils import transition_cell_cost
 from model_checker.algorithms.explicit.shared.state_utils import state_names_to_indices
 
 
-def _min_cost_to_targets(cgs, target_indices: Set[int]) -> List[float]:
+def _min_cost_to_targets(cgs, target_indices: set[int]) -> list[float]:
     """Minimum accumulated cost from each state to any target index."""
     n = len(cgs.graph)
     min_cost = [float("inf")] * n
@@ -37,7 +35,7 @@ def _min_cost_to_targets(cgs, target_indices: Set[int]) -> List[float]:
     return min_cost
 
 
-def states_within_cost(cgs, target_states: Set[str], max_cost: int) -> Set[str]:
+def states_within_cost(cgs, target_states: set[str], max_cost: int) -> set[str]:
     """States that can reach target_states with accumulated cost <= max_cost."""
     if not target_states:
         return set()
@@ -52,13 +50,13 @@ def states_within_cost(cgs, target_states: Set[str], max_cost: int) -> Set[str]:
     }
 
 
-def states_with_next_in(cgs, target_states: Set[str], max_step_cost: int) -> Set[str]:
+def states_with_next_in(cgs, target_states: set[str], max_step_cost: int) -> set[str]:
     """States where every step within max_step_cost stays in target_states."""
     target_indices = state_names_to_indices(cgs, target_states)
     if not target_indices:
         return set()
 
-    result: Set[str] = set()
+    result: set[str] = set()
     for i in range(len(cgs.graph)):
         has_affordable_step = False
         for j in range(len(cgs.graph)):
@@ -76,7 +74,7 @@ def states_with_next_in(cgs, target_states: Set[str], max_step_cost: int) -> Set
     return result
 
 
-def states_globally_in(cgs, phi_states: Set[str], max_cost: int) -> Set[str]:
+def states_globally_in(cgs, phi_states: set[str], max_cost: int) -> set[str]:
     """States in phi where the adversary cannot reach outside phi within max_cost."""
     phi = {str(s) for s in phi_states}
     all_states = {str(s) for s in cgs.all_states_set}
@@ -87,7 +85,7 @@ def states_globally_in(cgs, phi_states: Set[str], max_cost: int) -> Set[str]:
     return phi - reach_violation
 
 
-def _min_cost_until(cgs, phi_states: Set[str], psi_states: Set[str]) -> List[float]:
+def _min_cost_until(cgs, phi_states: set[str], psi_states: set[str]) -> list[float]:
     """Minimum cost to reach psi while visiting only phi on the prefix."""
     n = len(cgs.graph)
     phi_indices = state_names_to_indices(cgs, phi_states)
@@ -117,8 +115,8 @@ def _min_cost_until(cgs, phi_states: Set[str], psi_states: Set[str]) -> List[flo
 
 
 def states_until(
-    cgs, phi_states: Set[str], psi_states: Set[str], max_cost: int
-) -> Set[str]:
+    cgs, phi_states: set[str], psi_states: set[str], max_cost: int
+) -> set[str]:
     """States from which psi is reachable within max_cost while phi holds on the prefix."""
     min_cost = _min_cost_until(cgs, phi_states, psi_states)
     return {
@@ -129,8 +127,8 @@ def states_until(
 
 
 def states_release(
-    cgs, phi_states: Set[str], psi_states: Set[str], max_cost: int
-) -> Set[str]:
+    cgs, phi_states: set[str], psi_states: set[str], max_cost: int
+) -> set[str]:
     """phi R psi as the dual of (not phi) U (not psi) under the same cost bound."""
     all_states = {str(s) for s in cgs.all_states_set}
     phi = {str(s) for s in phi_states}
@@ -140,8 +138,8 @@ def states_release(
 
 
 def states_weak(
-    cgs, phi_states: Set[str], psi_states: Set[str], max_cost: int
-) -> Set[str]:
+    cgs, phi_states: set[str], psi_states: set[str], max_cost: int
+) -> set[str]:
     """phi W psi equals psi R (phi or psi) under the same cost bound."""
     psi = {str(s) for s in psi_states}
     phi_or_psi = {str(s) for s in phi_states} | psi

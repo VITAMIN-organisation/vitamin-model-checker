@@ -3,10 +3,8 @@
 Extract actions from the transition matrix, format coalition/opponent moves.
 """
 
-from typing import Dict, List, Set
 
-
-def validate_agent_numbers(agents: List[int], num_agents: int):
+def validate_agent_numbers(agents: list[int], num_agents: int):
     """Check that every agent number is between 1 and num_agents. Raises ValueError if not."""
     for agent in agents:
         if not isinstance(agent, int) or agent < 1 or agent > num_agents:
@@ -16,12 +14,12 @@ def validate_agent_numbers(agents: List[int], num_agents: int):
             )
 
 
-def format_agents(agents: List[int]) -> Set[int]:
+def format_agents(agents: list[int]) -> set[int]:
     """Drop 0 from the list and convert 1-based agent numbers to 0-based indices."""
     return {int(x) - 1 for x in agents if x != 0}
 
 
-def get_agents_from_coalition(coalition: str) -> Set[str]:
+def get_agents_from_coalition(coalition: str) -> set[str]:
     """Split a comma-separated coalition string (e.g. "1,2,3") into a set of agent ids."""
     if not coalition or not coalition.strip():
         return set()
@@ -42,7 +40,7 @@ def normalize_action_token(token: str) -> str:
     return stripped
 
 
-def parse_joint_action_cell(cell: str, num_agents: int) -> List[List[str]]:
+def parse_joint_action_cell(cell: str, num_agents: int) -> list[list[str]]:
     """Parse one transition-matrix cell into joint action choices.
 
     Joint moves in a cell are separated by ",". Each joint is either:
@@ -61,7 +59,7 @@ def parse_joint_action_cell(cell: str, num_agents: int) -> List[List[str]]:
     joint_strings = [
         part.strip() for part in raw.split(JOINT_CHOICE_SEPARATOR) if part.strip()
     ]
-    joint_actions: List[List[str]] = []
+    joint_actions: list[list[str]] = []
 
     for joint in joint_strings:
         if AGENT_ACTION_SEPARATOR in joint:
@@ -92,8 +90,8 @@ def parse_joint_action_cell(cell: str, num_agents: int) -> List[List[str]]:
 
 
 def extract_actions_for_agents(
-    graph: List[List], agents: List[int]
-) -> Dict[str, List[str]]:
+    graph: list[list], agents: list[int]
+) -> dict[str, list[str]]:
     """Return ``agent{n}`` -> action tokens from graph cells for 1-based agent ids.
 
     Call ``validate_agent_numbers`` first. Cell encoding is defined by
@@ -126,7 +124,7 @@ def extract_actions_for_agents(
 
 
 def process_action_string(
-    action_string: str, agents: Set[int], include_agents: bool = True
+    action_string: str, agents: set[int], include_agents: bool = True
 ) -> str:
     """Keep or drop agent positions in an action string; replaced positions become "-".
 
@@ -142,7 +140,7 @@ def process_action_string(
     return AGENT_ACTION_SEPARATOR.join(masked_tokens)
 
 
-def _expand_action_wildcards(actions: Set[str], num_agents: int) -> Set[str]:
+def _expand_action_wildcards(actions: set[str], num_agents: int) -> set[str]:
     """Expand "*" to a wildcard token for each agent in the joint choice."""
     if num_agents <= 0:
         return {s for s in actions if s != "*"}
@@ -151,8 +149,8 @@ def _expand_action_wildcards(actions: Set[str], num_agents: int) -> Set[str]:
 
 
 def _process_actions_for_agents(
-    actions: Set[str], agents: Set[int], num_agents: int, include_agents: bool
-) -> Set[str]:
+    actions: set[str], agents: set[int], num_agents: int, include_agents: bool
+) -> set[str]:
     """Expand wildcards then mask each action by coalition (include_agents=True) or opponents (False)."""
     expanded = _expand_action_wildcards(actions, num_agents)
     return {
@@ -162,8 +160,8 @@ def _process_actions_for_agents(
 
 
 def get_coalition_actions(
-    actions: Set[str], agents: Set[int], num_agents: int
-) -> Set[str]:
+    actions: set[str], agents: set[int], num_agents: int
+) -> set[str]:
     """Return the coalition’s part of each action string (other positions become "-")."""
     if not agents:
         return {"-" * num_agents}

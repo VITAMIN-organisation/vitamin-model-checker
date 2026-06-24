@@ -1,14 +1,14 @@
 """
-Shared Recall-based NatATL logic for Strategy Logic (NatSL) semantics.
+Shared recall-based NatATL building blocks for NatSL (Sequential and Alternated).
 
-This module provides common building blocks for both Sequential and Alternated
-NatSL verification, reducing duplication of strategy and tree management.
+Reduces duplication of strategy enumeration and tree management across both
+NatSL semantics variants.
 """
 
 import copy
 import logging
 import time
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 from model_checker.algorithms.explicit.NatATL.Recall.condition_generation import (
     create_reg_exp,
@@ -32,13 +32,13 @@ logger = logging.getLogger(__name__)
 
 
 def universal_natatl_recall(
-    trees: List[Any],
+    trees: list[Any],
     model_path: str,
     formula: str,
     num_agents: int,
     height: int,
     start_time: float,
-    cgs: Optional[CGSProtocol] = None,
+    cgs: CGSProtocol | None = None,
 ) -> bool:
     """
     Check universal strategies against a set of pruned trees.
@@ -112,7 +112,7 @@ def universal_natatl_recall(
 
 def existential_natatl_sequential(
     model_path: str, formula: str, *, allow_direct_solution: bool = True
-) -> Tuple[bool, List[Any], int, Any]:
+) -> tuple[bool, list[Any], int, Any]:
     """
     Search for existential strategies and collect pruned trees (Sequential).
     """

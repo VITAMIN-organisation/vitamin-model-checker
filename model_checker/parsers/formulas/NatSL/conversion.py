@@ -1,8 +1,4 @@
-"""NatSL to NatATL conversion helpers.
-
-This module converts already-parsed NatSL formulas to NatATL strings expected
-by downstream model checkers.
-"""
+"""NatSL to NatATL conversion helpers for downstream model checkers."""
 
 
 def _build_existential_natatl_formula(

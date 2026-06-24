@@ -14,7 +14,6 @@ Returns:
 """
 
 import re
-from typing import Optional
 
 from model_checker.parsers.syntax_patterns import (
     OL_DEMONIC_BOUND_FULL_RE,
@@ -134,7 +133,7 @@ class OLParser(BaseLogicParser):
         except DemonicValueError:
             return None
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         return run_common_prechecks(
             formula,
             allow_hash_at=True,

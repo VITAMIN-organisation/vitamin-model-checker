@@ -1,10 +1,7 @@
 """
-ATLF operator handlers for formula tree evaluation.
+Handler functions for all ATLF operators (unary: NOT/<A>X/<A>F/<A>G; binary: OR/AND/IMPLIES/<A>U).
 
-This module contains handler functions for all ATLF operators, both unary
-(NOT, <A>X, <A>F, <A>G) and binary (OR, AND, IMPLIES, <A>U).
-
-ATLF uses real-valued semantics: each state has a value in [0,1].
+ATLF uses real-valued semantics where each state has a value in [0, 1].
 """
 
 from model_checker.algorithms.explicit.ATLF.preimage import (

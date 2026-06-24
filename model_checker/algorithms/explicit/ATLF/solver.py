@@ -1,9 +1,4 @@
-"""
-Formula tree solver for ATLF model checking.
-
-This module contains the solve_tree function that recursively evaluates
-ATLF formula trees using bottom-up evaluation with real-valued semantics.
-"""
+"""Bottom-up formula tree solver for ATLF with real-valued semantics."""
 
 from model_checker.algorithms.explicit.ATLF.operators import (
     handle_and,

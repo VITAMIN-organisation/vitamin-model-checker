@@ -8,7 +8,7 @@ tokens and grammar rules.
 import inspect
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 import ply.lex as lex
 import ply.yacc as yacc
@@ -203,7 +203,7 @@ class BaseLogicParser:
                 self.errors.append(str(e))
             return None
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         """Hook for pre-parsing validation."""
         return run_common_prechecks(formula)
 

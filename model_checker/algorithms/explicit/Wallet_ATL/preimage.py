@@ -1,14 +1,15 @@
 """Wallet_ATL pre-image and wallet-constraint helpers."""
 
 import re
-from typing import Any, Iterable, List, Sequence, Set, Tuple
+from collections.abc import Iterable, Sequence
+from typing import Any
 
 from model_checker.algorithms.explicit.ATL.preimage import (
     build_transition_cache,
     pre,
 )
 
-WalletConstraint = Tuple[int, Tuple[str, int]]
+WalletConstraint = tuple[int, tuple[str, int]]
 
 _COALITION_PREFIX_RE = re.compile(
     r"^<<\s*(?P<agents>\d+(?:\s*,\s*\d+)*)\s*(?::\s*(?P<constraints>.*?))?\s*>>"
@@ -24,11 +25,11 @@ def is_wallet_coalition_operator(value: Any) -> bool:
     return value_str.startswith("<<") and ">>" in value_str
 
 
-def _parse_constraints(raw_constraints: str | None) -> List[WalletConstraint]:
+def _parse_constraints(raw_constraints: str | None) -> list[WalletConstraint]:
     if not raw_constraints:
         return []
 
-    constraints: List[WalletConstraint] = []
+    constraints: list[WalletConstraint] = []
     parts = [part.strip() for part in re.split(r"\s*&&\s*", raw_constraints) if part]
 
     for part in parts:
@@ -47,7 +48,7 @@ def _parse_constraints(raw_constraints: str | None) -> List[WalletConstraint]:
 
 def extract_coalition_and_constraints(
     operator_token: str,
-) -> Tuple[str, List[int], List[WalletConstraint]]:
+) -> tuple[str, list[int], list[WalletConstraint]]:
     """Extract coalition string, coalition agents and wallet constraints from `<<...>>Op`."""
     match = _COALITION_PREFIX_RE.match(str(operator_token))
     if not match:
@@ -68,14 +69,14 @@ def apply_wallet_constraints(
     coalition_agents: Sequence[int],
     constraints: Sequence[WalletConstraint],
     states: Iterable[Any],
-) -> Set[str]:
+) -> set[str]:
     """Filter states that satisfy all coalition wallet constraints."""
     normalized_states = {str(s) for s in states}
     if not normalized_states or not constraints:
         return normalized_states
 
     constraint_map = dict(constraints)
-    filtered_states: Set[str] = set()
+    filtered_states: set[str] = set()
 
     for state in normalized_states:
         satisfies_all = True

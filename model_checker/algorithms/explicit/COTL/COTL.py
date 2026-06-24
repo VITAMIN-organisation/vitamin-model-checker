@@ -9,10 +9,7 @@ from model_checker.algorithms.explicit.shared.atom_utils import (
 )
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.utils.error_handler import (
-    create_semantic_error,
-    create_syntax_error,
-)
+from model_checker.utils.error_handler import create_error_response
 
 from .solver import build_solve_context, solve_tree
 
@@ -34,11 +31,11 @@ def _core_cotl_checking(cgs, formula):
     res_parsing = parser.parse(formula, n_agent=cgs.get_number_of_agents())
     if res_parsing is None:
         error_msg = parser.errors[0] if parser.errors else "Syntax error in formula"
-        return create_syntax_error(error_msg)
+        return create_error_response("syntax", error_msg)
 
     root = build_resolved_formula_tree(cgs, res_parsing, parser)
     if root is None:
-        return create_semantic_error("The atom does not exist in the model")
+        return create_error_response("semantic", "The atom does not exist in the model")
 
     solve_context = build_solve_context(cgs.graph)
     solve_tree(cgs, root, solve_context)

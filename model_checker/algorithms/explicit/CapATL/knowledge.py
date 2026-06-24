@@ -1,9 +1,8 @@
 """
-Knowledge structures for CapATL model checker.
+Epistemic state data structures for CapATL model checking.
 
-This module defines data structures for representing epistemic states in CapATL:
-- Pointed knowledge (state-knowledge pairs)
-- Coalition knowledge with actions
+Defines pointed knowledge (state-knowledge pairs) and coalition knowledge
+with actions:
 - Formula tree nodes
 
 These structures are essential for knowledge-based reasoning about agent capacities.

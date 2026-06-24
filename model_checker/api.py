@@ -24,11 +24,7 @@ from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
-from model_checker.utils.error_handler import (
-    create_syntax_error,
-    create_system_error,
-    create_validation_error,
-)
+from model_checker.utils.error_handler import create_error_response
 
 __all__ = [
     "execute_model_checking_with_parser",
@@ -37,9 +33,7 @@ __all__ = [
     "create_model_parser_for_logic",
     "detect_model_type_from_content",
     "detect_model_type_from_file",
-    "create_validation_error",
-    "create_syntax_error",
-    "create_system_error",
+    "create_error_response",
     "format_model_checking_result",
     "CGS",
     "CostCGS",

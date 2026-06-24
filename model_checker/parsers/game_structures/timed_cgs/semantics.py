@@ -1,6 +1,6 @@
 """Helpers shared by TCTL and TOL."""
 
-from typing import TYPE_CHECKING, Set
+from typing import TYPE_CHECKING
 
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
 
-def states_where_prop_holds(tcgs: "TimedCGS", prop: str) -> Set[int] | None:
+def states_where_prop_holds(tcgs: "TimedCGS", prop: str) -> set[int] | None:
     """State indices where prop holds; None if the atom is missing."""
     index = proposition_index(tcgs.atomic_propositions, prop)
     if index is None:
@@ -23,7 +23,7 @@ def states_where_prop_holds(tcgs: "TimedCGS", prop: str) -> Set[int] | None:
     }
 
 
-def discrete_pre_image_states(tcgs: "TimedCGS", target_states) -> Set[str]:
+def discrete_pre_image_states(tcgs: "TimedCGS", target_states) -> set[str]:
     """States with an edge into target_states."""
     targets = {str(state) for state in target_states}
     return {source for source, target in tcgs.get_edges() if target in targets}
@@ -34,13 +34,13 @@ def zone_graph_pre_image_states(
     zone_graph: "ZoneGraph",
     target_states,
     constraints: tuple | str | None,
-) -> Set[str]:
+) -> set[str]:
     """States with a timed edge into target_states under the clock guard."""
     if not constraints:
         return discrete_pre_image_states(tcgs, target_states)
     target_names = {str(state) for state in target_states}
     clock_constraints, _ = DBMAdapter.parse_constraints([constraints], tcgs.clocks_dict)
-    result: Set[str] = set()
+    result: set[str] = set()
     for source, target in tcgs.get_edges():
         if target not in target_names:
             continue
@@ -69,9 +69,9 @@ def states_with_time_constraints(
     tcgs: "TimedCGS",
     zone_graph: "ZoneGraph",
     constraints: tuple[str, ...] | str,
-) -> Set[str]:
+) -> set[str]:
     """States whose zone satisfies the clock guard."""
-    result: Set[str] = set()
+    result: set[str] = set()
     guards, resets = DBMAdapter.parse_constraints([constraints], tcgs.clocks_dict)
     for state in sorted(zone_graph.states, key=lambda item: item.location):
         if DBMAdapter.zone_satisfies_guards(

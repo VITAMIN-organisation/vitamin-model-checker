@@ -35,21 +35,9 @@ classifiers = [
 ]
 # Runtime dependencies for the installable package. Workbench lockfiles use requirements-base.txt.
 dependencies = [
-    "automata-lib==6.0.2",
-    "visual-automata==1.1.1",
-    "networkx==2.8.6",
     "ply==3.11",
-    "antlr4-python3-runtime==4.8.0",
-    "anytree==2.8.0",
-    "lxml>=6.0.2",
-    "defusedxml>=0.7.1",
     "numpy>=1.26.0,<1.27.0",
-    "requests>=2.32.5,<3.0.0",
     "pydantic>=2.7.0",
-    "validators==0.22.0",
-    "semver==2.13.0",
-    "prometheus-client==0.14.1",
-    "tqdm>=4.66.0",
 ]
 
 [project.urls]
@@ -198,7 +186,7 @@ markers = [
 # ==============================================================================
 [tool.black]
 line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311']
+target-version = ['py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -243,7 +231,7 @@ skip_glob = [
 # Linting - Ruff
 [tool.ruff]
 line-length = 88
-target-version = "py38"
+target-version = "py311"
 exclude = [
     ".bzr",
     ".direnv",

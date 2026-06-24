@@ -8,7 +8,6 @@ Temporal operators: U, R, G, X, F and boolean connectives ``&&``, ``||``, ``!``,
 """
 
 import re
-from typing import Optional
 
 from model_checker.parsers.formulas.parser_utils import (
     CoalitionValueError,
@@ -92,7 +91,7 @@ class IATLParser(BaseLogicParser):
         self.n_agent = n_agent or kwargs.get("max_coalition", 0)
         return super().parse(formula, **kwargs)
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         return run_common_prechecks(
             formula,
             allow_hash_at=False,

@@ -5,7 +5,7 @@ _tabversion = "3.10"
 
 _lr_method = "LALR"
 
-_lr_signature = "rightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAGENT AND COALITION_BOUND EVENTUALLY EVENTUALLY FALSE GLOBALLY GLOBALLY IMPLIES IS KCAP LPAREN NEXT NEXT NOT OR PROP RELEASE RELEASE RPAREN TRUE UNTIL UNTILexpression : expression AND expressionexpression : COALITION_BOUND expression UNTIL expression\n        | COALITION_BOUND expression RELEASE expressionexpression : COALITION_BOUND NEXT expression\n        | COALITION_BOUND EVENTUALLY expression\n        | COALITION_BOUND GLOBALLY expressionexpression : NOT expressionexpression : KCAP AGENT expression2expression : LPAREN expression RPARENexpression2 : LPAREN expression2 RPARENexpression : FALSE\n        | TRUEexpression2 : expression2 AND expression2expression : PROPexpression2 : NOT expression2expression2 : AGENT IS PROPexpression2 : KCAP AGENT expression2"
+_lr_signature = "rightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAGENT AND COALITION_BOUND EVENTUALLY EVENTUALLY FALSE GLOBALLY GLOBALLY IMPLIES IS KCAP LPAREN NEXT NEXT NOT OR PROP RELEASE RELEASE RPAREN TRUE UNTIL UNTILexpression : expression AND expressionexpression : COALITION_BOUND expression UNTIL expression\n        | COALITION_BOUND expression RELEASE expressionexpression : COALITION_BOUND NEXT expression\n        | COALITION_BOUND EVENTUALLY expression\n        | COALITION_BOUND GLOBALLY expressionexpression : NOT expressionexpression : KCAP AGENT expression2expression : LPAREN expression RPARENexpression2 : LPAREN expression2 RPARENexpression : FALSE\n        | TRUEexpression2 : expression2 AND expression2expression2 : NOT expression2expression : PROPexpression2 : AGENT IS PROPexpression2 : KCAP AGENT expression2"
 
 _lr_action_items = {
     "COALITION_BOUND": (
@@ -247,7 +247,7 @@ _lr_action_items = {
             0,
             -11,
             -12,
-            -14,
+            -15,
             -7,
             -1,
             -4,
@@ -257,7 +257,7 @@ _lr_action_items = {
             -9,
             -2,
             -3,
-            -15,
+            -14,
             -17,
             -16,
             -13,
@@ -292,7 +292,7 @@ _lr_action_items = {
             9,
             -11,
             -12,
-            -14,
+            -15,
             9,
             -7,
             9,
@@ -305,7 +305,7 @@ _lr_action_items = {
             -2,
             9,
             33,
-            -15,
+            -14,
             33,
             -16,
             -13,
@@ -380,7 +380,7 @@ _lr_action_items = {
         [
             -11,
             -12,
-            -14,
+            -15,
             18,
             -7,
             -1,
@@ -391,7 +391,7 @@ _lr_action_items = {
             -9,
             -2,
             -3,
-            -15,
+            -14,
             -17,
             -16,
             -13,
@@ -422,7 +422,7 @@ _lr_action_items = {
         [
             -11,
             -12,
-            -14,
+            -15,
             19,
             -7,
             -1,
@@ -433,7 +433,7 @@ _lr_action_items = {
             -9,
             -2,
             -3,
-            -15,
+            -14,
             -17,
             -16,
             -13,
@@ -465,7 +465,7 @@ _lr_action_items = {
         [
             -11,
             -12,
-            -14,
+            -15,
             -7,
             28,
             -1,
@@ -477,7 +477,7 @@ _lr_action_items = {
             -2,
             -3,
             39,
-            -15,
+            -14,
             -17,
             -16,
             -13,
@@ -562,7 +562,7 @@ _lr_productions = [
         3,
         "p_expression_binary",
         "parser.py",
-        96,
+        95,
     ),
     (
         "expression -> COALITION_BOUND expression UNTIL expression",
@@ -570,7 +570,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        100,
+        99,
     ),
     (
         "expression -> COALITION_BOUND expression RELEASE expression",
@@ -578,7 +578,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        101,
+        100,
     ),
     (
         "expression -> COALITION_BOUND NEXT expression",
@@ -586,7 +586,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        108,
+        107,
     ),
     (
         "expression -> COALITION_BOUND EVENTUALLY expression",
@@ -594,7 +594,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        109,
+        108,
     ),
     (
         "expression -> COALITION_BOUND GLOBALLY expression",
@@ -602,7 +602,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        110,
+        109,
     ),
     (
         "expression -> NOT expression",
@@ -618,7 +618,7 @@ _lr_productions = [
         3,
         "p_expression_kcap",
         "parser.py",
-        117,
+        116,
     ),
     (
         "expression -> LPAREN expression RPAREN",
@@ -634,7 +634,7 @@ _lr_productions = [
         3,
         "p_expression_capformula_group",
         "parser.py",
-        121,
+        120,
     ),
     (
         "expression -> FALSE",
@@ -658,7 +658,15 @@ _lr_productions = [
         3,
         "p_expression_capformula_and",
         "parser.py",
-        125,
+        124,
+    ),
+    (
+        "expression2 -> NOT expression2",
+        "expression2",
+        2,
+        "p_expression_capformula_not",
+        "parser.py",
+        128,
     ),
     (
         "expression -> PROP",
@@ -669,20 +677,12 @@ _lr_productions = [
         128,
     ),
     (
-        "expression2 -> NOT expression2",
-        "expression2",
-        2,
-        "p_expression_capformula_not",
-        "parser.py",
-        129,
-    ),
-    (
         "expression2 -> AGENT IS PROP",
         "expression2",
         3,
         "p_expression_capformula_is",
         "parser.py",
-        133,
+        132,
     ),
     (
         "expression2 -> KCAP AGENT expression2",
@@ -690,6 +690,6 @@ _lr_productions = [
         3,
         "p_expression_capformula_kcap",
         "parser.py",
-        137,
+        136,
     ),
 ]

@@ -1,13 +1,13 @@
 """BCGS (Birelational Concurrent Game Structure) model parser for IATL."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class BCGS:
     """Parser and in-memory representation for an IATL BCGS model file."""
 
     def __init__(self) -> None:
-        self._data: Optional[Dict[str, Any]] = None
+        self._data: dict[str, Any] | None = None
         self.filename: str = ""
 
     def read_file(self, filename: str) -> None:
@@ -18,7 +18,7 @@ class BCGS:
         self._data = read_file(filename)
 
     @property
-    def data(self) -> Dict[str, Any]:
+    def data(self) -> dict[str, Any]:
         if self._data is None:
             raise ValueError("BCGS model not loaded; call read_file first.")
         return self._data

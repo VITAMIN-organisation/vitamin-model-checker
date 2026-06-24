@@ -1,7 +1,6 @@
 """
-OATL model checker.
+OATL model checker over cost-CGS models.
 
-This module implements model checking for OATL formulas over cost-CGS models.
 Coalition modalities `<A><k>` require coalition `A` to enforce the sub-formula
 while each chosen transition has cost at most `k`.
 """
@@ -24,10 +23,7 @@ from model_checker.algorithms.explicit.shared.oatl_index_preimage import (
 from model_checker.engine.atl_prefilter import run_atl_prefilter
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.utils.error_handler import (
-    create_semantic_error,
-    create_syntax_error,
-)
+from model_checker.utils.error_handler import create_error_response
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +37,13 @@ def _core_oatl_checking(cgs, formula):
     res_parsing = parser.parse(formula, n_agent=cgs.get_number_of_agents())
     if res_parsing is None:
         error_msg = parser.errors[0] if parser.errors else "Syntax error in formula"
-        return create_syntax_error(error_msg)
+        return create_error_response("syntax", error_msg)
 
     root = build_resolved_formula_tree(cgs, res_parsing, parser)
     if root is None:
-        return create_semantic_error("One or more atoms do not exist in the model")
+        return create_error_response(
+            "semantic", "One or more atoms do not exist in the model"
+        )
 
     solve_context = {
         "graph": cgs.graph,

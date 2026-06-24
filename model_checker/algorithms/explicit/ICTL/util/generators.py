@@ -12,10 +12,12 @@ def _apply_antisymmetry_transitivity(n_states, states_row, states_col, relations
         for i in range(states_row)
     ]
     i_index, j_index = zip(
-        *[(i, j) for arr in indices for i in arr for j in arr if i < j]
+        *[(i, j) for arr in indices for i in arr for j in arr if i < j],
+        strict=True,
     )
     i_index_z, j_index_z = zip(
-        *[(arr[0], j) for arr in indices_zigzag for j in arr if arr[0] < j]
+        *[(arr[0], j) for arr in indices_zigzag for j in arr if arr[0] < j],
+        strict=True,
     )
     relations[i_index, j_index] = "P"
     relations[i_index_z, j_index_z] = "P"

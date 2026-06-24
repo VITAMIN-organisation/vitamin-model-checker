@@ -1,7 +1,7 @@
 """Strategy enumeration and pruning loop for NatATL memoryless verification."""
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from model_checker.algorithms.explicit.NatATL.Memoryless.pruning import (
     pruning,
@@ -17,17 +17,17 @@ logger = logging.getLogger(__name__)
 
 def solve_natatl_memoryless(
     k: int,
-    agent_actions: Dict[str, List[str]],
-    actions_list: List[List[str]],
-    atomic_propositions: List[str],
+    agent_actions: dict[str, list[str]],
+    actions_list: list[list[str]],
+    atomic_propositions: list[str],
     CTLformula: str,
-    agents: List[int],
+    agents: list[int],
     cgs: CGSProtocol,
     model_path: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Search strategies up to complexity k; return the first one that passes pruning."""
     found_solution = False
-    result: Dict[str, Any] = {}
+    result: dict[str, Any] = {}
 
     i = 1
     logger.info("Starting NatATL Memoryless verification (Bound k=%d)", k)

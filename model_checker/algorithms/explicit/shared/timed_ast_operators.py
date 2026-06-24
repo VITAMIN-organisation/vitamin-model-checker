@@ -1,6 +1,7 @@
 """Boolean and leaf operators for TCTL/TOL AST nodes (satisfying_states sets)."""
 
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from model_checker.algorithms.explicit.shared.boolean_semantics import (
     compute_boolean_result,
@@ -72,10 +73,11 @@ def handle_implies(tcgs: "TimedCGS", node) -> None:
     )
 
 
-def handle_clock_expr(node) -> None:
-    node.satisfying_states = node.subject.satisfying_states
+def handle_clock_expr(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
+    guard_states = states_with_time_constraints(tcgs, zone_graph, node.constraints)
+    node.satisfying_states = node.subject.satisfying_states & guard_states
 
 
-def handle_freeze(node) -> None:
-    """j.phi: Sat(j.phi) <- Sat(phi) with formula clock j in ZG(A, phi) (Algorithm 1)."""
+def handle_freeze(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
+    # TOL uses location names only; clock reset does not change the location.
     node.satisfying_states = set(node.operand.satisfying_states)

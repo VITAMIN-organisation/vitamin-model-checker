@@ -3,7 +3,7 @@
 import logging
 import os
 import time
-from typing import Any, Dict
+from typing import Any
 
 from model_checker.algorithms.explicit.ATL.ATL import (
     model_checking as atl_model_checking,
@@ -22,17 +22,17 @@ from model_checker.models.model_factory import (
 )
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cgs import CGSProtocol
-from model_checker.utils.error_handler import create_system_error
+from model_checker.utils.error_handler import create_error_response
 
 logger = logging.getLogger(__name__)
 
 
-def preprocess_and_verify(model_path: str, formula: str) -> Dict[str, Any]:
+def preprocess_and_verify(model_path: str, formula: str) -> dict[str, Any]:
     """Run ATL first; if it passes, run full NatATL memoryless checking."""
     start_time = time.time()
 
     if not os.path.isfile(model_path):
-        return create_system_error(f"Model file not found: {model_path}")
+        return create_error_response("system", f"Model file not found: {model_path}")
 
     atlformula = natatl_to_atl(formula)
     logger.debug("Checking optimistic ATL formula: %s", atlformula)
@@ -49,7 +49,7 @@ def preprocess_and_verify(model_path: str, formula: str) -> Dict[str, Any]:
         atl_result = atl_model_checking(atlformula, model_path)
         logger.debug("ATL Pre-check result: %s", atl_result)
 
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
 
         initial_state_res = atl_result.get("initial_state", "")
 
@@ -69,10 +69,10 @@ def preprocess_and_verify(model_path: str, formula: str) -> Dict[str, Any]:
 
     except Exception as e:
         logger.exception("Error during pre-filtered verification")
-        return create_system_error(f"Error: {str(e)}")
+        return create_error_response("system", f"Error: {str(e)}")
 
 
-def process_data(cgs: CGSProtocol, model_path: str, formula: str) -> Dict[str, Any]:
+def process_data(cgs: CGSProtocol, model_path: str, formula: str) -> dict[str, Any]:
     """Run NatATL memoryless strategy search on a loaded model."""
     # Pass the existing CGS object to avoid re-reading the model file
     (

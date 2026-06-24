@@ -1,7 +1,7 @@
 """NatATL formula parsing and AST utilities for the memoryless/recall hot path."""
 
 import re
-from typing import Any, List, Set, Tuple
+from typing import Any
 
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
@@ -62,9 +62,9 @@ def _iter_coalition_modals(ast: Any):
         yield from _iter_coalition_modals(ast[2])
 
 
-def get_agents_from_ast(ast: Any) -> List[int]:
+def get_agents_from_ast(ast: Any) -> list[int]:
     """Collect sorted agent indices referenced in coalition modalities."""
-    agents: Set[int] = set()
+    agents: set[int] = set()
     for agents_csv, _, _ in _iter_coalition_modals(ast):
         for part in agents_csv.split(","):
             part = part.strip()
@@ -136,7 +136,7 @@ def natatl_ast_to_ctl(ast: Any) -> str:
 
 def analyze_natatl_formula(
     formula: str, n_agent: int
-) -> Tuple[Any, str, List[int], int]:
+) -> tuple[Any, str, list[int], int]:
     """Parse NatATL and return (ast, ctl_formula, agents, k)."""
     ast = parse_natatl_formula(formula, n_agent)
     ctl_formula = natatl_ast_to_ctl(ast)

@@ -121,11 +121,11 @@ All temporal operators share `timed_predecessors` in
 | Operator | Definition |
 |----------|------------|
 | `EF phi` | `lfp Z . Sat(phi) union Pre(Z)` |
-| `AF phi` | `All \\ lfp Z . (All \\ Sat(phi)) union Pre(Z)` |
+| `AF phi` | `All \ gfp Z . (All \ Sat(phi)) intersect Pre(Z)` |
 | `EG phi` | `gfp Z . Sat(phi) intersect Pre(Z)` |
-| `AG phi` | `All \\ lfp Z . (All \\ Sat(phi)) union Pre(Z)` |
+| `AG phi` | `All \ lfp Z . (All \ Sat(phi)) union Pre(Z)` |
 | `E(phi U psi)` | `lfp Z . Sat(psi) union (Sat(phi) intersect Pre(Z))` |
-| `A(phi U psi)` | Dual least fixpoint on complements |
+| `A(phi U psi)` | `All \ lfp Z . !Sat(psi) union (!Sat(phi) intersect !Sat(psi) intersect AX(Z))` where `AX(Z) = All \ Pre(All \ Z)` |
 
 `All` is the set of all `(location, zone)` nodes in the zone graph.
 

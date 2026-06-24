@@ -1,17 +1,11 @@
 import gzip
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 
-def get_knowledge_documents() -> List[Dict[str, Any]]:
-    """
-    Load the pre-compiled knowledge documents from the bundle.
-
-    Returns:
-        List[Dict[str, Any]]: A list of dictionaries with 'content' and 'metadata'.
-        Returns an empty list if the bundle doesn't exist or is corrupted.
-    """
+def get_knowledge_documents() -> list[dict[str, Any]]:
+    """Load documents from ``knowledge_bundle.json.gz``, or ``[]`` if missing."""
     bundle_path = Path(__file__).parent / "knowledge_bundle.json.gz"
     if not bundle_path.exists():
         return []
@@ -30,13 +24,8 @@ def get_knowledge_documents() -> List[Dict[str, Any]]:
         return []
 
 
-def get_bundle_metadata() -> Dict[str, Any]:
-    """
-    Retrieve metadata about the current knowledge bundle.
-
-    Returns:
-        Dict[str, Any]: Metadata including version, git_hash, and document count.
-    """
+def get_bundle_metadata() -> dict[str, Any]:
+    """Bundle version, git hash, and document count (or a status flag)."""
     bundle_path = Path(__file__).parent / "knowledge_bundle.json.gz"
     if not bundle_path.exists():
         return {"status": "missing"}

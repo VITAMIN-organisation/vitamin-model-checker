@@ -1,13 +1,8 @@
-"""
-Strategy initialization for NatATL Recall model checker.
-
-This module handles model loading, validation, and formula parsing for
-recall strategy verification.
-"""
+"""Model loading, validation, and formula parsing for NatATL Recall verification."""
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from model_checker.algorithms.explicit.NatATL.NatATLtoCTL import prepare_natatl_formula
 from model_checker.models.model_factory import (
@@ -22,15 +17,13 @@ from model_checker.parsers.game_structures.cgs import (
 logger = logging.getLogger(__name__)
 
 
-def initialize(
-    model_path: str, formula: str, cgs: Optional[CGSProtocol] = None
-) -> Tuple[
+def initialize(model_path: str, formula: str, cgs: CGSProtocol | None = None) -> tuple[
     int,
-    Dict[str, List[str]],
-    List[List[str]],
-    List[str],
+    dict[str, list[str]],
+    list[list[str]],
+    list[str],
     str,
-    List[int],
+    list[int],
     str,
     Any,
 ]:

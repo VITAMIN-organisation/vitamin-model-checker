@@ -1,6 +1,7 @@
 """Bit-vector state sets for large models."""
 
-from typing import Iterable, Iterator, Optional, Set, Union
+from collections.abc import Iterable, Iterator
+from typing import Union
 
 import numpy as np
 
@@ -14,9 +15,7 @@ class BitVectorStateSet:
 
     __slots__ = ("_bits", "_num_states")
 
-    def __init__(
-        self, num_states: int, initial_indices: Optional[Iterable[int]] = None
-    ):
+    def __init__(self, num_states: int, initial_indices: Iterable[int] | None = None):
         self._num_states = num_states
         self._bits = np.zeros(num_states, dtype=np.uint8)
         if initial_indices is not None:
@@ -79,7 +78,7 @@ class BitVectorStateSet:
     def clear(self) -> None:
         self._bits.fill(0)
 
-    def to_set(self) -> Set[int]:
+    def to_set(self) -> set[int]:
         return set(np.nonzero(self._bits)[0])
 
     def update(self, other: Union["BitVectorStateSet", Iterable[int]]) -> None:

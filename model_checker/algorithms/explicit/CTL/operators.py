@@ -1,11 +1,6 @@
-"""
-CTL operator handlers for formula tree evaluation.
+"""Handler functions for all CTL operators (unary: NOT/EX/AX/EF/AF/EG/AG/AR; binary: OR/AND/IMPLIES/EU/AU/ER)."""
 
-This module contains handler functions for all CTL operators, both unary
-(NOT, EX, AX, EF, AF, EG, AG, AR) and binary (OR, AND, IMPLIES, EU, AU, ER).
-"""
-
-from typing import TYPE_CHECKING, Any, Set
+from typing import TYPE_CHECKING, Any
 
 from model_checker.algorithms.explicit.CTL.fixpoint import (
     greatest_fixpoint,
@@ -67,14 +62,14 @@ def handle_ef(cgs: "CGS", node: Any) -> None:
         cgs.get_reverse_index() if hasattr(cgs, "get_reverse_index") else None
     )
 
-    def update(T: Set[str]) -> Set[str]:
+    def update(T: set[str]) -> set[str]:
         return T.union(pre_image_exist(edges, T, reverse_index=reverse_index))
 
     result = least_fixpoint(target, update)
     node.value = str(tuple(sorted({str(s) for s in result})))
 
 
-def _compute_af(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
+def _compute_af(cgs: "CGS", node: Any, cached_edges=None) -> set[str]:
     """Compute AF phi = all_states - EG not_phi. Returns the state set."""
     all_states = cgs.all_states_set
     not_phi = all_states - parse_state_set_literal(node.left.value)
@@ -83,7 +78,7 @@ def _compute_af(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
         cgs.get_reverse_index() if hasattr(cgs, "get_reverse_index") else None
     )
 
-    def update(T: Set[str]) -> Set[str]:
+    def update(T: set[str]) -> set[str]:
         return not_phi.intersection(
             pre_image_exist(edges, T, reverse_index=reverse_index)
         )
@@ -97,7 +92,7 @@ def handle_af(cgs: "CGS", node: Any) -> None:
     node.value = str(tuple(sorted({str(s) for s in _compute_af(cgs, node)})))
 
 
-def _compute_eg(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
+def _compute_eg(cgs: "CGS", node: Any, cached_edges=None) -> set[str]:
     """Compute EG phi. Returns the state set."""
     all_states = cgs.all_states_set
     target = parse_state_set_literal(node.left.value)
@@ -106,7 +101,7 @@ def _compute_eg(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
         cgs.get_reverse_index() if hasattr(cgs, "get_reverse_index") else None
     )
 
-    def update(T: Set[str]) -> Set[str]:
+    def update(T: set[str]) -> set[str]:
         return target.intersection(
             pre_image_exist(edges, T, reverse_index=reverse_index)
         )
@@ -125,7 +120,7 @@ def handle_ag(cgs: "CGS", node: Any) -> None:
     not_phi = all_states - parse_state_set_literal(node.left.value)
     edges = cgs.get_edges()
 
-    def update(T: Set[str]) -> Set[str]:
+    def update(T: set[str]) -> set[str]:
         return T.union(pre_image_exist(edges, T))
 
     ef_not_phi = least_fixpoint(not_phi, update)
@@ -164,7 +159,7 @@ def handle_eu(cgs: "CGS", node: Any) -> None:
         cgs.get_reverse_index() if hasattr(cgs, "get_reverse_index") else None
     )
 
-    def update(T: Set[str]) -> Set[str]:
+    def update(T: set[str]) -> set[str]:
         return T.union(
             phi_states.intersection(
                 pre_image_exist(edges, T, reverse_index=reverse_index)
@@ -175,14 +170,14 @@ def handle_eu(cgs: "CGS", node: Any) -> None:
     node.value = str(tuple(sorted({str(s) for s in result})))
 
 
-def _compute_au(cgs: "CGS", node: Any, cached_edges=None) -> Set[str]:
+def _compute_au(cgs: "CGS", node: Any, cached_edges=None) -> set[str]:
     """Compute A(phi U psi) = mu Y. psi or (phi and AX Y). Returns the state set."""
     phi_states = {str(s) for s in parse_state_set_literal(node.left.value)}
     psi_states = parse_state_set_literal(node.right.value)
     all_states = cgs.all_states_set
     edges = cached_edges if cached_edges is not None else cgs.get_edges()
 
-    def update(T: Set[str]) -> Set[str]:
+    def update(T: set[str]) -> set[str]:
         return T.union(phi_states.intersection(pre_image_all(edges, all_states, T)))
 
     return least_fixpoint(psi_states, update)
@@ -200,7 +195,7 @@ def handle_er(cgs: "CGS", node: Any) -> None:
     not_psi = all_states - parse_state_set_literal(node.right.value)
     edges = cgs.get_edges()
 
-    def update(T: Set[str]) -> Set[str]:
+    def update(T: set[str]) -> set[str]:
         return T.union(
             not_phi.intersection(not_psi).intersection(
                 pre_image_all(edges, all_states, T)

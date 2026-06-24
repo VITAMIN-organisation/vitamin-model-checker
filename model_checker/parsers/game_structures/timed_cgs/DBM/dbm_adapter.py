@@ -1,12 +1,11 @@
 import re
-from typing import Union
 
 from ..timed_cgs import TimedCGS
 from .DBM import DBM
 
 # Bridges timedCGS models and DBM zone operations.
 
-FormulaInput = Union[str, tuple[str, ...]]
+FormulaInput = str | tuple[str, ...]
 _AND_OPS = frozenset({"&", "and"})
 _OR_OPS = frozenset({"|", "or"})
 _COMBINATORS = _AND_OPS | _OR_OPS
@@ -214,7 +213,7 @@ def get_max_clock_constraints(tcgs: TimedCGS) -> list[int]:
     clocks_dict = tcgs.clocks_dict
 
     for invariants in tcgs.invariants_arr:
-        for clock, bound in zip(invariants[::2], invariants[1::2]):
+        for clock, bound in zip(invariants[::2], invariants[1::2], strict=True):
             if clock in clocks_dict:
                 idx = clocks_dict[clock]
                 max_constants[idx] = max(max_constants[idx], int(bound))

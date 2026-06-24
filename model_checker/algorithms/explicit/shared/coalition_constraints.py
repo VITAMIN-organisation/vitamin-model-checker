@@ -1,9 +1,7 @@
 """Parsing helpers for coalition-constrained operators."""
 
-from typing import List, Tuple, Union
 
-
-def parse_coalition_constraint(formula_node_value: str) -> Tuple[str, str]:
+def parse_coalition_constraint(formula_node_value: str) -> tuple[str, str]:
     """Parse ``<coalition><constraint>...`` into raw coalition and constraint text."""
     raw = formula_node_value.strip()
     if not raw.startswith("<"):
@@ -32,10 +30,10 @@ def parse_coalition_constraint(formula_node_value: str) -> Tuple[str, str]:
     return parts[0], constraint
 
 
-def parse_coalition_and_bound_vector(formula_node_value: str) -> Tuple[str, List[int]]:
+def parse_coalition_and_bound_vector(formula_node_value: str) -> tuple[str, list[int]]:
     """Parse ``<J><b1,b2,...>`` into coalition and integer vector."""
     coalition, constraint = parse_coalition_constraint(formula_node_value)
-    bounds: List[int] = []
+    bounds: list[int] = []
     for token in constraint.split(","):
         stripped = token.strip()
         if not stripped:
@@ -54,7 +52,7 @@ def parse_coalition_and_bound_vector(formula_node_value: str) -> Tuple[str, List
 
 def parse_coalition_and_scalar_constraint(
     formula_node_value: str,
-) -> Tuple[str, Union[int, float]]:
+) -> tuple[str, int | float]:
     """Parse ``<J><n>`` into coalition and scalar numeric constraint."""
     coalition, constraint = parse_coalition_constraint(formula_node_value)
     last_error = None

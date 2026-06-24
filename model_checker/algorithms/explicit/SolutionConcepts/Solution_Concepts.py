@@ -4,7 +4,6 @@ Verifies Nash Equilibrium properties by checking for profitable unilateral devia
 """
 
 import logging
-from typing import Dict, List, Tuple
 
 from model_checker.algorithms.explicit.LTL.pruning import pruning
 from model_checker.algorithms.explicit.LTL.strategies import (
@@ -18,12 +17,12 @@ logger = logging.getLogger(__name__)
 def is_not_nash(
     model: str,
     cgs: CGSProtocol,
-    agents: List[str],
+    agents: list[str],
     ctl_formula: str,
-    current_strategy: List[Tuple[str, str]],
+    current_strategy: list[tuple[str, str]],
     bound: int,
-    agent_actions: Dict[str, List[str]],
-    atomic_propositions: List[str],
+    agent_actions: dict[str, list[str]],
+    atomic_propositions: list[str],
 ) -> bool:
     """Return True if some agent has a profitable unilateral deviation (not Nash)."""
     for agent_index, agent in enumerate(agents):
@@ -61,12 +60,12 @@ def is_not_nash(
 
 def exists_nash(
     cgs: CGSProtocol,
-    agents: List[str],
+    agents: list[str],
     ctl_formula: str,
-    current_strategy: List[Tuple[str, str]],
+    current_strategy: list[tuple[str, str]],
     bound: int,
-    agent_actions: Dict[str, List[str]],
-    atomic_propositions: List[str],
+    agent_actions: dict[str, list[str]],
+    atomic_propositions: list[str],
 ) -> bool:
     """Checks if the strategy profile IS a Nash Equilibrium.
 

@@ -1,10 +1,9 @@
 """Parse literal values embedded in formula trees and checker results."""
 
 import ast
-from typing import List, Optional, Set, Tuple, Union
 
 
-def parse_state_set_literal(value: Optional[Union[str, Set[str]]]) -> Set[str]:
+def parse_state_set_literal(value: str | set[str] | None) -> set[str]:
     """Parse a state set from a set, tuple string, or tree node value."""
     if value is None or value == "":
         return set()
@@ -25,14 +24,14 @@ def parse_state_set_literal(value: Optional[Union[str, Set[str]]]) -> Set[str]:
     return set()
 
 
-def parse_tuple_list_literal(value: str) -> List[Tuple[str, float]]:
+def parse_tuple_list_literal(value: str) -> list[tuple[str, float]]:
     """Parse a list of (state, value) pairs from a string; return [] on failure."""
     if value in ("[]", None, ""):
         return []
     try:
         parsed = ast.literal_eval(value)
         if isinstance(parsed, (list, tuple)):
-            result: List[Tuple[str, float]] = []
+            result: list[tuple[str, float]] = []
             for item in parsed:
                 if isinstance(item, (list, tuple)) and len(item) == 2:
                     state, val = item

@@ -1,7 +1,7 @@
 """Model checker API: correctness (ATL, CTL, NatATL_Recall, NatSL variants), error-path regression for other logics."""
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Dict, Tuple
 
 import pytest
 
@@ -25,7 +25,7 @@ from model_checker.tests.helpers.model_helpers import (
     extract_states_from_result,
 )
 
-LogicConfig = Dict[str, Tuple[Callable[[str, str], Dict[str, str]], Tuple[str, ...]]]
+LogicConfig = dict[str, tuple[Callable[[str, str], dict[str, str]], tuple[str, ...]]]
 
 
 LOGIC_CONFIG: LogicConfig = {

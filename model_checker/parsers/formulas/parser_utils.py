@@ -4,7 +4,8 @@ Coalition checks, lexer token checks, and pre-parse validation live here.
 """
 
 import re
-from typing import Any, Optional, Sequence, Set
+from collections.abc import Sequence
+from typing import Any
 
 from model_checker.parsers.syntax_patterns import (
     AGENT_LIST,
@@ -39,7 +40,7 @@ def validate_proposition_identifier(
     name: str,
     *,
     reserved_words: frozenset[str] = FORMULA_RESERVED_WORDS,
-) -> tuple[bool, Optional[str]]:
+) -> tuple[bool, str | None]:
     """Return (True, None) when name is a valid atomic proposition identifier.
 
     Applies the shared model/formula alphabet and rejects reserved keywords.
@@ -57,7 +58,7 @@ def validate_proposition_identifier(
     return True, None
 
 
-def validate_natsl_temporal_atom(atom: str) -> tuple[bool, Optional[str]]:
+def validate_natsl_temporal_atom(atom: str) -> tuple[bool, str | None]:
     """Validate the proposition after F/!F in a NatSL formula."""
     valid, err = validate_proposition_identifier(atom)
     if not valid:
@@ -70,7 +71,7 @@ def validate_natsl_temporal_atom(atom: str) -> tuple[bool, Optional[str]]:
     return True, None
 
 
-def natsl_temporal_atom_from_parsed_formula(parsed_formula) -> Optional[str]:
+def natsl_temporal_atom_from_parsed_formula(parsed_formula) -> str | None:
     """Extract the temporal proposition from a parsed NatSL AST tuple."""
     if not isinstance(parsed_formula, tuple) or len(parsed_formula) != 3:
         return None
@@ -86,7 +87,7 @@ def natsl_temporal_atom_from_parsed_formula(parsed_formula) -> Optional[str]:
 
 def validate_release_weak_rejected(
     formula: str, logic_name: str
-) -> tuple[bool, Optional[str]]:
+) -> tuple[bool, str | None]:
     """Reject Release (R) and Weak Until (W) when the logic solver does not evaluate them."""
     if re.search(
         r"(?:<\d+(?:,\d+)*>)+\s*(?:[RW]\b|release\b|weak\b)",
@@ -109,7 +110,7 @@ def validate_release_weak_rejected(
     return True, None
 
 
-def validate_ctl_path_quantifiers(formula: str) -> tuple[bool, Optional[str]]:
+def validate_ctl_path_quantifiers(formula: str) -> tuple[bool, str | None]:
     """Reject CTL formulas whose temporal operators are not path-quantified.
 
     Uses token-boundary checks so proposition names such as Goal or Flux are not
@@ -282,14 +283,14 @@ def validate_natatl_coalition(
     return coalition_values, k_value
 
 
-def validate_formula_basic(formula) -> tuple[bool, Optional[str]]:
+def validate_formula_basic(formula) -> tuple[bool, str | None]:
     """Reject empty or whitespace-only formulas."""
     if not formula or not formula.strip():
         return False, "Formula cannot be empty"
     return True, None
 
 
-def validate_formula_unicode(formula) -> tuple[bool, Optional[str]]:
+def validate_formula_unicode(formula) -> tuple[bool, str | None]:
     """Reject non-ASCII characters (formulas must be plain ASCII)."""
     for idx, c in enumerate(formula):
         if ord(c) > 127:
@@ -302,7 +303,7 @@ def validate_formula_unicode(formula) -> tuple[bool, Optional[str]]:
 
 def validate_formula_special_chars(
     formula, allowed_operators=None, allow_hash_at=False
-) -> tuple[bool, Optional[str]]:
+) -> tuple[bool, str | None]:
     """Reject characters that are not letters, digits, whitespace, or allowed operators."""
     if allowed_operators is None:
         allowed_operators = set("<>(),!&|->")
@@ -343,9 +344,9 @@ def run_common_prechecks(
     allow_hash_at: bool = False,
     coalition_required: bool = True,
     allow_negative_agents: bool = False,
-    allowed_operators: Optional[Set[str]] = None,
+    allowed_operators: set[str] | None = None,
     extra_invalid_regexes: Sequence[str] = (),
-) -> tuple[bool, Optional[str]]:
+) -> tuple[bool, str | None]:
     """Run the standard checks before PLY parsing.
 
     Returns (True, None) if the formula passes, else (False, error_message).

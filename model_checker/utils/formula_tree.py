@@ -1,6 +1,7 @@
 """Binary tree nodes for parsed logic formulas."""
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 
 class FormulaTreeNode:
@@ -8,11 +9,11 @@ class FormulaTreeNode:
 
     def __init__(self, value: Any) -> None:
         self.value = value
-        self.left: Optional[FormulaTreeNode] = None
-        self.right: Optional[FormulaTreeNode] = None
+        self.left: FormulaTreeNode | None = None
+        self.right: FormulaTreeNode | None = None
 
 
-def build_formula_tree(tpl: Any, atom_resolver: Callable[[Any], Optional[str]]):
+def build_formula_tree(tpl: Any, atom_resolver: Callable[[Any], str | None]):
     """Build a formula tree from a parsed tuple; atom_resolver fills leaf values."""
     if isinstance(tpl, tuple):
         root = FormulaTreeNode(tpl[0])

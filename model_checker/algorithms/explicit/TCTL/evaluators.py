@@ -1,6 +1,7 @@
 """TCTL region labelling (rsat) on the zone graph."""
 
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from model_checker.parsers.game_structures.timed_cgs.formula_clocks import (
     collect_formula_clocks,

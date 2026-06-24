@@ -1,0 +1,30 @@
+# MODEL: Two-state timedCGS for TCTL AU vs EU regression
+#
+# PURPOSE: s0 can self-loop or move to s1; s1 self-loops only; p holds at s1.
+#          E[!p U p] = {s0, s1}  (s0 has path s0->s1 reaching p)
+#          A[!p U p] = {s1}      (s0 can loop forever without reaching p)
+#
+# LOGIC: TCTL
+
+Transition
+* a
+0 *
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+0
+1
+Number_of_agents
+1
+Clocks
+x
+Clock_constraints
+x<=1 x<=1
+x<=1 x<=1
+Invariants
+x<=2
+x<=2

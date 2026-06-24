@@ -1,9 +1,4 @@
-"""
-CapATL operator handlers for formula tree evaluation.
-
-This module contains handler functions for all CapATL operators, both unary
-(NOT, NEXT, EVENTUALLY, GLOBALLY) and binary (AND, OR, UNTIL).
-"""
+"""Handler functions for all CapATL operators (unary: NOT/NEXT/EVENTUALLY/GLOBALLY; binary: AND/OR/UNTIL)."""
 
 from model_checker.algorithms.explicit.CapATL.preimage import pre
 from model_checker.algorithms.explicit.CapATL.utils import (

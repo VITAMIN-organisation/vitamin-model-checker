@@ -2,7 +2,6 @@
 
 import logging
 import os
-from typing import Dict, List, Optional, Tuple
 
 from model_checker.algorithms.explicit.NatATL.NatATLtoCTL import prepare_natatl_formula
 from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
@@ -11,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 def initialize(
-    model_path: str, formula: str, cgs: Optional[CGS] = None
-) -> Tuple[int, Dict[str, List[str]], List[List[str]], List[str], str, List[int], CGS]:
+    model_path: str, formula: str, cgs: CGS | None = None
+) -> tuple[int, dict[str, list[str]], list[list[str]], list[str], str, list[int], CGS]:
     """Load the model, parse NatATL, and return k, actions, CTL formula, and agents."""
     filename = os.path.abspath(model_path)
     if not os.path.isfile(filename):

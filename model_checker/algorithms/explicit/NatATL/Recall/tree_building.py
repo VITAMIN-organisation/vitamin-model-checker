@@ -1,12 +1,4 @@
-"""
-Tree building utilities for NatATL Recall model checker.
-
-This module provides functions for constructing execution trees from CGS models,
-converting pruned trees back to transition matrices, and building a CGS instance
-from tree data for in-memory CTL verification.
-"""
-
-from typing import Dict, List
+"""Build recall execution trees and flatten pruned trees for CTL."""
 
 import numpy as np
 
@@ -14,9 +6,9 @@ from model_checker.algorithms.explicit.NatATL.Recall.tree_structure import Node
 from model_checker.parsers.game_structures.cgs import CGS
 
 
-def build_tree_from_CGS(cgs: CGS, model_states: List[str], height: int) -> Node:
+def build_tree_from_CGS(cgs: CGS, model_states: list[str], height: int) -> Node:
     """Build execution tree from CGS transition matrix."""
-    nodes: Dict[str, Node] = {}
+    nodes: dict[str, Node] = {}
 
     def add_children(node: Node, current_level: int) -> None:
         if current_level >= height:
@@ -57,24 +49,10 @@ def build_tree_from_CGS(cgs: CGS, model_states: List[str], height: int) -> Node:
 
 def tree_to_initial_CGS(
     root: Node,
-    states: List[str],
+    states: list[str],
     max_depth: int,
-) -> List[List[str]]:
-    """
-    Convert pruned tree back to transition matrix for CTL verification.
-
-    After pruning, the tree represents the restricted model. This function
-    converts it back to a transition matrix format that CTL model checking
-    can process.
-
-    Args:
-        root: Root node of the pruned tree
-        states: List of state names in the tree
-        max_depth: Maximum traversal depth
-
-    Returns:
-        Transition matrix as list of lists
-    """
+) -> list[list[str]]:
+    """Pruned tree to transition matrix (for CTL on the restricted model)."""
     state_index = {state: idx for idx, state in enumerate(states)}
 
     transition_matrix = [
@@ -85,7 +63,7 @@ def tree_to_initial_CGS(
         if depth > max_depth or not node:
             return
         state_idx = state_index[node.state]
-        for child, actions in zip(node.children, node.actions):
+        for child, actions in zip(node.children, node.actions, strict=False):
             child_idx = state_index[child.state]
             action_value = str(actions)
             existing_value = transition_matrix[state_idx][child_idx]
@@ -104,21 +82,10 @@ def tree_to_initial_CGS(
 def build_cgs_from_tree(
     cgs: CGS,
     tree: Node,
-    tree_states: List[str],
-    unwinded_CGS: List[List],
+    tree_states: list[str],
+    unwinded_CGS: list[list],
 ) -> CGS:
-    """
-    Build a CGS instance from pruned tree data for in-memory CTL verification.
-
-    Args:
-        cgs: Original CGS (provides agents, propositions, actions)
-        tree: Root of pruned tree (after rename_nodes)
-        tree_states: State names in tree (same order as get_states_from_tree)
-        unwinded_CGS: Transition matrix from tree_to_initial_CGS
-
-    Returns:
-        New CGS instance with pruned graph, states, and labelling
-    """
+    """CGS copy with graph and labelling taken from the pruned tree."""
     pruned = CGS()
     pruned.graph = [row[:] for row in unwinded_CGS]
     pruned.states = np.array(tree_states)

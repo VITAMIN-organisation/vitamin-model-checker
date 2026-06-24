@@ -1,5 +1,5 @@
 import re
-from typing import Match
+from re import Match
 
 
 def natatl_to_atl(natatl_formula: str) -> str:

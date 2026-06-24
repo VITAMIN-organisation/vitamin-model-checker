@@ -4,7 +4,7 @@ OL operator handlers for formula tree evaluation.
 Unary: NOT, <Jn>X, <Jn>F, <Jn>G. Binary: OR, AND, IMPLIES, <Jn>U, <Jn>R, <Jn>W.
 """
 
-from typing import Callable, Set
+from collections.abc import Callable
 
 from model_checker.algorithms.explicit.OL.preimage import (
     states_globally_in,
@@ -58,7 +58,7 @@ def handle_demonic_eventually(cgs, node):
 def handle_demonic_ternary(
     cgs,
     node,
-    evaluate: Callable[..., Set[str]],
+    evaluate: Callable[..., set[str]],
 ):
     """Handle <Jn>U, <Jn>R, and <Jn>W from a shared phi/psi/bound evaluation."""
     bound = extract_bound(node.value)

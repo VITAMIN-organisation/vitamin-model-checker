@@ -1,7 +1,7 @@
 """timedCGS file parsing."""
 
 import re
-from typing import Any, List
+from typing import Any
 
 from model_checker.parsers.game_structures.cost_cgs import cost_cgs_parser
 
@@ -14,13 +14,13 @@ TIMED_SECTION_HEADERS = frozenset(
 )
 
 
-def parse_base_sections(lines: List[str], instance: Any) -> None:
+def parse_base_sections(lines: list[str], instance: Any) -> None:
     cost_cgs_parser.parse_cost_sections(lines, instance)
     cost_cgs_parser.parse_common_sections(lines, instance)
     cost_cgs_parser.parse_transitions(lines, instance)
 
 
-def parse_timed_sections(lines: List[str], instance: Any) -> None:
+def parse_timed_sections(lines: list[str], instance: Any) -> None:
     state_count = len(instance.states)
     instance.clock_constraint_struct = [[""] * state_count for _ in range(state_count)]
     instance.invariants_arr = [[] for _ in range(state_count)]

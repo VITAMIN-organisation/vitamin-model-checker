@@ -1,15 +1,15 @@
 """Pre-image computation for CTL (EX, AX, Release) and predecessor tracking for traces."""
 
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
 
 def _build_reverse_index(
-    transitions: List[Tuple[Any, Any]],
-) -> Dict[str, Set[str]]:
+    transitions: list[tuple[Any, Any]],
+) -> dict[str, set[str]]:
     """Build reverse index: target -> set of source states."""
-    reverse_index: Dict[str, Set[str]] = {}
+    reverse_index: dict[str, set[str]] = {}
     for source, target in transitions:
         target_str = str(target)
         if target_str not in reverse_index:
@@ -19,10 +19,10 @@ def _build_reverse_index(
 
 
 def pre_image_exist(
-    transitions: List[Tuple[Any, Any]],
-    target_states: Set[str],
-    reverse_index: Optional[Dict[str, Set[str]]] = None,
-) -> Set[str]:
+    transitions: list[tuple[Any, Any]],
+    target_states: set[str],
+    reverse_index: dict[str, set[str]] | None = None,
+) -> set[str]:
     """Existential pre-image (EX): states with at least one successor in target_states."""
     target_states = {str(s) for s in target_states}
 
@@ -45,10 +45,10 @@ def pre_image_exist(
 
 
 def pre_image_all(
-    transitions: List[Tuple[Any, Any]],
-    all_states: Set[str],
-    target_states: Set[str],
-) -> Set[str]:
+    transitions: list[tuple[Any, Any]],
+    all_states: set[str],
+    target_states: set[str],
+) -> set[str]:
     """Universal pre-image (AX): states whose successors are all in target_states.
 
     States with no successors are included (vacuous case).
@@ -75,9 +75,9 @@ def pre_image_all(
 
 def pre_release_universal(
     cgs: CGSProtocol,
-    phi_states: Set[str],
-    psi_states: Set[str],
-) -> Set[str]:
+    phi_states: set[str],
+    psi_states: set[str],
+) -> set[str]:
     """Compute A(phi R psi) via greatest fixpoint (psi and (phi or AX Z))."""
     all_states = cgs.all_states_set
     phi_states = {str(s) for s in phi_states}
@@ -109,14 +109,14 @@ def pre_release_universal(
 
 
 def pre_image_exist_with_trace(
-    transitions: List[Tuple[Any, Any]],
-    target_states: Set[str],
-) -> Tuple[Set[str], Dict[str, str]]:
+    transitions: list[tuple[Any, Any]],
+    target_states: set[str],
+) -> tuple[set[str], dict[str, str]]:
     """Existential pre-image plus a predecessor-to-successor map for trace building."""
     target_states = {str(s) for s in target_states}
     reverse_index = _build_reverse_index(transitions)
     predecessors = set()
-    predecessors_map: Dict[str, str] = {}
+    predecessors_map: dict[str, str] = {}
     for state in target_states:
         state_str = str(state)
         if state_str in reverse_index:

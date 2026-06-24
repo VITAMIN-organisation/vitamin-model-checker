@@ -1,19 +1,17 @@
 """
-NatSL (Strategy Logic) model checker - Alternated semantics.
+NatSL model checker - Alternated semantics.
 
-NatSL extends NatATL with both existential and universal strategy quantifiers.
-This module implements the Alternated semantics where existential and universal
-strategies alternate at each verification step.
-
-The verification process:
-1. Parse NatSL formula into separate existential and universal NatATL formulas
-2. Call existential NatATL to search for winning strategies
-3. Existential strategies are validated against all universal counter-strategies
+NatSL extends NatATL with existential and universal strategy quantifiers.
+In Alternated semantics, existential and universal strategies alternate at
+each verification step:
+1. Parse the NatSL formula into existential and universal NatATL sub-formulas
+2. Search for existential winning strategies via NatATL
+3. Validate each candidate against all universal counter-strategies
 """
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 from model_checker.algorithms.explicit.NatSL.shared_recall import (
     existential_natatl_alternated as existentialNatATL,
@@ -29,16 +27,12 @@ from model_checker.parsers.formulas.NatSL.utils import (
     normalize_formula,
     validate_bindings,
 )
-from model_checker.utils.error_handler import (
-    create_syntax_error,
-    create_system_error,
-    create_validation_error,
-)
+from model_checker.utils.error_handler import create_error_response
 
 logger = logging.getLogger(__name__)
 
 
-def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
+def model_checking(natsl_formula: str, model_path: str) -> dict[str, Any]:
     """
     Execute model checking for NatSL with Alternated semantics.
 
@@ -60,14 +54,14 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
         - "error"/"error_type": If verification failed
     """
     if not natsl_formula or not natsl_formula.strip():
-        return create_validation_error("Formula not entered")
+        return create_error_response("validation", "Formula not entered")
 
     if not model_path:
-        return create_validation_error("Model file not specified")
+        return create_error_response("validation", "Model file not specified")
 
     try:
         start_time = time.time()
-        result: Dict[str, Any] = {}
+        result: dict[str, Any] = {}
 
         logger.info("Starting NatSL verification (Alternated)")
         logger.debug("Formula: %s", natsl_formula)
@@ -75,7 +69,7 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
         try:
             fully_negated, normalized_formula = normalize_formula(natsl_formula)
         except ValueError:
-            return create_syntax_error("Error parsing the formula")
+            return create_error_response("syntax", "Error parsing the formula")
 
         parser = FormulaParserFactory.get_parser_instance("NatSL")
         parsed = parser.parse(normalized_formula)
@@ -83,12 +77,14 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
             error_msg = (
                 parser.errors[0] if parser.errors else "Error parsing the formula"
             )
-            return create_syntax_error(error_msg)
+            return create_error_response("syntax", error_msg)
 
         try:
             validate_bindings(parsed)
         except ValueError as e:
-            return create_syntax_error(f"Formula validation error: {str(e)}")
+            return create_error_response(
+                "syntax", f"Formula validation error: {str(e)}"
+            )
 
         existential_natatl, universal_natatl = convert_parsed_natsl_to_natatl_separated(
             parsed, fully_negated=fully_negated, original_formula=natsl_formula
@@ -118,11 +114,11 @@ def model_checking(natsl_formula: str, model_path: str) -> Dict[str, Any]:
         return result
 
     except FileNotFoundError:
-        return create_system_error(f"Model file not found: {model_path}")
+        return create_error_response("system", f"Model file not found: {model_path}")
     except ValueError:
         raise
     except Exception as e:
         logger.exception("Unexpected error during NatSL Alternated verification")
-        return create_system_error(
-            f"Error during NatSL Alternated verification: {str(e)}"
+        return create_error_response(
+            "system", f"Error during NatSL Alternated verification: {str(e)}"
         )

@@ -5,7 +5,7 @@ Creates and manages formula parser instances for temporal logics (CTL, ATL, LTL,
 
 import logging
 from threading import Lock
-from typing import Any, List
+from typing import Any
 
 from model_checker.discovery import (
     discover_logic_resource,
@@ -78,7 +78,7 @@ class FormulaParserFactory:
         )
 
     @classmethod
-    def warmup(cls, parser_names: List[str] = None) -> None:
+    def warmup(cls, parser_names: list[str] = None) -> None:
         """Pre-initialize parsers to generate tables at startup."""
         if parser_names is None:
             # Discover all available parsers via entry points

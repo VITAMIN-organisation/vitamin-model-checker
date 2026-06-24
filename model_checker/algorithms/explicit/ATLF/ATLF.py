@@ -3,10 +3,7 @@ from model_checker.algorithms.explicit.shared import build_resolved_formula_tree
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
-from model_checker.utils.error_handler import (
-    create_semantic_error,
-    create_syntax_error,
-)
+from model_checker.utils.error_handler import create_error_response
 from model_checker.utils.literals import parse_tuple_list_literal
 
 
@@ -39,13 +36,13 @@ def _core_atlf_checking(cgs, formula):
     res_parsing = parser.parse(formula, n_agent=cgs.get_number_of_agents())
     if res_parsing is None:
         error_msg = parser.errors[0] if parser.errors else "Syntax error in formula"
-        return create_syntax_error(error_msg)
+        return create_error_response("syntax", error_msg)
 
     root = build_resolved_formula_tree(
         cgs, res_parsing, atom_resolver=lambda atom: _resolve_atom(cgs, atom)
     )
     if root is None:
-        return create_semantic_error("The atom does not exist")
+        return create_error_response("semantic", "The atom does not exist")
     solve_tree(cgs, root)
     initial_state = cgs.initial_state
     value_initial_state = get_value_initial_state(initial_state, root.value)

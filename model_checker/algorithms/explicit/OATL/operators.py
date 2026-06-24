@@ -1,9 +1,4 @@
-"""
-OATL operator handlers for formula tree evaluation.
-
-This module contains handler functions for all OATL operators, both unary
-(NOT, <Jn>X, <Jn>F, <Jn>G) and binary (OR, AND, IMPLIES, <Jn>U).
-"""
+"""Handler functions for all OATL operators (unary: NOT/<Jn>X/<Jn>F/<Jn>G; binary: OR/AND/IMPLIES/<Jn>U)."""
 
 from model_checker.algorithms.explicit.OATL.preimage import (
     _base_action_cache,

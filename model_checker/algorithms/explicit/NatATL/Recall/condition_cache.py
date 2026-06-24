@@ -5,7 +5,7 @@ When the same (condition, model_path) is evaluated in legit_strategy_check and
 boolean_pruning across strategies, the result is cached. Key: (condition, model_path).
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from model_checker.algorithms.explicit.CTL.CTL import model_checking
 
@@ -13,8 +13,8 @@ from model_checker.algorithms.explicit.CTL.CTL import model_checking
 def ctl_model_checking_cached(
     condition: str,
     model_path: str,
-    preloaded_model: Optional[Any] = None,
-) -> Dict[str, Any]:
+    preloaded_model: Any | None = None,
+) -> dict[str, Any]:
     """
     Run CTL model_checking for a condition with caching.
 

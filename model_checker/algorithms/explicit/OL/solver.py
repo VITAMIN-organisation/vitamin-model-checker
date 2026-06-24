@@ -4,8 +4,6 @@ Formula tree solver for OL model checking.
 Recursively evaluates OL formula trees using bottom-up evaluation.
 """
 
-from typing import Dict
-
 from model_checker.algorithms.explicit.OL.operators import (
     TERNARY_EVALUATORS,
     handle_demonic_eventually,
@@ -69,7 +67,7 @@ def _ol_binary_key(parser_instance, val):
     return None
 
 
-def solve_tree(cgs, node, cache: Dict = None):
+def solve_tree(cgs, node, cache: dict = None):
     """Recursively solve the OL formula tree."""
     if cache is None:
         cache = {}

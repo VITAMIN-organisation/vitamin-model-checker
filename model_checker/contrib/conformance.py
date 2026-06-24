@@ -1,10 +1,10 @@
 """Conformance checks for external logic modules."""
 
 from inspect import signature
-from typing import Any, Dict, Type
+from typing import Any
 
 
-def check_parser_conformance(parser_class: Type[Any]) -> Dict[str, Any]:
+def check_parser_conformance(parser_class: type[Any]) -> dict[str, Any]:
     checks = {
         "has_parse": hasattr(parser_class, "parse"),
         "has_verify": hasattr(parser_class, "verify"),
@@ -16,7 +16,7 @@ def check_parser_conformance(parser_class: Type[Any]) -> Dict[str, Any]:
 
 def check_checker_conformance(
     module: Any, entry_point: str = "model_checking"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     if not hasattr(module, entry_point):
         return {"ok": False, "error": f"Missing checker entry point: {entry_point}"}
 
@@ -34,7 +34,7 @@ def check_checker_conformance(
     }
 
 
-def check_model_compatibility(model_parser: Any) -> Dict[str, Any]:
+def check_model_compatibility(model_parser: Any) -> dict[str, Any]:
     required = (
         "states",
         "initial_state",

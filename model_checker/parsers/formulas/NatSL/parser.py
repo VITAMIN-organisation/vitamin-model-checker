@@ -10,8 +10,6 @@ Behavior:
 - Returns an AST tuple on success; logs syntax issues at debug level.
 """
 
-from typing import Optional
-
 from model_checker.parsers.syntax_patterns import PROPOSITION_TOKEN
 
 from ..parser_utils import (
@@ -156,7 +154,7 @@ class NatSLParser(BaseLogicParser):
             return False
         return True
 
-    def _pre_validation(self, formula) -> tuple[bool, Optional[str]]:
+    def _pre_validation(self, formula) -> tuple[bool, str | None]:
         return run_common_prechecks(
             formula,
             coalition_required=False,

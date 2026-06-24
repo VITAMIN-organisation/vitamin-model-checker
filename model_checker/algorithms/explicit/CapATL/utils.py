@@ -1,9 +1,4 @@
-"""
-Utility functions for CapATL model checker.
-
-This module provides helper functions for state/index management, capacity
-computations, and knowledge set generation.
-"""
+"""State/index management, capacity computation, and knowledge set generation for CapATL."""
 
 import functools
 import logging

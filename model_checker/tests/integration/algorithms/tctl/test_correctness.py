@@ -1,4 +1,4 @@
-"""TCTL model checking on timedCGS (TIGER Ch. 6 rsat semantics)."""
+"""TCTL model checking on timedCGS."""
 
 from pathlib import Path
 
@@ -12,6 +12,18 @@ _MINIMAL = (
     / "fixtures"
     / "timedCGS"
     / "tctl_tol_minimal.txt"
+)
+_AF_REGRESSION = (
+    Path(__file__).resolve().parents[3]
+    / "fixtures"
+    / "timedCGS"
+    / "tctl_af_regression.txt"
+)
+_AU_REGRESSION = (
+    Path(__file__).resolve().parents[3]
+    / "fixtures"
+    / "timedCGS"
+    / "tctl_au_regression.txt"
 )
 
 
@@ -61,6 +73,40 @@ def test_tctl_semantics(formula, expected_locations, initial_ok):
 )
 def test_tctl_clock_guards_and_freeze(formula, expected_locations, initial_ok):
     result = model_checking(formula, str(_MINIMAL))
+    assert _states(result) == expected_locations
+    assert _initial_satisfied(result) is initial_ok
+
+
+@pytest.mark.parametrize(
+    ("formula", "expected_locations", "initial_ok"),
+    [
+        # AF p: s0 is forced to s1 where p holds, so all paths eventually reach p.
+        # AG p: only s1 (s0 lacks p even though it reaches s1 next step).
+        ("AF p", {"s0", "s1"}, True),
+        ("AG p", {"s1"}, False),
+        ("EF p", {"s0", "s1"}, True),
+        ("EG p", {"s1"}, False),
+    ],
+)
+def test_tctl_af_differs_from_ag(formula, expected_locations, initial_ok):
+    result = model_checking(formula, str(_AF_REGRESSION))
+    assert _states(result) == expected_locations
+    assert _initial_satisfied(result) is initial_ok
+
+
+@pytest.mark.parametrize(
+    ("formula", "expected_locations", "initial_ok"),
+    [
+        # A[!p U p]: s0 can self-loop forever, so all-paths guarantee fails at s0.
+        # E[!p U p]: s0 has the path s0->s1 where !p then p, so both states satisfy.
+        ("A (!p) U p", {"s1"}, False),
+        ("E (!p) U p", {"s0", "s1"}, True),
+        ("A ((!p) U p)", {"s1"}, False),
+        ("E ((!p) U p)", {"s0", "s1"}, True),
+    ],
+)
+def test_tctl_au_differs_from_eu(formula, expected_locations, initial_ok):
+    result = model_checking(formula, str(_AU_REGRESSION))
     assert _states(result) == expected_locations
     assert _initial_satisfied(result) is initial_ok
 

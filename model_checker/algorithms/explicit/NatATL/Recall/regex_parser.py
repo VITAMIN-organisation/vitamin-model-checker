@@ -1,12 +1,11 @@
 """
-Regex parser utilities for NatATL Recall.
+Regex vs. boolean classifier utilities for NatATL Recall.
 
-This module provides utilities for distinguishing between regex patterns and
-boolean formulas, and for checking if propositions hold in label rows.
+Distinguishes between regex patterns and boolean formulas, and checks
+whether propositions hold in label rows.
 """
 
 import re
-from typing import List
 
 from model_checker.parsers.game_structures.cgs import CGS
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
@@ -37,7 +36,7 @@ def is_regex_or_boolean_formula(pattern: str) -> str:
     return "Boolean Formula"
 
 
-def check_prop_holds_in_label_row(cgs: CGS, prop: str, prop_matrix: List[int]) -> bool:
+def check_prop_holds_in_label_row(cgs: CGS, prop: str, prop_matrix: list[int]) -> bool:
     """
     Check if a proposition (or compound proposition) holds in a label row.
 

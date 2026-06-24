@@ -4,8 +4,6 @@ Main CGS class for loading and querying CGS model files; heavy work is done
 in cgs_parser, cgs_validation, cgs_actions, and cgs_utils.
 """
 
-from typing import Optional
-
 import numpy as np
 
 from model_checker.parsers.game_structures.cgs import (
@@ -37,7 +35,7 @@ class CGS:
         self.atomic_propositions = np.array([])
         self.matrix_prop = []
         self.initial_state = ""
-        self.number_of_agents: Optional[int] = None
+        self.number_of_agents: int | None = None
         self.agent_labels: list = []
         self.actions = []
         self._all_states_set = None
