@@ -51,11 +51,9 @@ structures include CGS, BCGS, CostCGS, CapCGS, WalletCGS, and timedCGS. See
 
 ## Documentation
 
-- Repository docs: [docs/index.md](docs/index.md)
 - Architecture, file formats, and logic guides live under `docs/`
 - API reference pages are generated with MkDocs (`pip install -e ".[docs]"` then
   `mkdocs serve`)
-- Changelog: [CHANGELOG.md](CHANGELOG.md)
 
 ## Repository role
 
@@ -139,6 +137,6 @@ core package. See `docs/adding_a_new_logic.md` for both workflows.
 
 ## License
 
-Distributed under the SOURCE-AVAILABLE NON-COMMERCIAL LICENSE. See [LICENSE](LICENSE)
-for the full text. Commercial use requires prior written permission from the
+Distributed under the SOURCE-AVAILABLE NON-COMMERCIAL LICENSE. See LICENSE for
+the full text. Commercial use requires prior written permission from the
 copyright holder.
