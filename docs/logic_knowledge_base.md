@@ -719,25 +719,79 @@ model-checking algorithm.
 ---
 
 <a id="iatl---intuitionistic-atl"></a>
-## IATL
+## IATL - Intuitionistic ATL
 
-Coalition logic with intuitionistic existential and universal coalitions.
+### Theoretical Background
 
-**Coalition syntax:**
-- Existential: `<1,2>` (angle brackets)
-- Universal: `[1,2]` (square brackets)
+IATL (Intuitionistic ATL) extends ATL with **intuitionistic propositional
+connectives** and **dual coalition modalities** over BCGS models (Bozzelli et al.,
+KR 2025). Each model combines:
+
+- **CGS transitions**: joint action profiles (multi-agent moves).
+- **Preorder `P`**: information refinement; intuitionistic truth is monotone along `P`.
+
+**Coalition modalities** (surface syntax `<A>` / `[A]` for paper `<<A>>` / `[[A]]`):
+
+- `<A> phi`: coalition `A` has a strategy enforcing `phi`.
+- `[A] phi`: no strategy of `A` can prevent `phi`.
+
+**Well-behaved BCGS (paper Definition 2):** per-coalition constraints **C1** and **C2**
+(contravariant simulation of coalition decisions along `P`).
+
+**Sugar encodings (KR 2025 fixpoints):**
+
+- `<A> F phi` = `<A>(T U phi)`; `[A] F phi` = `[A](T U phi)`
+- `<A> G phi` = `<A>(bottom R phi)`; `[A] G phi` = `[A](bottom R phi)`
+
+On finitely-branching BCGS, perfect-recall and memoryless semantics coincide
+(Theorem 5); the explicit checker uses memoryless coalition pre-images.
+
+### Current Implementation
+
+**Parser:** `model_checker/parsers/formulas/IATL/parser.py`
+
+**Checker:** `model_checker/algorithms/explicit/IATL/`
+
+**Model loader:** `model_checker/algorithms/explicit/IATL/util/graph.read_file`
+(BCGS: `Transition` + boolean `Preorder` matrix + CGS-style labelling).
+
+**Coalition pre-images (Proposition 2):**
+
+- `Pre_d(A, X)` (`pre_exists`): some `A`-decision; all opponent responses stay in `X`.
+- `Pre_f(A, X)` (`pre_forall`): every `A`-decision; some response lands in `X`.
+
+**Semantic highlights:**
+
+- `phi -> psi`, `! phi`: upward closure (`^up`) along `P`.
+- `<A> X phi`: `Pre_d`; `[A] X phi`: `Pre_f` (no `^up` on `[A] X`).
+- `U` / `R` / `F` / `G`: fixpoints per Theorem 4 (Figure 4).
 
 **Examples:**
 ```text
 <1>G a
 [1,2]F goal
 <1,2>U safe
+<1>X p
+[1]X p
+!p
+p -> q
 ```
 
-**Temporal operators:** `X`, `F`, `G`, `U`, `R`.
+**Model type:** BCGS with separate `Preorder` section. See
+[IATL/algorithm.md](IATL/algorithm.md) for validation, denotations, and pipeline.
 
-**Model type:** BCGS (CGS transitions plus a boolean `Preorder` matrix). Loaded by
-`IATL/util/graph.read_file`.
+### Comparison: Theory vs Implementation
+
+| Aspect | Theory (KR 2025) | Implementation |
+| :--- | :--- | :--- |
+| **Model** | BCGS + monotone valuation | `read_file` + `check_conditions_hold` |
+| **Frame constraints** | C1, C2 per coalition | `_check_well_behaved_c1/c2` |
+| **`->`, `!`** | Intuitionistic (`^up`) | `handle_implies`, `handle_not` |
+| **`[A] X`** | `Pre_f(A, [[phi]])` | `handle_coalition_next_forall` = `Pre_f` |
+| **`<A> X`** | `Pre_d(A, [[phi]])` | `handle_coalition_next_exists` |
+| **`F` / `G`** | `U` / `R` encodings above | Direct fixpoint handlers |
+| **Strategies** | Perfect recall = memoryless (finitely branching) | State-based pre-images |
+| **Complexity** | `O(|G|^2 * |phi|)` PTIME | Explicit set-based checker |
 
 **Deep dive:** [IATL/algorithm.md](IATL/algorithm.md)
 
@@ -877,7 +931,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **COTL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><k>` (cost-bounded) | costCGS |
 | **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
 | **ICTL** | Branching | `EX`, `AX`, `EF`, `AF`, `EG`, `AG`, `EU`, `AU`, `ER`, `AR` | `E`, `A`; `->` / `not` intuitionistic | Birelational matrix |
-| **IATL** | Branching | `<A>X`, `F`, `G`, `U` | `<1>` exist, `[1]` forall | BCGS |
+| **IATL** | Branching | `<A>X`, `<A>F/G/U/R`, `[A]X`, `[A]F/G/U/R` | `<1>` exist, `[1]` forall; `->` / `!` intuitionistic | BCGS + `Preorder` |
 | **TCTL** | Branching | `EF`, `AG`, clock bounds | `A`, `E` + clocks | timedCGS |
 | **TOL** | Linear | `{Jk}X`, `F`, `G`, `U`, `R`, `W` | `{J5}` per-step obstruction | timedCGS |
 

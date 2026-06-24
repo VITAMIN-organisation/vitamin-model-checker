@@ -162,16 +162,22 @@ X^up = { s in S | s^up subseteq X }
 | Formula | Denotation |
 |---------|------------|
 | `<A> X phi` | `Pre_d(A, [[phi]])` |
-| `[A] X phi` | `(Pre_f(A, [[phi]]))^up` |
+| `[A] X phi` | `Pre_f(A, [[phi]])` |
+
+Upward closure (`^up`) applies to intuitionistic connectives only (`->`, `!`), not
+to `[A] X` (KR 2025 Proposition 2, Figure 4).
 
 ### Eventually and globally
 
-| Formula | Denotation | Implementation |
-|---------|------------|----------------|
-| `<A> F phi` | least `mu X. [[phi]] union Pre_d(A, X)` | `least_fixpoint` |
-| `[A] F phi` | least `mu X. [[phi]] union Pre_f(A, X)` | `least_fixpoint` |
-| `<A> G phi` | greatest `nu X. [[phi]] intersect Pre_d(A, X)` | `greatest_fixpoint` |
-| `[A] G phi` | greatest `nu X. [[phi]] intersect Pre_f(A, X)` | `greatest_fixpoint` |
+Surface `F` / `G` abbreviate the paper encodings below. Classical ATL complement
+dualities are **not** used (KR 2025 Proposition 3).
+
+| Formula | Paper encoding | Denotation |
+|---------|----------------|------------|
+| `<A> F phi` | `<A>(T U phi)` | least `mu X. [[phi]] union Pre_d(A, X)` |
+| `[A] F phi` | `[A](T U phi)` | least `mu X. [[phi]] union Pre_f(A, X)` |
+| `<A> G phi` | `<A>(bottom R phi)` | greatest `nu X. [[phi]] intersect Pre_d(A, X)` |
+| `[A] G phi` | `[A](bottom R phi)` | greatest `nu X. [[phi]] intersect Pre_f(A, X)` |
 
 ### Until (least fixpoint)
 
@@ -273,11 +279,6 @@ Parser metadata: `model_type: "CGS"` (BCGS files use the extended `Preorder` sec
 | Path | Coverage |
 |------|----------|
 | `tests/integration/algorithms/iatl/test_smoke.py` | Load, pre-images, operator smoke, `!p` with custom states |
-| `tests/integration/algorithms/iatl/test_correctness.py` | Pinned fixture semantics, `^up`, validation |
+| `tests/integration/algorithms/iatl/test_correctness.py` | Pinned fixture, `Pre_d`/`Pre_f`, `[A]X` = `Pre_f`, `F`/`G` encodings, excluded-middle countermodel, `^up` on `!` |
 | `tests/fixtures/CGS/IATL/iatl_2agents_2states_minimal.txt` | Minimal 2-agent BCGS |
-
-## Background literature
-
-IATL follows the intuitionistic ATL line of work, including coalition pre-images as
-in Bozzelli et al. (KR 2025). This file documents the code path in
-`vitamin-model-checker`, not a particular published axiomatization in full.
+| `tests/fixtures/CGS/IATL/iatl_figure2_proposition1.txt` | IATL allows !<A>X p && !<A>X !p where ATL cannot (undetermined p) |

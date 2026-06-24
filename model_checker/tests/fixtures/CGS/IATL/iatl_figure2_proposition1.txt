@@ -1,0 +1,29 @@
+# MODEL: Three-state BCGS; information grows along preorder s0 <= s1 <= s2.
+# PURPOSE: At s0, both "grand coalition cannot force p next" and "grand coalition
+#          cannot force !p next" hold (!<1,2>X p && !<1,2>X !p).
+#          In classical ATL this pair is unsatisfiable (excluded middle on next-step
+#          ability). In IATL it is satisfiable: at s1, p is undetermined (neither
+#          proved nor refuted along P-refinements). p is true only at the most
+#          informative state s2.
+# LOGIC: IATL
+
+Transition
+II,II 0 0
+0 II,II 0
+0 II,II II,II
+Preorder
+1 1 1
+0 1 1
+0 0 1
+Name_State
+s0 s1 s2
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+0
+0
+1
+Number_of_agents
+2

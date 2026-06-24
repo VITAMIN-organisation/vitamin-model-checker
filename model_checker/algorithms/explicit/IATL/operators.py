@@ -1,7 +1,7 @@
 """Operator handlers for IATL model checking."""
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Set
 
 from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from model_checker.algorithms.explicit.IATL.checker import IATLModelChecker
     from model_checker.utils.formula_tree import FormulaTreeNode
 
+_CoalitionPreimage = Callable[[str, Set[str]], Set[str]]
+
 _COALITION_FROM_NODE = re.compile(r"^([<\[])([\d,]+)([>\]])")
 
 
@@ -21,6 +23,56 @@ def coalition_from_node(node_value: str) -> str:
     if match is None:
         raise ValueError(f"Invalid coalition operator label: {node_value!r}")
     return match.group(2)
+
+
+def _greatest_g_states(
+    checker: "IATLModelChecker",
+    coalition: str,
+    phi_states: Set[str],
+    pre_image: _CoalitionPreimage,
+) -> Set[str]:
+    def update(current: Set[str]) -> Set[str]:
+        return pre_image(coalition, current) & phi_states
+
+    return greatest_fixpoint(checker.states_set.copy(), update)
+
+
+def _least_f_states(
+    checker: "IATLModelChecker",
+    coalition: str,
+    phi_states: Set[str],
+    pre_image: _CoalitionPreimage,
+) -> Set[str]:
+    def update(current: Set[str]) -> Set[str]:
+        return current | pre_image(coalition, current)
+
+    return least_fixpoint(phi_states, update)
+
+
+def _least_until_states(
+    checker: "IATLModelChecker",
+    coalition: str,
+    states1: Set[str],
+    states2: Set[str],
+    pre_image: _CoalitionPreimage,
+) -> Set[str]:
+    def update(accumulated: Set[str]) -> Set[str]:
+        return accumulated | (pre_image(coalition, accumulated) & states1)
+
+    return least_fixpoint(states2, update)
+
+
+def _greatest_release_states(
+    checker: "IATLModelChecker",
+    coalition: str,
+    states1: Set[str],
+    states2: Set[str],
+    pre_image: _CoalitionPreimage,
+) -> Set[str]:
+    def update(current: Set[str]) -> Set[str]:
+        return states2 & (states1 | pre_image(coalition, current))
+
+    return greatest_fixpoint(checker.states_set.copy(), update)
 
 
 def handle_not(checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
@@ -60,8 +112,7 @@ def handle_coalition_next_forall(
 ) -> None:
     coalition = coalition_from_node(node.value)
     states = parse_state_set_literal(node.left.value)
-    pre_forall = checker.pre_forall(coalition, states)
-    node.value = str(checker.states_with_upset_in(pre_forall))
+    node.value = str(checker.pre_forall(coalition, states))
 
 
 def handle_coalition_globally_exists(
@@ -69,11 +120,9 @@ def handle_coalition_globally_exists(
 ) -> None:
     coalition = coalition_from_node(node.value)
     phi_states = parse_state_set_literal(node.left.value)
-
-    def update(current):
-        return checker.pre_exists(coalition, current) & phi_states
-
-    node.value = str(greatest_fixpoint(checker.states_set.copy(), update))
+    node.value = str(
+        _greatest_g_states(checker, coalition, phi_states, checker.pre_exists)
+    )
 
 
 def handle_coalition_globally_forall(
@@ -81,11 +130,9 @@ def handle_coalition_globally_forall(
 ) -> None:
     coalition = coalition_from_node(node.value)
     phi_states = parse_state_set_literal(node.left.value)
-
-    def update(current):
-        return checker.pre_forall(coalition, current) & phi_states
-
-    node.value = str(greatest_fixpoint(checker.states_set.copy(), update))
+    node.value = str(
+        _greatest_g_states(checker, coalition, phi_states, checker.pre_forall)
+    )
 
 
 def handle_coalition_eventually_exists(
@@ -93,11 +140,9 @@ def handle_coalition_eventually_exists(
 ) -> None:
     coalition = coalition_from_node(node.value)
     phi_states = parse_state_set_literal(node.left.value)
-
-    def update(current):
-        return current | checker.pre_exists(coalition, current)
-
-    node.value = str(least_fixpoint(phi_states, update))
+    node.value = str(
+        _least_f_states(checker, coalition, phi_states, checker.pre_exists)
+    )
 
 
 def handle_coalition_eventually_forall(
@@ -105,11 +150,9 @@ def handle_coalition_eventually_forall(
 ) -> None:
     coalition = coalition_from_node(node.value)
     phi_states = parse_state_set_literal(node.left.value)
-
-    def update(current):
-        return current | checker.pre_forall(coalition, current)
-
-    node.value = str(least_fixpoint(phi_states, update))
+    node.value = str(
+        _least_f_states(checker, coalition, phi_states, checker.pre_forall)
+    )
 
 
 def handle_coalition_until_exists(
@@ -118,11 +161,9 @@ def handle_coalition_until_exists(
     coalition = coalition_from_node(node.value)
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-
-    def update(accumulated):
-        return accumulated | (checker.pre_exists(coalition, accumulated) & states1)
-
-    node.value = str(least_fixpoint(states2, update))
+    node.value = str(
+        _least_until_states(checker, coalition, states1, states2, checker.pre_exists)
+    )
 
 
 def handle_coalition_until_forall(
@@ -131,11 +172,9 @@ def handle_coalition_until_forall(
     coalition = coalition_from_node(node.value)
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-
-    def update(accumulated):
-        return accumulated | (checker.pre_forall(coalition, accumulated) & states1)
-
-    node.value = str(least_fixpoint(states2, update))
+    node.value = str(
+        _least_until_states(checker, coalition, states1, states2, checker.pre_forall)
+    )
 
 
 def handle_coalition_release_exists(
@@ -144,11 +183,11 @@ def handle_coalition_release_exists(
     coalition = coalition_from_node(node.value)
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-
-    def update(q1):
-        return states2 & (states1 | checker.pre_exists(coalition, q1))
-
-    node.value = str(greatest_fixpoint(checker.states_set.copy(), update))
+    node.value = str(
+        _greatest_release_states(
+            checker, coalition, states1, states2, checker.pre_exists
+        )
+    )
 
 
 def handle_coalition_release_forall(
@@ -157,8 +196,8 @@ def handle_coalition_release_forall(
     coalition = coalition_from_node(node.value)
     states1 = parse_state_set_literal(node.left.value)
     states2 = parse_state_set_literal(node.right.value)
-
-    def update(q1):
-        return states2 & (states1 | checker.pre_forall(coalition, q1))
-
-    node.value = str(greatest_fixpoint(checker.states_set.copy(), update))
+    node.value = str(
+        _greatest_release_states(
+            checker, coalition, states1, states2, checker.pre_forall
+        )
+    )
