@@ -149,9 +149,3 @@ All temporal operators share `timed_predecessors` in
 | `tests/integration/algorithms/tctl/test_correctness.py` | Temporal ops, guards, FREEZE |
 | `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared timedCGS with TOL |
 | `parsers/game_structures/timed_cgs/tests/test_zone_graph.py` | Zone graph paths and guards |
-
-## Related documentation
-
-- [TOL implementation reference](../TOL/algorithm.md)
-- [File formats](../file_formats.md) (timedCGS sections)
-- [Logic Knowledge Base](../logic_knowledge_base.md#tctl---timed-ctl)

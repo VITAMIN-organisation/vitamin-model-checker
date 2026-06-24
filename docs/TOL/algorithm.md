@@ -170,10 +170,3 @@ Shared timed helpers: `parsers/game_structures/timed_cgs/semantics.py`.
 | `tests/integration/algorithms/tol/test_correctness.py` | Paper `▼` semantics on weighted fixture |
 | `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared zero-cost fixture with TCTL |
 | `tests/fixtures/timedCGS/tol_cost_2states.txt` | Two-state obstruction-cost fixture |
-
-## Related documentation
-
-- [TCTL implementation reference](../TCTL/algorithm.md)
-- [File formats](../file_formats.md)
-- [Logic Knowledge Base](../logic_knowledge_base.md#tol---timed-obstruction-logic)
-- [Semantics decisions](../audits/semantics_decisions.md) (TOL per-step obstruction vs OL)

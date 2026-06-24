@@ -15,6 +15,7 @@ from model_checker.algorithms.explicit.ICTL.util.graph import (
     get_preorder,
     read_file,
 )
+from model_checker.algorithms.explicit.shared.fixpoint_iter import greatest_fixpoint
 from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 from model_checker.utils.literals import parse_state_set_literal
 
@@ -22,13 +23,14 @@ _FIXTURES = Path(__file__).resolve().parent / "fixtures"
 _EXPERIMENT_MODEL = _FIXTURES / "experiment_2x3.txt"
 
 
-def _states_from_result(result):
+def _states_from_checker(checker, formula):
+    result = run_model_checking(formula, checker)
     assert "error" not in result
     return parse_state_set_literal(result["res"].removeprefix("Result: "))
 
 
 def _ax_chain_model_data():
-    """Three-state P-chain where classical Pre_forall differs from ICTL AX."""
+    """Three-state P-chain used for upward-closure propositional checks."""
     graph = np.full((3, 3), "0", dtype=object)
     np.fill_diagonal(graph, "P,R")
     graph[0, 1] = "P,R"
@@ -43,6 +45,47 @@ def _ax_chain_model_data():
         "states_counter": 3,
         "atomic_propositions_counter": 3,
     }
+
+
+def _figure5_countermodel_data():
+    """Figure 5 (EUMAS25b): preorder countermodel for Proposition 3."""
+    graph = np.array(
+        [
+            ["P,R", "P", "P"],
+            ["0", "P,R", "0"],
+            ["R", "0", "P,R"],
+        ],
+        dtype=object,
+    )
+    return {
+        "graph": graph,
+        "states": np.array(["s1", "s2", "s3"]),
+        "atomic_propositions": np.array(["p"]),
+        "matrix_prop": np.array([[0], [0], [1]]),
+        "initial_state": "s1",
+        "states_counter": 3,
+        "atomic_propositions_counter": 1,
+    }
+
+
+def _a_top_until(checker, phi_states):
+    """Paper encoding AF phi = A(T U phi)."""
+    all_states = checker.states_set
+    p: set[str] = set()
+    t = set(phi_states)
+    while t - p:
+        p.update(t)
+        t = pre_image_all(checker.edges, p) & all_states
+    return p
+
+
+def _a_bottom_release(checker, phi_states):
+    """Paper encoding AG phi = A(bottom R phi)."""
+
+    def update(q1):
+        return phi_states & pre_image_all(checker.edges, q1)
+
+    return greatest_fixpoint(checker.states_set, update)
 
 
 class TestPreorderClosure:
@@ -65,30 +108,61 @@ class TestPreorderClosure:
 
 
 class TestUpwardClosureOperators:
-    def test_ax_restricts_classical_pre_forall(self):
+    def test_ax_equals_pre_forall(self):
         checker = ICTLModelChecker(_ax_chain_model_data())
-        negated = checker.states_set - {"s0", "s1"}
-        classical_ax = checker.states_set - pre_image_all(checker.edges, negated)
-        ictl_ax = _states_from_result(run_model_checking("AX e", checker))
+        e_states = {"s0", "s1"}
+        paper_ax = pre_image_all(checker.edges, e_states)
+        ictl_ax = _states_from_checker(checker, "AX e")
 
-        assert classical_ax == {"s0", "s1"}
-        assert ictl_ax == set()
-        assert ictl_ax <= classical_ax
+        assert paper_ax == {"s0", "s1"}
+        assert ictl_ax == paper_ax
 
     def test_implication_uses_upward_closure(self):
         checker = ICTLModelChecker(_ax_chain_model_data())
-        states = _states_from_result(run_model_checking("e -> h", checker))
+        states = _states_from_checker(checker, "e -> h")
         assert states == {"s2"}
+
+
+class TestSugarEncodings:
+    """AF/AG sugar must match paper encodings A(T U phi) and A(bottom R phi)."""
+
+    @pytest.mark.parametrize("atom", ["e", "h"])
+    def test_af_matches_a_top_until_on_fixture(self, atom):
+        data = read_file(str(_EXPERIMENT_MODEL))
+        checker = ICTLModelChecker(data)
+        phi_states = _states_from_checker(checker, atom)
+        assert _states_from_checker(checker, f"AF {atom}") == _a_top_until(
+            checker, phi_states
+        )
+
+    @pytest.mark.parametrize("atom", ["e", "h"])
+    def test_ag_matches_a_bottom_release_on_fixture(self, atom):
+        data = read_file(str(_EXPERIMENT_MODEL))
+        checker = ICTLModelChecker(data)
+        phi_states = _states_from_checker(checker, atom)
+        assert _states_from_checker(checker, f"AG {atom}") == _a_bottom_release(
+            checker, phi_states
+        )
+
+
+class TestPaperCountermodels:
+    def test_figure5_proposition3_next_duality_fails_at_s1(self):
+        checker = ICTLModelChecker(_figure5_countermodel_data())
+        not_ax_p = _states_from_checker(checker, "!AX p")
+        ex_not_p = _states_from_checker(checker, "EX !p")
+
+        assert "s1" in not_ax_p
+        assert "s1" not in ex_not_p
 
 
 class TestReleaseOperators:
     def test_existential_release_on_fixture(self):
-        result = model_checking("E e R h", str(_EXPERIMENT_MODEL))
-        assert _states_from_result(result) == {"s2"}
+        checker = ICTLModelChecker(read_file(str(_EXPERIMENT_MODEL)))
+        assert _states_from_checker(checker, "E e R h") == {"s2"}
 
     def test_universal_release_on_fixture(self):
-        result = model_checking("A e R h", str(_EXPERIMENT_MODEL))
-        assert _states_from_result(result) == set()
+        checker = ICTLModelChecker(read_file(str(_EXPERIMENT_MODEL)))
+        assert _states_from_checker(checker, "A e R h") == set()
 
 
 class TestUntilOperators:
@@ -102,7 +176,11 @@ class TestUntilOperators:
     )
     def test_until_on_fixture(self, formula, expected_states, initial_satisfied):
         result = model_checking(formula, str(_EXPERIMENT_MODEL))
-        assert _states_from_result(result) == expected_states
+        assert "error" not in result
+        assert (
+            parse_state_set_literal(result["res"].removeprefix("Result: "))
+            == expected_states
+        )
         assert result["initial_state"] == f"Initial state s0: {initial_satisfied}"
 
 
@@ -114,16 +192,21 @@ class TestFixtureSemantics:
         [
             ("EX e", {"s0", "s1", "s3"}, True),
             ("EF e", {"s0", "s1", "s2", "s3", "s4", "s5"}, True),
-            ("AG e", {"s1"}, False),
+            ("AG e", set(), False),
             ("!(e -> h)", {"s1", "s4"}, False),
             ("AX e", {"s0", "s3"}, True),
+            ("AX h", {"s4", "s5"}, False),
             ("EG e", {"s1"}, False),
-            ("AF e", {"s0", "s1", "s2", "s3", "s4", "s5"}, True),
+            ("AF e", {"s0", "s1", "s3", "s4", "s5"}, True),
         ],
     )
     def test_formula_result(self, formula, expected_states, initial_satisfied):
         result = model_checking(formula, str(_EXPERIMENT_MODEL))
-        assert _states_from_result(result) == expected_states
+        assert "error" not in result
+        assert (
+            parse_state_set_literal(result["res"].removeprefix("Result: "))
+            == expected_states
+        )
         assert result["initial_state"] == f"Initial state s0: {initial_satisfied}"
 
 
@@ -142,3 +225,10 @@ class TestValidation:
         data = read_file(str(_EXPERIMENT_MODEL))
         assert data["initial_state"] == "s0"
         assert data["states_counter"] == 6
+
+    def test_figure5_countermodel_passes_validation(self):
+        from model_checker.algorithms.explicit.ICTL.util.validation import (
+            check_conditions_hold,
+        )
+
+        check_conditions_hold(_figure5_countermodel_data())

@@ -1,7 +1,7 @@
 # ICTL - Implementation Reference
 
-This document describes how ICTL (Intuitionistic Computation Tree Logic) is defined
-and model-checked in `model_checker/algorithms/explicit/ICTL/`. It is the normative
+This document describes how ICTL (Intuitionistic CTL) is defined and
+model-checked in `model_checker/algorithms/explicit/ICTL/`. It is the normative
 reference for behaviour in this codebase.
 
 ## Overview
@@ -56,7 +56,7 @@ if s <=_P s' and s -R-> t, then exists t' with s' -R-> t' and t <=_P t'
 if s <=_P s' and s' -R-> t', then exists t with s -R-> t and t <=_P t'
 ```
 
-**C3** (additional constraint enforced by this implementation):
+**C3** (additional constraint enforced by this implementation, not in EUMAS25b):
 
 ```text
 if s -P-> y and y -R-> z, then exists u with s -R-> u and u -P-> z
@@ -128,12 +128,12 @@ There are no coalition quantifiers.
 The parser accepts `F` / `eventually` and `G` / `globally` as unary temporal
 operators after `E` or `A`:
 
-| Surface syntax | Parser output | Handler |
-|----------------|---------------|---------|
-| `EF phi` | `EXIST` + `EVENTUALLY` | `handle_ef` |
-| `EG phi` | `EXIST` + `GLOBALLY` | `handle_eg` |
-| `AF phi` | `FORALL` + `EVENTUALLY` | `handle_af` |
-| `AG phi` | `FORALL` + `GLOBALLY` | `handle_ag` |
+| Surface syntax | Paper encoding | Handler |
+|----------------|----------------|---------|
+| `EF phi` | `E(T U phi)` | `handle_ef` |
+| `EG phi` | `E(bottom R phi)` | `handle_eg` |
+| `AF phi` | `A(T U phi)` | `handle_af` |
+| `AG phi` | `A(bottom R phi)` | `handle_ag` |
 
 Sugar is **not** rewritten at parse time to `U` / `R` forms. The solver dispatches
 directly to the dedicated handler for each sugar operator.
@@ -174,9 +174,12 @@ X^up = { s in S | s^up subseteq X }
 | Formula | Denotation |
 |---------|------------|
 | `E X phi` | `Pre_exists([[phi]])` |
-| `A X phi` | `(Pre_forall([[phi]]))^up` |
+| `A X phi` | `Pre_forall([[phi]])` |
 
 `Pre_forall([[phi]])` is computed as `S \\ Pre_exists(S \\ [[phi]])`.
+
+Upward closure (`^up`) applies to intuitionistic connectives only (`->`, `not`), not
+to `AX` (EUMAS25b Proposition 5, Figure 7).
 
 ### Until (least fixpoint)
 
@@ -208,10 +211,11 @@ Implemented in `handle_er` / `handle_ar` via `shared/fixpoint_iter.greatest_fixp
 
 ### Eventually and globally (sugar handlers)
 
-These use dedicated fixpoint loops in `operators.py` rather than calling `handle_eu`
-/ `handle_er` with constant formulas.
+`EF` / `EG` / `AF` / `AG` are surface syntax for the paper encodings above. Classical
+CTL complement dualities (for example `AF phi` as `S \\ EG(~phi)`) are **not** used,
+because they are not valid in ICTL (EUMAS25b Proposition 3).
 
-**`EF phi`** (`handle_ef`) -- least fixpoint reachability along `R`:
+**`EF phi`** (`handle_ef`) -- least fixpoint reachability along `R` (same as `E(T U phi)`):
 
 ```text
 Q := emptyset;  T := [[phi]]
@@ -220,7 +224,7 @@ while T not subseteq Q:
     T := Pre_exists(Q)
 ```
 
-**`EG phi`** (`handle_eg`) -- greatest fixpoint:
+**`EG phi`** (`handle_eg`) -- greatest fixpoint (same as `E(bottom R phi)`):
 
 ```text
 Q := S;  T := [[phi]]
@@ -229,28 +233,22 @@ while Q != T:
     T := Pre_exists(Q) intersect [[phi]]
 ```
 
-**`AF phi`** (`handle_af`) -- complement-based greatest fixpoint on `~[[phi]]`,
-then subtract from `S`:
+**`AF phi`** (`handle_af`) -- least fixpoint (same as `A(T U phi)`):
 
 ```text
-C := S \\ [[phi]]
-Q := S;  T := C
-while Q != T:
-    Q := T
-    T := Pre_forall(Q) intersect C
-result := S \\ Q
-```
-
-**`AG phi`** (`handle_ag`) -- complement-based least fixpoint on `~[[phi]]`,
-then subtract from `S`:
-
-```text
-C := S \\ [[phi]]
-Q := emptyset;  T := C
+Q := emptyset;  T := [[phi]]
 while T not subseteq Q:
     Q := Q union T
     T := Pre_forall(Q)
-result := S \\ Q
+```
+
+**`AG phi`** (`handle_ag`) -- greatest fixpoint (same as `A(bottom R phi)`):
+
+```text
+Q := S;  T := [[phi]]
+while Q != T:
+    Q := T
+    T := Pre_forall(Q) intersect [[phi]]
 ```
 
 ## Model-checking pipeline
@@ -330,14 +328,5 @@ ICTL is not registered under `vitamin.benchmarks`. Parser metadata lists
 | Path | Coverage |
 |------|----------|
 | `tests/integration/algorithms/ictl/test_smoke.py` | Generator validation, basic runs |
-| `tests/integration/algorithms/ictl/test_correctness.py` | Transitive `^up`, `AX`, release, pinned fixture semantics |
+| `tests/integration/algorithms/ictl/test_correctness.py` | `^up`, `AX` = `Pre_forall`, `AF`/`AG` paper encodings, Figure 5 countermodel, fixture semantics |
 | `tests/integration/algorithms/ictl/fixtures/experiment_2x3.txt` | Deterministic 6-state model |
-
-## Background literature
-
-ICTL in this project follows the birelational intuitionistic CTL line of work, e.g.:
-
-- Catta, Malvone, Murano et al., *Reasoning about Intuitionistic Computation Tree Logic* ([arXiv:2310.02355](https://arxiv.org/pdf/2310.02355))
-- *An Intuitionistic Version of Computation Tree Logic* ([EUMAS 2025](https://vadimmalvone.github.io/papers/EUMAS25b.pdf))
-
-Those sources motivate the logic; this file documents what the code actually does.

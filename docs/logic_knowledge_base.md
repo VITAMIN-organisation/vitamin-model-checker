@@ -629,35 +629,90 @@ ATL with wallet-aware coalitions over `WalletCGS` models.
 ---
 
 <a id="ictl---intuitionistic-ctl"></a>
-## ICTL
+## ICTL - Intuitionistic CTL
 
-Intuitionistic branching-time logic over **birelational models**: a preorder `P`
-(information growth) and a serial transition relation `R` (system evolution) on
-the same state set. This is **not** a standard CGS file; models use an `N x N`
-matrix with cell labels `0`, `R`, `P`, `P,R`.
+### Theoretical Background
 
-**Quantifiers:** `E` / `exist`, `A` / `forall` (path quantifiers over `R`-paths).
+ICTL (Intuitionistic CTL) extends CTL with **intuitionistic propositional
+connectives** over **birelational models** (EUMAS 2025, Bozzelli et al.). Each
+model has two relations on the same finite state set:
 
-**Temporal operators:** `X`, `F`, `G`, `U`, `R` (`F`/`G` are parser sugar).
+- **`P` (`<=_P`)**: information preorder; truth is monotone as knowledge grows.
+- **`R`**: serial transition relation; path quantifiers range over infinite `R`-paths.
 
-**Examples:**
+Path formulas (`X`, `U`, `R`) use standard CTL semantics on `R`-paths. Only
+implication and negation are intuitionistic: `phi -> psi` is checked at all
+`P`-refinements of the current state.
+
+**Well-behaved frames (paper):** confluence constraints **C1** and **C2** between
+`P` and `R`. This implementation also enforces **C3** (not in EUMAS25b); see
+[ICTL/algorithm.md](ICTL/algorithm.md).
+
+**Standard syntax (state formulas):**
+- Boolean: `->`, `not`, `/\`, `\/` (implication is primitive; no excluded middle).
+- Path quantifiers: `E`, `A` over `R`-paths.
+- Temporal: `X`, `U`, `R`; surface sugar `F` / `G` after `E` or `A`.
+
+**Sugar encodings (EUMAS25b fixpoints):**
+- `EF phi` = `E(T U phi)`
+- `EG phi` = `E(bottom R phi)`
+- `AF phi` = `A(T U phi)`
+- `AG phi` = `A(bottom R phi)`
+
+Classical CTL complement dualities (for example `AF phi` as `S \\ EG(~phi)`) are
+**not valid** in ICTL and are not used by the checker.
+
+### Current Implementation
+
+**Parser location:** `model_checker/parsers/formulas/ICTL/parser.py`
+
+**Checker location:** `model_checker/algorithms/explicit/ICTL/`
+
+**Model loader:** `model_checker/algorithms/explicit/ICTL/util/graph.read_file` (dedicated
+`N x N` matrix format; not the standard CGS parser). Cell labels: `0`, `R`, `P`,
+`P,R`, `*` on the diagonal.
+
+**Supported syntax:**
+1. **Quantifiers:** `E` / `exist`, `A` / `forall`.
+2. **Temporal:** `X`, `U`, `R`; sugar `F` / `G` (also `eventually`, `globally`, etc.).
+3. **Boolean:** `&&`, `||`, `!` / `not`, `->` / `implies`.
+4. **Propositions:** dedicated lexer pattern so `EX`, `AG`, etc. are not atoms; mixed-case
+   names such as `Goal` are supported. Single uppercase letters (for example `P`) are not
+   valid proposition tokens.
+
+**Semantic highlights (set-based model checking):**
+- `phi -> psi`, `not phi`: upward closure (`^up`) along `P`.
+- `EX phi`: `Pre_exists([[phi]])`; `AX phi`: `Pre_forall([[phi]])` (no `^up` on `AX`).
+- `EU` / `AU` / `ER` / `AR`: least / greatest fixpoints per EUMAS25b Theorem 3.
+- `EF` / `EG` / `AF` / `AG`: direct fixpoint encodings above (not complement tricks).
+
+**Formula examples:**
 ```text
 EX e
 EF e
+AX e
+AF e
 AG (p -> EF q)
 AG Goal
 E p R q
+!(e -> h)
 ```
 
-**Proposition lexer note:** ICTL uses a dedicated proposition pattern so path-operator
-tokens such as `EX` and `AG` are not parsed as atomic names. Mixed-case identifiers
-like `Goal` are supported. Single uppercase letters (for example `P`) are not valid
-proposition tokens; use `p` or a mixed-case name such as `Prop` instead.
-
-**Model type:** birelational matrix (loaded by `ICTL/util/graph.read_file`).
-Metadata entry point lists `CGS` for VMI compatibility; see
-[ICTL Algorithm](ICTL/algorithm.md) for theory, validation (C1/C2/C3), and the
+**Model type:** birelational matrix. VMI metadata lists `CGS` for compatibility; see
+[ICTL/algorithm.md](ICTL/algorithm.md) for validation (C1/C2/C3), denotations, and the
 model-checking algorithm.
+
+### Comparison: Theory vs Implementation
+
+| Aspect | Theory (EUMAS25b) | Implementation |
+| :--- | :--- | :--- |
+| **Model** | Birelational frame + monotone valuation | Matrix loader + `check_conditions_hold` |
+| **Frame constraints** | C1, C2 (well-behaved) | C1, C2, plus **C3** (stricter) |
+| **`->`, `not`** | Intuitionistic (`^up`) | `handle_implies`, `handle_not` with `^up` |
+| **`AX`** | `Pre_forall([[phi]])` | `handle_ax` = `Pre_forall` (no `^up`) |
+| **`AF` / `AG`** | `A(T U phi)` / `A(bottom R phi)` | `handle_af` / `handle_ag` (direct fixpoints) |
+| **`EF` / `EG` / `EU` / `AU` / `ER` / `AR`** | Standard fixpoints on `R` | Same as paper Figure 7 |
+| **Complexity** | `O(|M|^2 * |phi|)` PTIME | Explicit set-based checker |
 
 **Deep dive:** [ICTL/algorithm.md](ICTL/algorithm.md)
 
@@ -821,7 +876,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **CapATL** | Branching | `<A,k>X`, `F`, `G`, `U`, `Ki`, `i is p` | `<{1,2}, k>` | capCGS |
 | **COTL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><k>` (cost-bounded) | costCGS |
 | **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
-| **ICTL** | Branching | `EX`, `AX`, `EF`, `AG`, `EU` | `E`, `A` | BCGS (birelational) |
+| **ICTL** | Branching | `EX`, `AX`, `EF`, `AF`, `EG`, `AG`, `EU`, `AU`, `ER`, `AR` | `E`, `A`; `->` / `not` intuitionistic | Birelational matrix |
 | **IATL** | Branching | `<A>X`, `F`, `G`, `U` | `<1>` exist, `[1]` forall | BCGS |
 | **TCTL** | Branching | `EF`, `AG`, clock bounds | `A`, `E` + clocks | timedCGS |
 | **TOL** | Linear | `{Jk}X`, `F`, `G`, `U`, `R`, `W` | `{J5}` per-step obstruction | timedCGS |
@@ -853,8 +908,12 @@ The base model for CTL, LTL, ATL, NatATL, and NatSL.
 For 2 agents: `AC` means Agent 1 performs action `A` and Agent 2 performs action `C`.
 
 ### BCGS (Birelational CGS)
-Used for ICTL and IATL. Includes a `Preorder` matrix with edge labels (`P`, `R`, `P,R`).
+Used for IATL and related birelational loaders. Edge labels include `P`, `R`, `P,R`.
 Loader: `model_checker/parsers/game_structures/birelational/`.
+
+ICTL uses the same matrix cell vocabulary but is loaded by
+`model_checker/algorithms/explicit/ICTL/util/graph.read_file` (see
+[ICTL/algorithm.md](ICTL/algorithm.md)).
 
 ### costCGS (CGS with Costs)
 Used for OATL, OL, RBATL, RABATL, and COTL.

@@ -37,6 +37,6 @@ def test_run_model_checking_on_checker():
 
 def test_model_checking_on_fixture():
     result = model_checking("AG e", str(_FIXTURE))
-    assert _states(result) == {"s1"}
+    assert _states(result) == set()
     assert result["initial_state"] == "Initial state s0: False"
     assert result["res"].startswith("Result:")

@@ -16,10 +16,7 @@ if TYPE_CHECKING:
 
 def handle_ax(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     states_sat = parse_state_set_literal(node.left.value)
-    negated = checker.states_set - states_sat
-    pre = pre_image_all(checker.edges, negated)
-    pre_forall = checker.states_set - pre
-    node.value = str(checker.states_with_upset_in(pre_forall))
+    node.value = str(pre_image_all(checker.edges, states_sat))
 
 
 def handle_ex(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
@@ -40,13 +37,12 @@ def handle_eg(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
 
 def handle_ag(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     states_sat = parse_state_set_literal(node.left.value)
-    compl_states = checker.states_set - states_sat
-    p: Set[str] = set()
-    t = compl_states
-    while t - p:
-        p.update(t)
-        t = pre_image_all(checker.edges, p)
-    node.value = str(checker.states_set - p)
+    edges = checker.edges
+
+    def update(q1: Set[str]) -> Set[str]:
+        return states_sat & pre_image_all(edges, q1)
+
+    node.value = str(greatest_fixpoint(checker.states_set, update))
 
 
 def handle_ef(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
@@ -61,13 +57,13 @@ def handle_ef(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
 
 def handle_af(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
     states_sat = parse_state_set_literal(node.left.value)
-    compl_states = checker.states_set - states_sat
-    p = checker.states_set
-    t = compl_states
-    while p - t:
-        p = t
-        t = pre_image_all(checker.edges, p) & compl_states
-    node.value = str(checker.states_set - p)
+    all_states = checker.states_set
+    p: Set[str] = set()
+    t = states_sat
+    while t - p:
+        p.update(t)
+        t = pre_image_all(checker.edges, p) & all_states
+    node.value = str(p)
 
 
 def handle_or(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
