@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vitamin-model-checker"
-version = "1.6.0"
+version = "1.6.1"
 description = "The VITAMIN model checker python package"
 readme = "README.md"
 requires-python = ">=3.11"
