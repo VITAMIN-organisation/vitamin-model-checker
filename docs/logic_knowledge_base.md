@@ -535,18 +535,20 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 1.  **Coalition**: `<{agent1,agent2,...}, k>` (Must use curly braces).
 2.  **Capability**: `K1(p)`, `K2(K3 p)`.
 3.  **Agent Properties**: `1 is active`, `2 is critical`.
-4.  **Temporal Operators**: `X`, `F`, `G`, `U` only.
+4.  **Temporal Operators**: `X`, `F`, `G`, `U`, and binary `R` (Release).
 
 **Validation Rules:**
 > [!NOTE]
-> **Operator Support (W, R):** Weak Until (`W`) and Release (`R`) are **rejected at parse time**. The CapATL solver evaluates `X`, `F`, `G`, and `U` only.
+> **Operator Support (W):** Weak Until (`W`) is not part of CapATL path syntax and remains unsupported. Release (`R`) is accepted as a binary operator (`<{A}, k> phi R psi`) and evaluated by the CapATL solver (greatest fixpoint). Input spacing in `<{A}, k>` is optional; the AST normalizes to a space after the comma.
 - **Model Requirement**: Can only be verified against `capCGS` models.
 
 **Formula Examples:**
 ```text
-<{1,2}, 3> F (K1 safe)
+<{1,2}, 3> F (K1 safe)z
 <{1}, 1> G (1 is active && ! 2 is active)
 <{1,2,3}, 2> X (3 is standby)
+<{1}, 1> p R q
+<{1}, 5> false R g
 ```
 
 ### Comparison: Theory vs Implementation
@@ -556,7 +558,7 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 | **Coalition** | <{A}, k> | `<{A}, k>` (Braces required) |
 | **Capability** | Ki p | `Ki (agent is p)` or `Ki(Ki agent is p)` |
 | **Agent Prop** | i is p | `i is p` |
-| **Temporal** | Full | `X, F, G, U` (`R`, `W` rejected at parser) |
+| **Temporal** | X, U, R (F/G sugar) | `X, F, G, U, R` (`W` unsupported) |
 
 
 ---
@@ -927,7 +929,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **OATL** | Branching | `<A><k>X`, `F`, `G`, `U` | `<1,2><5>` (per-step cost bound) | costCGS |
 | **OL** | Linear | `<Jk>X`, `F`, `G`, `U`, `R`, `W` | `<J5>` (Demonic) | costCGS |
 | **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U` | `<1><10,5>` (Vectors) | costCGS |
-| **CapATL** | Branching | `<A,k>X`, `F`, `G`, `U`, `Ki`, `i is p` | `<{1,2}, k>` | capCGS |
+| **CapATL** | Branching | `<A,k>X`, `F`, `G`, `U`, `R`, `Ki`, `i is p` | `<{1,2}, k>` | capCGS |
 | **COTL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><k>` (cost-bounded) | costCGS |
 | **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
 | **ICTL** | Branching | `EX`, `AX`, `EF`, `AF`, `EG`, `AG`, `EU`, `AU`, `ER`, `AR` | `E`, `A`; `->` / `not` intuitionistic | Birelational matrix |

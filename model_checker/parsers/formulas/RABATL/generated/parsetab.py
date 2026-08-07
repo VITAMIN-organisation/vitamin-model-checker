@@ -584,7 +584,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        91,
+        80,
     ),
     (
         "expression -> COALITION_BOUND expression WEAK expression",
@@ -592,7 +592,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        92,
+        81,
     ),
     (
         "expression -> COALITION_BOUND expression RELEASE expression",
@@ -600,7 +600,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        93,
+        82,
     ),
     (
         "expression -> COALITION_BOUND GLOBALLY expression",
@@ -608,7 +608,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        99,
+        88,
     ),
     (
         "expression -> COALITION_BOUND NEXT expression",
@@ -616,7 +616,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        100,
+        89,
     ),
     (
         "expression -> COALITION_BOUND EVENTUALLY expression",
@@ -624,7 +624,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        101,
+        90,
     ),
     (
         "expression -> expression AND expression",

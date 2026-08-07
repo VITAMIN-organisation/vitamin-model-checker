@@ -7,6 +7,7 @@ from model_checker.algorithms.explicit.CapATL.CapATL import (
     model_checking,
 )
 from model_checker.tests.helpers.model_helpers import extract_states_from_result
+from model_checker.tests.integration.algorithms import capatl
 
 
 @pytest.mark.unit
@@ -55,3 +56,13 @@ class TestCapATLSemantics:
         states = extract_states_from_result(result)
         assert states == {"q2"}
         assert ": False" in result.get("initial_state", "")
+
+    def test_capatl_release_matches_globally_for_false_left(self, capatl_model):
+        """false R phi is the dual of G phi; results should agree on the example model"""
+        globally_result = _core_capatl_checking(capatl_model, "<{1}, 5>G g")
+        release_result = _core_capatl_checking(capatl_model, "<{1}, 5>false R g")
+        assert "error" not in globally_result
+        assert "error" not in release_result
+        assert extract_states_from_result(
+            globally_result
+        ) == extract_states_from_result(release_result)

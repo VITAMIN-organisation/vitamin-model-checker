@@ -9,6 +9,7 @@ What it handles:
   release/until/next/eventually/globally operators `R`, `U`, `X`, `F`, `G`.
 
 What it rejects:
+- Weak Until (W): CapATL path formulas use X, U and R (G/F are supported sugar).
 - Uppercase textual boolean keywords; uppercase is limited to modal letters U/R/X/F/G/K.
 - Non-ASCII characters, invalid special characters, empty/None formulas, null bytes.
 - Empty or malformed coalitions (e.g., `<>`, trailing commas, negative indices, or
@@ -27,7 +28,6 @@ from ..parser_utils import (
     run_common_prechecks,
     validate_ast,
     validate_coalition,
-    validate_release_weak_rejected,
     verify_token,
 )
 from ..shared_parser import BaseLogicParser
@@ -98,7 +98,7 @@ class CapATLParser(BaseLogicParser):
     def p_expression_ternary(self, p):
         """expression : COALITION_BOUND expression UNTIL expression
         | COALITION_BOUND expression RELEASE expression"""
-        coalition_str = f"<{{{p[1][0]}}},{p[1][1]}>"
+        coalition_str = f"<{{{p[1][0]}}}, {p[1][1]}>"
         coalition_only = f"<{p[1][0]}>"
         validate_coalition(coalition_only, self.max_coalition)
         p[0] = (coalition_str + p[3], p[2], p[4])
@@ -107,7 +107,7 @@ class CapATLParser(BaseLogicParser):
         """expression : COALITION_BOUND NEXT expression
         | COALITION_BOUND EVENTUALLY expression
         | COALITION_BOUND GLOBALLY expression"""
-        coalition_str = f"<{{{p[1][0]}}},{p[1][1]}>"
+        coalition_str = f"<{{{p[1][0]}}}, {p[1][1]}>"
         coalition_only = f"<{p[1][0]}>"
         validate_coalition(coalition_only, self.max_coalition)
         p[0] = (coalition_str + p[2], p[3])
@@ -160,10 +160,6 @@ class CapATLParser(BaseLogicParser):
                 False,
                 "CapATL requires either capacity bounds <{coalition}, bound> or knowledge operators K(agent)",
             )
-
-        valid, err = validate_release_weak_rejected(formula, "CapATL")
-        if not valid:
-            return False, err
 
         return True, None
 

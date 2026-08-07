@@ -11,6 +11,7 @@ from model_checker.algorithms.explicit.CapATL.operators import (
     handle_not,
     handle_or,
     handle_until,
+    handle_release,
 )
 from model_checker.algorithms.explicit.CapATL.utils import (
     X_agt_cap,
@@ -129,5 +130,8 @@ def solve_tree(cgs: CapCGSProtocol, node: Node_PK | None) -> None:
         elif parser.verify("UNTIL", val_str):
             coal_str = _extract_coalition(val_str)
             handle_until(cgs, node, coal_str)
+        elif parser.verify("RELEASE", val_str):
+            coal_str = _extract_coalition(val_str)
+            handle_release(cgs, node, coal_str)
 
     return node.value

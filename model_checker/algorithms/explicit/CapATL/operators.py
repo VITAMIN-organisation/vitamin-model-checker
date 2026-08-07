@@ -1,4 +1,10 @@
-"""Handler functions for all CapATL operators (unary: NOT/NEXT/EVENTUALLY/GLOBALLY; binary: AND/OR/UNTIL)."""
+"""
+Handler functions for all CapATL operators
+(
+    unary: NOT/NEXT/EVENTUALLY/GLOBALLY;
+    binary: AND/OR/UNTIL/RELEASE
+).
+"""
 
 from model_checker.algorithms.explicit.CapATL.preimage import pre
 from model_checker.algorithms.explicit.CapATL.utils import (
@@ -72,4 +78,18 @@ def handle_until(cgs, node, coal_str):
     while not w_new.issubset(w_old):
         w_old |= w_new
         w_new = set(pre(cgs, list(w_old), coal_str)) & set(left_w)
+    node.value = set(pi_theta(cgs, list(w_old)))
+
+
+def handle_release(cgs, node, coal_str):
+    """Handle RELEASE: greatest fixpoint nu X. psi intersect (phi union Pre(X))"""
+    left_w = set(pi_omega_Y(cgs, list(node.left.value), coal_str))
+    right_w = set(pi_omega_Y(cgs, list(node.right.value), coal_str))
+
+    w_old = set(right_w)
+    w_new = right_w & (left_w | set(pre(cgs, list(w_old), coal_str)))
+
+    while not w_old.issubset(w_new):
+        w_old = w_new
+        w_new = right_w & (left_w | set(pre(cgs, list(w_old), coal_str)))
     node.value = set(pi_theta(cgs, list(w_old)))
