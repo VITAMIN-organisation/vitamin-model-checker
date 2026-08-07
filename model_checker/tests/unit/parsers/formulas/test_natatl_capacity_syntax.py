@@ -37,12 +37,15 @@ class TestNatATLParserCapacitySyntax:
 
         assert result is None
 
+    def test_n_agent_zero_rejects_all_agents(self):
+        """n_agent=0 is fail-closed: no agent index is in range [1, 0]."""
+        assert NatATLParser().parse("<{1}, 1>F p", n_agent=0) is None
+        assert NatATLParser().parse("<{99}, 1>F p", n_agent=0) is None
+
     def test_accepts_uppercase_atomic_proposition(self):
         """Uppercase proposition names are valid NatATL surface syntax."""
         formula = "<{1}, 5>F Goal"
-        result = NatATLParser().parse(formula, n_agent=1)
-
-        assert result is not None
+        assert NatATLParser().parse(formula, n_agent=1) is not None
 
 
 @pytest.mark.unit

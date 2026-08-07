@@ -279,7 +279,7 @@ def validate_natatl_coalition(
 
     for value in agent_list:
         agent_num = int(value)
-        if max_coalition > 0 and (agent_num <= 0 or agent_num > int(max_coalition)):
+        if agent_num <= 0 or agent_num > int(max_coalition):
             raise CoalitionValueError(
                 f"Invalid coalition value {value}: must be between 1 and {max_coalition}"
             )
