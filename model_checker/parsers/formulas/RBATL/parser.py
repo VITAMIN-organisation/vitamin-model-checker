@@ -23,7 +23,6 @@ from ..parser_utils import (
     validate_ast,
     validate_coalition_bound_token,
     validate_release_weak_rejected,
-    verify_token,
 )
 from ..shared_parser import BaseLogicParser
 
@@ -57,7 +56,7 @@ class RBATLParser(BaseLogicParser):
                 "EVENTUALLY",
             ]
         )
-        self.max_coalition = 100
+        self.max_coalition = 0
         self.bound_limit = 1_000_000
         self.build()
 
@@ -83,7 +82,7 @@ class RBATLParser(BaseLogicParser):
 
     # === Validation ===
 
-    def parse(self, formula, n_agent=100, max_bound=None, **kwargs):
+    def parse(self, formula, n_agent=0, max_bound=None, **kwargs):
         self.max_coalition = n_agent
         if max_bound is not None:
             self.bound_limit = max_bound
@@ -93,7 +92,7 @@ class RBATLParser(BaseLogicParser):
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
         valid, err = run_common_prechecks(
             formula,
-            allow_hash_at=True,
+            allow_hash_at=False,
             coalition_required=True,
             allow_negative_agents=False,
             allowed_operators=None,
@@ -122,6 +121,3 @@ class RBATLParser(BaseLogicParser):
             _RBATL_VALID_OPERATORS,
             coalition_pattern=_RBATL_COALITION_OPERATOR_PATTERN,
         )
-
-    def verify(self, token_name, string):
-        return verify_token(self.lexer, token_name, string)

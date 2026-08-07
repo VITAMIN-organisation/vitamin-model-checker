@@ -134,6 +134,3 @@ class NatATLParser(BaseLogicParser):
             _NATATL_VALID_OPERATORS,
             coalition_pattern=_NATATL_COALITION_OPERATOR_PATTERN,
         )
-
-    def p_error(self, p):
-        super().p_error(p)

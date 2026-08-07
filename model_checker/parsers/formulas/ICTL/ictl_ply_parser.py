@@ -97,15 +97,38 @@ def p_expression_prop(p):
     p[0] = p[1]
 
 
+_CACHED_LEXER = None
+_CACHED_PARSER = None
+_VERIFY_LEXER = None
+
+
+def _get_ictl_ply():
+    global _CACHED_LEXER, _CACHED_PARSER
+    if _CACHED_PARSER is None:
+        _CACHED_LEXER = lex.lex(module=_MODULE_REF, errorlog=lex.NullLogger())
+        _CACHED_PARSER = yacc.yacc(
+            module=_MODULE_REF,
+            write_tables=False,
+            debug=False,
+            errorlog=yacc.NullLogger(),
+        )
+    return _CACHED_LEXER, _CACHED_PARSER
+
+
+def _get_verify_lexer():
+    global _VERIFY_LEXER
+    if _VERIFY_LEXER is None:
+        _VERIFY_LEXER = lex.lex(module=_MODULE_REF, errorlog=lex.NullLogger())
+    return _VERIFY_LEXER
+
+
 # given a ICTL formula as input, returns a tuple representing the formula divided into sub formulas.
 def do_parsingICTL(formula):
     global _PARSER_HAS_ERROR, _LEXER_HAS_ERROR
     _PARSER_HAS_ERROR = False
     _LEXER_HAS_ERROR = False
     try:
-        # Create fresh local lexer/parser
-        local_lexer = lex.lex(module=_MODULE_REF)
-        local_parser = yacc.yacc(module=_MODULE_REF, write_tables=False, debug=False)
+        local_lexer, local_parser = _get_ictl_ply()
         result = local_parser.parse(formula, lexer=local_lexer)
         if _PARSER_HAS_ERROR or _LEXER_HAS_ERROR:
             return None
@@ -116,8 +139,7 @@ def do_parsingICTL(formula):
 
 # checks whether the input operator corresponds to a given operator defined in the grammar
 def verifyICTL(token_name, string):
-    # Use a separate lexer instance for verification
-    v_lexer = lex.lex(module=_MODULE_REF)
+    v_lexer = _get_verify_lexer()
     v_lexer.input(string)
     for token in v_lexer:
         if token.type == token_name and token.value in string:

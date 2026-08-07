@@ -61,7 +61,7 @@ class CapATLParser(BaseLogicParser):
             ]
         )
 
-        self.max_coalition = 3
+        self.max_coalition = 0
         self.build()
 
     # === Tokens ===
@@ -137,7 +137,7 @@ class CapATLParser(BaseLogicParser):
 
     # === Validation ===
 
-    def parse(self, formula, n_agent=3, **kwargs):
+    def parse(self, formula, n_agent=0, **kwargs):
         self.max_coalition = n_agent
         return super().parse(formula, **kwargs)
 

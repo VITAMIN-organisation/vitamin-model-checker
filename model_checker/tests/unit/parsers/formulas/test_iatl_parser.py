@@ -38,3 +38,9 @@ def test_valid_iatl_formulas(parser, formula):
 )
 def test_rejects_non_project_coalition_syntax(parser, formula):
     assert parser.parse(formula, n_agent=2) is None
+
+
+def test_explicit_n_agent_zero_not_overridden_by_max_coalition(parser):
+    """n_agent=0 must stay fail-closed even if max_coalition is also passed."""
+    assert parser.parse("<1>X p", n_agent=0, max_coalition=5) is None
+    assert parser.parse("<1>X p", max_coalition=2) is not None

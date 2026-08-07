@@ -37,12 +37,6 @@ tokens = (
     "NEXT",
     "EVENTUALLY",
     "PROP",
-    "WALLET",
-    "GE",
-    "LE",
-    "EQ",
-    "COLON",
-    "COMMA",
     "COALITION",
 )
 
@@ -52,12 +46,6 @@ t_AND = r"&&|\&|and"
 t_OR = r"\|\||\||or"
 t_NOT = r"!|not"
 t_IMPLIES = r"->|>|implies"
-t_GE = r">="
-t_LE = r"<="
-t_EQ = r"==|="
-t_COLON = r":"
-t_COMMA = r","
-t_WALLET = r"wallet"
 
 
 def _parse_coalition_logic(text):
@@ -239,22 +227,37 @@ def _normalize_wallet_atl_formula(formula_text):
     return _COALITION_TEMPORAL_SPACING.sub(">> ", text)
 
 
-def _create_wallet_atl_ply_parser():
-    """Build a fresh PLY lexer and parser for one parse attempt."""
-    lexer = lex.lex(module=sys.modules[__name__], errorlog=lex.NullLogger())
+_CACHED_LEXER = None
+_CACHED_PARSER = None
+_VERIFY_LEXER = None
 
-    output_dir = os.path.join(os.path.dirname(__file__), "generated")
-    os.makedirs(output_dir, exist_ok=True)
 
-    parser = yacc.yacc(
-        module=sys.modules[__name__],
-        debug=False,
-        write_tables=True,
-        optimize=True,
-        outputdir=output_dir,
-        errorlog=yacc.NullLogger(),
-    )
-    return lexer, parser
+def _get_wallet_atl_ply():
+    """Return a cached PLY lexer and parser for Wallet_ATL."""
+    global _CACHED_LEXER, _CACHED_PARSER
+    if _CACHED_PARSER is None:
+        module = sys.modules[__name__]
+        _CACHED_LEXER = lex.lex(module=module, errorlog=lex.NullLogger())
+
+        output_dir = os.path.join(os.path.dirname(__file__), "generated")
+        os.makedirs(output_dir, exist_ok=True)
+
+        _CACHED_PARSER = yacc.yacc(
+            module=module,
+            debug=False,
+            write_tables=True,
+            optimize=True,
+            outputdir=output_dir,
+            errorlog=yacc.NullLogger(),
+        )
+    return _CACHED_LEXER, _CACHED_PARSER
+
+
+def _get_verify_lexer():
+    global _VERIFY_LEXER
+    if _VERIFY_LEXER is None:
+        _VERIFY_LEXER = lex.lex(module=sys.modules[__name__], errorlog=lex.NullLogger())
+    return _VERIFY_LEXER
 
 
 def do_parsingWallet_ATL(formula_text, max_coalition=0):
@@ -266,7 +269,7 @@ def do_parsingWallet_ATL(formula_text, max_coalition=0):
 
     try:
         normalized = _normalize_wallet_atl_formula(formula_text)
-        lexer, parser = _create_wallet_atl_ply_parser()
+        lexer, parser = _get_wallet_atl_ply()
         result = parser.parse(normalized, lexer=lexer)
         if _LEXER_HAS_ERROR or _PARSER_HAS_ERROR:
             return None
@@ -341,14 +344,9 @@ class Wallet_ATLParser(BaseLogicParser):
             return None
 
     def verify(self, token_name, string):
-        v_lexer = lex.lex(module=sys.modules[__name__], errorlog=lex.NullLogger())
-        return verify_token(v_lexer, token_name, str(string), case_sensitive=False)
+        return verify_token(
+            _get_verify_lexer(), token_name, str(string), case_sensitive=False
+        )
 
     def build(self, **kwargs) -> None:
         """Wallet_ATL uses module-level PLY tables; no build on this class."""
-
-
-class Wallet_ATLFormulaParser(Wallet_ATLParser):
-    """Backward-compatible alias for older imports."""
-
-    pass

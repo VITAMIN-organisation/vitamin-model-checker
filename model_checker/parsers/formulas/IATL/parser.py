@@ -87,8 +87,13 @@ class IATLParser(BaseLogicParser):
             validate_coalition(coalition_str, self.n_agent)
         p[0] = (p[1] + p[2], p[3])
 
-    def parse(self, formula, n_agent=0, **kwargs):
-        self.n_agent = n_agent or kwargs.get("max_coalition", 0)
+    def parse(self, formula, n_agent=None, max_coalition=None, **kwargs):
+        if n_agent is not None:
+            self.n_agent = n_agent
+        elif max_coalition is not None:
+            self.n_agent = max_coalition
+        else:
+            self.n_agent = 0
         return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:

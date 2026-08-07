@@ -224,6 +224,32 @@ def p_error(p):
     _PARSER_HAS_ERROR = True
 
 
+_CACHED_LEXER = None
+_CACHED_PARSER = None
+_VERIFY_LEXER = None
+
+
+def _get_tctl_ply():
+    global _CACHED_LEXER, _CACHED_PARSER
+    if _CACHED_PARSER is None:
+        module = sys.modules[__name__]
+        _CACHED_LEXER = lex.lex(module=module, errorlog=lex.NullLogger())
+        _CACHED_PARSER = yacc.yacc(
+            module=module,
+            write_tables=False,
+            debug=False,
+            errorlog=yacc.NullLogger(),
+        )
+    return _CACHED_LEXER, _CACHED_PARSER
+
+
+def _get_verify_lexer():
+    global _VERIFY_LEXER
+    if _VERIFY_LEXER is None:
+        _VERIFY_LEXER = lex.lex(module=sys.modules[__name__], errorlog=lex.NullLogger())
+    return _VERIFY_LEXER
+
+
 # given a TCTL formula as input, returns a tuple representing the formula divided into subformulas.
 def do_parsingTCTL(formula):
     global _PARSER_HAS_ERROR, _LEXER_HAS_ERROR
@@ -238,11 +264,7 @@ def do_parsingTCTL(formula):
         else:
             s = formula
 
-        # Create fresh local lexer/parser
-        local_lexer = lex.lex(module=sys.modules[__name__])
-        local_parser = yacc.yacc(
-            module=sys.modules[__name__], write_tables=False, debug=False
-        )
+        local_lexer, local_parser = _get_tctl_ply()
         result = local_parser.parse(s, lexer=local_lexer)
         if _PARSER_HAS_ERROR or _LEXER_HAS_ERROR:
             return None
@@ -254,8 +276,7 @@ def do_parsingTCTL(formula):
 # checks whether the input operator corresponds to a given operator defined in the grammar
 def verifyTCTL(token_name, string):
     santized_string = str(string)
-    # Use a separate lexer instance for verification
-    v_lexer = lex.lex(module=sys.modules[__name__])
+    v_lexer = _get_verify_lexer()
     v_lexer.input(santized_string)
     for token in v_lexer:
         if token.type == token_name and token.value in santized_string:

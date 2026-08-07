@@ -25,7 +25,6 @@ from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_ast,
-    verify_token,
 )
 from ..shared_parser import BaseLogicParser
 
@@ -151,6 +150,3 @@ class OLParser(BaseLogicParser):
             _OL_VALID_OPERATORS,
             coalition_pattern=_OL_DEMONIC_OPERATOR_PATTERN,
         )
-
-    def verify(self, token_name, string):
-        return verify_token(self.lexer, token_name, string)

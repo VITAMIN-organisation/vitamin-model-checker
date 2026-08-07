@@ -123,6 +123,3 @@ class ATLParser(BaseLogicParser):
             return False
 
         return True
-
-    def p_error(self, p):
-        super().p_error(p)

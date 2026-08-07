@@ -60,7 +60,7 @@ def test_formula_parser_valid_and_invalid(
             "model_checker.parsers.formulas.NatATLF.parser",
             "NatATLFParser",
         ),
-        "COTL": ("model_checker.parsers.formulas.OATL.parser", "COTLParser"),
+        "COTL": ("model_checker.parsers.formulas.COTL.parser", "COTLParser"),
         "ICTL": ("model_checker.parsers.formulas.ICTL.parser", "ICTLParser"),
         "IATL": ("model_checker.parsers.formulas.IATL.parser", "IATLParser"),
         "TCTL": ("model_checker.parsers.formulas.TCTL.parser", "TCTLParser"),

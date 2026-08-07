@@ -20,13 +20,6 @@ def validate_bindings(parsed_formula):
             )
 
 
-def count_agents(parsed_formula):
-    """Count the number of unique agents present in the formula."""
-    _, binding_pairs, _ = parsed_formula
-    agents = {int(agent) for _, agent in binding_pairs}
-    return len(agents)
-
-
 def _extract_agents_by_quantifier(parsed_formula, quantifier_char):
     """Extract agent numbers for variables bound to the given quantifier (E or A)."""
     quantifiers, binding_pairs, _ = parsed_formula
@@ -45,41 +38,6 @@ def extract_existential_agents(parsed_formula):
 def extract_universal_agents(parsed_formula):
     """Extract universal agents from the NatSL formula."""
     return _extract_agents_by_quantifier(parsed_formula, "A")
-
-
-def count_universal_agents(universal_agents):
-    """Count the number of universal agents."""
-    return len(universal_agents)
-
-
-def count_existential_agents(existential_agents):
-    """Count the number of existential agents."""
-    return len(existential_agents)
-
-
-def extract_formula(parsed_formula):
-    """Extract the temporal operator and proposition from the NatSL formula."""
-    _, _, temporal_expr = parsed_formula
-    if isinstance(temporal_expr, tuple):
-        if len(temporal_expr) == 2:
-            operator, proposition = temporal_expr
-            return operator + proposition
-        if len(temporal_expr) == 3 and temporal_expr[0] == "!":
-            _, operator, proposition = temporal_expr
-            return "!" + operator + proposition
-    raise ValueError("Unexpected temporal expression format")
-
-
-def convert_natsl_to_ctl(parsed_formula, negate: bool):
-    """Convert a parsed NatSL formula to the corresponding CTL formula using the universal quantifier 'A'."""
-    _, _, temporal_expr = parsed_formula
-    temporal_operator, proposition = temporal_expr
-    ctl_formula = (
-        f"!A{temporal_operator}{proposition}"
-        if negate
-        else f"A{temporal_operator}{proposition}"
-    )
-    return ctl_formula
 
 
 def normalize_formula(formula):
@@ -109,14 +67,3 @@ def normalize_formula(formula):
 
     normalized_formula = normalized_quantifiers + ":" + rest
     return fully_negated, normalized_formula
-
-
-def skolemize_formula(parsed_formula):
-    """Reorder quantifiers so existentials come first, then universals. Does not perform skolemization."""
-    quantifiers, binding_pairs, temporal_expr = parsed_formula
-
-    existentials = [(q, var, bound) for q, var, bound in quantifiers if q == "E"]
-    universals = [(q, var, bound) for q, var, bound in quantifiers if q == "A"]
-
-    skolemized_quantifiers = existentials + universals
-    return (skolemized_quantifiers, binding_pairs, temporal_expr)

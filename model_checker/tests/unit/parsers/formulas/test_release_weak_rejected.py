@@ -40,8 +40,8 @@ def test_capatl_accepts_binary_release():
 def test_cotl_accepts_binary_release_and_weak():
     """COTL implements R/W; binary forms must remain accepted."""
     parser = FormulaParserFactory.get_parser_instance("COTL")
-    assert parser.parse("<1><5> p R q") == ("<1><5>R", "p", "q")
-    assert parser.parse("<1><5> p W q") == ("<1><5>W", "p", "q")
+    assert parser.parse("<1><5> p R q", n_agent=3) == ("<1><5>R", "p", "q")
+    assert parser.parse("<1><5> p W q", n_agent=3) == ("<1><5>W", "p", "q")
 
 
 @pytest.mark.unit
