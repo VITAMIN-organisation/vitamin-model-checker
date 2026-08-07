@@ -29,6 +29,10 @@ _INVALID_PROPOSITION_MSG = "expected identifier matching [a-zA-Z][a-zA-Z0-9_]*"
 _MODAL_TOKEN_PREFIX = r"(?:^|(?<![a-zA-Z0-9_]))"
 _MODAL_TOKEN_SUFFIX = r"(?![a-zA-Z0-9_])"
 
+BOOLEAN_AST_OPERATORS = frozenset(
+    {"&&", "||", "->", "!", "AND", "OR", "IMPLIES", "NOT"}
+)
+
 
 class CoalitionValueError(Exception):
     """Bad coalition syntax or an agent index outside the allowed range."""
@@ -416,6 +420,7 @@ __all__ = [
     "ATOMIC_PROPOSITION_NAME_RE",
     "CoalitionValueError",
     "PROPOSITION_AST_PATTERN",
+    "BOOLEAN_AST_OPERATORS",
     "PROPOSITION_TOKEN_PATTERN",
     "natsl_temporal_atom_from_parsed_formula",
     "run_common_prechecks",

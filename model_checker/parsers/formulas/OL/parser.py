@@ -21,6 +21,7 @@ from model_checker.parsers.syntax_patterns import (
 )
 
 from ..parser_utils import (
+    BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_ast,
@@ -32,26 +33,24 @@ _OL_DEMONIC_OPERATOR_PATTERN = re.compile(
     r"^<J[1-9]\d*>(F|G|X|U|R|W|UNTIL|RELEASE|WEAK|NEXT|EVENTUALLY|GLOBALLY)$",
     re.IGNORECASE,
 )
-_OL_VALID_OPERATORS = frozenset(
-    {
-        "U",
-        "R",
-        "W",
-        "X",
-        "F",
-        "G",
-        "&&",
-        "AND",
-        "NOT",
-        "UNTIL",
-        "RELEASE",
-        "WEAK",
-        "NEXT",
-        "EVENTUALLY",
-        "GLOBALLY",
-        "!",
-        "->",
-    }
+_OL_VALID_OPERATORS = (
+    frozenset(
+        {
+            "U",
+            "R",
+            "W",
+            "X",
+            "F",
+            "G",
+            "UNTIL",
+            "RELEASE",
+            "WEAK",
+            "NEXT",
+            "EVENTUALLY",
+            "GLOBALLY",
+        }
+    )
+    | BOOLEAN_AST_OPERATORS
 )
 
 

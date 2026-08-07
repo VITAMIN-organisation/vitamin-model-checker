@@ -470,7 +470,7 @@ _lr_productions = [
         3,
         "p_expression_until",
         "parser.py",
-        53,
+        52,
     ),
     (
         "expression -> NEXT expression",
@@ -478,7 +478,7 @@ _lr_productions = [
         2,
         "p_expression_unary_temporal",
         "parser.py",
-        57,
+        56,
     ),
     (
         "expression -> GLOBALLY expression",
@@ -486,7 +486,7 @@ _lr_productions = [
         2,
         "p_expression_unary_temporal",
         "parser.py",
-        58,
+        57,
     ),
     (
         "expression -> EVENTUALLY expression",
@@ -494,7 +494,7 @@ _lr_productions = [
         2,
         "p_expression_unary_temporal",
         "parser.py",
-        59,
+        58,
     ),
     (
         "expression -> expression AND expression",

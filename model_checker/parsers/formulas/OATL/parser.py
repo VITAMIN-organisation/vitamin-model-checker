@@ -16,6 +16,7 @@ Returns:
 import re
 
 from ..parser_utils import (
+    BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_ast,
@@ -29,21 +30,20 @@ _OATL_COALITION_OPERATOR_PATTERN = re.compile(
     r"^<\d+(?:,\d+)*><[1-9]\d*>(F|G|X|U|UNTIL|NEXT|EVENTUALLY|GLOBALLY)$",
     re.IGNORECASE,
 )
-_OATL_VALID_OPERATORS = frozenset(
-    {
-        "U",
-        "X",
-        "F",
-        "G",
-        "&&",
-        "AND",
-        "NOT",
-        "UNTIL",
-        "NEXT",
-        "EVENTUALLY",
-        "GLOBALLY",
-        "!",
-    }
+_OATL_VALID_OPERATORS = (
+    frozenset(
+        {
+            "U",
+            "X",
+            "F",
+            "G",
+            "UNTIL",
+            "NEXT",
+            "EVENTUALLY",
+            "GLOBALLY",
+        }
+    )
+    | BOOLEAN_AST_OPERATORS
 )
 
 

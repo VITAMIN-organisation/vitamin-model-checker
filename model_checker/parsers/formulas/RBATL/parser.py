@@ -16,6 +16,7 @@ Returns:
 import re
 
 from ..parser_utils import (
+    BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_ast,
@@ -29,21 +30,9 @@ _RBATL_COALITION_OPERATOR_PATTERN = re.compile(
     r"^<\d+(?:,\d+)*><\d+(?:,\d+)*>(F|G|X|U|UNTIL|NEXT|EVENTUALLY|GLOBALLY)$",
     re.IGNORECASE,
 )
-_RBATL_VALID_OPERATORS = frozenset(
-    {
-        "U",
-        "X",
-        "F",
-        "G",
-        "&&",
-        "AND",
-        "NOT",
-        "UNTIL",
-        "NEXT",
-        "EVENTUALLY",
-        "GLOBALLY",
-        "!",
-    }
+_RBATL_VALID_OPERATORS = (
+    frozenset({"U", "X", "F", "G", "UNTIL", "NEXT", "EVENTUALLY", "GLOBALLY"})
+    | BOOLEAN_AST_OPERATORS
 )
 
 

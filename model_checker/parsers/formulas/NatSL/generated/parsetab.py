@@ -5,7 +5,7 @@ _tabversion = "3.10"
 
 _lr_method = "LALR"
 
-_lr_signature = "formularightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAGENT AND BOUND COLON COMMA EVENTUALLY EXIST FALSE FORALL GLOBALLY IMPLIES LPAREN NEXT NOT OR PROP RPAREN TRUE UNTILformula : quantifiers COLON binding_pairs temporal_expressionquantifiers : quantifier\n        | quantifiers quantifierquantifier : EXIST opt_bound PROP\n        | FORALL opt_bound PROPexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionopt_bound : BOUND\n        | emptyexpression : NOT expressionempty :expression : LPAREN expression RPARENbinding_pairs : binding_pair\n        | binding_pairs binding_pairexpression : FALSE\n        | TRUEexpression : PROPbinding_pair : LPAREN PROP COMMA AGENT RPARENtemporal_expression : negation_expression\n        | EVENTUALLY PROPnegation_expression : NOT EVENTUALLY PROP"
+_lr_signature = "formularightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAGENT AND BOUND COLON COMMA EVENTUALLY EXIST FALSE FORALL GLOBALLY IMPLIES LPAREN NEXT NOT OR PROP RPAREN TRUE UNTILformula : quantifiers COLON binding_pairs temporal_expressionquantifiers : quantifier\n        | quantifiers quantifierquantifier : EXIST opt_bound PROP\n        | FORALL opt_bound PROPopt_bound : BOUND\n        | emptyexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : NOT expressionempty :expression : LPAREN expression RPARENbinding_pairs : binding_pair\n        | binding_pairs binding_pairexpression : FALSE\n        | TRUEexpression : PROPbinding_pair : LPAREN PROP COMMA AGENT RPARENtemporal_expression : negation_expression\n        | EVENTUALLY PROPnegation_expression : NOT EVENTUALLY PROP"
 
 _lr_action_items = {
     "EXIST": (
@@ -102,8 +102,8 @@ _lr_action_items = {
             -12,
             -12,
             15,
-            -9,
-            -10,
+            -6,
+            -7,
             16,
             22,
             23,
@@ -288,16 +288,16 @@ _lr_productions = [
         4,
         "p_formula",
         "parser.py",
-        91,
+        90,
     ),
-    ("quantifiers -> quantifier", "quantifiers", 1, "p_quantifiers", "parser.py", 95),
+    ("quantifiers -> quantifier", "quantifiers", 1, "p_quantifiers", "parser.py", 94),
     (
         "quantifiers -> quantifiers quantifier",
         "quantifiers",
         2,
         "p_quantifiers",
         "parser.py",
-        96,
+        95,
     ),
     (
         "quantifier -> EXIST opt_bound PROP",
@@ -305,7 +305,7 @@ _lr_productions = [
         3,
         "p_quantifier",
         "parser.py",
-        104,
+        103,
     ),
     (
         "quantifier -> FORALL opt_bound PROP",
@@ -313,8 +313,10 @@ _lr_productions = [
         3,
         "p_quantifier",
         "parser.py",
-        105,
+        104,
     ),
+    ("opt_bound -> BOUND", "opt_bound", 1, "p_opt_bound", "parser.py", 109),
+    ("opt_bound -> empty", "opt_bound", 1, "p_opt_bound", "parser.py", 110),
     (
         "expression -> expression AND expression",
         "expression",
@@ -339,8 +341,6 @@ _lr_productions = [
         "shared_parser.py",
         111,
     ),
-    ("opt_bound -> BOUND", "opt_bound", 1, "p_opt_bound", "parser.py", 110),
-    ("opt_bound -> empty", "opt_bound", 1, "p_opt_bound", "parser.py", 111),
     (
         "expression -> NOT expression",
         "expression",
@@ -349,7 +349,7 @@ _lr_productions = [
         "shared_parser.py",
         115,
     ),
-    ("empty -> <empty>", "empty", 0, "p_empty", "parser.py", 118),
+    ("empty -> <empty>", "empty", 0, "p_empty", "parser.py", 117),
     (
         "expression -> LPAREN expression RPAREN",
         "expression",
@@ -364,7 +364,7 @@ _lr_productions = [
         1,
         "p_binding_pairs",
         "parser.py",
-        122,
+        121,
     ),
     (
         "binding_pairs -> binding_pairs binding_pair",
@@ -372,7 +372,7 @@ _lr_productions = [
         2,
         "p_binding_pairs",
         "parser.py",
-        123,
+        122,
     ),
     (
         "expression -> FALSE",
@@ -404,7 +404,7 @@ _lr_productions = [
         5,
         "p_binding_pair",
         "parser.py",
-        130,
+        129,
     ),
     (
         "temporal_expression -> negation_expression",
@@ -412,7 +412,7 @@ _lr_productions = [
         1,
         "p_temporal_expression",
         "parser.py",
-        134,
+        133,
     ),
     (
         "temporal_expression -> EVENTUALLY PROP",
@@ -420,7 +420,7 @@ _lr_productions = [
         2,
         "p_temporal_expression",
         "parser.py",
-        135,
+        134,
     ),
     (
         "negation_expression -> NOT EVENTUALLY PROP",
@@ -428,6 +428,6 @@ _lr_productions = [
         3,
         "p_negation_expression",
         "parser.py",
-        142,
+        141,
     ),
 ]
