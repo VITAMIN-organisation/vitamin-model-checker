@@ -2,9 +2,10 @@
 
 Supported:
 - Resource-bounded ATL with coalition-bound operators like `<1,2><5>F p` and `<1><3>G p`.
-- Boolean connectives (&&, ||, !, ->) and temporal ops (U, R, W, G, X, F).
+- Boolean connectives (&&, ||, !, ->) and temporal ops (U, G, X, F).
 
 Rejects:
+- Release (R) and Weak Until (W) (solver does not evaluate them).
 - Coalitions missing a bound (e.g., `<1>F p`).
 - Invalid or out-of-range coalition members relative to n_agent.
 - Non-ASCII, null bytes, or disallowed special characters.
@@ -51,8 +52,6 @@ class RBATLParser(BaseLogicParser):
                 "COALITION_BOUND",
                 "PROP",
                 "UNTIL",
-                "RELEASE",
-                "WEAK",
                 "GLOBALLY",
                 "NEXT",
                 "EVENTUALLY",
@@ -65,38 +64,22 @@ class RBATLParser(BaseLogicParser):
     t_PROP = PROPOSITION_TOKEN_PATTERN
     t_COALITION_BOUND = r"<\d+(?:,\d+)*><\d+(?:,\d+)*>"
 
-    def t_RELEASE(self, t):
-        r"R|release\b"
-        t.value = "R"
-        return t
-
-    def t_WEAK(self, t):
-        r"W|weak\b"
-        t.value = "W"
-        return t
-
     # === Grammar ===
     def p_expression_ternary(self, p):
-        """expression : COALITION_BOUND expression UNTIL expression
-        | COALITION_BOUND expression WEAK expression
-        | COALITION_BOUND expression RELEASE expression"""
-        coalition_bound_str = p[1]
-        self._validate_coalition_bound(coalition_bound_str)
+        """expression : COALITION_BOUND expression UNTIL expression"""
+        validate_coalition_bound_token(
+            p[1], self.max_coalition, bound_limit=self.bound_limit
+        )
         p[0] = (p[1] + p[3], p[2], p[4])
 
     def p_expression_unary(self, p):
         """expression : COALITION_BOUND GLOBALLY expression
         | COALITION_BOUND NEXT expression
         | COALITION_BOUND EVENTUALLY expression"""
-        coalition_bound_str = p[1]
-        self._validate_coalition_bound(coalition_bound_str)
-        p[0] = (p[1] + p[2], p[3])
-
-    def _validate_coalition_bound(self, coalition_bound_str):
-        """Validate coalition/bound part to prevent malformed tokens."""
-        return validate_coalition_bound_token(
-            coalition_bound_str, self.max_coalition, bound_limit=self.bound_limit
+        validate_coalition_bound_token(
+            p[1], self.max_coalition, bound_limit=self.bound_limit
         )
+        p[0] = (p[1] + p[2], p[3])
 
     # === Validation ===
 

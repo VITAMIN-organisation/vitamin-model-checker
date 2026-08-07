@@ -41,7 +41,7 @@ class IATLParser(BaseLogicParser):
 
     def __init__(self) -> None:
         super().__init__()
-        self.tokens.extend(["PROP", "COALITION", "COALITION_UNIVERSAL"])
+        self.tokens.extend(["PROP", "COALITION", "COALITION_UNIVERSAL", "RELEASE"])
         self.n_agent = 0
         self.build()
 

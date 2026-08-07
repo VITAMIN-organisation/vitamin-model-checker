@@ -2,9 +2,10 @@
 
 Supported:
 - OATL formulas with coalition and demonic bounds (`<1,2><5>F p`, `<1><3>G p`).
-- Boolean connectives (&&, ||, !, ->) and temporal ops (U, R, W, G, X, F).
+- Boolean connectives (&&, ||, !, ->) and temporal ops (U, G, X, F).
 
 Rejects:
+- Release (R) and Weak Until (W); use COTL when those operators are required.
 - Missing demonic bounds after a coalition (e.g., `<1>F p`).
 - Malformed coalitions or invalid agent indices relative to n_agent.
 - Non-ASCII, null bytes, or disallowed special characters in propositions.
@@ -62,8 +63,6 @@ class OATLParser(BaseLogicParser):
                 "COALITION_DEMONIC",
                 "PROP",
                 "UNTIL",
-                "RELEASE",
-                "WEAK",
                 "GLOBALLY",
                 "NEXT",
                 "EVENTUALLY",
@@ -76,38 +75,22 @@ class OATLParser(BaseLogicParser):
     t_PROP = PROPOSITION_TOKEN_PATTERN
     t_COALITION_DEMONIC = r"<\d+(?:,\d+)*><[1-9]\d*>"
 
-    def t_RELEASE(self, t):
-        r"R|release\b"
-        t.value = "R"
-        return t
-
-    def t_WEAK(self, t):
-        r"W|weak\b"
-        t.value = "W"
-        return t
-
     # === Grammar ===
     def p_expression_ternary(self, p):
-        """expression : COALITION_DEMONIC expression UNTIL expression
-        | COALITION_DEMONIC expression WEAK expression
-        | COALITION_DEMONIC expression RELEASE expression"""
-        coalition_demonic_str = p[1]
-        self._validate_coalition_demonic(coalition_demonic_str)
+        """expression : COALITION_DEMONIC expression UNTIL expression"""
+        validate_coalition_bound_token(
+            p[1], self.max_coalition, bound_pattern=r"[1-9]\d*"
+        )
         p[0] = (p[1] + p[3], p[2], p[4])
 
     def p_expression_unary(self, p):
         """expression : COALITION_DEMONIC GLOBALLY expression
         | COALITION_DEMONIC NEXT expression
         | COALITION_DEMONIC EVENTUALLY expression"""
-        coalition_demonic_str = p[1]
-        self._validate_coalition_demonic(coalition_demonic_str)
-        p[0] = (p[1] + p[2], p[3])
-
-    def _validate_coalition_demonic(self, coalition_demonic_str):
-        """Validate a demonic coalition token of the form <agents><bound>."""
-        return validate_coalition_bound_token(
-            coalition_demonic_str, self.max_coalition, bound_pattern=r"[1-9]\d*"
+        validate_coalition_bound_token(
+            p[1], self.max_coalition, bound_pattern=r"[1-9]\d*"
         )
+        p[0] = (p[1] + p[2], p[3])
 
     # === Validation ===
     def parse(self, formula, n_agent=100, **kwargs):
@@ -177,7 +160,44 @@ _COTL_VALID_OPERATORS = _OATL_VALID_OPERATORS | frozenset({"R", "W", "RELEASE", 
 
 
 class COTLParser(OATLParser):
-    """OATL syntax with R/W allowed; used by the COTL model checker."""
+    """OATL surface syntax with Release/Weak Until; used by the COTL checker."""
+
+    def __init__(self):
+        """Initialize COTL lexer/parser with R/W tokens and productions."""
+        BaseLogicParser.__init__(self)
+        self.tokens.extend(
+            [
+                "COALITION_DEMONIC",
+                "PROP",
+                "UNTIL",
+                "RELEASE",
+                "WEAK",
+                "GLOBALLY",
+                "NEXT",
+                "EVENTUALLY",
+            ]
+        )
+        self.max_coalition = 100
+        self.build()
+
+    def t_RELEASE(self, t):
+        r"R|release\b"
+        t.value = "R"
+        return t
+
+    def t_WEAK(self, t):
+        r"W|weak\b"
+        t.value = "W"
+        return t
+
+    def p_expression_ternary(self, p):
+        """expression : COALITION_DEMONIC expression UNTIL expression
+        | COALITION_DEMONIC expression WEAK expression
+        | COALITION_DEMONIC expression RELEASE expression"""
+        validate_coalition_bound_token(
+            p[1], self.max_coalition, bound_pattern=r"[1-9]\d*"
+        )
+        p[0] = (p[1] + p[3], p[2], p[4])
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
         valid, err = run_common_prechecks(

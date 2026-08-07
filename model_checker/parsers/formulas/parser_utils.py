@@ -92,20 +92,23 @@ def natsl_temporal_atom_from_parsed_formula(parsed_formula) -> str | None:
 def validate_release_weak_rejected(
     formula: str, logic_name: str
 ) -> tuple[bool, str | None]:
-    """Reject Release (R) and Weak Until (W) when the logic solver does not evaluate them."""
+    """Reject Release (R) and Weak Until (W) when the logic solver does not evaluate them.
+
+    Covers glued forms (<1><5>R p) and binary infix (<1><5> p R q).
+    Single-letter R/W are case-sensitive so proposition names like ``r`` are kept.
+    """
+    # After a coalition/bound prefix: standalone R/W (uppercase) or release/weak words.
     if re.search(
-        r"(?:<\d+(?:,\d+)*>)+\s*(?:[RW]\b|release\b|weak\b)",
+        r"(?:<\d+(?:,\d+)*>)+.*?(?:(?<![A-Za-z0-9_])[RW](?![A-Za-z0-9_])|(?i:release\b|weak\b))",
         formula,
-        re.IGNORECASE,
     ):
         return (
             False,
             f"{logic_name} does not support Release (R) or Weak Until (W) operators",
         )
     if re.search(
-        r"<\{[\d,]+\},\s*\d+>\s*(?:[RW]\b|release\b|weak\b)",
+        r"<\{[\d,]+\},\s*\d+>.*?(?:(?<![A-Za-z0-9_])[RW](?![A-Za-z0-9_])|(?i:release\b|weak\b))",
         formula,
-        re.IGNORECASE,
     ):
         return (
             False,

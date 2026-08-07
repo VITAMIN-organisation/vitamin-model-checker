@@ -29,8 +29,6 @@ class NatSLParser(BaseLogicParser):
     def __init__(self):
         """Initialize the NatSL lexer and parser (PLY)."""
         super().__init__()
-        to_remove = {"WEAK", "RELEASE"}
-        self.tokens = [t for t in self.tokens if t not in to_remove]
 
         self.tokens.extend(
             [

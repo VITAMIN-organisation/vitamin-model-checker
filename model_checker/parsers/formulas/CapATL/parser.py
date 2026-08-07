@@ -45,7 +45,6 @@ class CapATLParser(BaseLogicParser):
     def __init__(self):
         """Initialize the CapATL lexer and parser (PLY)."""
         super().__init__()
-        self.tokens = [t for t in self.tokens if t != "WEAK"]
 
         self.tokens.extend(
             [
