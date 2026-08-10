@@ -6,6 +6,7 @@
 
 # DESCRIPTION: Two agents coordinate; some goals need cooperation. Includes
 # non-determinism so strategies must work for all environment choices.
+# Compact joints (AC) and explicit joints (A|C) encode the same per-agent moves.
 
 Transition
 0 AC,AD BC,BD 0

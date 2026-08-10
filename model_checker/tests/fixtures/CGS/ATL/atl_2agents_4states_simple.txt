@@ -6,6 +6,8 @@
 
 # DESCRIPTION: Two agents choose actions; state s3 is non-deterministic (several
 # outcomes). Good for learning how coalitions work in ATL.
+# Joint profiles use compact form (AC = agent 1 plays A, agent 2 plays C); the
+# same moves can be written explicitly as A|C. Both forms are equivalent.
 
 Transition
 0 AC,AD BC,BD 0

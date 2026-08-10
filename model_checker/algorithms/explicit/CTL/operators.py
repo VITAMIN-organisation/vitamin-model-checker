@@ -1,4 +1,8 @@
-"""Handler functions for all CTL operators (unary: NOT/EX/AX/EF/AF/EG/AG/AR; binary: OR/AND/IMPLIES/EU/AU/ER)."""
+"""Handler functions for CTL temporal operators (EX/AX/EF/AF/EG/AG/AR/EU/AU/ER).
+
+Boolean connectives (NOT/OR/AND/IMPLIES) are handled by
+``shared.boolean_operators`` and wired in ``CTL.solver``.
+"""
 
 from typing import TYPE_CHECKING, Any
 
@@ -11,27 +15,10 @@ from model_checker.algorithms.explicit.CTL.preimage import (
     pre_image_exist,
     pre_release_universal,
 )
-from model_checker.algorithms.explicit.shared.boolean_operators import (
-    handle_and as _bool_and,
-)
-from model_checker.algorithms.explicit.shared.boolean_operators import (
-    handle_implies as _bool_implies,
-)
-from model_checker.algorithms.explicit.shared.boolean_operators import (
-    handle_not as _bool_not,
-)
-from model_checker.algorithms.explicit.shared.boolean_operators import (
-    handle_or as _bool_or,
-)
 from model_checker.utils.literals import parse_state_set_literal
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS
-
-
-def handle_not(cgs: "CGS", node: Any) -> None:
-    """Handle NOT operator: complement of child's state set."""
-    _bool_not(cgs, node)
 
 
 def handle_ex(cgs: "CGS", node: Any) -> None:
@@ -133,21 +120,6 @@ def handle_ar(cgs: "CGS", node: Any) -> None:
     psi_states = parse_state_set_literal(node.right.value)
     result = {str(s) for s in pre_release_universal(cgs, phi_states, psi_states)}
     node.value = str(tuple(sorted({str(s) for s in result})))
-
-
-def handle_or(cgs: "CGS", node: Any) -> None:
-    """Handle OR operator: disjunction of two formulas."""
-    _bool_or(cgs, node)
-
-
-def handle_and(cgs: "CGS", node: Any) -> None:
-    """Handle AND operator: conjunction of two formulas."""
-    _bool_and(cgs, node)
-
-
-def handle_implies(cgs: "CGS", node: Any) -> None:
-    """Handle IMPLIES operator: phi -> psi = not phi or psi."""
-    _bool_implies(cgs, node)
 
 
 def handle_eu(cgs: "CGS", node: Any) -> None:

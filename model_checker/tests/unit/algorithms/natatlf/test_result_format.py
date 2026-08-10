@@ -3,7 +3,9 @@
 import pytest
 
 from model_checker.algorithms.explicit.NatATLF.NatATL import model_checking
-from model_checker.synthetic_models import generate_natatl_linear_chain_model
+from model_checker.tests.helpers.synthetic_models import (
+    generate_natatl_linear_chain_model,
+)
 
 
 @pytest.mark.unit

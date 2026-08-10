@@ -40,6 +40,31 @@ def normalize_action_token(token: str) -> str:
     return stripped
 
 
+def wildcard_joint_profile(num_agents: int) -> str:
+    """Return the pipe-separated wildcard profile for ``num_agents`` positions."""
+    if num_agents <= 0:
+        return "*"
+    return AGENT_ACTION_SEPARATOR.join("*" for _ in range(num_agents))
+
+
+def build_action_list(action_string: str, num_agents: int) -> list[str]:
+    """Expand one transition cell into pipe-normalized joint profiles.
+
+    Compact joints such as ``AC`` and explicit joints such as ``A|C`` both become
+    per-agent token lists joined with ``|``. The cell wildcard ``*`` becomes one
+    profile with ``*`` in every agent position.
+    """
+    raw = str(action_string).strip() if action_string is not None else ""
+    if not raw:
+        return []
+    if raw == "*":
+        return [wildcard_joint_profile(num_agents)]
+    return [
+        AGENT_ACTION_SEPARATOR.join(tokens)
+        for tokens in parse_joint_action_cell(raw, num_agents)
+    ]
+
+
 def parse_joint_action_cell(cell: str, num_agents: int) -> list[list[str]]:
     """Parse one transition-matrix cell into joint action choices.
 
@@ -47,7 +72,8 @@ def parse_joint_action_cell(cell: str, num_agents: int) -> list[list[str]]:
     - one character per agent (e.g. "AC" means agent 1 does A, agent 2 does C), or
     - tokens separated by "|" for longer names (e.g. "IDLE|MOVE").
 
-    Only the first num_agents tokens are used. "I" and "IDLE" map to IDLE.
+    Both forms denote the same per-agent move vector. Only the first num_agents
+    tokens are used. "I" and "IDLE" map to IDLE.
     """
     if not isinstance(cell, str):
         return []
@@ -126,9 +152,11 @@ def extract_actions_for_agents(
 def process_action_string(
     action_string: str, agents: set[int], include_agents: bool = True
 ) -> str:
-    """Keep or drop agent positions in an action string; replaced positions become "-".
+    """Keep or drop agent positions in a pipe-separated profile; others become "-".
 
-    include_agents=True keeps the given agents; False keeps the others (opponents).
+    ``action_string`` must already be a per-agent profile (``A|C``), as produced by
+    ``build_action_list``. include_agents=True keeps the given agents;
+    False keeps the others (opponents).
     """
     tokens = [
         normalize_action_token(t) for t in action_string.split(AGENT_ACTION_SEPARATOR)
@@ -141,10 +169,10 @@ def process_action_string(
 
 
 def _expand_action_wildcards(actions: set[str], num_agents: int) -> set[str]:
-    """Expand "*" to a wildcard token for each agent in the joint choice."""
+    """Expand a bare "*" profile to one wildcard token per agent position."""
     if num_agents <= 0:
         return {s for s in actions if s != "*"}
-    wildcard_joint = AGENT_ACTION_SEPARATOR.join("*" for _ in range(num_agents))
+    wildcard_joint = wildcard_joint_profile(num_agents)
     return {s if s != "*" else wildcard_joint for s in actions}
 
 
@@ -162,7 +190,9 @@ def _process_actions_for_agents(
 def get_coalition_actions(
     actions: set[str], agents: set[int], num_agents: int
 ) -> set[str]:
-    """Return the coalition’s part of each action string (other positions become "-")."""
+    """Return the coalition's part of each profile (other positions become "-")."""
     if not agents:
-        return {"-" * num_agents}
+        if num_agents <= 0:
+            return {"-"}
+        return {AGENT_ACTION_SEPARATOR.join("-" for _ in range(num_agents))}
     return _process_actions_for_agents(actions, agents, num_agents, include_agents=True)

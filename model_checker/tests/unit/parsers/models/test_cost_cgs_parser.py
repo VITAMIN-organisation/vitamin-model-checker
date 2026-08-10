@@ -28,3 +28,15 @@ class TestCostCGSCostParsing:
         instance = CostCGS()
         with pytest.raises(ValueError, match="Invalid cost value"):
             cost_cgs_parser.parse_cost_line("I* s0$1:x,y", instance, parse_split=True)
+
+    def test_get_cost_for_action_accepts_pipe_and_compact(self):
+        """Pipe-normalized profiles resolve to compact cost table keys."""
+        instance = CostCGS()
+        instance.number_of_agents = 3
+        cost_cgs_parser.parse_cost_line("AAC s0$1,1,1", instance, parse_split=True)
+        cost_cgs_parser.parse_cost_line("*** s1$2:2", instance, parse_split=False)
+
+        assert instance.get_cost_for_action("AAC", "s0") == [[1, 1, 1]]
+        assert instance.get_cost_for_action("A|A|C", "s0") == [[1, 1, 1]]
+        assert instance.get_cost_for_action("*|*|*", "s1") == [2, 2]
+        assert instance.get_cost_for_action("***", "s1") == [2, 2]

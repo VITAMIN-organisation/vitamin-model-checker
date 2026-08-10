@@ -18,9 +18,9 @@ class TestCoalitionPreImage:
         """Test coalition fails when opponent can spoil the outcome."""
         content = build_cgs_model_content(
             transitions=[
-                ["0", "1", "1"],
-                ["0", "0", "0"],
-                ["0", "0", "0"],
+                ["0", "AC", "AD"],
+                ["0", "II", "0"],
+                ["0", "0", "II"],
             ],
             state_names=["s0", "s1", "s2"],
             initial_state="s0",

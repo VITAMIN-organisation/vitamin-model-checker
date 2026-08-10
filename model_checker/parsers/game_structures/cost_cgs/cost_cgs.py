@@ -6,6 +6,10 @@ Extends CGS with action-state costs; used by OATL, OL and other cost-bounded log
 from typing import Any
 
 from model_checker.parsers.game_structures.cgs.cgs import CGS
+from model_checker.parsers.game_structures.cgs.cgs_actions import (
+    AGENT_ACTION_SEPARATOR,
+    wildcard_joint_profile,
+)
 from model_checker.parsers.game_structures.cost_cgs import cost_cgs_parser
 
 
@@ -47,10 +51,27 @@ class CostCGS(CGS):
     # --- Cost Accessor Methods ---
 
     def get_cost_for_action(self, action: str, state: str) -> Any:
-        """Look up cost for action at state; all-wildcard actions use the '*' key."""
-        key = f"{action};{state}"
-        if key in self.cost_for_action:
-            return self.cost_for_action[key]
-        if action == "*" * self.get_number_of_agents():
-            key = f"*;{state}"
-        return self.cost_for_action[key]
+        """Look up cost for action at state; all-wildcard actions use the '*' key.
+
+        Action profiles may be compact (``AAC``) or pipe-normalized (``A|A|C``);
+        both forms resolve to the same cost table entry.
+        """
+        action = str(action)
+        candidates = [action]
+        if AGENT_ACTION_SEPARATOR in action:
+            candidates.append("".join(action.split(AGENT_ACTION_SEPARATOR)))
+
+        num_agents = self.get_number_of_agents()
+        compact = candidates[-1]
+        if action == wildcard_joint_profile(num_agents) or compact == "*" * num_agents:
+            candidates.extend(["*", "*" * num_agents])
+
+        seen: set[str] = set()
+        for act in candidates:
+            if act in seen:
+                continue
+            seen.add(act)
+            key = f"{act};{state}"
+            if key in self.cost_for_action:
+                return self.cost_for_action[key]
+        raise KeyError(f"{action};{state}")

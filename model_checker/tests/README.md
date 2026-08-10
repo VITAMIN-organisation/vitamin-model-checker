@@ -63,9 +63,10 @@ Two complementary approaches:
 - **Fixtures** - checked-in `.txt` models under `fixtures/`. Use these when
   the shape of the file matters (real game structures, cost/cap extensions,
   invalid files for error handling).
-- **Synthetic models** - built in memory via `model_checker.synthetic_models`
-  (and test helpers that load or assert on them). Use these when size or
-  repetition matters (chains, cycles, scalability sweeps).
+- **Synthetic models** - built in memory via
+  `model_checker.tests.helpers.synthetic_models` (and `model_helpers` that
+  re-export common builders). Use these when size or repetition matters
+  (chains, cycles, scalability sweeps).
 
 Pick the smallest model that still exercises the behavior under test.
 

@@ -7,6 +7,7 @@ in cgs_parser, cgs_validation, cgs_actions, and cgs_utils.
 import numpy as np
 
 from model_checker.parsers.game_structures.cgs import (
+    cgs_actions,
     cgs_parser,
     cgs_utils,
     cgs_validation,
@@ -138,10 +139,12 @@ class CGS:
         return cgs_utils.default_agent_labels(n)
 
     def build_action_list(self, action_string):
-        """Turn an action string (e.g. with '*' or commas) into a list of action strings; result is cached."""
+        """Expand a transition cell into pipe-normalized joint profiles; result is cached."""
         if action_string in self._action_list_cache:
             return self._action_list_cache[action_string]
-        result = cgs_utils.build_action_list(action_string, self.get_number_of_agents())
+        result = cgs_actions.build_action_list(
+            action_string, self.get_number_of_agents()
+        )
         self._action_list_cache[action_string] = result
         return result
 

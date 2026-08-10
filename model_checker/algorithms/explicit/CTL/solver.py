@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any
 from model_checker.algorithms.explicit.CTL.operators import (
     handle_af,
     handle_ag,
-    handle_and,
     handle_ar,
     handle_au,
     handle_ax,
@@ -14,9 +13,6 @@ from model_checker.algorithms.explicit.CTL.operators import (
     handle_er,
     handle_eu,
     handle_ex,
-    handle_implies,
-    handle_not,
-    handle_or,
 )
 from model_checker.algorithms.explicit.CTL.operators_with_trace import (
     TRACE_HANDLERS,
@@ -26,6 +22,12 @@ from model_checker.algorithms.explicit.shared import (
     StateTrace,
     extract_shortest_trace,
     reconstruct_trace_from_predecessors,
+)
+from model_checker.algorithms.explicit.shared.boolean_operators import (
+    handle_and,
+    handle_implies,
+    handle_not,
+    handle_or,
 )
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.utils.literals import parse_state_set_literal

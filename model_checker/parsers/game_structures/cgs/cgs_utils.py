@@ -63,10 +63,3 @@ def build_reverse_index(
             reverse_index[target_str] = set()
         reverse_index[target_str].add(str(source))
     return reverse_index
-
-
-def build_action_list(action_string: str, num_agents: int) -> list[str]:
-    """Turn an action string into a list: "*" is expanded to num_agents chars, then split on commas."""
-    if action_string == "*":
-        action_string = "*" * num_agents
-    return action_string.split(",")

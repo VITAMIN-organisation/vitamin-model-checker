@@ -34,9 +34,23 @@ def pre_indices(state_set_index: set[int], pre_by_index: list[set[int]]) -> set[
 
 
 def check_if_action_is_extension(action: str, extension_action: str) -> bool:
-    """Return True if extension_action is a consistent extension of action."""
-    for coalition_char, extension_char in zip(action, extension_action, strict=True):
-        if coalition_char != "-" and coalition_char != extension_char:
+    """Return True if extension_action is a consistent extension of action.
+
+    Supports compact masks (``A--``) and pipe-normalized masks (``A|-|-``).
+    A ``-`` token matches any opponent action in that agent position.
+    """
+    sep = cgs_actions.AGENT_ACTION_SEPARATOR
+    if sep in action or sep in extension_action:
+        action_tokens = action.split(sep)
+        extension_tokens = extension_action.split(sep)
+    else:
+        action_tokens = list(action)
+        extension_tokens = list(extension_action)
+
+    if len(action_tokens) != len(extension_tokens):
+        return False
+    for coalition_token, extension_token in zip(action_tokens, extension_tokens):
+        if coalition_token != "-" and coalition_token != extension_token:
             return False
     return True
 

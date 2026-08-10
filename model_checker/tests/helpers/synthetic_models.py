@@ -1,6 +1,24 @@
-"""Synthetic CGS-family model file content for tests and external tooling."""
+"""Synthetic CGS-family model file content for tests.
+
+Builds in-memory model strings (chains, cycles, cost/cap variants) so tests
+can vary size without checking in large fixture files.
+"""
 
 from __future__ import annotations
+
+
+def compact_joint(token: str, num_agents: int) -> str:
+    """Build a compact joint profile with the same token in every agent position."""
+    if num_agents <= 1:
+        return token
+    return token * num_agents
+
+
+def forward_joint(num_agents: int) -> str:
+    """Compact forward joint: ``A`` for agent 1 and ``C`` for every other agent."""
+    if num_agents <= 1:
+        return "A"
+    return "A" + "C" * (num_agents - 1)
 
 
 def build_cgs_model_content(
@@ -112,13 +130,14 @@ def generate_linear_chain(
         prop_names = ["p"]
     state_names = [f"s{i}" for i in range(num_states)]
     use_ac = action_label == "AC"
-    action = "AC" * num_agents if use_ac else "1"
+    action = forward_joint(num_agents) if use_ac else compact_joint("1", num_agents)
+    terminal = "*" if use_ac else compact_joint("1", num_agents)
     transitions = []
     unknown_transitions = [] if use_ac else None
     for i in range(num_states):
         row = ["0"] * num_states
         if i == num_states - 1:
-            row[i] = "*" if use_ac else "1"
+            row[i] = terminal
         elif i + 1 < num_states:
             row[i + 1] = action
         transitions.append(row)
@@ -155,7 +174,7 @@ def generate_cycle_model(num_states, num_agents=2, prop_name="p"):
     """Cycle s0 -> s1 -> ... -> sN-1 -> s0."""
     states = [f"s{i}" for i in range(num_states)]
     unknown_transitions = [" ".join(["0"] * num_states)] * num_states
-    forward_action = "AC" * num_agents
+    forward_action = forward_joint(num_agents)
 
     def cell_at(i, j):
         if j == (i + 1) % num_states:
@@ -172,6 +191,61 @@ def generate_cycle_model(num_states, num_agents=2, prop_name="p"):
         labelling=labelling,
         num_agents=num_agents,
         unknown_transitions=[row.split() for row in unknown_transitions],
+    )
+
+
+def generate_fully_connected_model(num_states, num_agents=2, prop_name="p"):
+    """Fully connected graph: every state reaches every other state; self-loops are *."""
+    states = [f"s{i}" for i in range(num_states)]
+    action = forward_joint(num_agents) if num_agents >= 1 else "A"
+    unknown_transitions = [["0"] * num_states for _ in range(num_states)]
+
+    def cell_at(i, j):
+        if i == j:
+            return "*"
+        return action
+
+    transitions = _build_transition_rows(num_states, cell_at)
+    labelling = ["1" if i < num_states // 2 else "0" for i in range(num_states)]
+    return build_cgs_model_content(
+        transitions=[row.split() for row in transitions],
+        state_names=states,
+        initial_state="s0",
+        prop_names=[prop_name],
+        labelling=labelling,
+        num_agents=num_agents,
+        unknown_transitions=unknown_transitions,
+    )
+
+
+def generate_sparse_graph_model(
+    num_states, num_agents=2, prop_name="p", connectivity=0.3
+):
+    """Sparse random graph with self-loops; seeded for reproducible edges/labels."""
+    import random
+
+    random.seed(42)
+    states = [f"s{i}" for i in range(num_states)]
+    action = forward_joint(num_agents) if num_agents >= 1 else "A"
+    unknown_transitions = [["0"] * num_states for _ in range(num_states)]
+
+    def cell_at(i, j):
+        if i == j:
+            return "*"
+        if random.random() < connectivity:
+            return action
+        return "0"
+
+    transitions = _build_transition_rows(num_states, cell_at)
+    labelling = ["1" if random.random() < 0.3 else "0" for _ in range(num_states)]
+    return build_cgs_model_content(
+        transitions=[row.split() for row in transitions],
+        state_names=states,
+        initial_state="s0",
+        prop_names=[prop_name],
+        labelling=labelling,
+        num_agents=num_agents,
+        unknown_transitions=unknown_transitions,
     )
 
 
@@ -245,7 +319,7 @@ def generate_cost_cgs_linear_chain_content(num_states, num_agents=2, prop_names=
 
     states = [f"s{i}" for i in range(num_states)]
     unknown_transitions = [" ".join(["0"] * num_states)] * num_states
-    forward_action = "AC" * num_agents
+    forward_action = forward_joint(num_agents)
 
     def cell_at(i, j):
         if j == i + 1:
@@ -296,7 +370,7 @@ def generate_lollipop_model(
     loop_start = num_states - loop_size
 
     states = [f"s{i}" for i in range(num_states)]
-    forward_action = "AC" * num_agents
+    forward_action = forward_joint(num_agents)
     unknown_transitions = [" ".join(["0"] * num_states)] * num_states
 
     def cell_at(i, j):
@@ -324,9 +398,13 @@ def generate_lollipop_model(
 
 
 __all__ = [
+    "compact_joint",
+    "forward_joint",
     "build_cgs_model_content",
     "generate_linear_chain",
     "generate_cycle_model",
+    "generate_fully_connected_model",
+    "generate_sparse_graph_model",
     "generate_lollipop_model",
     "generate_natatl_linear_chain_model",
     "generate_capcgs_linear_chain_model",

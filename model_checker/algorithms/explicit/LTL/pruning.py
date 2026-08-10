@@ -14,8 +14,8 @@ from model_checker.utils.literals import parse_state_set_literal
 
 
 def process_transition_matrix_data(cgs, model, agents, *strategies):
-    graph = cgs.graph
-    label_matrix = cgs.create_label_matrix(graph)
+    graph = [row[:] for row in cgs.graph]
+    state_to_index = cgs.state_to_index
     cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
     actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
     agent_actions = {}
@@ -47,7 +47,14 @@ def process_transition_matrix_data(cgs, model, agents, *strategies):
                     state_sets = set(cgs.states)
                     action = "I"
                 graph = modify_matrix(
-                    graph, label_matrix, state_sets, action, strategy_index, agents
+                    graph,
+                    state_sets,
+                    action,
+                    strategy_index,
+                    agents,
+                    num_agents=cgs.get_number_of_agents(),
+                    state_to_index=state_to_index,
+                    in_place=True,
                 )
             else:
                 if state_set:
@@ -56,7 +63,14 @@ def process_transition_matrix_data(cgs, model, agents, *strategies):
                     state_sets = set(cgs.states)
                     action = "I"
                 graph = modify_matrix(
-                    graph, label_matrix, state_sets, action, strategy_index, agents
+                    graph,
+                    state_sets,
+                    action,
+                    strategy_index,
+                    agents,
+                    num_agents=cgs.get_number_of_agents(),
+                    state_to_index=state_to_index,
+                    in_place=True,
                 )
 
     return graph

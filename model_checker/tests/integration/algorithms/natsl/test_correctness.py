@@ -8,7 +8,7 @@ from model_checker.algorithms.explicit.NatSL.Alternated.natSL import (
 from model_checker.algorithms.explicit.NatSL.Sequential.natSL import (
     model_checking,
 )
-from model_checker.synthetic_models import (
+from model_checker.tests.helpers.synthetic_models import (
     generate_capcgs_linear_chain_model,
     generate_natatl_linear_chain_model,
 )

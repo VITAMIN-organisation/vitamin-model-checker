@@ -83,11 +83,20 @@ The transition matrix is square: one row and one column per state.
 Accepted cell values:
 
 - `0`: no transition,
-- a joint action string such as `AC`,
-- a comma-separated list such as `A1,A2`,
+- a joint action profile for all agents (see formats below),
+- a comma-separated list of joint profiles such as `AC,AD` or `A|C,A|D`,
 - `*`: wildcard, meaning any joint action allows the transition.
 
-Joint action strings must match `Number_of_agents`.
+**Joint action formats** (equivalent; both encode one move per agent, in agent order 1..n):
+
+| Form | Example (2 agents) | Meaning |
+|---|---|---|
+| Compact | `AC` | Agent 1 plays `A`, agent 2 plays `C` (one character per agent). |
+| Explicit | `A\|C` or `IDLE\|MOVE` | Same per-agent vector; use `\|` when action names are longer than one character. |
+
+Algorithms normalize every profile to the explicit `|`-separated form before coalition masking and strategy pruning. Compact and explicit cells therefore have the same verification semantics. Joint profiles must match `Number_of_agents`.
+
+The cell wildcard `*` is treated as a profile with `*` in every agent position.
 
 ### State And Label Sections
 

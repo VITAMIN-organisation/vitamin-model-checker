@@ -25,8 +25,8 @@ def process_transition_matrix_data_fixed(
     cgs: CGS, model_path: str, agents: list[int], *strategies: dict[str, Any]
 ) -> list[list]:
     """Pruning with corrected state coverage logic."""
-    graph = cgs.graph
-    label_matrix = cgs.create_label_matrix(graph)
+    graph = [row[:] for row in cgs.graph]
+    state_to_index = cgs.state_to_index
 
     for strategy_index, strategy in enumerate(strategies, start=1):
         covered_states: set[str] = set()
@@ -57,11 +57,13 @@ def process_transition_matrix_data_fixed(
                 # Apply to graph
                 graph = modify_matrix(
                     graph,
-                    label_matrix,
                     applicable_states,
                     action,
                     strategy_index,
                     agents,
+                    num_agents=cgs.get_number_of_agents(),
+                    state_to_index=state_to_index,
+                    in_place=True,
                 )
                 covered_states.update(applicable_states)
 
@@ -69,7 +71,14 @@ def process_transition_matrix_data_fixed(
         remaining = all_states - covered_states
         if remaining:
             graph = modify_matrix(
-                graph, label_matrix, remaining, "I", strategy_index, agents
+                graph,
+                remaining,
+                "I",
+                strategy_index,
+                agents,
+                num_agents=cgs.get_number_of_agents(),
+                state_to_index=state_to_index,
+                in_place=True,
             )
 
     return graph
@@ -82,8 +91,7 @@ def pruning(
 
     Returns True when the initial state satisfies the formula on the pruned model.
     """
-    # Copy the model so the pruned graph and CTL run do not alter the shared cgs
-    # used while enumerating other strategies.
+    # Isolate pruned model from the shared CGS used across strategy candidates.
     cgs1 = copy.deepcopy(cgs)
     cgs1.graph = process_transition_matrix_data_fixed(
         cgs, model_path, agents, *current_agents

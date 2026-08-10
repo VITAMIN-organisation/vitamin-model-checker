@@ -8,11 +8,13 @@ import pytest
 from model_checker.models.model_factory import create_model_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
-from model_checker.synthetic_models import (
+from model_checker.tests.helpers.synthetic_models import (
     build_cgs_model_content,
     generate_cost_cgs_linear_chain_content,
     generate_cycle_model,
+    generate_fully_connected_model,
     generate_linear_chain,
+    generate_sparse_graph_model,
 )
 
 
@@ -104,6 +106,8 @@ __all__ = [
     "build_cgs_model_content",
     "generate_linear_chain",
     "generate_cycle_model",
+    "generate_fully_connected_model",
+    "generate_sparse_graph_model",
     "generate_cost_cgs_linear_chain_content",
     "assert_parse_structure",
 ]

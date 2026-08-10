@@ -950,7 +950,7 @@ sections present in the file. Canonical details also appear in [file_formats.md]
 The base model for CTL, LTL, ATL, NatATL, and NatSL.
 
 **File Sections:**
-1.  **Transition**: Matrix (States x States) containing joint action strings (e.g., `AC,AD`). Use `*` for wildcards and `0` for no transition.
+1.  **Transition**: Matrix (States x States) of joint action profiles. Each non-zero cell lists one or more joints separated by commas. A joint is either compact (`AC` = agent 1 plays `A`, agent 2 plays `C`) or explicit (`A|C`, `IDLE|MOVE`). Both forms are the same per-agent move vector; checkers normalize them to `|`-separated profiles. Use `*` for a full-agent wildcard and `0` for no transition.
 2.  **Unknown_Transition_by**: Typically zeroed matrix for experimental uncertainty.
 3.  **Name_State**: Space-separated list of state names.
 4.  **Initial_State**: The starting state identifier.
@@ -961,7 +961,7 @@ The base model for CTL, LTL, ATL, NatATL, and NatSL.
     1..n. Formulas use `<1>`, `<2>`, ...; labels are metadata only.
 
 **Example Action Format:**
-For 2 agents: `AC` means Agent 1 performs action `A` and Agent 2 performs action `C`.
+For 2 agents, `AC` and `A|C` both mean Agent 1 performs `A` and Agent 2 performs `C`. Prefer compact single-character names in examples; use `|` when an action name has more than one character.
 
 ### BCGS (Birelational CGS)
 Used for IATL and related birelational loaders. Edge labels include `P`, `R`, `P,R`.
