@@ -1,19 +1,9 @@
 """Cost-bounded pre-image computation for OATL."""
 
-from typing import Any
+from model_checker.algorithms.explicit.shared.cost_utils import cost_to_scalar
 
 _cost_cache: dict[tuple, float] = {}
 _base_action_cache: dict[tuple, str] = {}
-
-
-def _cost_to_scalar(costs: Any) -> float:
-    """Convert model cost (number or list of numbers) to a single float; lists are summed."""
-    if not costs:
-        return 0.0
-    first_cost = costs[0]
-    if isinstance(first_cost, (list, tuple)):
-        return sum(first_cost) if first_cost else 0.0
-    return float(first_cost)
 
 
 def _get_cached_cost(cgs, action: str, state_name: str) -> float:
@@ -25,12 +15,12 @@ def _get_cached_cost(cgs, action: str, state_name: str) -> float:
     cost = 0.0
     try:
         costs = cgs.get_cost_for_action(action, state_name)
-        cost = _cost_to_scalar(costs) if costs else 0.0
+        cost = cost_to_scalar(costs) if costs else 0.0
     except (KeyError, IndexError, AttributeError, TypeError):
         if "*" in str(action):
             try:
                 costs = cgs.get_cost_for_action("*", state_name)
-                cost = _cost_to_scalar(costs) if costs else 0.0
+                cost = cost_to_scalar(costs) if costs else 0.0
             except (KeyError, IndexError, AttributeError, TypeError):
                 pass
 
