@@ -27,7 +27,7 @@ NATATL_SCALING_CASES = [
             transitions=[
                 ["1", "1", "0"],
                 ["0", "1", "0"],
-                ["0", "0", "0"],
+                ["0", "0", "*"],
             ],
             state_names=["s0", "s1", "s2"],
             initial_state="s0",

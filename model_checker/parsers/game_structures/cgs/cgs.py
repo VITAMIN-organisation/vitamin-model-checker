@@ -53,6 +53,7 @@ class CGS:
             lines = f.readlines()
         self._reset_state()
         cgs_parser.parse_cgs_file(lines, self)
+        self.validate_model_structure()
 
     def read_from_model_object(self, model):
         """Fill this CGS from an existing model object instead of reading a file."""
@@ -77,6 +78,7 @@ class CGS:
         self._cached_graph_id = None
         self._cached_reverse_index = None
         self._cached_reverse_index_graph_id = None
+        self.validate_model_structure()
 
     # --- Cached Properties for Performance ---
 
@@ -171,13 +173,6 @@ class CGS:
             self._cached_reverse_index = cgs_utils.build_reverse_index(edges)
             self._cached_reverse_index_graph_id = current_graph_id
         return self._cached_reverse_index
-
-    def create_label_matrix(self, graph):
-        """Build a label matrix from the given graph for NatATL (labels like s0, s1; non-string cells become None)."""
-        return [
-            [f"s{i}" if isinstance(elem, str) and elem != "*" else None for elem in row]
-            for i, row in enumerate(graph)
-        ]
 
     # --- Validation ---
 

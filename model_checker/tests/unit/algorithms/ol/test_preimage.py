@@ -53,14 +53,18 @@ class TestOLCostSemantics:
         content = build_cgs_model_content(
             transitions=[
                 ["0", "1A", "2A"],
-                ["0", "0", "0"],
+                ["0", "*", "0"],
                 ["0", "0", "*"],
             ],
             state_names=["s0", "s1", "s2"],
             initial_state="s0",
             labelling=[["0"], ["1"], ["0"]],
             prop_names=["p"],
-            costs_for_actions={"1A": "s0$1:0", "2A": "s0$1:0", "*": "s2$0:0"},
+            costs_for_actions={
+                "1A": "s0$1:0",
+                "2A": "s0$1:0",
+                "*": "s1$2:0;s2$0:0",
+            },
             num_agents=1,
         )
         cgs = load_costcgs_from_content(temp_file, content)

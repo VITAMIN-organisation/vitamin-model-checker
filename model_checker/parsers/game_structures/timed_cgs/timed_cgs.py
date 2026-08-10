@@ -26,3 +26,4 @@ class TimedCGS(CostCGS):
         )
         timed_cgs_parser.parse_base_sections(base_lines, self)
         timed_cgs_parser.parse_timed_sections(lines, self)
+        self.validate_model_structure()

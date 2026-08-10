@@ -5,10 +5,7 @@ Checks states, agents, transition matrix, labelling matrix, and NatATL/tree rule
 
 from . import cgs_actions
 
-
-def get_num_states(states) -> int:
-    """Return how many states there are; 0 if the list/array is empty."""
-    return len(states) if hasattr(states, "__len__") and len(states) > 0 else 0
+_EMPTY_TRANSITION_CELLS = frozenset({0, "", "0", None})
 
 
 def validate_transition_matrix_dimensions(
@@ -90,7 +87,7 @@ def validate_nat_idle_requirements(graph: list[list], n_agents: int) -> None:
     all zeros/empty or if some agent position has no idle-capable joint action.
     """
     for i, row in enumerate(graph):
-        if all(elem == 0 or elem == "" for elem in row):
+        if not any(elem not in _EMPTY_TRANSITION_CELLS for elem in row):
             raise ValueError(f"All elements in row {i} are 0")
 
         idle_counts = [0] * n_agents
@@ -114,6 +111,31 @@ def validate_nat_idle_requirements(graph: list[list], n_agents: int) -> None:
                 f"Idle error in row {i}: There has to be at least one idle "
                 f"joint action for agents {missing_agents}"
             )
+
+
+def validate_total_transitions(graph: list[list], states) -> list[str]:
+    """Require every state to have at least one outgoing transition.
+
+    CTL/ATL-style semantics assume a total (serial) transition relation: every
+    state has a successor. Terminal states should use a self-loop such as ``*``.
+    """
+    errors = []
+    if not graph:
+        return errors
+
+    for i, row in enumerate(graph):
+        if any(elem not in _EMPTY_TRANSITION_CELLS for elem in row):
+            continue
+        if hasattr(states, "__len__") and i < len(states):
+            state_name = str(states[i])
+        else:
+            state_name = f"index {i}"
+        errors.append(
+            f"State '{state_name}' has no outgoing transitions. "
+            "Every state must have at least one successor "
+            "(use '*' for a self-loop on terminal states)."
+        )
+    return errors
 
 
 def collect_model_structure_errors(cgs) -> list[str]:
@@ -147,8 +169,11 @@ def collect_model_structure_errors(cgs) -> list[str]:
     else:
         errors.append("Initial_State section is missing or empty")
 
-    num_states = get_num_states(cgs.states)
+    num_states = (
+        len(cgs.states) if hasattr(cgs.states, "__len__") and len(cgs.states) > 0 else 0
+    )
     errors.extend(validate_transition_matrix_dimensions(cgs.graph, num_states))
+    errors.extend(validate_total_transitions(cgs.graph, cgs.states))
 
     num_props = (
         len(cgs.atomic_propositions)
@@ -181,17 +206,17 @@ def validate_recall_structure(graph: list[list], n_agents: int) -> None:
     """Check Recall semantics: idle rules, s0 has at least one transition, and connectivity from s0 (no forest)."""
     validate_nat_idle_requirements(graph, n_agents)
 
-    if not any(elem != 0 and elem != "" for elem in graph[0]):
+    if not any(elem not in _EMPTY_TRANSITION_CELLS for elem in graph[0]):
         raise ValueError(
             "Transition error: The initial state 's0' must have at least one non-zero transition"
         )
 
     s0_transitions_to_others = any(
-        graph[0][j] != 0 and graph[0][j] != "" for j in range(1, len(graph[0]))
+        graph[0][j] not in _EMPTY_TRANSITION_CELLS for j in range(1, len(graph[0]))
     )
     if not s0_transitions_to_others:
         for i in range(1, len(graph)):
-            if any(elem != 0 and elem != "" for elem in graph[i]):
+            if any(elem not in _EMPTY_TRANSITION_CELLS for elem in graph[i]):
                 raise ValueError(
                     f"Configuration error: State 's0' has no transitions to other "
                     f"states but state 's{i}' has transitions."

@@ -10,7 +10,6 @@ from model_checker.tests.helpers.model_helpers import (
     build_cgs_model_content,
     load_cgs_from_content,
     load_costcgs_from_content,
-    load_test_model,
 )
 
 
@@ -51,27 +50,18 @@ class TestMissingSectionsAndMalformedMatrices:
     """Missing sections and malformed transition/labelling matrices."""
 
     @pytest.mark.parametrize(
-        "file_name, expectation, error_msg",
+        "file_name, error_msg",
         [
-            ("missing_transition.txt", lambda p: len(p.states) > 0, None),
-            (
-                "missing_number_of_agents.txt",
-                lambda p: p.number_of_agents == "",
-                "Number_of_agents is missing",
-            ),
+            ("missing_transition.txt", "Transition matrix"),
+            ("missing_number_of_agents.txt", "Number_of_agents"),
         ],
     )
-    def test_missing_sections_handling(
-        self, test_data_dir, file_name, expectation, error_msg
-    ):
-        parser = load_test_model(test_data_dir, f"invalid/{file_name}")
-        if error_msg:
-            with pytest.raises(ValueError, match=error_msg):
-                parser.get_number_of_agents()
-        else:
-            assert expectation(parser)
-            if hasattr(parser, "graph"):
-                assert parser.graph is not None
+    def test_missing_sections_handling(self, test_data_dir, file_name, error_msg):
+        """Incomplete models are rejected when the file is loaded."""
+        parser = CGS()
+        path = test_data_dir / "tests" / "invalid" / file_name
+        with pytest.raises(ValueError, match=error_msg):
+            parser.read_file(str(path))
 
     @pytest.mark.parametrize(
         "file_name, match", [("malformed_labelling.txt", "inhomogeneous")]
@@ -145,10 +135,13 @@ class TestSpecialCharactersAndDuplicateSections:
     def test_state_names_special_characters(
         self, temp_file, state_names, initial_state, labelling
     ):
+        n = len(state_names)
+        transitions = [["III" if i == j else "0" for j in range(n)] for i in range(n)]
         content = _base_content(
             state_names=state_names,
             initial_state=initial_state,
             labelling=labelling,
+            transitions=transitions,
         )
         parser = load_cgs_from_content(temp_file, content)
         for name in state_names:

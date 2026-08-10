@@ -1,4 +1,4 @@
-"""CTL fixpoint: convergence, iteration count, intermediate values, cycles and deadlocks (EF/AF/EG/AG)."""
+"""CTL fixpoint: convergence, iteration count, intermediate values, and cycles (EF/AF/EG/AG)."""
 
 import pytest
 
@@ -50,32 +50,14 @@ def compute_eg_fixpoint_iterations(cgs, target_states):
     return T, iterations
 
 
-def compute_af_fixpoint_iterations(cgs, target_states):
-    """
-    Compute AF fixpoint with iteration tracking.
+def compute_complement_dual_fixpoint(cgs, target_states, dual_compute):
+    """Dual operators: result = S \\ dual_compute(S \\ target); keep dual iterations.
 
-    AF phi = not EG(not phi)
-    Returns: (final_result, iterations_list)
+    Used for AF phi = not EG(not phi) and AG phi = not EF(not phi).
     """
     all_states = set(cgs.states)
-    not_target = all_states - target_states
-    eg_result, iterations = compute_eg_fixpoint_iterations(cgs, not_target)
-    af_result = all_states - eg_result
-    return af_result, iterations
-
-
-def compute_ag_fixpoint_iterations(cgs, target_states):
-    """
-    Compute AG fixpoint with iteration tracking.
-
-    AG phi = not EF(not phi)
-    Returns: (final_result, iterations_list)
-    """
-    all_states = set(cgs.states)
-    not_target = all_states - target_states
-    ef_result, iterations = compute_ef_fixpoint_iterations(cgs, not_target)
-    ag_result = all_states - ef_result
-    return ag_result, iterations
+    dual_result, iterations = dual_compute(cgs, all_states - target_states)
+    return all_states - dual_result, iterations
 
 
 @pytest.mark.semantic
@@ -170,8 +152,12 @@ class TestCTLFixpointConvergence:
 
         _, ef_iterations = compute_ef_fixpoint_iterations(cgs_simple_parser, target)
         _, eg_iterations = compute_eg_fixpoint_iterations(cgs_simple_parser, target)
-        _, af_iterations = compute_af_fixpoint_iterations(cgs_simple_parser, target)
-        _, ag_iterations = compute_ag_fixpoint_iterations(cgs_simple_parser, target)
+        _, af_iterations = compute_complement_dual_fixpoint(
+            cgs_simple_parser, target, compute_eg_fixpoint_iterations
+        )
+        _, ag_iterations = compute_complement_dual_fixpoint(
+            cgs_simple_parser, target, compute_ef_fixpoint_iterations
+        )
 
         assert len(ef_iterations) <= num_states + 1, (
             f"EF fixpoint should converge in at most {num_states + 1} iterations, "

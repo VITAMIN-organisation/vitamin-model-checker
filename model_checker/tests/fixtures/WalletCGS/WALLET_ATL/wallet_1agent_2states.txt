@@ -6,7 +6,7 @@
 
 Transition
 A *
-0 0
+0 *
 Name_State
 s0 s1
 Initial_State

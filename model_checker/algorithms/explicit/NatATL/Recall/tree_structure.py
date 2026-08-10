@@ -20,7 +20,10 @@ class Node:
         self.predecessors = (
             [str(p) for p in predecessors] if predecessors is not None else []
         )
-        self.label_row = self.get_label_row_list(cgs.states, cgs.matrix_prop)
+        idx = cgs.state_to_index.get(self.state)
+        self.label_row = (
+            list(cgs.matrix_prop[idx]) if idx is not None and cgs.matrix_prop else None
+        )
         self.actions: list[str] = []
         self.old_state = name
         self.pruned = False
@@ -52,15 +55,6 @@ class Node:
         for child in self.children:
             ret += child.__str__(level + 1)
         return ret
-
-    def get_label_row_list(
-        self, states: list[str], label_matrix: list[list]
-    ) -> list | None:
-        """Get proposition values for this state from the label matrix."""
-        for i, state in enumerate(states):
-            if self.state == state:
-                return label_matrix[i]
-        return None
 
 
 def rename_nodes(tree: Node) -> None:

@@ -950,7 +950,9 @@ sections present in the file. Canonical details also appear in [file_formats.md]
 The base model for CTL, LTL, ATL, NatATL, and NatSL.
 
 **File Sections:**
-1.  **Transition**: Matrix (States x States) of joint action profiles. Each non-zero cell lists one or more joints separated by commas. A joint is either compact (`AC` = agent 1 plays `A`, agent 2 plays `C`) or explicit (`A|C`, `IDLE|MOVE`). Both forms are the same per-agent move vector; checkers normalize them to `|`-separated profiles. Use `*` for a full-agent wildcard and `0` for no transition.
+1.  **Transition**: Matrix (States x States) of joint action profiles. Each non-zero cell lists one or more joints separated by commas. A joint is either compact (`AC` = agent 1 plays `A`, agent 2 plays `C`) or explicit (`A|C`, `IDLE|MOVE`). Both forms are the same per-agent move vector; checkers normalize them to `|`-separated profiles. Use `*` for a full-agent wildcard and `0` for no transition. Every state must have at least one successor (total relation); use a `*` self-loop on terminal states. Cost table keys are normalized to the same pipe form at load time.
+
+    > **Why total transitions?** CTL/ATL (and related) semantics are defined on infinite paths (Baier/Katoen). A state with no successor makes `X` undefined and can make universal next operators hold vacuously. A self-loop means "stay here forever," not that the system has no end state in the modeled domain.
 2.  **Unknown_Transition_by**: Typically zeroed matrix for experimental uncertainty.
 3.  **Name_State**: Space-separated list of state names.
 4.  **Initial_State**: The starting state identifier.

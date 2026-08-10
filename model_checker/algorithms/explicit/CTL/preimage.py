@@ -51,7 +51,7 @@ def pre_image_all(
 ) -> set[str]:
     """Universal pre-image (AX): states whose successors are all in target_states.
 
-    States with no successors are included (vacuous case).
+    Models must be total (every state has a successor); validated on load.
     """
     all_states = {str(s) for s in all_states}
     target_states = {str(s) for s in target_states}
@@ -67,7 +67,7 @@ def pre_image_all(
     for state in all_states:
         state_str = str(state)
         successors = forward_index.get(state_str, set())
-        if not successors or successors.issubset(target_states):
+        if successors and successors.issubset(target_states):
             result.add(state_str)
 
     return result
@@ -98,7 +98,7 @@ def pre_release_universal(
         for s in all_states:
             if s in psi_states:
                 successors = forward_index.get(str(s), set())
-                if s in phi_states or not successors or successors.issubset(result):
+                if s in phi_states or (successors and successors.issubset(result)):
                     new_result.add(s)
 
         if new_result == result:

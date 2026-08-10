@@ -4,6 +4,7 @@ Boolean connectives (NOT/OR/AND/IMPLIES) are handled by
 ``shared.boolean_operators`` and wired in ``CTL.solver``.
 """
 
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from model_checker.algorithms.explicit.CTL.fixpoint import (
@@ -165,10 +166,9 @@ def handle_er(cgs: "CGS", node: Any) -> None:
     all_states = cgs.all_states_set
     not_phi = all_states - parse_state_set_literal(node.left.value)
     not_psi = all_states - parse_state_set_literal(node.right.value)
-    edges = cgs.get_edges()
-
-    def update(T: set[str]) -> set[str]:
-        return T.union(not_phi.intersection(pre_image_all(edges, all_states, T)))
-
-    a_not_phi_u_not_psi = least_fixpoint(not_psi, update)
+    dual = SimpleNamespace(
+        left=SimpleNamespace(value=str(tuple(sorted({str(s) for s in not_phi})))),
+        right=SimpleNamespace(value=str(tuple(sorted({str(s) for s in not_psi})))),
+    )
+    a_not_phi_u_not_psi = _compute_au(cgs, dual)
     node.value = str(tuple(sorted({str(s) for s in all_states - a_not_phi_u_not_psi})))

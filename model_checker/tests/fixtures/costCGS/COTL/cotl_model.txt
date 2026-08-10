@@ -5,14 +5,15 @@
 # LOGIC: COTL
 
 # DESCRIPTION: CostCGS with propositions r, s, g, h; cost-bounded formulas <coalition><cost>F/G/X/U.
+# Every state has a successor: sinks use a self-loop (*).
 
 Transition
 0 AAB AAC BBB 0 0
-0 0 0 0 0 0
-0 0 0 0 0 0
-0 0 0 0 0 0
-0 0 0 0 0 0
-0 0 0 0 0 0
+0 * 0 0 0 0
+0 0 * 0 0 0
+0 0 0 * 0 0
+0 0 0 0 * 0
+0 0 0 0 0 *
 Name_State
 s0 s1 s2 s3 s4 s5
 Initial_State

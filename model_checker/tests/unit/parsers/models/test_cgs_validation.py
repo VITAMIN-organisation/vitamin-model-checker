@@ -2,10 +2,10 @@
 
 import pytest
 
+from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.tests.helpers.model_helpers import (
     build_cgs_model_content,
     load_cgs_from_content,
-    load_test_model,
 )
 
 
@@ -67,16 +67,27 @@ class TestCGSValidation:
                 },
                 "Labelling",
             ),
+            (
+                "content",
+                {
+                    "transitions": [["A", "0"], ["0", "0"]],
+                    "state_names": ["s0", "s1"],
+                    "initial_state": "s0",
+                    "labelling": [["1"], ["0"]],
+                    "num_agents": 1,
+                },
+                "no outgoing transitions",
+            ),
         ],
     )
     def test_validate_model_structure_error_detection(
         self, test_data_dir, temp_file, case_type, params, expected_error_pattern
     ):
-        if case_type == "file":
-            parser = load_test_model(
-                test_data_dir, f"{params['folder']}/{params['filename']}"
-            )
-        else:
-            parser = load_cgs_from_content(temp_file, build_cgs_model_content(**params))
+        """Invalid models are rejected when the file is loaded."""
         with pytest.raises(ValueError, match=expected_error_pattern):
-            parser.validate_model_structure()
+            if case_type == "file":
+                path = test_data_dir / "tests" / params["folder"] / params["filename"]
+                parser = CGS()
+                parser.read_file(str(path))
+            else:
+                load_cgs_from_content(temp_file, build_cgs_model_content(**params))

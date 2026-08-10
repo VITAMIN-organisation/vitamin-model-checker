@@ -98,6 +98,13 @@ Algorithms normalize every profile to the explicit `|`-separated form before coa
 
 The cell wildcard `*` is treated as a profile with `*` in every agent position.
 
+Every state must have at least one outgoing transition (total / serial relation).
+Use a self-loop such as `*` on terminal states. Models that leave a row entirely
+`0` are rejected at load time. CTL/ATL-style operators assume infinite paths
+(Baier/Katoen); without a successor, next-time modalities are ill-defined and
+universal next can hold vacuously. A self-loop models a terminal situation as
+"remain forever."
+
 ### State And Label Sections
 
 - `Name_State`: space-separated state names.

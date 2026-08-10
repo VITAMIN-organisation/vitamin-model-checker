@@ -3,16 +3,16 @@
 import pytest
 
 from model_checker.parsers.game_structures.cgs import cgs_actions
-from model_checker.tests.helpers.model_helpers import load_test_model
+from model_checker.parsers.game_structures.cgs.cgs import CGS
 
 
 @pytest.mark.unit
 class TestCGSNumberOfAgents:
     """get_number_of_agents error cases."""
 
-    def test_get_number_of_agents_error_cases(self, test_data_dir):
-        """Missing Number_of_agents section raises ValueError."""
-        parser = load_test_model(test_data_dir, "invalid/missing_number_of_agents.txt")
+    def test_get_number_of_agents_error_cases(self):
+        """Unset Number_of_agents raises ValueError on the API accessor."""
+        parser = CGS()
         with pytest.raises(ValueError, match="Number_of_agents is missing"):
             parser.get_number_of_agents()
 
@@ -40,19 +40,21 @@ class TestCGSActionExtraction:
         actions = cgs_actions.extract_actions_for_agents(
             cgs_simple_parser.graph, agents
         )
-        all_action_strings = set()
         for row in cgs_simple_parser.graph:
             for elem in row:
-                if elem != 0 and elem != "*":
-                    for action in str(elem).split(","):
-                        all_action_strings.add(action)
-        for action_string in all_action_strings:
-            for agent_num in agents:
-                agent_index = agent_num - 1
-                if (
-                    agent_index < len(action_string)
-                    and action_string[agent_index] != "I"
+                if elem in (0, "*", "0", ""):
+                    continue
+                for tokens in cgs_actions.parse_joint_action_cell(
+                    str(elem), num_agents
                 ):
-                    agent_key = f"agent{agent_num}"
-                    expected_action = action_string[agent_index]
-                    assert expected_action in actions[agent_key]
+                    for agent_num in agents:
+                        agent_index = agent_num - 1
+                        token = tokens[agent_index]
+                        if token in (
+                            cgs_actions.CANONICAL_IDLE_TOKEN,
+                            "I",
+                            "*",
+                        ):
+                            continue
+                        agent_key = f"agent{agent_num}"
+                        assert token in actions[agent_key]

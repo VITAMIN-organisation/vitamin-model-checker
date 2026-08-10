@@ -49,6 +49,7 @@ class CapCGS(CGS):
         self._parse_capacity_sections(lines)
         self._parse_common_sections(lines)
         self._parse_transitions(lines)
+        self.validate_model_structure()
 
     # --- Private Parsing Methods - Capacity Sections ---
 

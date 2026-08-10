@@ -37,7 +37,7 @@ class TestStateNamesToIndices:
     def test_all_unknown_state_names_returns_empty_set(self, temp_file):
         """When all names are unknown, returns empty set without raising."""
         content = build_cgs_model_content(
-            transitions=[["0", "I"]],
+            transitions=[["I"]],
             state_names=["s0"],
             initial_state="s0",
             labelling=[["0"]],
@@ -53,7 +53,7 @@ class TestStateNamesToIndices:
     def test_empty_iterable_returns_empty_set(self, temp_file):
         """Empty iterable returns empty set."""
         content = build_cgs_model_content(
-            transitions=[["0", "I"]],
+            transitions=[["I"]],
             state_names=["s0"],
             initial_state="s0",
             labelling=[["0"]],

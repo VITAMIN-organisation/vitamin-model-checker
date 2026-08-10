@@ -44,6 +44,7 @@ class CostCGS(CGS):
         cost_cgs_parser.parse_common_sections(lines, self)
         cost_cgs_parser.normalize_cost_action_keys(self)
         cost_cgs_parser.parse_transitions(lines, self)
+        self.validate_model_structure()
 
     def read_from_model_object(self, model: Any) -> None:
         """Copy fields from an existing model object, including cost_for_action."""

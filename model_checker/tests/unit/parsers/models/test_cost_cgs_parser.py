@@ -43,3 +43,13 @@ class TestCostCGSCostParsing:
         assert instance.get_cost_for_action("A|A|C", "s0") == [[1, 1, 1]]
         assert instance.get_cost_for_action("*|*|*", "s1") == [2, 2]
         assert instance.get_cost_for_action("***", "s1") == [2, 2]
+
+    def test_get_cost_for_action_accepts_caret_compact_joints(self):
+        """Compact joints with non-letter tokens (e.g. AA^) normalize for lookup."""
+        instance = CostCGS()
+        instance.number_of_agents = 3
+        cost_cgs_parser.parse_cost_line("AA^ s0$1:1", instance, parse_split=False)
+        cost_cgs_parser.normalize_cost_action_keys(instance)
+        assert "A|A|^;s0" in instance.cost_for_action
+        assert instance.get_cost_for_action("AA^", "s0") == [1, 1]
+        assert instance.get_cost_for_action("A|A|^", "s0") == [1, 1]

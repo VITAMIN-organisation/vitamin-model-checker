@@ -75,7 +75,7 @@ class TestCTLTraceGeneration:
 
     def test_counterexample_trace(self, tmp_path):
         """When formula is not satisfied, result includes counterexample trace."""
-        model_content = _build_model(2, ["p"], [[1, 0], [0, 1]])
+        model_content = _build_model(2, ["p"], [[1], [0]])
         model_file = tmp_path / "test_model.txt"
         model_file.write_text(model_content)
 

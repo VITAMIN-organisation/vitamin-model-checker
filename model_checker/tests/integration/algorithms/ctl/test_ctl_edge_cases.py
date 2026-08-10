@@ -1,4 +1,4 @@
-"""CTL semantics on small models: two-state cycles and deadlocks."""
+"""CTL semantics on small models: two-state cycles."""
 
 import pytest
 
@@ -35,19 +35,6 @@ def create_two_state_cycle_model(
     """Build a CGS parser for the 2-state cycle s0 -> s1 -> s0."""
     content = _build_two_state_cycle_content(
         state0_label, state1_label, initial_state=initial_state
-    )
-    return load_cgs_from_content(temp_file, content)
-
-
-def create_deadlock_model(
-    temp_file, transitions, state_names, labelling, initial_state="s0"
-):
-    """Build a CGS parser from given transition matrix and labelling."""
-    content = build_cgs_model_content(
-        transitions=transitions,
-        state_names=state_names,
-        initial_state=initial_state,
-        labelling=labelling,
     )
     return load_cgs_from_content(temp_file, content)
 
@@ -96,51 +83,3 @@ class TestCTLCycles:
                 expected_ef,
                 f"EF p mismatch for 2-state cycle ({description})",
             )
-
-
-@pytest.mark.edge_case
-@pytest.mark.model_checking
-class TestCTLDeadlockStates:
-    """CTL AX/AG on model with deadlock states."""
-
-    @pytest.mark.parametrize(
-        "transitions, state_names, labelling, expected_ax, expected_ag, description",
-        [
-            (
-                [
-                    ["0", "AC", "BC"],
-                    ["0", "0", "0"],
-                    ["0", "0", "0"],
-                ],
-                ["s0", "s1", "s2"],
-                [["0"], ["1"], ["0"]],
-                {"s1", "s2"},
-                {"s1"},
-                "two deadlocks reachable from s0",
-            ),
-        ],
-    )
-    def test_deadlock_models(
-        self,
-        temp_file,
-        transitions,
-        state_names,
-        labelling,
-        expected_ax,
-        expected_ag,
-        description,
-    ):
-        """Test models with deadlock states across scenarios."""
-        parser = create_deadlock_model(
-            temp_file,
-            transitions=transitions,
-            state_names=state_names,
-            labelling=labelling,
-        )
-
-        _assert_ctl_result(
-            parser, "AX p", expected_ax, f"AX p mismatch ({description})"
-        )
-        _assert_ctl_result(
-            parser, "AG p", expected_ag, f"AG p mismatch ({description})"
-        )

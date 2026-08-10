@@ -77,7 +77,7 @@ class TestBuildTreeFromCGS:
     def test_build_tree_respects_height_limit(self, temp_file):
         """Verify tree stops building at specified height."""
         content = build_cgs_model_content(
-            transitions=[["0", "a"], ["0", "b"], ["0", "I"]],
+            transitions=[["0", "a", "0"], ["0", "0", "b"], ["0", "0", "I"]],
             state_names=["s0", "s1", "s2"],
             initial_state="s0",
             labelling=[["1"], ["0"], ["0"]],
@@ -115,7 +115,7 @@ class TestBuildTreeFromCGS:
     def test_build_tree_tracks_predecessors(self, temp_file):
         """Verify tree nodes track predecessor states correctly."""
         content = build_cgs_model_content(
-            transitions=[["0", "a"], ["0", "b"], ["0", "I"]],
+            transitions=[["0", "a", "0"], ["0", "0", "b"], ["0", "0", "I"]],
             state_names=["s0", "s1", "s2"],
             initial_state="s0",
             labelling=[["1"], ["0"], ["0"]],
@@ -186,7 +186,7 @@ class TestTreeToInitialCGS:
     def test_convert_respects_max_depth(self, temp_file):
         """Verify conversion respects max_depth parameter."""
         content = build_cgs_model_content(
-            transitions=[["0", "a"], ["0", "b"], ["0", "I"]],
+            transitions=[["0", "a", "0"], ["0", "0", "b"], ["0", "0", "I"]],
             state_names=["s0", "s1", "s2"],
             initial_state="s0",
             labelling=[["1"], ["0"], ["0"]],

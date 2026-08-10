@@ -1,4 +1,6 @@
-"""CTL model checking: deadlock handling (AX vacuously true), release (AR), error handling."""
+"""CTL model checking: total transitions, release (AR), error handling."""
+
+import pytest
 
 from model_checker.algorithms.explicit.CTL.CTL import (
     _core_ctl_checking,
@@ -11,11 +13,11 @@ from model_checker.tests.helpers.model_helpers import (
 )
 
 
-class TestCTLDeadlockHandling:
-    """Deadlock handling: AX phi vacuously true when no outgoing transitions."""
+class TestCTLTotalTransitions:
+    """Models must be total: every state has a successor."""
 
-    def test_ax_in_deadlock_state(self, temp_file):
-        """AX is true in deadlock states (no paths to check)."""
+    def test_deadlock_state_rejected_on_load(self, temp_file):
+        """A row with no outgoing transitions is rejected when the model is loaded."""
         content = build_cgs_model_content(
             transitions=[
                 ["0", "1", "0"],
@@ -27,16 +29,8 @@ class TestCTLDeadlockHandling:
             labelling=[["1"], ["0"], ["1"]],
             num_agents=1,
         )
-        parser = load_cgs_from_content(temp_file, content)
-
-        result = _core_ctl_checking(parser, "AX p")
-        assert "error" not in result
-        states = extract_states_from_result(result)
-        assert states is not None
-        assert "s2" in states, (
-            "Deadlock state s2 should be included in AX p result. "
-            "In CTL, AX phi is vacuously true in deadlock states (no paths to check)."
-        )
+        with pytest.raises(ValueError, match="no outgoing transitions"):
+            load_cgs_from_content(temp_file, content)
 
 
 class TestCTLReleaseOperator:
