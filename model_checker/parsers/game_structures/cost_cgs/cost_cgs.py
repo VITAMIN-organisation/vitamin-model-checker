@@ -8,6 +8,7 @@ from typing import Any
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cgs.cgs_actions import (
     AGENT_ACTION_SEPARATOR,
+    build_action_list,
     wildcard_joint_profile,
 )
 from model_checker.parsers.game_structures.cost_cgs import cost_cgs_parser
@@ -41,6 +42,7 @@ class CostCGS(CGS):
 
         cost_cgs_parser.parse_cost_sections(lines, self)
         cost_cgs_parser.parse_common_sections(lines, self)
+        cost_cgs_parser.normalize_cost_action_keys(self)
         cost_cgs_parser.parse_transitions(lines, self)
 
     def read_from_model_object(self, model: Any) -> None:
@@ -53,18 +55,28 @@ class CostCGS(CGS):
     def get_cost_for_action(self, action: str, state: str) -> Any:
         """Look up cost for action at state; all-wildcard actions use the '*' key.
 
-        Action profiles may be compact (``AAC``) or pipe-normalized (``A|A|C``);
-        both forms resolve to the same cost table entry.
+        Keys are pipe-normalized at load time. Compact profiles are still accepted
+        so callers and hand-built tables remain compatible.
         """
         action = str(action)
+        num_agents = self.get_number_of_agents()
         candidates = [action]
         if AGENT_ACTION_SEPARATOR in action:
             candidates.append("".join(action.split(AGENT_ACTION_SEPARATOR)))
+        else:
+            profiles = build_action_list(action, num_agents)
+            if profiles:
+                candidates.append(profiles[0])
 
-        num_agents = self.get_number_of_agents()
-        compact = candidates[-1]
+        compact = (
+            "".join(action.split(AGENT_ACTION_SEPARATOR))
+            if AGENT_ACTION_SEPARATOR in action
+            else action
+        )
         if action == wildcard_joint_profile(num_agents) or compact == "*" * num_agents:
-            candidates.extend(["*", "*" * num_agents])
+            candidates.extend(
+                ["*", "*" * num_agents, wildcard_joint_profile(num_agents)]
+            )
 
         seen: set[str] = set()
         for act in candidates:

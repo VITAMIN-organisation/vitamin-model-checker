@@ -3,6 +3,7 @@
 from typing import Any
 
 from model_checker.parsers.game_structures.cgs import cgs_parser
+from model_checker.parsers.game_structures.cgs.cgs_actions import build_action_list
 
 
 def parse_cost_sections(lines: list[str], instance: Any) -> None:
@@ -79,6 +80,29 @@ def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None
 
         key = f"{action_name};{state}"
         instance.cost_for_action.update({key: costs})
+
+
+def normalize_cost_action_keys(instance: Any) -> None:
+    """Rewrite cost table keys to pipe-normalized joint profiles.
+
+    Compact names such as ``AAC`` become ``A|A|C``. Bare ``*`` is kept as ``*``;
+    compact all-wildcards such as ``***`` become ``*|*|*``. Call after
+    ``Number_of_agents`` is available.
+    """
+    num_agents = instance.get_number_of_agents()
+    normalized: dict[str, Any] = {}
+    for key, costs in instance.cost_for_action.items():
+        action_name, sep, state = key.partition(";")
+        if not sep:
+            normalized[key] = costs
+            continue
+        if action_name == "*":
+            norm_action = "*"
+        else:
+            profiles = build_action_list(action_name, num_agents)
+            norm_action = profiles[0] if profiles else action_name
+        normalized[f"{norm_action};{state}"] = costs
+    instance.cost_for_action = normalized
 
 
 def parse_common_sections(lines: list[str], instance: Any) -> None:

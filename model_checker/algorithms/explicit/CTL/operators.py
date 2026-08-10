@@ -161,18 +161,14 @@ def handle_au(cgs: "CGS", node: Any) -> None:
 
 
 def handle_er(cgs: "CGS", node: Any) -> None:
-    """Handle ER operator: existential release E(phi R psi)."""
+    """Handle ER operator: E(phi R psi) = not A(not phi U not psi)."""
     all_states = cgs.all_states_set
     not_phi = all_states - parse_state_set_literal(node.left.value)
     not_psi = all_states - parse_state_set_literal(node.right.value)
     edges = cgs.get_edges()
 
     def update(T: set[str]) -> set[str]:
-        return T.union(
-            not_phi.intersection(not_psi).intersection(
-                pre_image_all(edges, all_states, T)
-            )
-        )
+        return T.union(not_phi.intersection(pre_image_all(edges, all_states, T)))
 
-    a_not_phi_until = least_fixpoint(not_psi, update)
-    node.value = str(tuple(sorted({str(s) for s in all_states - a_not_phi_until})))
+    a_not_phi_u_not_psi = least_fixpoint(not_psi, update)
+    node.value = str(tuple(sorted({str(s) for s in all_states - a_not_phi_u_not_psi})))

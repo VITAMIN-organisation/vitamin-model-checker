@@ -21,29 +21,23 @@ from model_checker.tests.performance.performance_helpers import (
 def compute_atl_fixpoint_iterations(cgs, target_states, coalition, operator="F"):
     """Compute ATL fixpoint iterations for convergence checks."""
     if operator == "F":
-        T = target_states.copy()
-        iterations = 0
-        while True:
-            pre_result = pre(cgs, coalition, T)
-            new_T = target_states.union(pre_result)
-            if new_T == T:
-                break
-            T = new_T
-            iterations += 1
-        return T, iterations
-    if operator == "G":
-        all_states = set(cgs.states)
-        T = all_states.copy()
-        iterations = 0
-        while True:
-            pre_result = pre(cgs, coalition, T)
-            new_T = target_states.intersection(pre_result)
-            if new_T == T:
-                break
-            T = new_T
-            iterations += 1
-        return T, iterations
-    return None, 0
+        seed = target_states.copy()
+        step = lambda T: target_states.union(pre(cgs, coalition, T))
+    elif operator == "G":
+        seed = set(cgs.states)
+        step = lambda T: target_states.intersection(pre(cgs, coalition, T))
+    else:
+        return None, 0
+
+    T = seed
+    iterations = 0
+    while True:
+        new_T = step(T)
+        if new_T == T:
+            break
+        T = new_T
+        iterations += 1
+    return T, iterations
 
 
 def _model_content_for_layout(layout, num_states, num_agents, **kwargs):
@@ -56,14 +50,37 @@ def _model_content_for_layout(layout, num_states, num_agents, **kwargs):
     raise ValueError(f"Unknown layout: {layout}")
 
 
+# num_states, num_agents, layout, formula, max_time, model_kwargs, min_states, exact_all
 ATL_PERFORMANCE_CASES = [
-    (100, 2, "linear", "<1>F p", 10.0, None),
-    (100, 2, "cycle", "<1>G p", 10.0, None),
-    (100, 2, "linear", "<1>X p", 5.0, None),
-    (100, 2, "linear", "<1>(p U q)", 10.0, {"prop_names": ["p", "q"], "dense_p": True}),
-    (100, 3, "linear", "<1,2>F p", 15.0, None),
-    (200, 2, "linear", "<1>F p", 20.0, None),
+    (100, 2, "linear", "<1>F p", 10.0, None, 1, False),
+    (100, 2, "cycle", "<1>G p", 10.0, None, 1, False),
+    (100, 2, "linear", "<1>X p", 5.0, None, 0, False),
+    (
+        100,
+        2,
+        "linear",
+        "<1>(p U q)",
+        10.0,
+        {"prop_names": ["p", "q"], "dense_p": True},
+        None,
+        True,
+    ),
+    (100, 3, "linear", "<1,2>F p", 15.0, None, 1, False),
+    (200, 2, "linear", "<1>F p", 20.0, None, 1, False),
 ]
+
+ATL_FIXPOINT_CASES = [
+    ("linear", 100, "1", "F", "ends"),
+    ("cycle", 100, "1", "G", "all"),
+]
+
+
+def _fixpoint_targets(kind, num_states):
+    if kind == "ends":
+        return {"s0", f"s{num_states - 1}"}
+    if kind == "all":
+        return {f"s{i}" for i in range(num_states)}
+    raise ValueError(f"Unknown target kind: {kind}")
 
 
 @pytest.mark.performance
@@ -72,7 +89,7 @@ class TestATLPerformanceLargeModels:
     """Performance tests for ATL operators with large state spaces."""
 
     @pytest.mark.parametrize(
-        "num_states,num_agents,layout,formula,max_time,model_kwargs",
+        "num_states,num_agents,layout,formula,max_time,model_kwargs,min_states,exact_all",
         ATL_PERFORMANCE_CASES,
         ids=[
             "F_linear_100",
@@ -84,48 +101,61 @@ class TestATLPerformanceLargeModels:
         ],
     )
     def test_atl_operator_scales(
-        self, temp_file, num_states, num_agents, layout, formula, max_time, model_kwargs
+        self,
+        temp_file,
+        num_states,
+        num_agents,
+        layout,
+        formula,
+        max_time,
+        model_kwargs,
+        min_states,
+        exact_all,
     ):
         """ATL operators complete within time bound."""
         kwargs = model_kwargs or {}
-        model_content = _model_content_for_layout(
-            layout, num_states, num_agents, **kwargs
+        parser = load_cgs_from_content(
+            temp_file,
+            _model_content_for_layout(layout, num_states, num_agents, **kwargs),
         )
-        parser = load_cgs_from_content(temp_file, model_content)
         states, _ = run_model_checking_with_timeout(
             parser, _core_atl_checking, formula, max_time
         )
-        assert (
-            len(states) > 0 or formula == "<1>X p"
-        ), "Formula should hold in some states"
-        if formula == "<1>(p U q)":
+        if exact_all:
             assert len(states) == num_states
+        else:
+            assert (
+                len(states) >= min_states
+            ), f"{formula} should hold in at least {min_states} states"
 
-    def test_atl_f_fixpoint_convergence(self, temp_file):
-        """<1>F fixpoint converges in at most num_states iterations."""
-        num_states, num_agents = 100, 2
-        model_content = generate_linear_chain(num_states, num_agents, action_label="AC")
-        parser = load_cgs_from_content(temp_file, model_content)
-        target_states = {"s0", f"s{num_states - 1}"}
-        _, iterations = compute_atl_fixpoint_iterations(parser, target_states, "1", "F")
-        assert iterations <= num_states
-
-    def test_atl_g_fixpoint_convergence(self, temp_file):
-        """<1>G fixpoint converges in at most num_states iterations."""
-        num_states, num_agents = 100, 2
-        model_content = generate_cycle_model(num_states, num_agents)
-        parser = load_cgs_from_content(temp_file, model_content)
-        target_states = {f"s{i}" for i in range(num_states)}
-        _, iterations = compute_atl_fixpoint_iterations(parser, target_states, "1", "G")
+    @pytest.mark.parametrize(
+        "layout,num_states,coalition,operator,target_kind",
+        ATL_FIXPOINT_CASES,
+        ids=["F_linear_100", "G_cycle_100"],
+    )
+    def test_atl_fixpoint_convergence(
+        self, temp_file, layout, num_states, coalition, operator, target_kind
+    ):
+        """ATL F/G fixpoints converge in at most |S| iterations."""
+        parser = load_cgs_from_content(
+            temp_file, _model_content_for_layout(layout, num_states, 2)
+        )
+        _, iterations = compute_atl_fixpoint_iterations(
+            parser,
+            _fixpoint_targets(target_kind, num_states),
+            coalition,
+            operator,
+        )
         assert iterations <= num_states
 
     def test_atl_fixpoint_convergence_guarantee(self, temp_file):
-        """ATL fixpoints converge in at most |S| iterations."""
-        num_states, num_agents = 100, 2
-        model_content = generate_linear_chain(num_states, num_agents, action_label="AC")
-        parser = load_cgs_from_content(temp_file, model_content)
-        target_states = {"s0", f"s{num_states - 1}"}
-        for op in ["F", "G"]:
+        """Both F and G fixpoints converge in at most |S| iterations on one model."""
+        num_states = 100
+        parser = load_cgs_from_content(
+            temp_file, generate_linear_chain(num_states, 2, action_label="AC")
+        )
+        target_states = _fixpoint_targets("ends", num_states)
+        for op in ("F", "G"):
             _, iterations = compute_atl_fixpoint_iterations(
                 parser, target_states, "1", op
             )
@@ -135,9 +165,10 @@ class TestATLPerformanceLargeModels:
 
     def test_atl_pre_image_scalability(self, temp_file):
         """Pre-image computation scales with state space."""
-        num_states, num_agents = 150, 2
-        model_content = generate_linear_chain(num_states, num_agents, action_label="AC")
-        parser = load_cgs_from_content(temp_file, model_content)
+        num_states = 150
+        parser = load_cgs_from_content(
+            temp_file, generate_linear_chain(num_states, 2, action_label="AC")
+        )
         target_states = {f"s{i}" for i in range(num_states // 2, num_states)}
         start_time = time.time()
         pre_result = pre(parser, "1", target_states)

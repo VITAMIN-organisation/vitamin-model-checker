@@ -35,7 +35,10 @@ class TestCostCGSCostParsing:
         instance.number_of_agents = 3
         cost_cgs_parser.parse_cost_line("AAC s0$1,1,1", instance, parse_split=True)
         cost_cgs_parser.parse_cost_line("*** s1$2:2", instance, parse_split=False)
+        cost_cgs_parser.normalize_cost_action_keys(instance)
 
+        assert "A|A|C;s0" in instance.cost_for_action
+        assert "*|*|*;s1" in instance.cost_for_action
         assert instance.get_cost_for_action("AAC", "s0") == [[1, 1, 1]]
         assert instance.get_cost_for_action("A|A|C", "s0") == [[1, 1, 1]]
         assert instance.get_cost_for_action("*|*|*", "s1") == [2, 2]
