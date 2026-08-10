@@ -54,6 +54,9 @@ ENV/
 .vmi-integrated-modules/
 .vmi-snapshots/
 
+# PLY parse tables (regenerated on first parse into each logic's generated/)
+**/generated/parsetab.py
+
 # Package specifics
 ctl.json
 ctl.json.summary.json
