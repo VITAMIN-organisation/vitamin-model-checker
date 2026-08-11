@@ -49,50 +49,38 @@ def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Node_PK | None:
             root.right = build_tree(cgs, tpl[2])
             if root.right is None:
                 return None
-    else:
-        if isinstance(tpl, tuple) and len(tpl) == 2:
-            agent_str, prop_str = str(tpl[0]), str(tpl[1])
-            if agent_str.isdigit() and prop_str and prop_str[0].islower():
-                states_set = resolve_atom_with_constants(cgs, prop_str, parser)
-                if states_set is None:
-                    return None
-                Theta = pointed_knowledge_set(cgs)
-                winning_pk = {
-                    theta for theta in Theta if str(theta.state) in states_set
-                }
-                return Node_PK(winning_pk)
-        tpl_str = str(tpl)
-        if verify_digits_and_letters(tpl_str):
-            # Atomic capacity constraint (e.g. 1c)
-            ag_str = "".join(filter(str.isdigit, tpl_str))
-            if not ag_str:
-                return None
-            ag_idx = int(ag_str) - 1
-            cap_a = tpl_str[len(ag_str) :]
+        return root
 
-            all_cap_combos = {tuple(elem) for elem in X_agt_cap(cgs)}
-            winning_combos = {
-                c for c in all_cap_combos if ag_idx < len(c) and c[ag_idx] == cap_a
-            }
-            if not winning_combos:
-                return None
-            return Node_PK(winning_combos)
-        else:
-            # Atomic proposition
-            states_set = resolve_atom_with_constants(cgs, tpl_str, parser)
-            if states_set is None:
-                return None
-            Theta = pointed_knowledge_set(cgs)
-            winning_pk = {theta for theta in Theta if str(theta.state) in states_set}
-            return Node_PK(winning_pk)
+    tpl_str = str(tpl)
+    if verify_digits_and_letters(tpl_str):
+        # Atomic capacity constraint (e.g. 1c)
+        ag_str = "".join(filter(str.isdigit, tpl_str))
+        if not ag_str:
+            return None
+        ag_idx = int(ag_str) - 1
+        cap_a = tpl_str[len(ag_str):]
 
-    return root
+        all_cap_combos = {tuple(elem) for elem in X_agt_cap(cgs)}
+        winning_combos = {
+            c for c in all_cap_combos if ag_idx < len(c) and c[ag_idx] == cap_a
+        }
+        if not winning_combos:
+            return None
+        return Node_PK(winning_combos)
+
+    # Atomic proposition
+    states_set = resolve_atom_with_constants(cgs, tpl_str, parser)
+    if states_set is None:
+        return None
+    Theta = pointed_knowledge_set(cgs)
+    winning_pk = {theta for theta in Theta if str(theta.state) in states_set}
+    return Node_PK(winning_pk)
 
 
 def solve_tree(cgs: CapCGSProtocol, node: Node_PK | None) -> None:
     """Evaluate the CapATL formula tree bottom-up."""
     if node is None:
-        return set()
+        return
 
     if node.left:
         solve_tree(cgs, node.left)
@@ -104,7 +92,7 @@ def solve_tree(cgs: CapCGSProtocol, node: Node_PK | None) -> None:
     if node.right is None:
         val_str = str(node.value)
         if node.left is None:
-            return node.value
+            return
 
         if parser.verify("NOT", val_str):
             handle_not(cgs, node)
@@ -133,5 +121,3 @@ def solve_tree(cgs: CapCGSProtocol, node: Node_PK | None) -> None:
         elif parser.verify("RELEASE", val_str):
             coal_str = _extract_coalition(val_str)
             handle_release(cgs, node, coal_str)
-
-    return node.value

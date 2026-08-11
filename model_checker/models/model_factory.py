@@ -40,15 +40,16 @@ def detect_model_type_from_content(content: str) -> str:
     Returns:
         One of CGS, costCGS, or capCGS.
     """
-    if "Wallets" in content:
+    lines = {line.strip() for line in content.splitlines()}
+    if "Wallets" in lines:
         return "WalletCGS"
-    if "Clocks" in content or "Clock_constraints" in content:
+    if "Clocks" in lines or "Clock_constraints" in lines:
         return "timedCGS"
-    if "Transition_With_Costs" in content or "Costs_for_actions" in content:
+    if "Transition_With_Costs" in lines or "Costs_for_actions" in lines:
         return "costCGS"
-    if "Capacities" in content or "Capacities_assignment" in content:
+    if "Capacities" in lines or "Capacities_assignment" in lines:
         return "capCGS"
-    if "Preorder" in content:
+    if "Preorder" in lines:
         return "BCGS"
     return "CGS"
 
