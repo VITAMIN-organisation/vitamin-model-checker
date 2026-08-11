@@ -342,6 +342,12 @@ E{2}myVar : (myVar, 1) !F fail
 | **Temporal** | Full LTL/CTL | Only `F` or `!F` currently |
 | **Reduced Form**| RED(SL) -> NatATL | Automatic conversion |
 
+> [!NOTE]
+> **`!F` reduction:** `E{k}x:(x,a)!F p` converts to `!<{a},k>F p` (no NatATL strategy
+> to eventually reach `p`), not to an explicit avoid formula such as
+> `<{a},k>G !p`. On many models both agree; they can diverge when an agent can
+> avoid `p` forever without being able to force reaching it.
+
 ### Execution Semantics
 
 NatSL supports two distinct semantic interpretations of strategy quantification sequences:
@@ -361,16 +367,20 @@ NatSL supports two distinct semantic interpretations of strategy quantification 
 
 ### Theoretical Background
 
-OATL extends ATL with demonic cost bounds. It assesses whether a coalition can achieve a goal while keeping the total cost (defined in the model) below a specific threshold.
+OATL extends ATL with demonic cost bounds on coalition strategies over
+`costCGS` models.
 
 **Standard Syntax:**
 - **Bounded Coalition**: `<A><k> p`
     - `A`: The coalition of agents.
     - `k`: A positive integer cost bound.
-- **Operators**: Extends standard ATL with `W` (Weak Until) and `R` (Release).
+- **Operators**: Theory often includes `W` (Weak Until) and `R` (Release); see
+  implementation notes for what VITAMIN accepts.
 
-**Semantics:**
-- `<A><k> p` means coalition `A` has a strategy to ensure `p` such that for every sequence of actions, the sum of the costs is less than or equal to `k`.
+**Semantics (VITAMIN):**
+- `<A><k> phi` means coalition `A` has a strategy to enforce `phi` such that
+  **every chosen transition** has cost at most `k` (per-step affordability).
+  The bound is **not** a cumulative sum along the play (contrast with OL).
 
 ### Current Implementation
 
@@ -398,8 +408,8 @@ OATL extends ATL with demonic cost bounds. It assesses whether a coalition can a
 | Aspect | Theory | Implementation |
 | :--- | :--- | :--- |
 | **Coalition** | <A> | `<1,2>` (Indices) |
-| **Cost Bound** | <k> | `<k>` (Mandatory) |
-| **Temporal Ops**| X, F, G, U | `X`, `F`, `G`, `U`, `R`, `W` |
+| **Cost Bound** | per-step affordability | each transition cost `<= k` (not path sum) |
+| **Temporal Ops**| X, F, G, U (often + R, W) | `X`, `F`, `G`, `U` (R/W rejected at parse) |
 | **Propositions**| p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
 
 > [!NOTE]
@@ -544,10 +554,10 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 
 **Formula Examples:**
 ```text
-<{1,2}, 3> F (K1 safe)z
-<{1}, 1> G (1 is active && ! 2 is active)
-<{1,2,3}, 2> X (3 is standby)
-<{1}, 1> p R q
+<{1,2}, 3> F g
+<{1}, 1> G a
+<{1,2,3}, 2> X a
+<{1}, 1> a R g
 <{1}, 5> false R g
 ```
 
@@ -555,10 +565,22 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 
 | Aspect | Theory | Implementation |
 | :--- | :--- | :--- |
-| **Coalition** | <{A}, k> | `<{A}, k>` (Braces required) |
-| **Capability** | Ki p | `Ki (agent is p)` or `Ki(Ki agent is p)` |
-| **Agent Prop** | i is p | `i is p` |
+| **Coalition** | <{A}, k> | `<{A}, k>` (Braces required; see note on `k`) |
+| **Capability** | Ki p | Parsed as `Ki (...)`; **not evaluated** by the CapATL solver yet |
+| **Agent Prop** | i is p | Surface syntax documented; agent-scoped `i is p` is not fully wired in the solver |
 | **Temporal** | X, U, R (F/G sugar) | `X, F, G, U, R` (`W` unsupported) |
+
+> [!NOTE]
+> **Capacity bound `k`:** The parser requires `<{A}, k>`, but the current CapATL
+> solver extracts only the agent set and does **not** apply `k` when computing
+> winning sets. Formulas that differ only in `k` currently yield the same result.
+> Capacities still constrain available actions via the `capCGS` model sections.
+
+> [!NOTE]
+> **`Ki` / `i is p`:** These forms appear in the CapATL grammar and docs, but the
+> bottom-up solver has no dedicated knowledge handler yet. Prefer temporal goals
+> over atomic propositions that exist in the model labelling until knowledge
+> operators are wired through.
 
 
 ---
@@ -627,6 +649,12 @@ ATL with wallet-aware coalitions over `WalletCGS` models.
 **Temporal operators:** `X`, `F`, `G`, `U`.
 
 **Model type:** `WalletCGS`. See [Wallet_ATL usage](Wallet_ATL/usage.md).
+
+> [!NOTE]
+> **Wallet guards:** Balance filters are applied as a **static** state-name
+> constraint from the `Wallets` section (which states currently satisfy the
+> guard). They do not yet recompute balances along transitions from deposit/spend
+> action encodings.
 
 ---
 

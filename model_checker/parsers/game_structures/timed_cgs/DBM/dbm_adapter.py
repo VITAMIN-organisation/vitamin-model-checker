@@ -88,7 +88,7 @@ def _zone_at_target(tcgs: TimedCGS, target: str, formula_parts: list[str]) -> DB
     if not formula_parts:
         raise ValueError("There are no real-time formulas")
     dbm = DBM(len(tcgs.clocks))
-    target_idx = int(target[1:])
+    target_idx = tcgs.get_index_by_state_name(target)
     if tcgs.invariants_arr[target_idx]:
         apply_location_invariants(dbm, tcgs, target_idx)
     for part in formula_parts:
@@ -98,8 +98,8 @@ def _zone_at_target(tcgs: TimedCGS, target: str, formula_parts: list[str]) -> DB
 
 
 def _backward_step_zone(tcgs: TimedCGS, source: str, target: str, dbm: DBM) -> DBM:
-    source_idx = int(source[1:])
-    target_idx = int(target[1:])
+    source_idx = tcgs.get_index_by_state_name(source)
+    target_idx = tcgs.get_index_by_state_name(target)
     bounds, resets = parse_constraints(
         [
             part.strip()

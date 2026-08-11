@@ -58,3 +58,15 @@ class TestWalletATLSemantics:
         assert states == expected_states
         init = str(result.get("initial_state", ""))
         assert (": True" in init) is initial_expected
+
+    def test_wallet_guard_filters_states_by_balance(self, wallet_atl_model):
+        """Static guards use Wallets balances (both states have 5 on this fixture)."""
+        ok = _core_walletatl_checking(wallet_atl_model, "<<1:wallet(1, >= 5)>>F q")
+        assert "error" not in ok, ok
+        assert extract_states_from_result(ok) == {"s0", "s1"}
+
+        blocked = _core_walletatl_checking(
+            wallet_atl_model, "<<1:wallet(1, >= 10)>>F q"
+        )
+        assert "error" not in blocked, blocked
+        assert extract_states_from_result(blocked) == set()

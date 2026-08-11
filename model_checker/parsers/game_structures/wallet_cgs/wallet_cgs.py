@@ -171,7 +171,8 @@ class WalletCGS(CGS):
 
             # For agents 1 and 2: check wallet feasibility
             if agent in [1, 2]:
-                if not self.check_action_feasibility(state, agent, action):
+                feasible, _ = self.check_action_feasibility(state, agent, action)
+                if not feasible:
                     continue
 
             # For all agents: check additional wallet constraint if provided
@@ -184,9 +185,7 @@ class WalletCGS(CGS):
         return list(valid_actions)
 
     def get_next_states(self, current_state, actions):
-        """
-        Get possible next states given current state and actions
-        """
+        """Return all next states reachable under the given joint actions."""
         state_index = self.get_index_by_state_name(current_state)
         possible_transitions = self.graph[state_index]
 
@@ -222,15 +221,17 @@ class WalletCGS(CGS):
                         # Contract actions are always feasible
                         continue
 
-                    if not self.check_action_feasibility(current_state, agent, action):
+                    feasible, _ = self.check_action_feasibility(
+                        current_state, agent, action
+                    )
+                    if not feasible:
                         all_feasible = False
                         break
 
                 if all_feasible:
-                    next_state = self.get_state_name_by_index(i)
-                    next_states.append(next_state)
+                    next_states.append(self.get_state_name_by_index(i))
 
-                    return next_states
+        return next_states
 
     def check_wallet_constraint(self, state, agent, constraint):
         """Check if wallet satisfies a constraint"""

@@ -11,9 +11,12 @@ import ply.yacc as yacc
 from model_checker.parsers.formulas.parser_utils import (
     run_common_prechecks,
     validate_ast,
+    validate_proposition_identifier,
     verify_token,
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
+
+_WALLET_CONSTRAINT_OPS = frozenset({">=", "<=", "==", ">", "<"})
 
 # Error flags for robust error tracking
 _LEXER_HAS_ERROR = False
@@ -162,9 +165,16 @@ def p_coalition_formula(p):
     """coalition_formula : COALITION temporal_body"""
     coalition_info = p[1]
     for agent in coalition_info["agents"]:
-        if agent > _MAX_COALITION:
+        if agent < 1 or agent > _MAX_COALITION:
             raise ValueError(
-                f"Agent {agent} exceeds maximum coalition size {_MAX_COALITION}"
+                f"Invalid coalition value {agent}: must be between 1 and {_MAX_COALITION}"
+            )
+    for constraint in coalition_info["constraints"]:
+        agent = constraint["agent"]
+        if agent < 1 or agent > _MAX_COALITION:
+            raise ValueError(
+                f"Invalid wallet constraint agent {agent}: "
+                f"must be between 1 and {_MAX_COALITION}"
             )
     p[0] = {
         "type": "coalition_wallet",
@@ -278,6 +288,65 @@ def do_parsingWallet_ATL(formula_text, max_coalition=0):
         return None
 
 
+def _validate_wallet_dict_ast(node, valid_operators) -> bool:
+    """Walk a Wallet_ATL dict AST and reject unknown shapes or operators."""
+    if not isinstance(node, dict):
+        return False
+
+    node_type = node.get("type")
+    if node_type == "proposition":
+        prop = node.get("proposition")
+        if not isinstance(prop, str):
+            return False
+        valid, _ = validate_proposition_identifier(prop)
+        return valid
+
+    if node_type == "unary":
+        operator = node.get("operator")
+        if (
+            operator not in valid_operators
+            and str(operator).upper() not in valid_operators
+        ):
+            return False
+        return _validate_wallet_dict_ast(node.get("formula"), valid_operators)
+
+    if node_type == "binary":
+        operator = node.get("operator")
+        if (
+            operator not in valid_operators
+            and str(operator).upper() not in valid_operators
+        ):
+            return False
+        return _validate_wallet_dict_ast(
+            node.get("left"), valid_operators
+        ) and _validate_wallet_dict_ast(node.get("right"), valid_operators)
+
+    if node_type == "coalition_wallet":
+        agents = node.get("agents")
+        constraints = node.get("constraints")
+        if not isinstance(agents, list) or not agents:
+            return False
+        if not all(isinstance(agent, int) and agent >= 1 for agent in agents):
+            return False
+        if not isinstance(constraints, list):
+            return False
+        for constraint in constraints:
+            if not isinstance(constraint, dict):
+                return False
+            agent = constraint.get("agent")
+            operator = constraint.get("operator")
+            value = constraint.get("value")
+            if not isinstance(agent, int) or agent < 1:
+                return False
+            if operator not in _WALLET_CONSTRAINT_OPS:
+                return False
+            if not isinstance(value, int):
+                return False
+        return _validate_wallet_dict_ast(node.get("formula"), valid_operators)
+
+    return False
+
+
 class Wallet_ATLParser(BaseLogicParser):
     """Parser for Wallet_ATL formulas (dict AST via module-level PLY grammar)."""
 
@@ -288,14 +357,24 @@ class Wallet_ATLParser(BaseLogicParser):
             "F",
             "G",
             "&&",
+            "&",
+            "and",
             "AND",
+            "||",
+            "|",
+            "or",
+            "OR",
+            "!",
+            "not",
             "NOT",
+            "->",
+            ">",
+            "implies",
+            "IMPLIES",
             "UNTIL",
             "NEXT",
             "EVENTUALLY",
             "GLOBALLY",
-            "!",
-            "->",
         }
     )
 
@@ -304,19 +383,23 @@ class Wallet_ATLParser(BaseLogicParser):
         self.MAX_COALITION = 0
 
     def _pre_validation(self, formula):
+        # Wallet guards use ':' and comparison ops with '=' (e.g. >=, ==).
         return run_common_prechecks(
             formula,
             allow_hash_at=False,
             coalition_required=False,
             allow_negative_agents=False,
+            allowed_operators=set("<>(),!&|->:="),
         )
 
     def _post_validation(self, formula, result) -> bool:
         if result is None:
             return False
-        if not isinstance(result, tuple):
-            return True
-        return validate_ast(result, self._VALID_OPERATORS)
+        if isinstance(result, dict):
+            return _validate_wallet_dict_ast(result, self._VALID_OPERATORS)
+        if isinstance(result, tuple):
+            return validate_ast(result, self._VALID_OPERATORS)
+        return False
 
     def parse(self, formula_text, max_coalition=None, n_agent=None, **kwargs):
         self.errors = []
