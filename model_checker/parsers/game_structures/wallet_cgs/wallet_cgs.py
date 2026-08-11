@@ -158,6 +158,9 @@ class WalletCGS(CGS):
         """Get valid actions for an agent in a state with wallet feasibility checks"""
         state_index = self.get_index_by_state_name(state)
         valid_actions = set()
+        num_agents = self.get_number_of_agents()
+        # Last agent is the contract/system pool only when there is more than one agent.
+        contract_agent = num_agents if num_agents > 1 else None
 
         for transition in self.graph[state_index]:
             if transition == 0:
@@ -169,8 +172,8 @@ class WalletCGS(CGS):
 
             action = actions[agent - 1].strip()
 
-            # For agents 1 and 2: check wallet feasibility
-            if agent in [1, 2]:
+            # Contract agent actions are always feasible; all other agents are checked.
+            if agent != contract_agent:
                 feasible, _ = self.check_action_feasibility(state, agent, action)
                 if not feasible:
                     continue
@@ -292,16 +295,13 @@ class WalletCGS(CGS):
                         current_wallets[system_index] += parameter
 
             elif is_income:
-                # Income: agent gains funds
-                current_wallets[agent_index] += parameter
-
-                # Funds come from system (typically the last agent)
+                # Income: agent gains funds only when system pool can cover it.
                 if total_agents > 1:
                     system_index = total_agents - 1
-                    if (
-                        system_index != agent_index
-                        and current_wallets[system_index] >= parameter
-                    ):
+                    if system_index != agent_index and current_wallets[system_index] >= parameter:
                         current_wallets[system_index] -= parameter
+                        current_wallets[agent_index] += parameter
+                else:
+                    current_wallets[agent_index] += parameter
 
         return tuple(current_wallets)

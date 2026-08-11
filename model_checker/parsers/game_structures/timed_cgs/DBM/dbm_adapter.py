@@ -198,12 +198,27 @@ def parse_constraints(constraints: list[str], clocks_dict):
         m_reset = _RESET_RE.match(constraint)
         if m_bound:
             clock, op, bound = m_bound.groups()
+            if clock not in clocks_dict:
+                raise ValueError(
+                    f"Unknown clock '{clock}' in constraint '{constraint}'. "
+                    f"Known clocks: {list(clocks_dict)}."
+                )
             clock_index = clocks_dict[clock] + 1
             bounds.append((clock_index, op, int(bound)))
         elif m_reset:
             clock, bound = m_reset.groups()
+            if clock not in clocks_dict:
+                raise ValueError(
+                    f"Unknown clock '{clock}' in reset '{constraint}'. "
+                    f"Known clocks: {list(clocks_dict)}."
+                )
             clock_index = clocks_dict[clock] + 1
             resets.append((clock_index, int(bound)))
+        else:
+            raise ValueError(
+                f"Unrecognized constraint token '{constraint}'. "
+                "Expected format: <clock><op><integer> (bound) or <clock>=<integer> (reset)."
+            )
     return bounds, resets
 
 

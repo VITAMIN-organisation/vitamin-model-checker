@@ -97,9 +97,6 @@ def _action_forces_all_to_target(
     use_bit_vector: bool,
 ) -> bool:
     """True if every opponent response to action lands inside target_indices."""
-    if "*" in action:
-        return True
-
     move_profile = cgs_actions.get_coalition_actions(
         {action}, formatted_agents, num_agents
     )

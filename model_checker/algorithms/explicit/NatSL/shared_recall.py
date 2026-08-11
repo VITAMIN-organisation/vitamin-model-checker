@@ -200,12 +200,13 @@ def existential_natatl_alternated(
 
         for collective_strategy in strategies_iterator:
             tree_copy = copy.deepcopy(tree)
-            if pruning(
+            if not pruning(
                 cgs, tree_copy, height, filename, CTLformula, *collective_strategy
             ):
-                return True
+                continue
 
-            if all(
+            # Existential candidate found; validate it survives all universal challenges.
+            if not universal_formulas or all(
                 universal_natatl_recall(
                     [tree_copy], model_path, uf, 1, height, start_time, cgs
                 )

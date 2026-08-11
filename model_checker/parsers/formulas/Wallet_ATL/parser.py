@@ -444,6 +444,3 @@ class Wallet_ATLParser(BaseLogicParser):
         return verify_token(
             _get_verify_lexer(), token_name, str(string), case_sensitive=False
         )
-
-    def build(self, **kwargs) -> None:
-        """Wallet_ATL uses module-level PLY tables; no build on this class."""
