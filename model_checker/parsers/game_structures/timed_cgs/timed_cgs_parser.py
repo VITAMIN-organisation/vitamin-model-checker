@@ -3,6 +3,7 @@
 import re
 from typing import Any
 
+from model_checker.parsers.game_structures.cgs import cgs_parser
 from model_checker.parsers.game_structures.cost_cgs import cost_cgs_parser
 
 TIMED_SECTION_HEADERS = frozenset(
@@ -12,6 +13,12 @@ TIMED_SECTION_HEADERS = frozenset(
         "Invariants",
     }
 )
+
+# Non-timed headers that must end the current timed section so their payload
+# is never parsed as clocks, guards, or invariants.
+_NON_TIMED_SECTION_HEADERS = (
+    cgs_parser.SECTION_HEADERS | cgs_parser.EXTENSION_SECTION_HEADERS
+) - TIMED_SECTION_HEADERS
 
 
 def parse_base_sections(lines: list[str], instance: Any) -> None:
@@ -30,23 +37,35 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
 
     for line in lines:
         stripped = line.strip()
-        if row_index >= state_count:
-            row_index = 0
-
-        if stripped == "Clocks":
-            current_section = "Clocks"
-        elif stripped == "Clock_constraints":
-            current_section = "Clock_constraints"
-        elif stripped == "Invariants":
-            current_section = "Invariants"
-        elif not stripped:
+        if not stripped:
             continue
-        elif current_section == "Clocks":
+
+        if stripped in TIMED_SECTION_HEADERS:
+            current_section = stripped
+            row_index = 0
+            continue
+
+        if stripped in _NON_TIMED_SECTION_HEADERS:
+            current_section = None
+            row_index = 0
+            continue
+
+        if current_section == "Clocks":
             _parse_clocks(instance, stripped)
         elif current_section == "Clock_constraints":
+            if row_index >= state_count:
+                raise ValueError(
+                    f"Clock_constraints has more than {state_count} rows "
+                    f"(one row required per state)."
+                )
             _parse_clock_constraints_row(instance, stripped, row_index)
             row_index += 1
         elif current_section == "Invariants":
+            if row_index >= state_count:
+                raise ValueError(
+                    f"Invariants has more than {state_count} rows "
+                    f"(one row required per state)."
+                )
             _parse_invariants_row(instance, stripped, row_index)
             row_index += 1
 

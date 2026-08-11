@@ -79,12 +79,17 @@ def solve_tree(cgs, node, solve_context, cache=None):
     val = node.value
     parser = FormulaParserFactory.get_parser_instance("OATL")
     if node.right is None:
+        if node.left is None:
+            cache[node_key] = node.value
+            return
         key = _oatl_unary_key(parser, val)
-        if key and key in _UNARY:
-            _UNARY[key](cgs, node, solve_context)
+        if key is None or key not in _UNARY:
+            raise ValueError(f"Unsupported OATL unary operator: {val!r}")
+        _UNARY[key](cgs, node, solve_context)
     elif node.left and node.right:
         key = _oatl_binary_key(parser, val)
-        if key and key in _BINARY:
-            _BINARY[key](cgs, node, solve_context)
+        if key is None or key not in _BINARY:
+            raise ValueError(f"Unsupported OATL binary operator: {val!r}")
+        _BINARY[key](cgs, node, solve_context)
 
     cache[node_key] = node.value

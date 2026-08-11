@@ -84,3 +84,39 @@ def test_zone_graph_pre_image_uses_invariants(minimal_tcgs):
     assert not zone_graph.has_path_from("s0", bounds)
     feasible, _ = DBMAdapter.parse_constraints(["x<=1"], minimal_tcgs.clocks_dict)
     assert zone_graph.has_path_from("s0", feasible)
+
+
+@pytest.mark.unit
+def test_initial_zone_applies_location_invariant(tmp_path):
+    content = """
+Transition
+*
+Name_State
+s0
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+1
+Number_of_agents
+1
+Clocks
+x
+Clock_constraints
+0
+Invariants
+x<=0
+"""
+    path = tmp_path / "invariant_initial.txt"
+    path.write_text(content)
+    tcgs = TimedCGS()
+    tcgs.read_file(path)
+    zone_graph = ZoneGraph(tcgs)
+
+    assert zone_graph.states
+    for state in zone_graph.states:
+        if state.location != "s0":
+            continue
+        # x is DBM index 1; invariant x<=0 must already be in the stored zone.
+        assert state.zone.elements[1][0].constant <= 0

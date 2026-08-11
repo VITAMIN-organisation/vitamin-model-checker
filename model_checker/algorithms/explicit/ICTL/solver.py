@@ -71,12 +71,16 @@ def solve_tree(checker: "ICTLModelChecker", node: "FormulaTreeNode") -> None:
         solve_tree(checker, node.right)
 
     if node.right is None:
+        if node.left is None:
+            return
         handler = _unary_handler(checker, node)
-        if handler is not None:
-            handler(checker, node)
+        if handler is None:
+            raise ValueError(f"Unsupported ICTL unary operator: {node.value!r}")
+        handler(checker, node)
         return
 
     if node.left is not None and node.right is not None:
         handler = _binary_handler(checker, node)
-        if handler is not None:
-            handler(checker, node)
+        if handler is None:
+            raise ValueError(f"Unsupported ICTL binary operator: {node.value!r}")
+        handler(checker, node)

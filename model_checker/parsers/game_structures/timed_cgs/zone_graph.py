@@ -64,10 +64,14 @@ def _expand_delay_successors(
 
     delay_zone = DBMAdapter.delay_zone(tcgs, current_state.zone, current_state.location)
     if delay_zone is None:
+        visited.append(current_state)
         return
 
     delay_state = TimeState(current_state.location, delay_zone)
-    _register_state(zone_graph, all_states, waitlist, current_state, delay_state)
+    # When the zone is already closed under delay+invariant, a self-loop would
+    # incorrectly suggest infinite time progress inside a bounded invariant.
+    if delay_state != current_state:
+        _register_state(zone_graph, all_states, waitlist, current_state, delay_state)
     visited.append(current_state)
 
 
@@ -92,13 +96,28 @@ def _expand_discrete_successors(
         )
 
 
+def _initial_zone(tcgs: TimedCGS) -> DBM | None:
+    """Initial zone at the initial location, intersected with its invariants."""
+    zone = DBM(len(tcgs.clocks))
+    loc_idx = tcgs.get_index_by_state_name(tcgs.initial_state)
+    if tcgs.invariants_arr[loc_idx]:
+        DBMAdapter.apply_location_invariants(zone, tcgs, loc_idx)
+        if zone.is_empty():
+            return None
+    return zone
+
+
 def _build_zone_graph(
     tcgs: TimedCGS,
 ) -> tuple[dict[TimeState, list[TimeState]], set[TimeState]]:
     zone_graph: dict[TimeState, list[TimeState]] = {}
     all_states: set[TimeState] = set()
 
-    initial_state = TimeState(location=tcgs.initial_state, zone=DBM(len(tcgs.clocks)))
+    initial_zone = _initial_zone(tcgs)
+    if initial_zone is None:
+        return zone_graph, all_states
+
+    initial_state = TimeState(location=tcgs.initial_state, zone=initial_zone)
     all_states.add(initial_state)
     zone_graph[initial_state] = []
     waitlist = [initial_state]

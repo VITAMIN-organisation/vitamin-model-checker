@@ -71,3 +71,15 @@ class TestTimedCgsParser:
         instance.clock_constraint_struct = [["", ""]]
         timed_cgs_parser._parse_clock_constraints_row(instance, "0 *", 0)
         assert instance.clock_constraint_struct[0] == ["", ""]
+
+    def test_non_timed_header_stops_invariant_parsing(self):
+        instance = type("T", (), {})()
+        instance.states = ["s0"]
+        lines = [
+            "Invariants\n",
+            "x<=2\n",
+            "Number_of_agents\n",
+            "x<=9\n",
+        ]
+        timed_cgs_parser.parse_timed_sections(lines, instance)
+        assert instance.invariants_arr[0] == ["x", 2.0]

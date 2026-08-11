@@ -38,7 +38,7 @@ def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCa
         coalition_moves_by_column: list[frozenset] = []
 
         for dest_idx, mask in enumerate(row):
-            if mask == 0:
+            if mask == 0 or mask == "0":
                 coalition_moves_by_column.append(frozenset())
                 continue
 

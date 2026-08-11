@@ -73,13 +73,17 @@ def solve_tree(cgs, node, solve_context):
 
     parser = FormulaParserFactory.get_parser_instance("COTL")
     if node.right is None:
+        if node.left is None:
+            return
         key = _cotl_unary_key(parser, node.value)
-        if key and key in _UNARY:
-            _UNARY[key](cgs, node, solve_context)
+        if key is None or key not in _UNARY:
+            raise ValueError(f"Unsupported COTL unary operator: {node.value!r}")
+        _UNARY[key](cgs, node, solve_context)
     elif node.left is not None and node.right is not None:
         key = _cotl_binary_key(parser, node.value)
-        if key and key in _BINARY:
-            _BINARY[key](cgs, node, solve_context)
+        if key is None or key not in _BINARY:
+            raise ValueError(f"Unsupported COTL binary operator: {node.value!r}")
+        _BINARY[key](cgs, node, solve_context)
 
 
 def build_solve_context(graph):

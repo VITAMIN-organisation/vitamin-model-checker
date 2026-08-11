@@ -69,7 +69,7 @@ def build_transition_cache(
             formatted_agents, num_agents = coalition_context
             moves_by_coalition: dict[tuple, list[tuple]] = {}
             for next_index, mask in enumerate(outgoing):
-                if mask == 0:
+                if mask == 0 or mask == "0":
                     continue
                 for profile in cgs.build_action_list(mask):
                     coalition_move, opponent_move = _split_coalition_and_opponent_moves(
@@ -82,7 +82,7 @@ def build_transition_cache(
         else:
             moves: list[tuple] = []
             for next_index, mask in enumerate(outgoing):
-                if mask == 0:
+                if mask == 0 or mask == "0":
                     continue
                 for profile in cgs.build_action_list(mask):
                     moves.append((profile, next_index))
@@ -108,7 +108,7 @@ def _group_moves_by_coalition_for_state(
     else:
         joint_moves: list[tuple] = []
         for next_index, mask in enumerate(cgs.graph[state_index]):
-            if mask != 0:
+            if mask != 0 and mask != "0":
                 for prof in cgs.build_action_list(mask):
                     joint_moves.append((prof, next_index))
 

@@ -93,12 +93,16 @@ def solve_tree(checker: "IATLModelChecker", node: "FormulaTreeNode") -> None:
     parser_instance = FormulaParserFactory.get_parser_instance("IATL")
 
     if node.right is None:
+        if node.left is None:
+            return
         handler = _unary_handler(parser_instance, checker, node)
-        if handler is not None:
-            handler(checker, node)
+        if handler is None:
+            raise ValueError(f"Unsupported IATL unary operator: {node.value!r}")
+        handler(checker, node)
         return
 
     if node.left is not None and node.right is not None:
         handler = _binary_handler(parser_instance, node)
-        if handler is not None:
-            handler(checker, node)
+        if handler is None:
+            raise ValueError(f"Unsupported IATL binary operator: {node.value!r}")
+        handler(checker, node)
