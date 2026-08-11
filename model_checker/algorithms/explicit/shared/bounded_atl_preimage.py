@@ -23,11 +23,11 @@ TransitionCache = dict[int, "StateTransitionData"]
 
 class StateTransitionData(TypedDict):
     profiles_by_dest: dict[int, list[str]]
-    opponent_moves_by_column: list[frozenset]
+    coalition_moves_by_column: list[frozenset]
 
 
 def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCache:
-    """Cache per-state profiles and opponent moves for a fixed coalition."""
+    """Cache per-state profiles and coalition moves for a fixed coalition."""
     agents = cgs_actions.get_agents_from_coalition(coalition)
     formatted_agents = cgs_actions.format_agents(agents)
     num_agents = cgs.get_number_of_agents()
@@ -35,29 +35,28 @@ def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCa
 
     for state_idx, row in enumerate(cgs.graph):
         profiles_by_dest: dict[int, list[str]] = {}
-        opponent_moves_by_column: list[frozenset] = []
+        coalition_moves_by_column: list[frozenset] = []
 
         for dest_idx, mask in enumerate(row):
             if mask == 0:
-                opponent_moves_by_column.append(frozenset())
+                coalition_moves_by_column.append(frozenset())
                 continue
 
             profiles = cgs.build_action_list(mask)
             profiles_by_dest[dest_idx] = profiles
-            opponent_moves_by_column.append(
+            coalition_moves_by_column.append(
                 frozenset(
-                    cgs_actions._process_actions_for_agents(
-                        profiles,
+                    cgs_actions.get_coalition_actions(
+                        set(profiles),
                         formatted_agents,
                         num_agents,
-                        include_agents=False,
                     )
                 )
             )
 
         cache[state_idx] = {
             "profiles_by_dest": profiles_by_dest,
-            "opponent_moves_by_column": opponent_moves_by_column,
+            "coalition_moves_by_column": coalition_moves_by_column,
         }
 
     return cache
@@ -91,29 +90,29 @@ def _action_forces_all_to_target(
     action: str,
     formatted_agents,
     num_agents: int,
-    opponent_moves_by_column: list[frozenset],
+    coalition_moves_by_column: list[frozenset],
     target_indices: set[int],
     target_bits,
     use_bit_vector: bool,
 ) -> bool:
-    """True if every opponent response to action lands inside target_indices.
+    """True if every destination compatible with action's coalition move is in target.
+
+    Compatibility is checked by intersecting the coalition mask of ``action`` with
+    the coalition masks of joint profiles in each destination column. Comparing
+    against opponent masks would never match (those masks use complementary
+    position sets) and would make this check vacuously true.
 
     Wildcard actions (containing '*') are expanded by get_coalition_actions via
-    cgs_actions._expand_action_wildcards before the opponent-move intersection
-    check runs. This means wildcard coalition actions still go through the full
-    universal quantifier check; they are not unconditionally accepted.
-
-    Precondition: the CGS model must not emit bare '*' as a coalition action
-    in bounded ATL models unless the wildcard expansion in cgs_actions produces
-    a valid coalition mask for the intended number of agents.
+    cgs_actions._expand_action_wildcards before the compatibility check runs.
+    They are not unconditionally accepted.
     """
     move_profile = cgs_actions.get_coalition_actions(
         {action}, formatted_agents, num_agents
     )
-    for dest_idx, opponent_moves in enumerate(opponent_moves_by_column):
-        if not opponent_moves:
+    for dest_idx, coalition_moves in enumerate(coalition_moves_by_column):
+        if not coalition_moves:
             continue
-        if not move_profile.intersection(opponent_moves):
+        if not move_profile.intersection(coalition_moves):
             continue
         if use_bit_vector:
             if dest_idx not in target_bits:
@@ -158,13 +157,13 @@ def compute_pre_states(
         if not available_actions:
             continue
 
-        opponent_moves_by_column = state_data["opponent_moves_by_column"]
+        coalition_moves_by_column = state_data["coalition_moves_by_column"]
         for action in available_actions:
             if _action_forces_all_to_target(
                 action,
                 formatted_agents,
                 num_agents,
-                opponent_moves_by_column,
+                coalition_moves_by_column,
                 target_indices,
                 target_bits,
                 use_bit_vector,

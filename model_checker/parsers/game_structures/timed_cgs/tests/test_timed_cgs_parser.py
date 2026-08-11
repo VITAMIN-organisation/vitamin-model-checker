@@ -53,3 +53,21 @@ class TestTimedCgsParser:
         assert len(tcgs.clock_constraint_struct) == 2
         assert tcgs.clock_constraint_struct[0][0] == "x<=1"
         assert tcgs.invariants_arr[0] == ["x", 2.0]
+
+    def test_malformed_clock_constraint_raises(self):
+        instance = type("T", (), {})()
+        instance.clock_constraint_struct = [[""]]
+        with pytest.raises(ValueError, match="Malformed clock constraint"):
+            timed_cgs_parser._parse_clock_constraints_row(instance, "x>3y", 0)
+
+    def test_malformed_invariant_raises(self):
+        instance = type("T", (), {})()
+        instance.invariants_arr = [[]]
+        with pytest.raises(ValueError, match="Malformed invariant"):
+            timed_cgs_parser._parse_invariants_row(instance, "x>=5", 0)
+
+    def test_no_constraint_tokens_are_skipped(self):
+        instance = type("T", (), {})()
+        instance.clock_constraint_struct = [["", ""]]
+        timed_cgs_parser._parse_clock_constraints_row(instance, "0 *", 0)
+        assert instance.clock_constraint_struct[0] == ["", ""]

@@ -51,6 +51,18 @@ def test_max_clock_constants(minimal_tcgs):
 
 
 @pytest.mark.unit
+def test_parse_constraints_rejects_unrecognized_token():
+    with pytest.raises(ValueError, match="Unrecognized constraint token"):
+        DBMAdapter.parse_constraints(["not-a-constraint"], {"x": 0})
+
+
+@pytest.mark.unit
+def test_parse_constraints_rejects_unknown_clock():
+    with pytest.raises(ValueError, match="Unknown clock"):
+        DBMAdapter.parse_constraints(["y>=1"], {"x": 0})
+
+
+@pytest.mark.unit
 def test_zone_helpers_use_state_name_mapping(tmp_path):
     """State indices must come from Name_State, not sN digit parsing."""
     content = """

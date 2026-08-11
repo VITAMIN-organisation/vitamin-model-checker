@@ -309,7 +309,10 @@ class WalletCGS(CGS):
                 # Income: agent gains funds only when system pool can cover it.
                 if total_agents > 1:
                     system_index = total_agents - 1
-                    if system_index != agent_index and current_wallets[system_index] >= parameter:
+                    if (
+                        system_index != agent_index
+                        and current_wallets[system_index] >= parameter
+                    ):
                         current_wallets[system_index] -= parameter
                         current_wallets[agent_index] += parameter
                 else:

@@ -58,7 +58,7 @@ def build_tree(cgs: CapCGSProtocol, tpl: Any) -> Node_PK | None:
         if not ag_str:
             return None
         ag_idx = int(ag_str) - 1
-        cap_a = tpl_str[len(ag_str):]
+        cap_a = tpl_str[len(ag_str) :]
 
         all_cap_combos = {tuple(elem) for elem in X_agt_cap(cgs)}
         winning_combos = {

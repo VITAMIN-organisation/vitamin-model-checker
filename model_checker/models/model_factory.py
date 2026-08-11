@@ -45,7 +45,11 @@ def detect_model_type_from_content(content: str) -> str:
         return "WalletCGS"
     if "Clocks" in lines or "Clock_constraints" in lines:
         return "timedCGS"
-    if "Transition_With_Costs" in lines or "Costs_for_actions" in lines:
+    if (
+        "Transition_With_Costs" in lines
+        or "Costs_for_actions" in lines
+        or "Costs_for_actions_split" in lines
+    ):
         return "costCGS"
     if "Capacities" in lines or "Capacities_assignment" in lines:
         return "capCGS"
