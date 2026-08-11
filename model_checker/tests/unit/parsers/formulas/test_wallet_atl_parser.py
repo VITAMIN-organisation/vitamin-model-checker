@@ -90,3 +90,27 @@ def test_wallet_atl_post_validation_accepts_well_formed_dict_ast():
         },
     }
     assert parser._post_validation("", well_formed) is True
+
+
+@pytest.mark.unit
+def test_wallet_atl_concurrent_parses_are_stable():
+    from concurrent.futures import ThreadPoolExecutor
+
+    formulas = [
+        ("<<1>>X p", 1, True),
+        ("<<2>>F q", 2, True),
+        ("<<0>>X p", 2, False),
+        ("<<3>>G r", 2, False),
+        ("<<1:wallet(1, >= 1)>>F q", 1, True),
+    ]
+
+    def parse_one(item):
+        formula, max_coalition, expect_ok = item
+        result = do_parsingWallet_ATL(formula, max_coalition=max_coalition)
+        return (formula, expect_ok, result is not None)
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        outcomes = list(pool.map(parse_one, formulas * 20))
+
+    for formula, expect_ok, ok in outcomes:
+        assert ok is expect_ok, formula

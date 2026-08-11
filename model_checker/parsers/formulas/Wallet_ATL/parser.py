@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import threading
 import unicodedata
 
 import ply.lex as lex
@@ -18,10 +19,19 @@ from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 
 _WALLET_CONSTRAINT_OPS = frozenset({">=", "<=", "==", ">", "<"})
 
-# Error flags for robust error tracking
-_LEXER_HAS_ERROR = False
-_PARSER_HAS_ERROR = False
-_MAX_COALITION = 0
+# Shared PLY objects are not re-entrant; serialize parse sessions.
+_PARSE_LOCK = threading.Lock()
+_SESSION = threading.local()
+
+
+def _parse_session():
+    """Per-thread parse flags and coalition bound for the module-level grammar."""
+    if not hasattr(_SESSION, "lexer_has_error"):
+        _SESSION.lexer_has_error = False
+        _SESSION.parser_has_error = False
+        _SESSION.max_coalition = 0
+    return _SESSION
+
 
 # <<1>>X p -> <<1>> X p so temporal letters are not lexed as propositions
 _COALITION_TEMPORAL_SPACING = re.compile(r">>(?=[FGXU])")
@@ -125,8 +135,7 @@ t_ignore = " \t\n"
 
 
 def t_error(t):
-    global _LEXER_HAS_ERROR
-    _LEXER_HAS_ERROR = True
+    _parse_session().lexer_has_error = True
     t.lexer.skip(1)
 
 
@@ -164,17 +173,18 @@ def p_boolean_binary(p):
 def p_coalition_formula(p):
     """coalition_formula : COALITION temporal_body"""
     coalition_info = p[1]
+    max_coalition = _parse_session().max_coalition
     for agent in coalition_info["agents"]:
-        if agent < 1 or agent > _MAX_COALITION:
+        if agent < 1 or agent > max_coalition:
             raise ValueError(
-                f"Invalid coalition value {agent}: must be between 1 and {_MAX_COALITION}"
+                f"Invalid coalition value {agent}: must be between 1 and {max_coalition}"
             )
     for constraint in coalition_info["constraints"]:
         agent = constraint["agent"]
-        if agent < 1 or agent > _MAX_COALITION:
+        if agent < 1 or agent > max_coalition:
             raise ValueError(
                 f"Invalid wallet constraint agent {agent}: "
-                f"must be between 1 and {_MAX_COALITION}"
+                f"must be between 1 and {max_coalition}"
             )
     p[0] = {
         "type": "coalition_wallet",
@@ -218,15 +228,14 @@ def p_group_formula(p):
 
 
 def p_error(p):
-    global _PARSER_HAS_ERROR
-    _PARSER_HAS_ERROR = True
+    _parse_session().parser_has_error = True
 
 
 def _reset_parse_session(max_coalition):
-    global _LEXER_HAS_ERROR, _PARSER_HAS_ERROR, _MAX_COALITION
-    _LEXER_HAS_ERROR = False
-    _PARSER_HAS_ERROR = False
-    _MAX_COALITION = max_coalition
+    session = _parse_session()
+    session.lexer_has_error = False
+    session.parser_has_error = False
+    session.max_coalition = max_coalition
 
 
 def _normalize_wallet_atl_formula(formula_text):
@@ -265,9 +274,12 @@ def _get_wallet_atl_ply():
 
 def _get_verify_lexer():
     global _VERIFY_LEXER
-    if _VERIFY_LEXER is None:
-        _VERIFY_LEXER = lex.lex(module=sys.modules[__name__], errorlog=lex.NullLogger())
-    return _VERIFY_LEXER
+    with _PARSE_LOCK:
+        if _VERIFY_LEXER is None:
+            _VERIFY_LEXER = lex.lex(
+                module=sys.modules[__name__], errorlog=lex.NullLogger()
+            )
+        return _VERIFY_LEXER
 
 
 def do_parsingWallet_ATL(formula_text, max_coalition=0):
@@ -275,17 +287,19 @@ def do_parsingWallet_ATL(formula_text, max_coalition=0):
     if not formula_text.strip():
         return None
 
-    _reset_parse_session(max_coalition)
+    with _PARSE_LOCK:
+        _reset_parse_session(max_coalition)
 
-    try:
-        normalized = _normalize_wallet_atl_formula(formula_text)
-        lexer, parser = _get_wallet_atl_ply()
-        result = parser.parse(normalized, lexer=lexer)
-        if _LEXER_HAS_ERROR or _PARSER_HAS_ERROR:
+        try:
+            normalized = _normalize_wallet_atl_formula(formula_text)
+            lexer, parser = _get_wallet_atl_ply()
+            result = parser.parse(normalized, lexer=lexer)
+            session = _parse_session()
+            if session.lexer_has_error or session.parser_has_error:
+                return None
+            return result
+        except Exception:
             return None
-        return result
-    except Exception:
-        return None
 
 
 def _validate_wallet_dict_ast(node, valid_operators) -> bool:
