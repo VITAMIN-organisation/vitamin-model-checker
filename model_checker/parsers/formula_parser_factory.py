@@ -3,17 +3,12 @@
 Creates and manages formula parser instances for temporal logics (CTL, ATL, LTL, etc.).
 """
 
-import logging
 from threading import Lock
 from typing import Any
 
 from model_checker.discovery import (
     discover_logic_resource,
-    get_entry_points,
-    is_integrated_logic,
 )
-
-logger = logging.getLogger(__name__)
 
 
 class FormulaParserFactory:
@@ -76,46 +71,3 @@ class FormulaParserFactory:
         raise AttributeError(
             f"Parser for {logic_name} does not have a verification function."
         )
-
-    @classmethod
-    def warmup(cls, parser_names: list[str] = None) -> None:
-        """Pre-initialize parsers to generate tables at startup."""
-        if parser_names is None:
-            # Discover all available parsers via entry points
-            eps = get_entry_points("vitamin.parsers")
-            parser_names = list({ep.name for ep in eps})
-
-            # Also check the formulas directory for integrated logics
-            try:
-                from pathlib import Path
-
-                import model_checker.parsers.formulas as formulas_pkg
-
-                pkg_path = Path(formulas_pkg.__file__).parent
-                for item in pkg_path.iterdir():
-                    if item.is_dir() and (item / "parser.py").is_file():
-                        # Only include if it's either in entry points OR in the integration registry
-                        if item.name not in parser_names and is_integrated_logic(
-                            item.name
-                        ):
-                            parser_names.append(item.name)
-            except Exception as e:
-                logger.warning(f"Failed to scan formulas directory during warmup: {e}")
-
-        logger.info(f"Warming up {len(parser_names)} formula parsers...")
-
-        for parser_name in parser_names:
-            try:
-                cls.get_parser_instance(parser_name)
-                logger.debug(f"[OK] Warmed up {parser_name} parser")
-            except Exception as e:
-                logger.warning(f"[WARNING] Failed to warm up {parser_name} parser: {e}")
-
-        logger.info(f"Parser warmup complete. {len(cls._instances)} parsers ready.")
-
-    @classmethod
-    def clear_cache(cls) -> None:
-        """Clear all cached parser instances."""
-        with cls._lock:
-            cls._instances.clear()
-        logger.debug("Parser cache cleared")

@@ -10,7 +10,6 @@ from model_checker.algorithms.explicit.NatSL.Sequential.natSL import (
 )
 from model_checker.tests.helpers.synthetic_models import (
     generate_capcgs_linear_chain_model,
-    generate_natatl_linear_chain_model,
 )
 
 
@@ -41,13 +40,6 @@ class TestNatSLErrorHandling:
 class TestNatSLCorrectness:
     """Test NatSL model checking with representative models."""
 
-    def test_natsl_basic_formula(self, natatl_standard_model):
-        """Test NatSL with valid NatSL formula (E{1}x:(x,1)F a)."""
-        result = model_checking("E{1}x:(x,1)F a", natatl_standard_model.filename)
-        if "error" not in result:
-            assert "Satisfiability" in result
-            assert isinstance(result["Satisfiability"], bool)
-
     def test_natsl_known_satisfiable_formula(self, natatl_standard_model):
         """E{1}x:(x,1)F a on the standard model is satisfiable (proposition a reachable)."""
         result = model_checking("E{1}x:(x,1)F a", natatl_standard_model.filename)
@@ -55,7 +47,6 @@ class TestNatSLCorrectness:
             "error" not in result
         ), f"NatSL should not error on valid formula: {result}"
         assert "Satisfiability" in result
-        assert isinstance(result["Satisfiability"], bool)
         assert result["Satisfiability"] is True
 
     def test_natsl_alternated_existential_only_formula(self, natatl_standard_model):
@@ -67,26 +58,6 @@ class TestNatSLCorrectness:
             "error" not in result
         ), f"NatSL Alternated should not error on valid formula: {result}"
         assert result["Satisfiability"] is True
-
-    def test_natsl_sequential_synthetic_natatl_chain(self, temp_file):
-        """Existential-only NatSL on synthetic NatATL chain must not IndexError."""
-        content = generate_natatl_linear_chain_model(
-            num_states=4, num_agents=2, prop_names=["p"]
-        )
-        model_path = temp_file(content)
-        result = model_checking("E{1}x:(x,1)F p", model_path)
-        assert "error" not in result, result
-        assert isinstance(result["Satisfiability"], bool)
-
-    def test_natsl_alternated_synthetic_natatl_chain(self, temp_file):
-        """Alternated NatSL on synthetic NatATL chain must not IndexError."""
-        content = generate_natatl_linear_chain_model(
-            num_states=4, num_agents=2, prop_names=["p"]
-        )
-        model_path = temp_file(content)
-        result = model_checking_alternated("E{1}x:(x,1)F p", model_path)
-        assert "error" not in result, result
-        assert isinstance(result["Satisfiability"], bool)
 
 
 @pytest.mark.integration

@@ -1,7 +1,6 @@
 """State/index management, capacity computation, and knowledge set generation for CapATL."""
 
 import functools
-import logging
 
 from model_checker.algorithms.explicit.CapATL.combinatorics import (
     find_combinations,
@@ -11,28 +10,6 @@ from model_checker.algorithms.explicit.CapATL.knowledge import (
     p_knowledge,
     p_knowledge_for_Y,
 )
-
-logger = logging.getLogger(__name__)
-
-
-def get_prop_held_in_state(cgs, state):
-    """Get atomic propositions that hold in a given state."""
-    index = get_index_by_state_name(cgs, state)
-    if index is None:
-        return None
-    prop_matrix = cgs.matrix_prop
-    state_atoms = prop_matrix[index]
-    return {prop for prop, value in enumerate(state_atoms) if value == 1}
-
-
-def get_atom_index(cgs, element):
-    """Return the index of the given atom in the array of atomic propositions."""
-    from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
-
-    index = proposition_index(cgs.atomic_propositions, element)
-    if index is None:
-        logger.warning("Atom '%s' not found in model", element)
-    return index
 
 
 def get_index_by_state_name(cgs, state):
@@ -70,12 +47,6 @@ def build_state_cache(cgs):
         cgs._state_name_to_index_cache[state_str] = idx
         if isinstance(state, (tuple, list)) and len(state) > 1:
             cgs._state_name_to_index_cache["".join(str(elem) for elem in state)] = idx
-
-
-def clear_state_cache(cgs):
-    """Clear the state name to index cache."""
-    if hasattr(cgs, "_state_name_to_index_cache"):
-        cgs._state_name_to_index_cache.clear()
 
 
 def get_capacities_from_action2(cgs, action, agent):

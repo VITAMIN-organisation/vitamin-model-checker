@@ -36,18 +36,6 @@ class p_knowledge_for_Y:
     def __repr__(self) -> str:
         return f"pkY({self.state}, {self.knowledge}, {self.action}, {self.coalition})"
 
-    def not_in(self, ens: list) -> bool:
-        """Check if this element is already present in the given list."""
-        for elem in ens:
-            if (
-                elem.state == self.state
-                and elem.knowledge == self.knowledge
-                and elem.coalition == self.coalition
-                and elem.action == self.action
-            ):
-                return False
-        return True
-
     def __eq__(self, other):
         if isinstance(other, p_knowledge_for_Y):
             return (
@@ -83,13 +71,6 @@ class p_knowledge:
 
     def __repr__(self) -> str:
         return f"pk({self.state}, {self.knowledge})"
-
-    def not_in(self, ens: list) -> bool:
-        """Check if this element is already present in the given list."""
-        for elem in ens:
-            if elem.state == self.state and elem.knowledge == self.knowledge:
-                return False
-        return True
 
     def __eq__(self, other):
         if isinstance(other, p_knowledge):

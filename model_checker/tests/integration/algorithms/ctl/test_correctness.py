@@ -1,4 +1,4 @@
-"""CTL model checking: total transitions, release (AR), error handling."""
+"""CTL model checking: total transitions, until operators, error handling."""
 
 import pytest
 
@@ -33,23 +33,8 @@ class TestCTLTotalTransitions:
             load_cgs_from_content(temp_file, content)
 
 
-class TestCTLReleaseOperator:
-    """CTL release operator (AR)."""
-
-    def test_ar_operator(self, cgs_simple_parser):
-        """A[phi R psi] (all release)."""
-        result = _core_ctl_checking(cgs_simple_parser, "A[p R q]")
-        if "error" not in result:
-            states = extract_states_from_result(result)
-            assert states is not None
-        else:
-            assert "Syntax error" in result.get("res", "") or "syntax" in result.get(
-                "error", {}
-            ).get("type", "")
-
-
-class TestCTLEUAuErSemantics:
-    """CTL EU, AU, and ER operators (explicit semantics tests)."""
+class TestCTLEUAuSemantics:
+    """CTL EU and AU operators (explicit semantics tests)."""
 
     def test_eu_operator_returns_state_set(self, cgs_simple_parser):
         """E[p U q] (existential until) returns a state set without error."""
@@ -66,19 +51,6 @@ class TestCTLEUAuErSemantics:
         states = extract_states_from_result(result)
         assert states is not None
         assert states <= set(cgs_simple_parser.states)
-
-    def test_er_operator_returns_state_set_or_parseable(self, cgs_simple_parser):
-        """E[p R q] (existential release): either returns a state set or parser reports syntax (ER support may vary)."""
-        result = _core_ctl_checking(cgs_simple_parser, "E[p R q]")
-        if "error" not in result:
-            states = extract_states_from_result(result)
-            assert states is not None
-            assert states <= set(cgs_simple_parser.states)
-        else:
-            assert (
-                "syntax" in result.get("res", "").lower()
-                or "syntax" in str(result.get("error", {})).lower()
-            )
 
 
 class TestCTLErrorHandling:

@@ -1,17 +1,11 @@
 """Pre-image and strategy/knowledge helpers for CapATL."""
 
-from model_checker.algorithms.explicit.CapATL.combinatorics import (
-    find_combinations,
-    get_actions_from_capacity_set,
-)
 from model_checker.algorithms.explicit.CapATL.utils import (
     Omega_Y,
     succ,
 )
 
 __all__ = [
-    "find_combinations",
-    "get_actions_from_capacity_set",
     "pre",
 ]
 
@@ -77,24 +71,6 @@ def unique_state_action_couple(succw, W):
         if len(intersection_same_q(elem, W)) != 1:
             return False
     return True
-
-
-def elem_in_W(w, W):
-    """Return matching elements in W (knowledge subset and same state), or None."""
-    result = []
-    for value in W:
-        is_subset = True
-        val_know = value.knowledge
-        w_know = w.knowledge
-        for i in range(len(val_know)):
-            if not set(val_know[i]).issubset(set(w_know[i])):
-                is_subset = False
-                break
-
-        if is_subset and value.state == w.state:
-            result.append(value)
-
-    return result if result else None
 
 
 def succ_in_W(succw, W, dict_W):

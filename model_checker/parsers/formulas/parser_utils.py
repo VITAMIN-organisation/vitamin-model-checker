@@ -9,7 +9,6 @@ from typing import Any
 
 from model_checker.parsers.syntax_patterns import (
     AGENT_LIST,
-    ATOMIC_PROPOSITION_NAME_RE,
     EMPTY_COALITION_RE,
     FORMULA_RESERVED_WORDS,
     NATATL_CAPACITY_RE,
@@ -420,7 +419,6 @@ def validate_ast(
 
 # Re-export for CGS modules that already import from parser_utils.
 __all__ = [
-    "ATOMIC_PROPOSITION_NAME_RE",
     "CoalitionValueError",
     "PROPOSITION_AST_PATTERN",
     "BOOLEAN_AST_OPERATORS",

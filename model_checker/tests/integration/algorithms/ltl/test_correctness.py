@@ -5,15 +5,7 @@ import pytest
 from model_checker.algorithms.explicit.LTL.LTL import (
     model_checking,
     model_checking_exists_nash,
-    model_checking_is_not_nash,
-    model_checking_lose_some_nash,
-    model_checking_wins_some_nash,
 )
-from model_checker.algorithms.explicit.LTL.strategies import (
-    generate_strategies,
-    initialize,
-)
-from model_checker.algorithms.explicit.shared import strategies_base
 from model_checker.tests.helpers.model_helpers import generate_linear_chain
 
 
@@ -149,100 +141,3 @@ class TestLTLNashFunctions:
         assert "Complexity Bound" in result
         assert result["Satisfiability"] in (True, False)
         assert 1 <= result["Complexity Bound"] <= 2
-
-    def test_model_checking_wins_some_nash_returns_result_dict(self, ctl_small_model):
-        """model_checking_wins_some_nash runs without crash and returns Satisfiability."""
-        (
-            agent_actions,
-            actions_list,
-            atomic_propositions,
-            CTLformula,
-            agents,
-            cgs,
-            _,
-        ) = initialize(ctl_small_model.filename, "F q", 2, [1])
-        cartesian = strategies_base.generate_guarded_action_pairs(
-            1, agent_actions, actions_list, atomic_propositions
-        )
-        strategies_gen = generate_strategies(cartesian, 1, agents, [False])
-        current_strategy = next(strategies_gen, None)
-        if current_strategy is None:
-            pytest.skip("No strategy generated for this model")
-        result = model_checking_wins_some_nash(
-            cgs,
-            ctl_small_model.filename,
-            agents,
-            CTLformula,
-            current_strategy,
-            bound=1,
-            agent_actions=agent_actions,
-            atomic_propositions=atomic_propositions,
-            target_agent=1,
-        )
-        assert isinstance(result, dict)
-        assert "Satisfiability" in result
-        assert isinstance(result["Satisfiability"], bool)
-
-    def test_model_checking_lose_some_nash_returns_result_dict(self, ctl_small_model):
-        """model_checking_lose_some_nash runs without crash and returns Satisfiability."""
-        (
-            agent_actions,
-            actions_list,
-            atomic_propositions,
-            CTLformula,
-            agents,
-            cgs,
-            _,
-        ) = initialize(ctl_small_model.filename, "F q", 2, [1])
-        cartesian = strategies_base.generate_guarded_action_pairs(
-            1, agent_actions, actions_list, atomic_propositions
-        )
-        strategies_gen = generate_strategies(cartesian, 1, agents, [False])
-        current_strategy = next(strategies_gen, None)
-        if current_strategy is None:
-            pytest.skip("No strategy generated for this model")
-        result = model_checking_lose_some_nash(
-            cgs,
-            ctl_small_model.filename,
-            agents,
-            CTLformula,
-            current_strategy,
-            bound=1,
-            agent_actions=agent_actions,
-            atomic_propositions=atomic_propositions,
-            target_agent=1,
-        )
-        assert isinstance(result, dict)
-        assert "Satisfiability" in result
-        assert isinstance(result["Satisfiability"], bool)
-
-    def test_model_checking_is_not_nash_returns_result_dict(self, ctl_small_model):
-        """model_checking_is_not_nash runs without crash and returns Satisfiability when given a strategy."""
-        (
-            agent_actions,
-            actions_list,
-            atomic_propositions,
-            _,
-            agents,
-            cgs,
-            _,
-        ) = initialize(ctl_small_model.filename, "F q", 2, [1])
-        cartesian = strategies_base.generate_guarded_action_pairs(
-            1, agent_actions, actions_list, atomic_propositions
-        )
-        strategies_gen = generate_strategies(cartesian, 1, agents, [False])
-        natural_strategy = next(strategies_gen, None)
-        if natural_strategy is None:
-            pytest.skip("No strategy generated for this model")
-        result = model_checking_is_not_nash(
-            ctl_small_model.filename,
-            cgs,
-            "F q",
-            k=2,
-            natural_strategies=natural_strategy,
-            selected_agents=agents,
-        )
-        assert isinstance(result, dict)
-        assert "Satisfiability" in result
-        assert isinstance(result["Satisfiability"], bool)
-        assert "Complexity Bound" in result

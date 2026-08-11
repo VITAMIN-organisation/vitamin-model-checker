@@ -28,17 +28,6 @@ def _get_cached_cost(cgs, action: str, state_name: str) -> float:
     return cost
 
 
-def calculate_cost(cgs, actions: set[str], state_name: str) -> float:
-    """Return sum of costs for actions from state_name."""
-    if not hasattr(cgs, "get_cost_for_action"):
-        return 0.0
-
-    total = 0.0
-    for action in actions:
-        total += _get_cached_cost(cgs, action, state_name)
-    return total
-
-
 def has_affordable_action(
     cgs, actions: set[str], state_name: str, max_cost: float
 ) -> bool:

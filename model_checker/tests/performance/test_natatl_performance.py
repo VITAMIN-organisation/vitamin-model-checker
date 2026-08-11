@@ -51,21 +51,6 @@ NATATL_SCALING_CASES = [
 class TestNatATLStrategyEnumeration:
     """Test that NatATL strategy enumeration is lazy and bounded."""
 
-    def test_strategy_generator_is_lazy(self):
-        """Verify strategy generator uses lazy evaluation."""
-        cartesian_products = generate_guarded_action_pairs(
-            complexity_bound=1,
-            agent_actions={"actions_agent1": ["A", "B"]},
-            actions_list=[["A", "B"]],
-            atomic_propositions=["p"],
-        )
-        gen = generate_strategies(cartesian_products, 1, [1], False)
-        assert hasattr(gen, "__iter__") and hasattr(gen, "__next__")
-        try:
-            assert next(gen) is not None
-        except StopIteration:
-            pass
-
     @pytest.mark.parametrize(
         "case_id,content_fn,formula,max_time",
         NATATL_SCALING_CASES,

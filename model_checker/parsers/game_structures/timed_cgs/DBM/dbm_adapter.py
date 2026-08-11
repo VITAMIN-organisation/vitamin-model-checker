@@ -141,15 +141,6 @@ def _flatten_and_parts(subformulas: tuple) -> list[str]:
     return parts
 
 
-def add_constraints(tcgs: TimedCGS, current_zone: DBM, formulas: FormulaInput) -> DBM:
-    bounds, _ = parse_constraints(
-        list(_atomic_formula_parts(formulas)), tcgs.clocks_dict
-    )
-    zone = current_zone.copy()
-    apply_bounds(zone, bounds)
-    return zone
-
-
 def compute_predecessors(
     tcgs: TimedCGS,
     source: str,

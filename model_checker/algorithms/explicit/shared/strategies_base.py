@@ -174,10 +174,3 @@ def generate_guarded_action_pairs(
     except Exception as e:
         logger.error("Error generating guarded action pairs: %s", e)
         return {}
-
-
-def agent_combinations(new_combinations: list) -> Generator[tuple, None, None]:
-    """Yield all ordered pairs from new_combinations."""
-    for agent1 in new_combinations:
-        for agent2 in new_combinations:
-            yield agent1, agent2

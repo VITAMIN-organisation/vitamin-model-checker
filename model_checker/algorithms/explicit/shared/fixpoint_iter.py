@@ -16,19 +16,6 @@ def least_fixpoint(initial_set, update_func):
     return _iterate_fixpoint(set(), initial_set, update_func)
 
 
-def least_fixpoint_incremental(initial_set, update_func):
-    """Least fixpoint that only processes newly added states each step."""
-    result = set(initial_set)
-    frontier = set(initial_set)
-
-    while frontier:
-        new_states = update_func(result)
-        frontier = new_states - result
-        result.update(frontier)
-
-    return result
-
-
 def greatest_fixpoint(initial_set, update_func):
     """Largest set T such that T = update_func(T)."""
     return _iterate_fixpoint(initial_set, update_func(initial_set), update_func)

@@ -4,10 +4,7 @@ import re
 from collections.abc import Iterable, Sequence
 from typing import Any
 
-from model_checker.algorithms.explicit.ATL.preimage import (
-    build_transition_cache,
-    pre,
-)
+from model_checker.algorithms.explicit.ATL.preimage import pre
 
 WalletConstraint = tuple[int, tuple[str, int]]
 
@@ -100,7 +97,6 @@ def apply_wallet_constraints(
 
 __all__ = [
     "WalletConstraint",
-    "build_transition_cache",
     "pre",
     "is_wallet_coalition_operator",
     "extract_coalition_and_constraints",
