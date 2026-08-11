@@ -271,7 +271,18 @@ class WalletCGS(CGS):
         return proposition_index(self.atomic_propositions, element)
 
     def simulate_transition(self, current_state, actions):
-        """Simulate a transition and return the new wallet state"""
+        """Simulate a transition and return the new wallet state.
+
+        This is a simulation utility for external callers. The Wallet_ATL
+        model-checking algorithm does not use this method; it applies static
+        wallet guards at parse time via check_wallet_constraint.
+
+        Conservation invariant: the total sum of all wallet balances is
+        preserved across any transition. For consumption actions the agent
+        loses funds and the system/contract pool gains them. For income
+        actions the system pool is debited first; the user is credited only
+        when the pool has sufficient funds, so no value is created.
+        """
         current_wallets = list(
             self.wallets.get(current_state, (0,) * self.get_number_of_agents())
         )

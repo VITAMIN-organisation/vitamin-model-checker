@@ -167,6 +167,16 @@ def existential_natatl_alternated(
 ) -> bool:
     """
     Search for existential strategy that survives all universal challenges (Alternated).
+
+    Alternated semantics (per logic_knowledge_base.md): verification alternates
+    between existential search and universal validation at each step. Concretely:
+    1. For each existential strategy candidate (tree pruned by existential formula),
+       run universal_natatl_recall for every universal formula.
+    2. Only return True when an existential candidate passes all universal challenges.
+    3. When there are no universal formulas, existential success alone is sufficient.
+
+    This differs from Sequential semantics, where all existential candidates are
+    collected first and then validated against all universal strategies in one pass.
     """
     (
         k,

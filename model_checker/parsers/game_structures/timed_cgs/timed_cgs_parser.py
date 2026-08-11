@@ -53,7 +53,10 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
 
 _CONSTRAINT_RE = re.compile(r"^(\w+)(>=|<=|==|>|<|=)(\d+)$")
 _INVARIANT_RE = re.compile(r"^(\w+)(<=|<)(\d+)$")
-# Tokens that represent "no constraint on this transition cell"
+# Tokens that represent "no constraint on this transition cell".
+# A cell containing only one of these tokens is silently skipped.
+# Any other non-empty token that does not match _CONSTRAINT_RE or _INVARIANT_RE
+# raises ValueError immediately; there is no silent drop of constraint fragments.
 _NO_CONSTRAINT_TOKENS = frozenset({"0", "-", "*"})
 
 

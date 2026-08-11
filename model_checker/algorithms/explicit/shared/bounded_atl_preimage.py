@@ -96,7 +96,17 @@ def _action_forces_all_to_target(
     target_bits,
     use_bit_vector: bool,
 ) -> bool:
-    """True if every opponent response to action lands inside target_indices."""
+    """True if every opponent response to action lands inside target_indices.
+
+    Wildcard actions (containing '*') are expanded by get_coalition_actions via
+    cgs_actions._expand_action_wildcards before the opponent-move intersection
+    check runs. This means wildcard coalition actions still go through the full
+    universal quantifier check; they are not unconditionally accepted.
+
+    Precondition: the CGS model must not emit bare '*' as a coalition action
+    in bounded ATL models unless the wildcard expansion in cgs_actions produces
+    a valid coalition mask for the intended number of agents.
+    """
     move_profile = cgs_actions.get_coalition_actions(
         {action}, formatted_agents, num_agents
     )
