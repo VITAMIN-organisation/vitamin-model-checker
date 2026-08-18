@@ -19,15 +19,15 @@ from .operators import (
 )
 
 _UNARY = {
-    "NOT": lambda cgs, node, _ctx: handle_not(cgs, node),
+    "NOT": handle_not,
     "GLOBALLY": handle_coalition_globally,
     "NEXT": handle_coalition_next,
     "EVENTUALLY": handle_coalition_eventually,
 }
 _BINARY = {
-    "OR": lambda cgs, node, _ctx: handle_or(cgs, node),
-    "AND": lambda cgs, node, _ctx: handle_and(cgs, node),
-    "IMPLIES": lambda cgs, node, _ctx: handle_implies(cgs, node),
+    "OR": handle_or,
+    "AND": handle_and,
+    "IMPLIES": handle_implies,
     "UNTIL": handle_coalition_until,
     "RELEASE": handle_coalition_release,
     "WEAK": handle_coalition_weak,
@@ -78,12 +78,18 @@ def solve_tree(cgs, node, solve_context):
         key = _cotl_unary_key(parser, node.value)
         if key is None or key not in _UNARY:
             raise ValueError(f"Unsupported COTL unary operator: {node.value!r}")
-        _UNARY[key](cgs, node, solve_context)
+        if key == "NOT":
+            _UNARY[key](cgs, node)
+        else:
+            _UNARY[key](cgs, node, solve_context)
     elif node.left is not None and node.right is not None:
         key = _cotl_binary_key(parser, node.value)
         if key is None or key not in _BINARY:
             raise ValueError(f"Unsupported COTL binary operator: {node.value!r}")
-        _BINARY[key](cgs, node, solve_context)
+        if key in ["AND", "OR", "IMPLIES"]:
+            _BINARY[key](cgs, node)
+        else:
+            _BINARY[key](cgs, node, solve_context)
 
 
 def build_solve_context(graph):

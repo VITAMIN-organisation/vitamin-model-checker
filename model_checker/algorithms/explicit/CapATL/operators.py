@@ -7,6 +7,7 @@ Handler functions for all CapATL operators
 """
 
 from model_checker.algorithms.explicit.CapATL.preimage import pre
+
 from model_checker.algorithms.explicit.CapATL.utils import (
     pi_omega_Y,
     pi_theta,
@@ -66,6 +67,12 @@ def handle_and(cgs, node):
 def handle_or(cgs, node):
     """Handle OR operator: union of two pointed knowledge sets."""
     node.value = node.left.value | node.right.value
+
+
+def handle_implies(cgs, node):
+    """Handle IMPLIES operator: (NOT left) OR right"""
+    all_pk = set(pointed_knowledge_set(cgs))
+    node.value = (all_pk - node.left.value) | node.right.value
 
 
 def handle_until(cgs, node, coal_str):

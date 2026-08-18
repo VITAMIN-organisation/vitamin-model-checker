@@ -12,6 +12,7 @@ from model_checker.algorithms.explicit.CapATL.operators import (
     handle_or,
     handle_until,
     handle_release,
+    handle_implies,
 )
 from model_checker.algorithms.explicit.CapATL.utils import (
     X_agt_cap,
@@ -115,6 +116,8 @@ def solve_tree(cgs: CapCGSProtocol, node: Node_PK | None) -> None:
             handle_and(cgs, node)
         elif parser.verify("OR", val_str):
             handle_or(cgs, node)
+        elif parser.verify("IMPLIES", val_str):
+            handle_implies(cgs, node)
         elif parser.verify("UNTIL", val_str):
             coal_str = _extract_coalition(val_str)
             handle_until(cgs, node, coal_str)

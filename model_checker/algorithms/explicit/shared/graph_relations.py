@@ -9,7 +9,7 @@ def labeled_pairs(relations, states_list, predicate):
             if not predicate(element):
                 continue
             if element == "*":
-                pairs.append((states_list[i], states_list[i]))
+                pairs.append((str(states_list[i]), str(states_list[i])))
             else:
-                pairs.append((states_list[i], states_list[j]))
+                pairs.append((str(states_list[i]), str(states_list[j])))
     return pairs
