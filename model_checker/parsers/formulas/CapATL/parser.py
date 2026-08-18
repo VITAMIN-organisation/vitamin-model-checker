@@ -91,7 +91,9 @@ class CapATLParser(BaseLogicParser):
 
     # === Grammar rules ===
     def p_expression_binary(self, p):
-        """expression : expression AND expression"""
+        """expression : expression AND expression
+        | expression OR expression
+        | expression IMPLIES expression"""
         p[0] = (p[2], p[1], p[3])
 
     def p_expression_ternary(self, p):
@@ -119,8 +121,10 @@ class CapATLParser(BaseLogicParser):
         """expression2 : LPAREN expression2 RPAREN"""
         p[0] = p[2]
 
-    def p_expression_capformula_and(self, p):
-        """expression2 : expression2 AND expression2"""
+    def p_expression_capformula_binary(self, p):
+        """expression2 : expression2 AND expression2
+        | expression2 OR expression2
+        | expression2 IMPLIES expression2"""
         p[0] = (p[2], p[1], p[3])
 
     def p_expression_capformula_not(self, p):
@@ -174,6 +178,10 @@ class CapATLParser(BaseLogicParser):
             "G",
             "&&",
             "AND",
+            "||",
+            "OR",
+            "->",
+            "IMPLIES",
             "NOT",
             "UNTIL",
             "RELEASE",
