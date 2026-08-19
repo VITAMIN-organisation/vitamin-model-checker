@@ -213,7 +213,7 @@ class BaseLogicParser:
 
     def verify(self, token_name: str, string: Any) -> bool:
         """Verify if a token exists in the string using the lexer."""
-        if not getattr(self, "lexer", None):
+        if self.lexer is None:
             return False
         return self._run_lexer_verify(
             self.lexer.clone(), token_name, string, case_sensitive=True

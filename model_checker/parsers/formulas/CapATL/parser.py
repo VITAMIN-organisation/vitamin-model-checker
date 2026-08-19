@@ -205,7 +205,8 @@ class CapATLParser(BaseLogicParser):
         return True
 
     def verify(self, token_name: str, string) -> bool:
-        if not getattr(self, "lexer", None):
+        """Verify if a token exists in the string (case-insensitive for CapATL)."""
+        if self.lexer is None:
             return False
         return self._run_lexer_verify(
             self.lexer.clone(), token_name, string, case_sensitive=False
