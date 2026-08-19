@@ -35,13 +35,12 @@ class ATLParser(BaseLogicParser):
         self.n_agent = 0
         self.build()
 
-    def verify(self, token_name, string):
-        """
-        Verify if a token exists in the string (case-insensitive for ATL).
-        """
-        from ..parser_utils import verify_token
+    def verify(self, token_name: str, string) -> bool:
+        """Verify if a token exists in the string (case-insensitive for ATL)."""
+        if not getattr(self, "lexer", None):
+            return False
+        return self._run_lexer_verify(self.lexer.clone(), token_name, string, case_sensitive=False)
 
-        return verify_token(self.lexer, token_name, string, case_sensitive=False)
 
     # --- ATL Specific Tokens ---
     t_COALITION = COALITION_ATL_TOKEN

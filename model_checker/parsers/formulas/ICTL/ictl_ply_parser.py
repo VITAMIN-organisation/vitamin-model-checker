@@ -101,7 +101,6 @@ _CACHED_LEXER = None
 _CACHED_PARSER = None
 _VERIFY_LEXER = None
 
-
 def _get_ictl_ply():
     global _CACHED_LEXER, _CACHED_PARSER
     if _CACHED_PARSER is None:

@@ -51,23 +51,3 @@ class FormulaParserFactory:
                 f"Could not load parser for logic '{logic_name}': {e}"
             ) from e
 
-    @staticmethod
-    def parse_formula(logic_name: str, formula: str, **kwargs: Any) -> Any:
-        """Parse a formula using the specified logic."""
-        parser = FormulaParserFactory.get_parser_instance(logic_name)
-        if hasattr(parser, "parse"):
-            return parser.parse(formula, **kwargs)
-
-        raise AttributeError(f"Parser for {logic_name} does not have a parse method.")
-
-    @staticmethod
-    def verify_token(logic_name: str, token_name: str, string: str) -> bool:
-        """Verify if a token exists in the string for the specified logic."""
-        parser = FormulaParserFactory.get_parser_instance(logic_name)
-
-        if hasattr(parser, "verify"):
-            return parser.verify(token_name, string)
-
-        raise AttributeError(
-            f"Parser for {logic_name} does not have a verification function."
-        )

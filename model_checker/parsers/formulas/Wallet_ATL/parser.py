@@ -13,7 +13,6 @@ from model_checker.parsers.formulas.parser_utils import (
     run_common_prechecks,
     validate_ast,
     validate_proposition_identifier,
-    verify_token,
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 
@@ -440,7 +439,5 @@ class Wallet_ATLParser(BaseLogicParser):
             self.errors.append(str(e))
             return None
 
-    def verify(self, token_name, string):
-        return verify_token(
-            _get_verify_lexer(), token_name, str(string), case_sensitive=False
-        )
+    def verify(self, token_name: str, string) -> bool:
+        return self._run_lexer_verify(_get_verify_lexer(), token_name, string, case_sensitive=False)

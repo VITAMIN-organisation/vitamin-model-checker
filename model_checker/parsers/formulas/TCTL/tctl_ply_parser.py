@@ -1,102 +1,115 @@
 import sys
 import unicodedata
+from typing import Any, Optional, Tuple
 
 import ply.lex as lex
 import ply.yacc as yacc
 
 from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
 
+# ==========================================
+# 1. Error State & Globals
+# ==========================================
 _LEXER_HAS_ERROR = False
 _PARSER_HAS_ERROR = False
 
+_CACHED_LEXER = None
+_CACHED_PARSER = None
+_VERIFY_LEXER = None
 
+
+# ==========================================
+# 2. AST Nodes
+# ==========================================
 class Expr:
-    def __init__(self):
-        self.satisfying_regions = set()
+    def __init__(self) -> None:
+        self.satisfying_regions: set = set()
         self.constraints = None
 
 
 class Unary(Expr):
-    def __init__(self, op: str, operand: Expr):
+    def __init__(self, op: str, operand: Expr) -> None:
         super().__init__()
         self.op = op
         self.operand = operand
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.op}({self.operand})"
 
 
 class Binary(Expr):
-    def __init__(self, op: str, left: Expr, right: Expr):
+    def __init__(self, op: str, left: Expr, right: Expr) -> None:
         super().__init__()
         self.op = op
         self.right = right
         self.left = left
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.op} {self.left},{self.right}"
 
 
 class AtomicProp(Expr):
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__()
         self.name = name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
 class QuantifiedPath(Expr):
-    def __init__(self, quantifier: str, formula: Expr):
+    def __init__(self, quantifier: str, formula: Expr) -> None:
         super().__init__()
         self.quantifier = quantifier
         self.formula = formula
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.quantifier}({self.formula})"
 
 
 class FreezeExpr(Expr):
-    def __init__(self, clock: str, operand: Expr):
+    def __init__(self, clock: str, operand: Expr) -> None:
         super().__init__()
         self.clock = clock
         self.operand = operand
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.clock}.({self.operand})"
 
 
 class ClockExpr(Expr):
-    def __init__(self, subject: Expr, constraints: Expr):
+    def __init__(self, subject: Expr, constraints: Expr) -> None:
         super().__init__()
         self.subject = subject
         self.constraints = str(constraints)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.subject}: {self.constraints}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.subject}: {self.constraints}"
 
 
 class SimpleTimeExpr(Expr):  # simple clock constraints without subjects: x<=4
-    def __init__(self, constraints: tuple):
+    def __init__(self, constraints: tuple) -> None:
         super().__init__()
         self.constraints = constraints
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "".join(self.constraints)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "".join(self.constraints)
 
 
+# ==========================================
+# 3. Lexer Configuration
+# ==========================================
 reserved = {"implies": "IMPLIES"}
 
-# Tokens
 tokens = (
     "LPAREN",
     "RPAREN",
@@ -126,7 +139,6 @@ t_AND = r"&&|\&|and"
 t_OR = r"\|\||\||or"
 t_NOT = r"!|not"
 t_IMPLIES = r"->|implies"
-# t_PROP = r'[a-z_]+\d*'
 t_UNTIL = r"U|until"
 t_GLOBALLY = r"G|globally|always"
 t_EVENTUALLY = r"F|eventually"
@@ -140,7 +152,6 @@ t_CONST = r"\d+"
 t_TIME_SEP = r":"
 t_DOT = r"\."
 t_ignore = " \t\n"
-precedence = (("right", "NOT"),)
 
 
 def t_PROP(t):
@@ -151,14 +162,18 @@ def t_PROP(t):
 t_PROP.__doc__ = TCTL_TOL_PROPOSITION_TOKEN
 
 
-# Token error handling
 def t_error(t):
     global _LEXER_HAS_ERROR
     _LEXER_HAS_ERROR = True
     t.lexer.skip(1)
 
 
-# Grammar
+# ==========================================
+# 4. Yacc Grammar Rules
+# ==========================================
+precedence = (("right", "NOT"),)
+
+
 def p_expression_binary(p):
     """expression : expression AND expression
     | expression OR expression
@@ -224,12 +239,10 @@ def p_error(p):
     _PARSER_HAS_ERROR = True
 
 
-_CACHED_LEXER = None
-_CACHED_PARSER = None
-_VERIFY_LEXER = None
-
-
-def _get_tctl_ply():
+# ==========================================
+# 5. Parser Runtime API
+# ==========================================
+def _get_tctl_ply() -> Tuple[lex.Lexer, yacc.LRParser]:
     global _CACHED_LEXER, _CACHED_PARSER
     if _CACHED_PARSER is None:
         module = sys.modules[__name__]
@@ -243,15 +256,15 @@ def _get_tctl_ply():
     return _CACHED_LEXER, _CACHED_PARSER
 
 
-def _get_verify_lexer():
+def _get_verify_lexer() -> lex.Lexer:
     global _VERIFY_LEXER
     if _VERIFY_LEXER is None:
         _VERIFY_LEXER = lex.lex(module=sys.modules[__name__], errorlog=lex.NullLogger())
     return _VERIFY_LEXER
 
 
-# given a TCTL formula as input, returns a tuple representing the formula divided into subformulas.
-def do_parsingTCTL(formula):
+def do_parsingTCTL(formula: str) -> Optional[Expr]:
+    """Parse a TCTL formula into an AST."""
     global _PARSER_HAS_ERROR, _LEXER_HAS_ERROR
     _PARSER_HAS_ERROR = False
     _LEXER_HAS_ERROR = False
@@ -273,12 +286,12 @@ def do_parsingTCTL(formula):
         return None
 
 
-# checks whether the input operator corresponds to a given operator defined in the grammar
-def verifyTCTL(token_name, string):
-    santized_string = str(string)
+def verifyTCTL(token_name: str, string: Any) -> bool:
+    """Checks whether the input operator corresponds to a given operator defined in the grammar."""
+    sanitized_string = str(string)
     v_lexer = _get_verify_lexer()
-    v_lexer.input(santized_string)
+    v_lexer.input(sanitized_string)
     for token in v_lexer:
-        if token.type == token_name and token.value in santized_string:
+        if token.type == token_name:
             return True
     return False

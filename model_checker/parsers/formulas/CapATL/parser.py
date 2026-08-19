@@ -28,7 +28,6 @@ from ..parser_utils import (
     run_common_prechecks,
     validate_ast,
     validate_coalition,
-    verify_token,
 )
 from ..shared_parser import BaseLogicParser
 
@@ -205,8 +204,10 @@ class CapATLParser(BaseLogicParser):
             return False
         return True
 
-    def verify(self, token_name, string):
-        return verify_token(self.lexer, token_name, string, case_sensitive=False)
+    def verify(self, token_name: str, string) -> bool:
+        if not getattr(self, "lexer", None):
+            return False
+        return self._run_lexer_verify(self.lexer.clone(), token_name, string, case_sensitive=False)
 
 
 CapATLParser.t_COALITION_BOUND.__doc__ = _COALITION_BOUND_REGEX

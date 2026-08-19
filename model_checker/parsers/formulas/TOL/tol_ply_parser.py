@@ -278,7 +278,6 @@ _CACHED_LEXER = None
 _CACHED_PARSER = None
 _VERIFY_LEXER = None
 
-
 def _get_tol_ply():
     global _CACHED_LEXER, _CACHED_PARSER
     if _CACHED_PARSER is None:
@@ -291,13 +290,6 @@ def _get_tol_ply():
             errorlog=yacc.NullLogger(),
         )
     return _CACHED_LEXER, _CACHED_PARSER
-
-
-def _get_verify_lexer():
-    global _VERIFY_LEXER
-    if _VERIFY_LEXER is None:
-        _VERIFY_LEXER = lex.lex(module=sys.modules[__name__], errorlog=lex.NullLogger())
-    return _VERIFY_LEXER
 
 
 # given an ATL formula as input
@@ -322,6 +314,11 @@ def do_parsing(formula):
     except (SyntaxError, DemonicValueError, Exception):  # if parser fails
         return None
 
+def _get_verify_lexer():
+    global _VERIFY_LEXER
+    if _VERIFY_LEXER is None:
+        _VERIFY_LEXER = lex.lex(module=sys.modules[__name__], errorlog=lex.NullLogger())
+    return _VERIFY_LEXER
 
 # checks whether the input operator corresponds to a given operator defined in the grammar
 def verify(token_name, string):

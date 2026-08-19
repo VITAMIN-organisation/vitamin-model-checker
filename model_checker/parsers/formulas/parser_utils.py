@@ -36,8 +36,6 @@ BOOLEAN_AST_OPERATORS = frozenset(
 class CoalitionValueError(Exception):
     """Bad coalition syntax or an agent index outside the allowed range."""
 
-    pass
-
 
 def validate_proposition_identifier(
     name: str,
@@ -165,31 +163,6 @@ def validate_ctl_path_quantifiers(formula: str) -> tuple[bool, str | None]:
             "Temporal operators must be preceded by a path quantifier (A or E) in CTL",
         )
     return True, None
-
-
-def verify_token(
-    lexer: Any,
-    token_name: str,
-    string: str,
-    case_sensitive: bool = True,
-) -> bool:
-    """Return True if the lexer finds at least one token of the given type in string."""
-    lexer.input(string)
-    for token in lexer:
-        if token.type == token_name:
-            if case_sensitive:
-                if token.value in string:
-                    return True
-            else:
-                token_value = (
-                    token.value.lower()
-                    if isinstance(token.value, str)
-                    else str(token.value)
-                )
-                string_lower = string.lower()
-                if token_value in string_lower:
-                    return True
-    return False
 
 
 def validate_coalition(coalition_str: str, max_coalition: int) -> None:
@@ -433,5 +406,4 @@ __all__ = [
     "validate_natatl_coalition",
     "validate_proposition_identifier",
     "validate_release_weak_rejected",
-    "verify_token",
 ]

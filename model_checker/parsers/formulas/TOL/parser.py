@@ -9,8 +9,6 @@ from model_checker.parsers.formulas.parser_utils import (
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 
 from .tol_ply_parser import do_parsing
-from .tol_ply_parser import verify as tol_verify
-
 _TOL_VALID_OPERATORS = frozenset(
     {
         "U",
@@ -67,11 +65,7 @@ class TOLParser(BaseLogicParser):
             return None
         return result
 
-    def verify(self, name: str, string: str) -> bool:
-        return tol_verify(name, string)
+    def verify(self, token_name: str, string) -> bool:
+        from .tol_ply_parser import verify as tol_verify
+        return tol_verify(token_name, string)
 
-    def build(self, **kwargs: Any) -> None:
-        """TOL uses tol_ply_parser; no PLY tables on this class."""
-
-
-verify = tol_verify

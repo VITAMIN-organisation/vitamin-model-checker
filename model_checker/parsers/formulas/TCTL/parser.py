@@ -4,7 +4,7 @@ from model_checker.parsers.formulas.parser_utils import (
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 
-from .tctl_ply_parser import do_parsingTCTL, verifyTCTL
+from .tctl_ply_parser import do_parsingTCTL
 
 _TCTL_VALID_OPERATORS = frozenset(
     {
@@ -65,8 +65,6 @@ class TCTLParser(BaseLogicParser):
             return None
         return result
 
-    def verify(self, token_name: str, string: str) -> bool:
+    def verify(self, token_name: str, string) -> bool:
+        from .tctl_ply_parser import verifyTCTL
         return verifyTCTL(token_name, string)
-
-    def build(self, **kwargs) -> None:
-        """TCTL uses tctl_ply_parser; no PLY tables on this class."""

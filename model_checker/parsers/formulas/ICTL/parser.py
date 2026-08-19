@@ -4,7 +4,7 @@ from model_checker.parsers.formulas.parser_utils import (
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 
-from .ictl_ply_parser import do_parsingICTL, verifyICTL
+from .ictl_ply_parser import do_parsingICTL
 
 _ICTL_VALID_OPERATORS = frozenset(
     {
@@ -37,8 +37,6 @@ class ICTLParser(BaseLogicParser):
         self.lexer = None
         self.parser = None
 
-    def build(self, **kwargs):
-        pass
 
     def _pre_validation(self, formula):
         return run_common_prechecks(
@@ -71,5 +69,6 @@ class ICTLParser(BaseLogicParser):
             return None
         return result
 
-    def verify(self, token_name: str, string: str) -> bool:
+    def verify(self, token_name: str, string) -> bool:
+        from .ictl_ply_parser import verifyICTL
         return verifyICTL(token_name, string)
