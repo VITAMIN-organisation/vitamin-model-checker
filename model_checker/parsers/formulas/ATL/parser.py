@@ -9,15 +9,40 @@ What it handles:
 
 import re
 
-from model_checker.parsers.syntax_patterns import COALITION_ATL_TOKEN
-
-from ..parser_utils import (
+from model_checker.parsers.formulas.parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_ast,
     validate_coalition,
 )
-from ..shared_parser import BaseLogicParser
+from model_checker.parsers.formulas.shared_parser import BaseLogicParser
+from model_checker.parsers.syntax_patterns import COALITION_ATL_TOKEN
+
+_ATL_VALID_OPERATORS = frozenset(
+    {
+        "U",
+        "G",
+        "X",
+        "F",
+        "&&",
+        "||",
+        "->",
+        "AND",
+        "OR",
+        "NOT",
+        "IMPLIES",
+        "UNTIL",
+        "GLOBALLY",
+        "NEXT",
+        "EVENTUALLY",
+        "!",
+    }
+)
+
+_COALITION_OPERATOR_PATTERN = re.compile(
+    r"^<\d+(?:,\d+)*>(U|G|X|F|UNTIL|GLOBALLY|NEXT|EVENTUALLY)$",
+    re.IGNORECASE,
+)
 
 
 class ATLParser(BaseLogicParser):
@@ -30,26 +55,15 @@ class ATLParser(BaseLogicParser):
     def __init__(self):
         """Initialize the ATL lexer and parser (PLY)."""
         super().__init__()
-        # Add ATL specific tokens
         self.tokens.extend(["COALITION", "PROP"])
         self.n_agent = 0
         self.build()
 
-    def verify(self, token_name: str, string) -> bool:
-        """Verify if a token exists in the string (case-insensitive for ATL)."""
-        if self.lexer is None:
-            return False
-        return self._run_lexer_verify(
-            self.lexer.clone(), token_name, string, case_sensitive=False
-        )
-
-    # --- ATL Specific Tokens ---
+    # --- Specific Tokens ---
     t_COALITION = COALITION_ATL_TOKEN
     t_PROP = PROPOSITION_TOKEN_PATTERN
 
     # --- Grammar Rules ---
-    # Binary boolean operators are inherited from BaseLogicParser
-
     def p_expression_ternary(self, p):
         """expression : COALITION expression UNTIL expression
         | COALITION LPAREN expression UNTIL expression RPAREN"""
@@ -69,8 +83,7 @@ class ATLParser(BaseLogicParser):
         validate_coalition(coalition_str, self.n_agent)
         p[0] = (p[1] + p[2], p[3])
 
-    # --- Validation and Overrides ---
-
+    # --- Validation ---
     def parse(self, formula, n_agent=0, **kwargs):
         self.n_agent = n_agent
         return super().parse(formula, **kwargs)
@@ -87,39 +100,10 @@ class ATLParser(BaseLogicParser):
     def _post_validation(self, formula, result):
         if result is None:
             return False
-
-        _VALID_OPERATORS = {
-            "U",
-            "G",
-            "X",
-            "F",
-            "&&",
-            "||",
-            "->",
-            "AND",
-            "OR",
-            "NOT",
-            "IMPLIES",
-            "UNTIL",
-            "GLOBALLY",
-            "NEXT",
-            "EVENTUALLY",
-            "!",
-        }
-
-        _COALITION_OPERATOR_PATTERN = re.compile(
-            r"^<\d+(?:,\d+)*>(U|G|X|F|UNTIL|GLOBALLY|NEXT|EVENTUALLY)$",
-            re.IGNORECASE,
+        if not isinstance(result, tuple):
+            return True
+        return validate_ast(
+            result,
+            _ATL_VALID_OPERATORS,
+            coalition_pattern=_COALITION_OPERATOR_PATTERN,
         )
-
-        try:
-            if not validate_ast(
-                result,
-                _VALID_OPERATORS,
-                coalition_pattern=_COALITION_OPERATOR_PATTERN,
-            ):
-                return False
-        except Exception:
-            return False
-
-        return True

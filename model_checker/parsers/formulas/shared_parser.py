@@ -212,25 +212,14 @@ class BaseLogicParser:
         return result is not None
 
     def verify(self, token_name: str, string: Any) -> bool:
-        """Verify if a token exists in the string using the lexer."""
         if self.lexer is None:
             return False
-        return self._run_lexer_verify(
-            self.lexer.clone(), token_name, string, case_sensitive=True
-        )
+        return self._run_lexer_verify(self.lexer.clone(), token_name, string)
 
-    def _run_lexer_verify(
-        self, lexer: Any, token_name: str, string: Any, case_sensitive: bool
-    ) -> bool:
+    def _run_lexer_verify(self, lexer: Any, token_name: str, string: Any) -> bool:
         """Internal helper to verify a token against a lexer instance."""
-        string_str = str(string)
-        lexer.input(string_str)
+        lexer.input(str(string))
         for token in lexer:
             if token.type == token_name:
-                if case_sensitive:
-                    if str(token.value) in string_str:
-                        return True
-                else:
-                    if str(token.value).lower() in string_str.lower():
-                        return True
+                return True
         return False

@@ -36,6 +36,30 @@ def _validate_universal_coalition(coalition_str: str, max_coalition: int) -> Non
     validate_coalition(f"<{inner}>", max_coalition)
 
 
+_IATL_VALID_OPERATORS = frozenset(
+    {
+        "U",
+        "R",
+        "G",
+        "X",
+        "F",
+        "&&",
+        "||",
+        "->",
+        "AND",
+        "OR",
+        "NOT",
+        "IMPLIES",
+        "UNTIL",
+        "RELEASE",
+        "GLOBALLY",
+        "NEXT",
+        "EVENTUALLY",
+        "!",
+    }
+)
+
+
 class IATLParser(BaseLogicParser):
     """Parser for IATL formulas over BCGS models."""
 
@@ -108,32 +132,13 @@ class IATLParser(BaseLogicParser):
     def _post_validation(self, formula, result):
         if result is None:
             return False
-
-        valid_operators = {
-            "U",
-            "R",
-            "G",
-            "X",
-            "F",
-            "&&",
-            "||",
-            "->",
-            "AND",
-            "OR",
-            "NOT",
-            "IMPLIES",
-            "UNTIL",
-            "RELEASE",
-            "GLOBALLY",
-            "NEXT",
-            "EVENTUALLY",
-            "!",
-        }
+        if not isinstance(result, tuple):
+            return True
 
         try:
             return validate_ast(
                 result,
-                valid_operators,
+                _IATL_VALID_OPERATORS,
                 coalition_pattern=_COALITION_EXIST_PATTERN,
                 extra_atom_patterns=(_COALITION_UNIVERSAL_PATTERN,),
             )

@@ -2,15 +2,15 @@
 
 import pytest
 
-from model_checker.parsers.formulas.TCTL.tctl_ply_parser import do_parsingTCTL
-from model_checker.parsers.formulas.TOL.tol_ply_parser import do_parsing
+from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 
 @pytest.mark.unit
 def test_tctl_parser_freeze_expression():
-    ast = do_parsingTCTL("j.p")
+    parser = FormulaParserFactory.get_parser_instance("TCTL")
+    ast = parser.parse("j.p")
     assert ast is not None
-    from model_checker.parsers.formulas.TCTL.tctl_ply_parser import FreezeExpr
+    from model_checker.parsers.formulas.TCTL import FreezeExpr
 
     assert isinstance(ast, FreezeExpr)
     assert ast.clock == "j"
@@ -18,13 +18,14 @@ def test_tctl_parser_freeze_expression():
 
 @pytest.mark.unit
 def test_tctl_parser_parenthesized_until():
-    from model_checker.parsers.formulas.TCTL.tctl_ply_parser import (
+    from model_checker.parsers.formulas.TCTL import (
         Binary,
         QuantifiedPath,
     )
 
-    flat = do_parsingTCTL("E p U q")
-    grouped = do_parsingTCTL("E (p U q)")
+    parser = FormulaParserFactory.get_parser_instance("TCTL")
+    flat = parser.parse("E p U q")
+    grouped = parser.parse("E (p U q)")
     assert flat is not None
     assert grouped is not None
     assert isinstance(flat, QuantifiedPath)
@@ -43,7 +44,8 @@ def test_tctl_parser_parenthesized_until():
     ],
 )
 def test_tctl_parser_accepts_parenthesized_until(formula):
-    assert do_parsingTCTL(formula) is not None
+    parser = FormulaParserFactory.get_parser_instance("TCTL")
+    assert parser.parse(formula) is not None
 
 
 @pytest.mark.unit
@@ -58,7 +60,8 @@ def test_tctl_parser_accepts_parenthesized_until(formula):
     ],
 )
 def test_tctl_parser_accepts_mixed_case_propositions(formula):
-    assert do_parsingTCTL(formula) is not None
+    parser = FormulaParserFactory.get_parser_instance("TCTL")
+    assert parser.parse(formula) is not None
 
 
 @pytest.mark.unit
@@ -74,14 +77,16 @@ def test_tctl_parser_accepts_mixed_case_propositions(formula):
     ],
 )
 def test_tol_parser_accepts_mixed_case_propositions(formula):
-    assert do_parsing(formula) is not None
+    parser = FormulaParserFactory.get_parser_instance("TOL")
+    assert parser.parse(formula) is not None
 
 
 @pytest.mark.unit
 def test_tol_parser_freeze_expression():
-    ast = do_parsing("j.Goal")
+    parser = FormulaParserFactory.get_parser_instance("TOL")
+    ast = parser.parse("j.Goal")
     assert ast is not None
-    from model_checker.parsers.formulas.TOL.tol_ply_parser import FreezeExpr
+    from model_checker.parsers.formulas.TOL import FreezeExpr
 
     assert isinstance(ast, FreezeExpr)
     assert ast.clock == "j"

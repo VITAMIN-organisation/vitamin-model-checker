@@ -57,7 +57,9 @@ class FormulaParserFactory:
                         f"Could not load parser for logic '{logic_name}': {e}"
                     ) from e
 
-        # Instantiate and cache in thread-local storage
-        instance = parser_class()
-        FormulaParserFactory._local.instances[logic_name] = instance
+            # Instantiate and cache in thread-local storage inside the lock
+            # because ply.yacc.yacc() is not thread-safe during initial generation.
+            instance = parser_class()
+            FormulaParserFactory._local.instances[logic_name] = instance
+
         return instance

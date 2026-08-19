@@ -6,7 +6,7 @@ from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_inde
 from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
 
 if TYPE_CHECKING:
-    from model_checker.parsers.formulas.TCTL.tctl_ply_parser import Expr
+    from model_checker.parsers.formulas.TCTL.parser import Expr
     from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
     from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 

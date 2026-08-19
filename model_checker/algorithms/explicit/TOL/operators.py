@@ -8,7 +8,7 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     least_fixpoint,
 )
 from model_checker.algorithms.explicit.TOL.preimage import triangle_down
-from model_checker.parsers.formulas.TOL.tol_ply_parser import DemonicBinary, DemonicOp
+from model_checker.parsers.formulas.TOL.parser import DemonicBinary, DemonicOp
 from model_checker.parsers.game_structures.timed_cgs.semantics import (
     extract_closest_constraint,
 )

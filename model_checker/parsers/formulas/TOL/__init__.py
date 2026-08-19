@@ -1,4 +1,4 @@
-from .tol_ply_parser import (
+from .parser import (
     AtomicProp,
     Binary,
     ClockExpr,
@@ -8,8 +8,7 @@ from .tol_ply_parser import (
     FreezeExpr,
     SimpleTimeExpr,
     Unary,
-    do_parsing,
-    verify,
+    verifyTOL,
 )
 
 METADATA = {"model_type": "timedCGS"}
@@ -25,6 +24,5 @@ __all__ = [
     "FreezeExpr",
     "SimpleTimeExpr",
     "Unary",
-    "do_parsing",
-    "verify",
+    "verifyTOL",
 ]

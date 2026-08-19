@@ -18,7 +18,8 @@ from model_checker.algorithms.explicit.ICTL.operators import (
     handle_not,
     handle_or,
 )
-from model_checker.parsers.formulas.ICTL.ictl_ply_parser import verifyICTL
+from model_checker.parsers.formulas.ICTL.parser import verifyICTL
+
 
 if TYPE_CHECKING:
     from model_checker.algorithms.explicit.ICTL.checker import ICTLModelChecker

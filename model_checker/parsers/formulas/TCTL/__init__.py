@@ -1,4 +1,4 @@
-from .tctl_ply_parser import (
+from .parser import (
     AtomicProp,
     Binary,
     ClockExpr,
@@ -7,7 +7,6 @@ from .tctl_ply_parser import (
     QuantifiedPath,
     SimpleTimeExpr,
     Unary,
-    do_parsingTCTL,
     verifyTCTL,
 )
 
@@ -23,6 +22,5 @@ __all__ = [
     "QuantifiedPath",
     "SimpleTimeExpr",
     "Unary",
-    "do_parsingTCTL",
     "verifyTCTL",
 ]

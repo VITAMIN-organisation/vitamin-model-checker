@@ -23,15 +23,45 @@ Behavior:
 
 import re
 
-from ..parser_utils import (
+from model_checker.parsers.formulas.parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     validate_ast,
     validate_coalition,
 )
-from ..shared_parser import BaseLogicParser
+from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 
 _COALITION_BOUND_REGEX = r"<\{((?:\d+,)*\d+)\},\s*(\d+)>"
+
+_CAPATL_VALID_OPERATORS = frozenset(
+    {
+        "U",
+        "R",
+        "X",
+        "F",
+        "G",
+        "&&",
+        "AND",
+        "||",
+        "OR",
+        "->",
+        "IMPLIES",
+        "NOT",
+        "UNTIL",
+        "RELEASE",
+        "NEXT",
+        "EVENTUALLY",
+        "GLOBALLY",
+        "!",
+    }
+)
+
+_COALITION_OPERATOR_PATTERN = re.compile(
+    r"^<\{[\d,]+\},\s*\d+>(U|R|X|F|G|UNTIL|RELEASE|NEXT|EVENTUALLY|GLOBALLY)$",
+    re.IGNORECASE,
+)
+
+_KCAP_PATTERN = re.compile(r"^K\d+$", re.IGNORECASE)
 
 
 class CapATLParser(BaseLogicParser):
@@ -44,7 +74,6 @@ class CapATLParser(BaseLogicParser):
     def __init__(self):
         """Initialize the CapATL lexer and parser (PLY)."""
         super().__init__()
-
         self.tokens.extend(
             [
                 "IS",
@@ -59,11 +88,10 @@ class CapATLParser(BaseLogicParser):
                 "AGENT",
             ]
         )
-
         self.max_coalition = 0
         self.build()
 
-    # === Tokens ===
+    # --- Specific Tokens ---
     def t_RELEASE(self, t):
         r"R|release\b"
         t.value = "R"
@@ -78,17 +106,18 @@ class CapATLParser(BaseLogicParser):
         t.value = "K"
         return t
 
-    # Coalition with capacity bound: <{1,2}, 3>
     def t_COALITION_BOUND(self, t):
         match = re.match(_COALITION_BOUND_REGEX, t.value)
         if match:
             t.value = (match.group(1), match.group(2))
         return t
 
+    t_COALITION_BOUND.__doc__ = _COALITION_BOUND_REGEX
+
     t_AGENT = r"\d+"
     t_PROP = PROPOSITION_TOKEN_PATTERN
 
-    # === Grammar rules ===
+    # --- Grammar Rules ---
     def p_expression_binary(self, p):
         """expression : expression AND expression
         | expression OR expression
@@ -138,8 +167,7 @@ class CapATLParser(BaseLogicParser):
         """expression2 : KCAP AGENT expression2"""
         p[0] = (p[1] + p[2], p[3])
 
-    # === Validation ===
-
+    # --- Validation ---
     def parse(self, formula, n_agent=0, **kwargs):
         self.max_coalition = n_agent
         return super().parse(formula, **kwargs)
@@ -168,49 +196,14 @@ class CapATLParser(BaseLogicParser):
     def _post_validation(self, formula, result):
         if result is None:
             return False
-
-        _VALID_OPERATORS = {
-            "U",
-            "R",
-            "X",
-            "F",
-            "G",
-            "&&",
-            "AND",
-            "||",
-            "OR",
-            "->",
-            "IMPLIES",
-            "NOT",
-            "UNTIL",
-            "RELEASE",
-            "NEXT",
-            "EVENTUALLY",
-            "GLOBALLY",
-            "!",
-        }
-        _COALITION_OPERATOR_PATTERN = re.compile(
-            r"^<\{[\d,]+\},\s*\d+>(U|R|X|F|G|UNTIL|RELEASE|NEXT|EVENTUALLY|GLOBALLY)$",
-            re.IGNORECASE,
-        )
-        _KCAP_PATTERN = re.compile(r"^K\d+$", re.IGNORECASE)
+        if not isinstance(result, tuple):
+            return True
 
         if not validate_ast(
             result,
-            _VALID_OPERATORS,
+            _CAPATL_VALID_OPERATORS,
             coalition_pattern=_COALITION_OPERATOR_PATTERN,
             extra_atom_patterns=(_KCAP_PATTERN,),
         ):
             return False
         return True
-
-    def verify(self, token_name: str, string) -> bool:
-        """Verify if a token exists in the string (case-insensitive for CapATL)."""
-        if self.lexer is None:
-            return False
-        return self._run_lexer_verify(
-            self.lexer.clone(), token_name, string, case_sensitive=False
-        )
-
-
-CapATLParser.t_COALITION_BOUND.__doc__ = _COALITION_BOUND_REGEX

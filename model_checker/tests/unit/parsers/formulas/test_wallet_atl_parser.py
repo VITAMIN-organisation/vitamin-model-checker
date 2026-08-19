@@ -5,8 +5,9 @@ import pytest
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.formulas.Wallet_ATL.parser import (
     Wallet_ATLParser,
-    do_parsingWallet_ATL,
+    Wallet_ATLParser,
 )
+from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 
 @pytest.mark.unit
@@ -20,7 +21,8 @@ from model_checker.parsers.formulas.Wallet_ATL.parser import (
     ],
 )
 def test_wallet_atl_parses_coalition_temporal(formula):
-    ast = do_parsingWallet_ATL(formula, max_coalition=2)
+    parser = FormulaParserFactory.get_parser_instance("Wallet_ATL")
+    ast = parser.parse(formula, max_coalition=2)
     assert ast is not None
     assert ast.get("type") == "coalition_wallet"
 
@@ -36,7 +38,8 @@ def test_wallet_atl_parses_coalition_temporal(formula):
     ],
 )
 def test_wallet_atl_rejects_bare_temporal_without_coalition(formula):
-    assert do_parsingWallet_ATL(formula, max_coalition=2) is None
+    parser = FormulaParserFactory.get_parser_instance("Wallet_ATL")
+    assert parser.parse(formula, max_coalition=2) is None
 
 
 @pytest.mark.unit
@@ -61,7 +64,8 @@ def test_wallet_atl_factory_parse_accepts_wallet_guards():
     ],
 )
 def test_wallet_atl_rejects_agent_zero(formula):
-    assert do_parsingWallet_ATL(formula, max_coalition=2) is None
+    parser = FormulaParserFactory.get_parser_instance("Wallet_ATL")
+    assert parser.parse(formula, max_coalition=2) is None
 
 
 @pytest.mark.unit
@@ -106,7 +110,8 @@ def test_wallet_atl_concurrent_parses_are_stable():
 
     def parse_one(item):
         formula, max_coalition, expect_ok = item
-        result = do_parsingWallet_ATL(formula, max_coalition=max_coalition)
+        parser = FormulaParserFactory.get_parser_instance("Wallet_ATL")
+        result = parser.parse(formula, max_coalition=max_coalition)
         return (formula, expect_ok, result is not None)
 
     with ThreadPoolExecutor(max_workers=8) as pool:
