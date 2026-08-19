@@ -9,6 +9,7 @@ from model_checker.parsers.formulas.parser_utils import (
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 
 from .tol_ply_parser import do_parsing
+
 _TOL_VALID_OPERATORS = frozenset(
     {
         "U",
@@ -67,5 +68,5 @@ class TOLParser(BaseLogicParser):
 
     def verify(self, token_name: str, string) -> bool:
         from .tol_ply_parser import verify as tol_verify
-        return tol_verify(token_name, string)
 
+        return tol_verify(token_name, string)

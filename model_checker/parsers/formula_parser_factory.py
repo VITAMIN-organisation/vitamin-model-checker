@@ -50,4 +50,3 @@ class FormulaParserFactory:
             raise ImportError(
                 f"Could not load parser for logic '{logic_name}': {e}"
             ) from e
-

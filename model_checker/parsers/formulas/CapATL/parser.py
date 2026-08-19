@@ -207,7 +207,9 @@ class CapATLParser(BaseLogicParser):
     def verify(self, token_name: str, string) -> bool:
         if not getattr(self, "lexer", None):
             return False
-        return self._run_lexer_verify(self.lexer.clone(), token_name, string, case_sensitive=False)
+        return self._run_lexer_verify(
+            self.lexer.clone(), token_name, string, case_sensitive=False
+        )
 
 
 CapATLParser.t_COALITION_BOUND.__doc__ = _COALITION_BOUND_REGEX

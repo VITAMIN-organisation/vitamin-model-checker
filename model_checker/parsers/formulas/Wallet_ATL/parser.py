@@ -440,4 +440,6 @@ class Wallet_ATLParser(BaseLogicParser):
             return None
 
     def verify(self, token_name: str, string) -> bool:
-        return self._run_lexer_verify(_get_verify_lexer(), token_name, string, case_sensitive=False)
+        return self._run_lexer_verify(
+            _get_verify_lexer(), token_name, string, case_sensitive=False
+        )

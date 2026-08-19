@@ -215,9 +215,13 @@ class BaseLogicParser:
         """Verify if a token exists in the string using the lexer."""
         if not getattr(self, "lexer", None):
             return False
-        return self._run_lexer_verify(self.lexer.clone(), token_name, string, case_sensitive=True)
+        return self._run_lexer_verify(
+            self.lexer.clone(), token_name, string, case_sensitive=True
+        )
 
-    def _run_lexer_verify(self, lexer: Any, token_name: str, string: Any, case_sensitive: bool) -> bool:
+    def _run_lexer_verify(
+        self, lexer: Any, token_name: str, string: Any, case_sensitive: bool
+    ) -> bool:
         """Internal helper to verify a token against a lexer instance."""
         string_str = str(string)
         lexer.input(string_str)
@@ -230,4 +234,3 @@ class BaseLogicParser:
                     if str(token.value).lower() in string_str.lower():
                         return True
         return False
-

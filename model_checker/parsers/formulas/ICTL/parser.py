@@ -37,7 +37,6 @@ class ICTLParser(BaseLogicParser):
         self.lexer = None
         self.parser = None
 
-
     def _pre_validation(self, formula):
         return run_common_prechecks(
             formula,
@@ -71,4 +70,5 @@ class ICTLParser(BaseLogicParser):
 
     def verify(self, token_name: str, string) -> bool:
         from .ictl_ply_parser import verifyICTL
+
         return verifyICTL(token_name, string)

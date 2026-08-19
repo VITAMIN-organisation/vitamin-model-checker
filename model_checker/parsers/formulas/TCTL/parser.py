@@ -67,4 +67,5 @@ class TCTLParser(BaseLogicParser):
 
     def verify(self, token_name: str, string) -> bool:
         from .tctl_ply_parser import verifyTCTL
+
         return verifyTCTL(token_name, string)
