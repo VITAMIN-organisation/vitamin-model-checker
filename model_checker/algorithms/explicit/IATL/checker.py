@@ -21,18 +21,18 @@ from model_checker.utils.formula_tree import FormulaTreeNode, build_formula_tree
 class IATLModelChecker:
     """IATL checker over a BCGS model dict loaded from file I/O."""
 
-    def __init__(self, model: dict[str, Any]) -> None:
-        self.data = model
+    def __init__(self, model: Any) -> None:
+        self.model = model
         self._transition_caches: dict[str, TransitionCache] = {}
-        states = self.data["states"]
+        states = self.model.states
         preorder_edges = labeled_pairs(
-            self.data["preorder"], states, lambda cell: cell == 1
+            self.model.preorder, states, lambda cell: cell == 1
         )
         self.upward_closure = get_preorder(preorder_edges, states)
 
     @property
     def states_set(self) -> set[str]:
-        return {str(state) for state in self.data["states"]}
+        return {str(state) for state in self.model.states}
 
     def states_with_upset_in(self, target: set[str]) -> set[str]:
         """States whose P-upset is contained in target."""
@@ -46,8 +46,8 @@ class IATLModelChecker:
         cache = self._transition_caches.get(coalition)
         if cache is None:
             cache = build_transition_cache(
-                self.data["graph"],
-                self.data["number_of_agents"],
+                self.model.graph,
+                self.model.get_number_of_agents(),
                 coalition,
             )
             self._transition_caches[coalition] = cache
@@ -56,22 +56,22 @@ class IATLModelChecker:
     def pre_exists(self, coalition: str, target: set[str]) -> set[str]:
         """Coalition existential pre-image Pre_d(A, target)."""
         return pre_image_exists(
-            self.data["graph"],
-            self.data["states"],
+            self.model.graph,
+            self.model.states,
             coalition,
             {str(state) for state in target},
-            self.data["number_of_agents"],
+            self.model.get_number_of_agents(),
             transition_cache=self.transition_cache_for(coalition),
         )
 
     def pre_forall(self, coalition: str, target: set[str]) -> set[str]:
         """Coalition universal pre-image Pre_f(A, target)."""
         return pre_image_forall(
-            self.data["graph"],
-            self.data["states"],
+            self.model.graph,
+            self.model.states,
             coalition,
             {str(state) for state in target},
-            self.data["number_of_agents"],
+            self.model.get_number_of_agents(),
             transition_cache=self.transition_cache_for(coalition),
         )
 
@@ -79,13 +79,13 @@ class IATLModelChecker:
         """Build a formula tree with atoms resolved to state sets."""
 
         def resolve_atom(atom) -> str | None:
-            prop_idx = proposition_index(self.data["atomic_propositions"], str(atom))
+            prop_idx = proposition_index(self.model.atomic_propositions, str(atom))
             if prop_idx is None:
                 return None
             state_indices = set(
-                np.where(self.data["matrix_prop"][:, int(prop_idx)] == 1)[0]
+                np.where(self.model.matrix_prop[:, int(prop_idx)] == 1)[0]
             )
-            states = self.data["states"]
+            states = self.model.states
             return str({str(states[idx]) for idx in state_indices})
 
         return build_formula_tree(parsed_formula, resolve_atom)

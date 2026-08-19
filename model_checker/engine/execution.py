@@ -48,7 +48,12 @@ def execute_model_checking_with_parser(
             if pre_check_error is not None:
                 return pre_check_error
 
-        return core_checking_func(parser, formula)
+        result = core_checking_func(parser, formula)
+        if "formula" not in result and "error" not in result:
+            result["formula"] = formula
+        if "model" not in result and "error" not in result:
+            result["model"] = filename
+        return result
 
     except FileNotFoundError:
         return create_error_response("system", f"Model file not found: {filename}")

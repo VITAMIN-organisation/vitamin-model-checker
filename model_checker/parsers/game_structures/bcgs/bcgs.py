@@ -1,24 +1,52 @@
 """BCGS (Birelational Concurrent Game Structure) model parser for IATL."""
 
-from typing import Any
+import numpy as np
+
+from model_checker.parsers.game_structures.cgs.cgs import CGS
+from model_checker.parsers.game_structures.cgs import cgs_parser
 
 
-class BCGS:
+class BCGS(CGS):
     """Parser and in-memory representation for an IATL BCGS model file."""
 
     def __init__(self) -> None:
-        self._data: dict[str, Any] | None = None
-        self.filename: str = ""
+        super().__init__()
 
-    def read_file(self, filename: str) -> None:
-        """Load and validate a BCGS model from a file path."""
-        from model_checker.algorithms.explicit.IATL.util.graph import read_file
+    def _reset_state(self) -> None:
+        super()._reset_state()
+        self.preorder = np.array([])
 
-        self.filename = filename
-        self._data = read_file(filename)
+    def _parse_lines(self, lines: list[str]) -> None:
+        super()._parse_lines(lines)
 
-    @property
-    def data(self) -> dict[str, Any]:
-        if self._data is None:
-            raise ValueError("BCGS model not loaded; call read_file first.")
-        return self._data
+        preorder_list = []
+        current_section = None
+        for line in lines:
+            stripped = line.strip()
+            if stripped == "Preorder":
+                current_section = "Preorder"
+                continue
+            elif (
+                stripped in cgs_parser.SECTION_HEADERS
+                or stripped in cgs_parser.EXTENSION_SECTION_HEADERS
+            ) and stripped != "Preorder":
+                current_section = None
+                continue
+
+            if current_section == "Preorder" and stripped:
+                preorder_list.append([int(x) for x in stripped.split()])
+
+        if preorder_list:
+            self.preorder = np.array(preorder_list, dtype=int)
+        if hasattr(self, "graph") and self.graph:
+            self.graph = np.array(self.graph, dtype=object)
+        if hasattr(self, "matrix_prop") and self.matrix_prop:
+            self.matrix_prop = np.array(self.matrix_prop, dtype=int)
+
+    def validate_model_structure(self) -> None:
+        super().validate_model_structure()
+        from model_checker.algorithms.explicit.IATL.util.validation import (
+            check_conditions_hold,
+        )
+
+        check_conditions_hold(self)

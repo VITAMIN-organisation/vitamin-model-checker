@@ -79,8 +79,9 @@ class CGSProtocol(Protocol):
 class CapCGSProtocol(CGSProtocol, Protocol):
     """Extension of CGSProtocol for capability CGS (used by CapATL)."""
 
-    def get_action_capacities(self) -> Any:
-        """Return action capacity data."""
+    @property
+    def action_capacities(self) -> Any:
+        """Action capacity data."""
         ...
 
     def get_capacities_assignment(self) -> Any:

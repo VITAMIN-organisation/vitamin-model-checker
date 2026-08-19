@@ -1,9 +1,11 @@
 """IATL model checking on BCGS models."""
 
 from typing import Any
+from functools import partial
 
 from model_checker.algorithms.explicit.IATL.checker import IATLModelChecker
 from model_checker.algorithms.explicit.IATL.solver import solve_tree
+from model_checker.parsers.game_structures.bcgs.bcgs import BCGS
 from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,
     verify_initial_state,
@@ -13,12 +15,11 @@ from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.utils.error_handler import create_error_response
 
 
-def _core_iatl_checking(parser, formula: str) -> dict[str, Any]:
-    """Run IATL model checking on a loaded BCGS parser."""
-    checker = IATLModelChecker(parser.data)
-
+def _core_iatl_checking(parser: BCGS, formula: str) -> dict[str, Any]:
+    """Run IATL model checking on a loaded BCGS model."""
+    checker = IATLModelChecker(parser)
     formula_parser = FormulaParserFactory.get_parser_instance("IATL")
-    parsed = formula_parser.parse(formula, n_agent=checker.data["number_of_agents"])
+    parsed = formula_parser.parse(formula, n_agent=parser.get_number_of_agents())
     if parsed is None:
         error_msg = (
             formula_parser.errors[0]
@@ -34,7 +35,7 @@ def _core_iatl_checking(parser, formula: str) -> dict[str, Any]:
         )
 
     solve_tree(checker, root)
-    init_state = str(checker.data["initial_state"])
+    init_state = str(parser.initial_state)
     is_satisfied = verify_initial_state(init_state, root.value)
     return format_model_checking_result(root.value, init_state, is_satisfied)
 

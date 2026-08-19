@@ -16,7 +16,7 @@ def validate_transition_matrix_dimensions(
     Returns a list of error messages; empty if everything is fine.
     """
     errors = []
-    if not graph:
+    if len(graph) == 0:
         errors.append("Transition matrix is missing or empty")
         return errors
 
@@ -27,7 +27,7 @@ def validate_transition_matrix_dimensions(
                 "Transition matrix rows must match the number of states."
             )
         # Check each row has correct number of columns
-        if graph:
+        if len(graph) > 0:
             expected_cols = len(graph[0])
             # Find first row with incorrect column count
             for i, row in enumerate(graph):
@@ -53,7 +53,7 @@ def validate_labelling_matrix_dimensions(
     Returns a list of error messages; empty if valid. Uses states only for clearer error text.
     """
     errors = []
-    if not matrix_prop:
+    if len(matrix_prop) == 0:
         return errors
 
     if num_states > 0 and num_props > 0:
@@ -120,7 +120,7 @@ def validate_total_transitions(graph: list[list], states) -> list[str]:
     state has a successor. Terminal states should use a self-loop such as ``*``.
     """
     errors = []
-    if not graph:
+    if len(graph) == 0:
         return errors
 
     for i, row in enumerate(graph):

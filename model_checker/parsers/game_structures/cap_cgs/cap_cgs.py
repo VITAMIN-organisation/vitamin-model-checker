@@ -33,23 +33,11 @@ class CapCGS(CGS):
         self.action_capacities = []
         self.capacities = np.array([])
 
-    def read_file(self, filename: str) -> None:
-        """Read and parse a CapCGS model file from disk.
-
-        Args:
-            filename: Path to the CapCGS model file.
-
-        Raises:
-            ValueError: If section structure or dimensions are invalid.
-        """
-        with open(filename, encoding="utf-8") as f:
-            lines = f.readlines()
-
+    def _parse_lines(self, lines: list[str]) -> None:
         self._reset_state()
         self._parse_capacity_sections(lines)
         self._parse_common_sections(lines)
         self._parse_transitions(lines)
-        self.validate_model_structure()
 
     # --- Private Parsing Methods - Capacity Sections ---
 
@@ -173,7 +161,7 @@ class CapCGS(CGS):
         cap_ass = self.capacities_assignment
         result = []
         num_agents = self.get_number_of_agents()
-        capacities_list = self.get_capacities()
+        capacities_list = self.capacities_list
 
         for i in range(1, num_agents + 1):
             interm = [str(i)]
@@ -185,15 +173,8 @@ class CapCGS(CGS):
 
         return result
 
-    def get_action_capacities(self) -> list[list[str]]:
-        """Return the action-capacity mapping (one list per row from Actions_for_capacities).
-
-        Returns:
-            List of lists; each inner list is one row from the Actions_for_capacities section.
-        """
-        return self.action_capacities
-
-    def get_capacities(self) -> list[str]:
+    @property
+    def capacities_list(self) -> list[str]:
         """Return the list of capacity names from the Capacities section.
 
         Returns:

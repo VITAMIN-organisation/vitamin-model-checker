@@ -113,25 +113,28 @@ def _check_labeling_respects_preorder(
                 raise AssertionError("Labeling function not respected for preorder.")
 
 
-def _check_model_metadata(data) -> None:
-    if data["states_counter"] <= 0:
+from typing import Any
+
+
+def _check_model_metadata(model: Any) -> None:
+    if len(model.states) <= 0:
         raise AssertionError("There's no states in your model.")
-    if data["atomic_propositions_counter"] <= 0:
+    if len(model.atomic_propositions) <= 0:
         raise AssertionError("There's no atoms in your model.")
-    if not np.all(np.isin(data["matrix_prop"], [0, 1])):
+    if not np.all(np.isin(model.matrix_prop, [0, 1])):
         raise AssertionError("Only boolean proposition matrix are admitted.")
 
 
-def check_conditions_hold(data) -> None:
-    """Validate that ``data`` describes a well-formed ICTL birelational model.
+def check_conditions_hold(model: Any) -> None:
+    """Validate that ``model`` describes a well-formed ICTL birelational model.
 
     Enforces C1, C2, and C3 birelational constraints, plus preorder and
     labeling rules.
     """
-    graph = data["graph"]
+    graph = model.graph
     preorder = np.vectorize(lambda cell: cell in _PREORDER_CELLS, otypes=[bool])(graph)
 
-    _check_model_metadata(data)
+    _check_model_metadata(model)
     _check_graph_shape(graph)
     _check_serial(graph)
     _check_reflexive(preorder)
@@ -139,7 +142,7 @@ def check_conditions_hold(data) -> None:
     _check_transitive(preorder)
     _check_inference_constraints(graph)
 
-    preorder_successors = _preorder_successors(graph, data["states"])
+    preorder_successors = _preorder_successors(graph, model.states)
     _check_labeling_respects_preorder(
-        preorder_successors, data["matrix_prop"], data["states"]
+        preorder_successors, model.matrix_prop, model.states
     )

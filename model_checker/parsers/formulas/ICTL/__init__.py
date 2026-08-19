@@ -1,1 +1,1 @@
-METADATA = {"model_type": "BCGS"}
+METADATA = {"model_type": "BirelationalMatrix"}

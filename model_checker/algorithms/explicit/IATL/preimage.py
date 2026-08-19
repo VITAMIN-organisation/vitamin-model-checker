@@ -23,7 +23,7 @@ def group_moves_by_coalition(
     """Group outgoing transitions from one state by coalition move."""
     moves_by_coalition: MovesByCoalition = {}
     for dest_idx, cell in enumerate(graph_row):
-        if cell == "0":
+        if cell in (0, "0"):
             continue
         for joint in cgs_actions.parse_joint_action_cell(str(cell), num_agents):
             coalition_move = tuple(sorted(joint[agent] for agent in formatted_agents))

@@ -16,7 +16,7 @@ def get_actions_from_capacity_set(cgs, capacity_set):
 
     def get_actions_from_capacity(cgs, cap):
         """Return actions available for capacity cap."""
-        ens = cgs.get_action_capacities()
+        ens = cgs.action_capacities
         result = []
         for j in ens:
             if cap in j:

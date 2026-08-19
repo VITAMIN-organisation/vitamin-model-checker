@@ -19,13 +19,15 @@ def states_where_prop_holds(prop: str, prop_matrix, propositions) -> set[int] | 
 
 
 class ICTLModelChecker:
-    """ICTL checker over a birelational model dict loaded from graph I/O."""
+    """ICTL checker over a birelational model loaded from graph I/O."""
 
-    def __init__(self, model: dict[str, Any]) -> None:
-        self.data = model
-        graph = self.data["graph"]
-        states = self.data["states"]
-        self.edges = labeled_pairs(graph, states, lambda cell: cell not in ("0", "P"))
+    def __init__(self, model: Any) -> None:
+        self.model = model
+        graph = self.model.graph
+        states = self.model.states
+        self.edges = labeled_pairs(
+            graph, states, lambda cell: cell not in (0, "0", "P")
+        )
         self.preorder_edges = labeled_pairs(
             graph, states, lambda cell: cell in ("P,R", "P")
         )
@@ -33,7 +35,7 @@ class ICTLModelChecker:
 
     @property
     def states_set(self) -> set[str]:
-        return {str(s) for s in self.data["states"]}
+        return {str(s) for s in self.model.states}
 
     def states_with_upset_in(self, target: set[str]) -> set[str]:
         """States whose P-upset is contained in target (paper ^up operator)."""
@@ -45,11 +47,11 @@ class ICTLModelChecker:
 
         def resolve_atom(atom) -> str | None:
             indices = states_where_prop_holds(
-                str(atom), self.data["matrix_prop"], self.data["atomic_propositions"]
+                str(atom), self.model.matrix_prop, self.model.atomic_propositions
             )
             if indices is None:
                 return None
-            states = {str(self.data["states"][idx]) for idx in indices}
+            states = {str(self.model.states[idx]) for idx in indices}
             return str(states)
 
         return build_formula_tree(parsed_formula, resolve_atom)

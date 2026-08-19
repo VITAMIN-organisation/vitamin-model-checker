@@ -9,14 +9,18 @@ from model_checker.algorithms.explicit.ICTL.util.validation import (
 )
 
 
+from model_checker.parsers.game_structures.birelational_matrix.birelational_matrix import (
+    BirelationalMatrix,
+)
+
+
 def _minimal_ictl_data(graph):
-    return {
-        "graph": graph,
-        "states_counter": graph.shape[0],
-        "atomic_propositions_counter": 1,
-        "matrix_prop": np.array([[1], [1]], dtype=int),
-        "states": ["s0", "s1"],
-    }
+    model = BirelationalMatrix()
+    model.graph = graph
+    model.states = ["s0", "s1"]
+    model.atomic_propositions = ["p"]
+    model.matrix_prop = np.array([[1], [1]], dtype=int)
+    return model
 
 
 @pytest.mark.unit

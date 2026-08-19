@@ -27,24 +27,20 @@ class CostCGS(CGS):
     def __init__(self):
         """Create an empty CostCGS; load data with read_file or read_from_model_object."""
         super().__init__()
+
+    def _reset_state(self):
+        super()._reset_state()
         self.costs = []
         self.cost_for_action = {}
         self.usesCostsInsteadOfActions = False
 
-    def read_file(self, filename: str) -> None:
-        """Load a CostCGS model from a file. Raises ValueError on bad structure."""
-        with open(filename, encoding="utf-8") as f:
-            lines = f.readlines()
-
+    def _parse_lines(self, lines: list[str]) -> None:
         self._reset_state()
-        self.cost_for_action = {}
-        self.usesCostsInsteadOfActions = False
 
         cost_cgs_parser.parse_cost_sections(lines, self)
         cost_cgs_parser.parse_common_sections(lines, self)
         cost_cgs_parser.normalize_cost_action_keys(self)
         cost_cgs_parser.parse_transitions(lines, self)
-        self.validate_model_structure()
 
     def read_from_model_object(self, model: Any) -> None:
         """Copy fields from an existing model object, including cost_for_action."""

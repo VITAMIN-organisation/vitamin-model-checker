@@ -8,23 +8,42 @@ import pytest
 from model_checker.algorithms.explicit.ICTL.checker import ICTLModelChecker
 from model_checker.algorithms.explicit.ICTL.ICTL import (
     model_checking,
-    run_model_checking,
+    _core_ictl_checking,
 )
 from model_checker.algorithms.explicit.ICTL.preimage import pre_image_all
 from model_checker.algorithms.explicit.ICTL.util.graph import (
     get_preorder,
-    read_file,
 )
 from model_checker.algorithms.explicit.shared.fixpoint_iter import greatest_fixpoint
 from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 from model_checker.utils.literals import parse_state_set_literal
+from model_checker.parsers.game_structures.birelational_matrix.birelational_matrix import (
+    BirelationalMatrix,
+)
+
+
+def _load_cgs_file(filename):
+    model = BirelationalMatrix()
+    model.read_file(filename)
+    return model
+
+
+def _dict_to_cgs(data):
+    model = BirelationalMatrix()
+    model.graph = data["graph"]
+    model.states = data["states"]
+    model.atomic_propositions = data["atomic_propositions"]
+    model.matrix_prop = data["matrix_prop"]
+    model.initial_state = data["initial_state"]
+    return model
+
 
 _FIXTURES = Path(__file__).resolve().parent / "fixtures"
 _EXPERIMENT_MODEL = _FIXTURES / "experiment_2x3.txt"
 
 
-def _states_from_checker(checker, formula):
-    result = run_model_checking(formula, checker)
+def _states_from_checker(parser, formula):
+    result = _core_ictl_checking(parser, formula)
     assert "error" not in result
     return parse_state_set_literal(result["res"].removeprefix("Result: "))
 
@@ -109,17 +128,18 @@ class TestPreorderClosure:
 
 class TestUpwardClosureOperators:
     def test_ax_equals_pre_forall(self):
-        checker = ICTLModelChecker(_ax_chain_model_data())
+        model = _dict_to_cgs(_ax_chain_model_data())
+        checker = ICTLModelChecker(model)
         e_states = {"s0", "s1"}
         paper_ax = pre_image_all(checker.edges, e_states)
-        ictl_ax = _states_from_checker(checker, "AX e")
+        ictl_ax = _states_from_checker(model, "AX e")
 
         assert paper_ax == {"s0", "s1"}
         assert ictl_ax == paper_ax
 
     def test_implication_uses_upward_closure(self):
-        checker = ICTLModelChecker(_ax_chain_model_data())
-        states = _states_from_checker(checker, "e -> h")
+        model = _dict_to_cgs(_ax_chain_model_data())
+        states = _states_from_checker(model, "e -> h")
         assert states == {"s2"}
 
 
@@ -128,28 +148,28 @@ class TestSugarEncodings:
 
     @pytest.mark.parametrize("atom", ["e", "h"])
     def test_af_matches_a_top_until_on_fixture(self, atom):
-        data = read_file(str(_EXPERIMENT_MODEL))
-        checker = ICTLModelChecker(data)
-        phi_states = _states_from_checker(checker, atom)
-        assert _states_from_checker(checker, f"AF {atom}") == _a_top_until(
+        model = _load_cgs_file(str(_EXPERIMENT_MODEL))
+        checker = ICTLModelChecker(model)
+        phi_states = _states_from_checker(model, atom)
+        assert _states_from_checker(model, f"AF {atom}") == _a_top_until(
             checker, phi_states
         )
 
     @pytest.mark.parametrize("atom", ["e", "h"])
     def test_ag_matches_a_bottom_release_on_fixture(self, atom):
-        data = read_file(str(_EXPERIMENT_MODEL))
-        checker = ICTLModelChecker(data)
-        phi_states = _states_from_checker(checker, atom)
-        assert _states_from_checker(checker, f"AG {atom}") == _a_bottom_release(
+        model = _load_cgs_file(str(_EXPERIMENT_MODEL))
+        checker = ICTLModelChecker(model)
+        phi_states = _states_from_checker(model, atom)
+        assert _states_from_checker(model, f"AG {atom}") == _a_bottom_release(
             checker, phi_states
         )
 
 
 class TestPaperCountermodels:
     def test_figure5_proposition3_next_duality_fails_at_s1(self):
-        checker = ICTLModelChecker(_figure5_countermodel_data())
-        not_ax_p = _states_from_checker(checker, "!AX p")
-        ex_not_p = _states_from_checker(checker, "EX !p")
+        model = _dict_to_cgs(_figure5_countermodel_data())
+        not_ax_p = _states_from_checker(model, "!AX p")
+        ex_not_p = _states_from_checker(model, "EX !p")
 
         assert "s1" in not_ax_p
         assert "s1" not in ex_not_p
@@ -157,12 +177,12 @@ class TestPaperCountermodels:
 
 class TestReleaseOperators:
     def test_existential_release_on_fixture(self):
-        checker = ICTLModelChecker(read_file(str(_EXPERIMENT_MODEL)))
-        assert _states_from_checker(checker, "E e R h") == {"s2"}
+        model = _load_cgs_file(str(_EXPERIMENT_MODEL))
+        assert _states_from_checker(model, "E e R h") == {"s2"}
 
     def test_universal_release_on_fixture(self):
-        checker = ICTLModelChecker(read_file(str(_EXPERIMENT_MODEL)))
-        assert _states_from_checker(checker, "A e R h") == set()
+        model = _load_cgs_file(str(_EXPERIMENT_MODEL))
+        assert _states_from_checker(model, "A e R h") == set()
 
 
 class TestUntilOperators:
@@ -222,13 +242,13 @@ class TestVmiEntry:
 
 class TestValidation:
     def test_fixture_passes_validation(self):
-        data = read_file(str(_EXPERIMENT_MODEL))
-        assert data["initial_state"] == "s0"
-        assert data["states_counter"] == 6
+        model = _load_cgs_file(str(_EXPERIMENT_MODEL))
+        assert model.initial_state == "s0"
+        assert len(model.states) == 6
 
     def test_figure5_countermodel_passes_validation(self):
         from model_checker.algorithms.explicit.ICTL.util.validation import (
             check_conditions_hold,
         )
 
-        check_conditions_hold(_figure5_countermodel_data())
+        check_conditions_hold(_dict_to_cgs(_figure5_countermodel_data()))

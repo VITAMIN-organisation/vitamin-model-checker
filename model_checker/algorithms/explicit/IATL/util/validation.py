@@ -3,6 +3,7 @@
 from itertools import combinations
 
 import numpy as np
+from typing import Any
 
 from model_checker.algorithms.explicit.IATL.preimage import group_moves_by_coalition
 from model_checker.parsers.game_structures.cgs import cgs_actions
@@ -171,26 +172,29 @@ def _check_labeling_respects_preorder(
                 raise AssertionError("Labeling function not respected for preorder.")
 
 
-def _check_model_metadata(data) -> None:
-    if data["states_counter"] <= 0:
+def _check_model_metadata(model: Any) -> None:
+    if len(model.states) <= 0:
         raise AssertionError("There's no states in your model.")
-    if data["atomic_propositions_counter"] <= 0:
+    if len(model.atomic_propositions) <= 0:
         raise AssertionError("There's no atoms in your model.")
-    if data["number_of_agents"] <= 0:
+    if model.get_number_of_agents() <= 0:
         raise AssertionError("There's no actions in your model.")
-    if not np.all(np.isin(data["preorder"], [0, 1])):
+    if not np.all(np.isin(model.preorder, [0, 1])):
         raise AssertionError("Only boolean preorder matrices are admitted.")
-    if not np.all(np.isin(data["matrix_prop"], [0, 1])):
+    if not np.all(np.isin(model.matrix_prop, [0, 1])):
         raise AssertionError("Only boolean proposition matrix are admitted.")
 
 
-def check_conditions_hold(data) -> None:
-    """Validate that ``data`` describes a well-formed IATL BCGS model."""
-    graph = data["graph"]
-    preorder = data["preorder"]
-    num_agents = data["number_of_agents"]
+from typing import Any
 
-    _check_model_metadata(data)
+
+def check_conditions_hold(model: Any) -> None:
+    """Validate that ``model`` describes a well-formed IATL BCGS model."""
+    graph = model.graph
+    preorder = model.preorder
+    num_agents = model.get_number_of_agents()
+
+    _check_model_metadata(model)
     _check_graph_shape(graph)
     _check_agent_actions(graph, num_agents)
     _check_nonzero_rows(graph)
@@ -201,7 +205,7 @@ def check_conditions_hold(data) -> None:
     _check_well_behaved_c1(graph, preorder, num_agents)
     _check_well_behaved_c2(graph, preorder, num_agents)
 
-    preorder_successors = _preorder_successors(preorder, data["states"])
+    preorder_successors = _preorder_successors(preorder, model.states)
     _check_labeling_respects_preorder(
-        preorder_successors, data["matrix_prop"], data["states"]
+        preorder_successors, model.matrix_prop, model.states
     )

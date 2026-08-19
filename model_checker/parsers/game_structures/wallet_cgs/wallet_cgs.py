@@ -26,15 +26,14 @@ class WalletCGS(CGS):
             "U",  # unstake(v)
         }
 
-    def read_file(self, filename):
-        """Read and parse the WATL model file"""
-        super().read_file(filename)
+    def _reset_state(self):
+        super()._reset_state()
+        self.wallets = {}
 
-        with open(filename) as f:
-            lines = f.readlines()
+    def _parse_lines(self, lines: list[str]) -> None:
+        super()._parse_lines(lines)
 
         current_section = None
-        self.wallets = {}
 
         for line in lines:
             line = line.strip()

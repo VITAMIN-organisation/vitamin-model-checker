@@ -64,6 +64,7 @@ class TestCgsParserConstants:
             "Clock_constraints",
             "Invariants",
             "Wallets",
+            "Preorder",
         }
         assert cgs_parser.EXTENSION_SECTION_HEADERS == expected
 

@@ -51,9 +51,13 @@ class CGS:
         """Load and parse a CGS model from a file path. Replaces any existing data."""
         with open(filename, encoding="utf-8") as f:
             lines = f.readlines()
+        self._parse_lines(lines)
+        self.validate_model_structure()
+
+    def _parse_lines(self, lines: list[str]) -> None:
+        """Parse lines from a model file. Override in subclasses for extra sections."""
         self._reset_state()
         cgs_parser.parse_cgs_file(lines, self)
-        self.validate_model_structure()
 
     def read_from_model_object(self, model):
         """Fill this CGS from an existing model object instead of reading a file."""

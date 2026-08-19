@@ -2,12 +2,6 @@
 
 import numpy as np
 
-from model_checker.algorithms.explicit.ICTL.util.validation import check_conditions_hold
-from model_checker.algorithms.explicit.shared.model_io import (
-    SECTION_HANDLERS,
-    read_sectioned_model_file,
-)
-
 
 def get_preorder(preorder_pairs, states_list):
     """P-upset per state: transitive closure of direct P edges."""
@@ -30,23 +24,3 @@ def get_preorder(preorder_pairs, states_list):
         }
         for a in range(n_states)
     }
-
-
-def read_file(filename):
-    """Load and validate an ICTL model from a text file."""
-    data = read_sectioned_model_file(
-        filename=filename,
-        initial_data={
-            "graph": [],
-            "states": [],
-            "atomic_propositions": [],
-            "matrix_prop": [],
-            "initial_state": "",
-            "states_counter": 0,
-            "atomic_propositions_counter": 0,
-        },
-        section_handlers=SECTION_HANDLERS,
-    )
-
-    check_conditions_hold(data)
-    return data

@@ -55,7 +55,7 @@ def get_capacities_from_action2(cgs, action, agent):
     if action == "*":
         return cap_ag
     result = []
-    ens = cgs.get_action_capacities()
+    ens = cgs.action_capacities
     for j in ens:
         if j[0] in cap_ag and action in j:
             result.append(j[0])
