@@ -151,20 +151,37 @@ class BaseLogicParser:
         generated_dir = os.path.join(parser_dir, "generated")
         os.makedirs(generated_dir, exist_ok=True)
 
+        import sys
+        if generated_dir not in sys.path:
+            sys.path.insert(0, generated_dir)
+
+        # Generate unique module names based on the class name to prevent sys.path import collisions
+        class_name = self.__class__.__name__
+        unique_prefix = f"{class_name}"
+
+        # --- Lexer ---
         lex_kwargs = {k: v for k, v in kwargs.items() if k != "start"}
         if "errorlog" not in lex_kwargs:
             lex_kwargs["errorlog"] = lex.NullLogger()
+        if "outputdir" not in lex_kwargs:
+            lex_kwargs["outputdir"] = generated_dir
+        if "lextab" not in lex_kwargs:
+            lex_kwargs["lextab"] = f"{unique_prefix}_lextab"
+
         self.lexer = lex.lex(module=self, **lex_kwargs)
 
+        # --- Parser ---
         parser_kwargs = {
             "debug": False,
             "write_tables": True,
-            "optimize": True,
+            "optimize": False,  # Default to False to verify signatures and avoid stale tables
             "outputdir": generated_dir,
+            "tabmodule": f"{unique_prefix}_parsetab",
             **kwargs,
         }
         if "errorlog" not in parser_kwargs:
             parser_kwargs["errorlog"] = yacc.NullLogger()
+
         self.parser = yacc.yacc(module=self, **parser_kwargs)
 
     def parse(self, formula: str, **kwargs: Any) -> Any:

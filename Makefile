@@ -22,6 +22,7 @@ help:
 	@echo "  --- Quality ---"
 	@echo "  make format        Format code with black"
 	@echo "  make lint          Lint code with ruff"
+	@echo "  make generate-parsers Generate parsing tables for all logics"
 	@echo "  make test          Run unit and integration tests (fast)"
 
 # Setup
@@ -43,6 +44,15 @@ clean:
 	@cd $(MKFILE_DIR) && find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@cd $(MKFILE_DIR) && find . -type f -name "*.pyo" -delete 2>/dev/null || true
 	@cd $(MKFILE_DIR) && find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+	@echo "Done."
+
+generate-parsers:
+	@echo "Generating parser tables for all logics..."
+	@$(PYTHON) -c "import glob, importlib; \
+	[getattr(importlib.import_module(f.replace('/', '.')[:-3]), attr)() \
+	for f in glob.glob('model_checker/parsers/formulas/*/parser.py') \
+	for attr in dir(importlib.import_module(f.replace('/', '.')[:-3])) \
+	if attr.endswith('Parser') and attr != 'BaseLogicParser']"
 	@echo "Done."
 
 # Quality
