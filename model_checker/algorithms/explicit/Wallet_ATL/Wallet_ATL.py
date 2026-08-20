@@ -159,6 +159,20 @@ def _extract_state_name(initial_state: str) -> str:
 
 def _core_walletatl_checking(cgs, formula: str) -> dict[str, Any]:
     """Core Wallet_ATL model checking logic."""
+    from model_checker.algorithms.explicit.ATL.ATL import _core_atl_checking
+    from model_checker.algorithms.explicit.shared.resource_bounded_to_atl import (
+        wallet_atl_to_atl,
+    )
+
+    # 1. Fast path: check unconstrained ATL formula first
+    atl_formula = wallet_atl_to_atl(formula)
+    atl_result = _core_atl_checking(cgs, atl_formula)
+
+    if "error" not in atl_result:
+        if str(atl_result.get("initial_state", "")).endswith(": False"):
+            return atl_result
+
+    # 2. Standard path: full Wallet_ATL model checking
     parser = FormulaParserFactory.get_parser_instance("Wallet_ATL")
     res_parsing = parser.parse(formula, max_coalition=cgs.get_number_of_agents())
     if res_parsing is None:
