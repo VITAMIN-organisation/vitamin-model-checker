@@ -25,6 +25,18 @@ _AU_REGRESSION = (
     / "timedCGS"
     / "tctl_au_regression.txt"
 )
+_ZENO_CYCLE = (
+    Path(__file__).resolve().parents[3]
+    / "fixtures"
+    / "timedCGS"
+    / "tctl_zeno_cycle.txt"
+)
+_RESET_CYCLE = (
+    Path(__file__).resolve().parents[3]
+    / "fixtures"
+    / "timedCGS"
+    / "tctl_reset_cycle.txt"
+)
 
 
 def _states(result):
@@ -114,3 +126,20 @@ def test_tctl_au_differs_from_eu(formula, expected_locations, initial_ok):
 def test_syntax_error():
     result = model_checking("EF p (", str(_MINIMAL))
     assert "error" in result or "Syntax" in result.get("res", "")
+
+
+def test_tctl_zeno_cycle():
+    # Model has x<=5 invariant on self-loop but no reset.
+    # TCTL semantics (without strong non-Zeno requirements) allows infinite 0-time transitions.
+    # Therefore EG p is true.
+    result = model_checking("EG p", str(_ZENO_CYCLE))
+    assert _states(result) == {"s0"}
+    assert _initial_satisfied(result) is True
+
+
+def test_tctl_reset_enables_cycle():
+    # Model has x<=5 invariant on self-loop AND resets x=0.
+    # Infinite path is possible. EG p must be true.
+    result = model_checking("EG p", str(_RESET_CYCLE))
+    assert _states(result) == {"s0"}
+    assert _initial_satisfied(result) is True

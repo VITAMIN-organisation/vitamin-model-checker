@@ -101,3 +101,56 @@ x<=2
     )
     assert predecessors
     assert not predecessors[0].is_empty()
+
+
+@pytest.mark.unit
+def test_apply_bounds_equality():
+    from model_checker.parsers.game_structures.timed_cgs.DBM.DBM import DBM
+    dbm = DBM(2)
+    # x == 3 -> translates to x <= 3 and x >= 3
+    DBMAdapter.apply_bounds(dbm, [(1, "==", "3")])
+    assert dbm.elements[1][0].constant == 3
+    assert dbm.elements[0][1].constant == -3
+
+
+@pytest.mark.unit
+def test_forward_transition_with_reset(minimal_tcgs):
+    from model_checker.parsers.game_structures.timed_cgs.DBM.DBM import DBM
+    original_constraints = minimal_tcgs.clock_constraint_struct
+    minimal_tcgs.clock_constraint_struct = [
+        ["", "x>=1,x=0"],
+        ["", ""]
+    ]
+    
+    zone = DBM(len(minimal_tcgs.clocks))
+    # current zone: x >= 1
+    DBMAdapter.apply_bounds(zone, [(1, ">=", "1")])
+    
+    successor_zone = DBMAdapter.forward_transition_zone(
+        minimal_tcgs, zone, source_idx=0, target_idx=1
+    )
+    assert successor_zone is not None
+    # So x >= 0. Because s1 has invariant x <= 2, x should be bounded by 2.
+    assert successor_zone.elements[1][0].constant == 2
+    assert successor_zone.elements[0][1].constant == 0
+    
+    # restore
+    minimal_tcgs.clock_constraint_struct = original_constraints
+
+
+@pytest.mark.unit
+def test_compute_predecessors_nested_logic(minimal_tcgs):
+    # Test nested AST: E ((x<=2 and x>=1) or x<5) U p
+    nested_formula = ("or", ("and", "x<=2", "x>=1"), "x<5")
+    zones = DBMAdapter.compute_predecessors(
+        minimal_tcgs, source="s0", target="s1", formulas=nested_formula
+    )
+    assert len(zones) == 2
+    # One zone for x<=2 & x>=1 (predecessor bounds back to 0 due to down())
+    assert all(z.elements[1][0].constant == 2 and z.elements[0][1].constant == 0 for z in zones)
+
+
+@pytest.mark.unit
+def test_parse_constraints_unknown_clock_in_reset():
+    with pytest.raises(ValueError, match="Unknown clock 'y' in reset 'y=0'"):
+        DBMAdapter.parse_constraints(["y=0"], {"x": 0})

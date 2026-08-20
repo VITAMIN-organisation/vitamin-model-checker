@@ -9,14 +9,17 @@ FormulaInput = str | tuple[str, ...]
 _AND_OPS = frozenset({"&", "and"})
 _OR_OPS = frozenset({"|", "or"})
 _COMBINATORS = _AND_OPS | _OR_OPS
-_BOUND_RE = re.compile(r"(\w+)(>|<|>=|<=)(\d+)")
+_BOUND_RE = re.compile(r"(\w+)(>|<|>=|<=|==)(\d+)")
 _RESET_RE = re.compile(r"(\w+)=(\d+)")
-_MAX_CONSTRAINT_RE = re.compile(r"(\w+)\s*(?:==|>=|<=|>|<)\s*(\d+\.?\d*)")
+_MAX_CONSTRAINT_RE = re.compile(r"(\w+)\s*(?:==|>=|<=|>|<)\s*(\d+)")
 
 
 def apply_bounds(dbm: DBM, bounds) -> None:
     for clock_index, op, bound in bounds:
-        if op in ">=":
+        if op == "==":
+            dbm.add_constraint(0, clock_index, -int(bound), "<=")
+            dbm.add_constraint(clock_index, 0, int(bound), "<=")
+        elif op in (">", ">="):
             dbm.add_constraint(0, clock_index, -int(bound), op.replace(">", "<"))
         else:
             dbm.add_constraint(clock_index, 0, int(bound), op)

@@ -117,5 +117,81 @@ x<=0
     for state in zone_graph.states:
         if state.location != "s0":
             continue
-        # x is DBM index 1; invariant x<=0 must already be in the stored zone.
         assert state.zone.elements[1][0].constant <= 0
+
+
+@pytest.mark.unit
+def test_zone_graph_no_premature_leaves(tmp_path):
+    content = """
+Transition
+* 0
+0 *
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+1
+0
+Number_of_agents
+1
+Clocks
+x
+Clock_constraints
+0 x>=1
+0 0
+Invariants
+0
+0
+"""
+    path = tmp_path / "infinite_cycle.txt"
+    path.write_text(content)
+    tcgs = TimedCGS()
+    tcgs.read_file(path)
+    
+    zone_graph = ZoneGraph(tcgs)
+    
+    assert len(zone_graph.states) > 0
+    for state, successors in zone_graph.graph.items():
+        assert len(successors) > 0, f"State {state.location} {state.zone} is a premature leaf!"
+
+
+@pytest.mark.unit
+def test_zone_graph_zeno_cycle(tmp_path):
+    content = """
+Transition
+* 0
+0 *
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+1
+0
+Number_of_agents
+1
+Clocks
+x
+Clock_constraints
+x>=1 x>=1
+0 0
+Invariants
+x<=5
+0
+"""
+    path = tmp_path / "zeno_cycle.txt"
+    path.write_text(content)
+    tcgs = TimedCGS()
+    tcgs.read_file(path)
+    
+    zone_graph = ZoneGraph(tcgs)
+    
+    assert len(zone_graph.states) > 0
+    
+    for state, successors in zone_graph.graph.items():
+        assert len(successors) > 0, f"State {state.location} is a premature leaf!"

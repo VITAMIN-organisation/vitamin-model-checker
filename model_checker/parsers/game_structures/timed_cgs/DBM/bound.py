@@ -17,9 +17,6 @@ class Bound:
         if float(self.constant) < float(other.constant):
             return True
 
-        if other.constant == np.inf and self.constant != np.inf:
-            return True
-
         if (
             self.constant == other.constant
             and self.operator == "<"

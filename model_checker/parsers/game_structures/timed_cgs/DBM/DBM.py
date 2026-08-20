@@ -8,22 +8,20 @@ class DBM:
 
     def __init__(self, number_of_clocks: int, elements=None):
         self.size = number_of_clocks + 1
+        self.elements = np.empty((self.size, self.size), dtype=Bound)
         if elements is not None:
-            self.elements = np.empty((self.size, self.size), dtype=Bound)
             for i in range(self.size):
                 for j in range(self.size):
                     bound = elements[i][j]
                     self.elements[i][j] = Bound(bound.constant, bound.operator)
             return
 
-        self.elements = np.empty((self.size, self.size), dtype=Bound)
-        zero = Bound(0, "<=")
-        inf = Bound(np.inf, "<=")
         for i in range(self.size):
             for j in range(self.size):
-                self.elements[i][j] = zero if i == j else inf
-        for j in range(self.size):
-            self.elements[0][j] = zero
+                if i == j or i == 0:
+                    self.elements[i][j] = Bound(0, "<=")
+                else:
+                    self.elements[i][j] = Bound(np.inf, "<=")
 
     def close(self):
         """
