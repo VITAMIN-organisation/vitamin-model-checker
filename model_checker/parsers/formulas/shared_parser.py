@@ -34,6 +34,7 @@ class BaseLogicParser:
 
     t_LPAREN = r"\("
     t_RPAREN = r"\)"
+    t_ignore = " \t"
 
     def t_UNTIL(self, t):
         r"U(?![a-zA-Z0-9_])|until\b"
@@ -83,8 +84,6 @@ class BaseLogicParser:
         r"->|>|implies\b"
         return t
 
-    t_ignore = " \t"
-
     def t_newline(self, t):
         r"\n+"
         t.lexer.lineno += len(t.value)
@@ -92,8 +91,7 @@ class BaseLogicParser:
     def t_error(self, t):
         """Error handling for illegal characters."""
         err_msg = f"Invalid character '{t.value[0]}' at position {t.lexpos + 1}"
-        self.logger.debug(err_msg)
-        self.errors.append(err_msg)
+        self._log_error(err_msg)
         t.lexer.skip(1)
 
     precedence = (
@@ -131,13 +129,19 @@ class BaseLogicParser:
     def p_error(self, p):
         """Syntax error handler."""
         if p:
-            err_msg = f"Syntax error near token '{p.value}' at position {getattr(p, 'lexpos', '?') + 1}"
-            self.logger.debug(err_msg)
-            self.errors.append(err_msg)
+            lexpos = getattr(p, "lexpos", None)
+            if lexpos is not None:
+                err_msg = f"Syntax error near token '{p.value}' at position {lexpos + 1}"
+            else:
+                err_msg = f"Syntax error near token '{p.value}'"
         else:
             err_msg = "Syntax error at end of input"
-            self.logger.debug(err_msg)
-            self.errors.append(err_msg)
+        self._log_error(err_msg)
+
+    def _log_error(self, err_msg: str):
+        """Helper to log and store errors."""
+        self.logger.debug(err_msg)
+        self.errors.append(err_msg)
 
     def build(self, **kwargs):
         """Build the lexer and parser.

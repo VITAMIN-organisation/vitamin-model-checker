@@ -13,7 +13,6 @@ from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
 _FIXTURE = (
     Path(__file__).resolve().parents[4]
-    / "tests"
     / "fixtures"
     / "timedCGS"
     / "tctl_tol_minimal.txt"
