@@ -165,26 +165,26 @@ def test_copy_is_deep_and_independent(constraint_dbm):
 def test_intersect():
     dbm1 = DBM(2)
     dbm1.add_constraint(1, 0, 5, "<=")  # x <= 5
-    dbm1.add_constraint(0, 1, -2, "<=") # x >= 2
-    
+    dbm1.add_constraint(0, 1, -2, "<=")  # x >= 2
+
     dbm2 = DBM(2)
     dbm2.add_constraint(1, 0, 8, "<=")  # x <= 8
-    dbm2.add_constraint(0, 1, -4, "<=") # x >= 4
-    
+    dbm2.add_constraint(0, 1, -4, "<=")  # x >= 4
+
     dbm1.intersect(dbm2)
     assert not dbm1.is_empty()
     assert dbm1.elements[1][0].constant == 5  # min(5, 8)
-    assert dbm1.elements[0][1].constant == -4 # min(-2, -4) -> tighter bound
+    assert dbm1.elements[0][1].constant == -4  # min(-2, -4) -> tighter bound
 
 
 @pytest.mark.unit
 def test_intersect_disjoint():
     dbm1 = DBM(2)
     dbm1.add_constraint(1, 0, 3, "<=")  # x <= 3
-    
+
     dbm2 = DBM(2)
-    dbm2.add_constraint(0, 1, -5, "<=") # x >= 5
-    
+    dbm2.add_constraint(0, 1, -5, "<=")  # x >= 5
+
     dbm1.intersect(dbm2)
     assert dbm1.is_empty()
 
@@ -200,11 +200,12 @@ def test_is_consistent_failures():
 def test_k_normalize_extrapolation_correctness():
     dbm = DBM(1)
     dbm.add_constraint(1, 0, 20, "<=")  # x <= 20
-    dbm.add_constraint(0, 1, -10, "<=") # x >= 10
-    
+    dbm.add_constraint(0, 1, -10, "<=")  # x >= 10
+
     dbm.k_normalize([5])
-    
+
     import numpy as np
+
     assert dbm.elements[1][0].constant == np.inf
     assert dbm.elements[0][1].constant == -5
     assert dbm.elements[0][1].operator == "<"

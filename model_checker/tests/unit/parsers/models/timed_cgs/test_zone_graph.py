@@ -150,12 +150,14 @@ Invariants
     path.write_text(content)
     tcgs = TimedCGS()
     tcgs.read_file(path)
-    
+
     zone_graph = ZoneGraph(tcgs)
-    
+
     assert len(zone_graph.states) > 0
     for state, successors in zone_graph.graph.items():
-        assert len(successors) > 0, f"State {state.location} {state.zone} is a premature leaf!"
+        assert (
+            len(successors) > 0
+        ), f"State {state.location} {state.zone} is a premature leaf!"
 
 
 @pytest.mark.unit
@@ -188,10 +190,10 @@ x<=5
     path.write_text(content)
     tcgs = TimedCGS()
     tcgs.read_file(path)
-    
+
     zone_graph = ZoneGraph(tcgs)
-    
+
     assert len(zone_graph.states) > 0
-    
+
     for state, successors in zone_graph.graph.items():
         assert len(successors) > 0, f"State {state.location} is a premature leaf!"

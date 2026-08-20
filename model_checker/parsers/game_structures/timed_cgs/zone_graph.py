@@ -23,8 +23,6 @@ class TimeState:
         return self.location == other.location and self.zone == other.zone
 
 
-
-
 def _register_state(
     zone_graph: dict,
     all_states: set,

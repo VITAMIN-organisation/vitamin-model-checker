@@ -131,7 +131,9 @@ class BaseLogicParser:
         if p:
             lexpos = getattr(p, "lexpos", None)
             if lexpos is not None:
-                err_msg = f"Syntax error near token '{p.value}' at position {lexpos + 1}"
+                err_msg = (
+                    f"Syntax error near token '{p.value}' at position {lexpos + 1}"
+                )
             else:
                 err_msg = f"Syntax error near token '{p.value}'"
         else:
@@ -156,6 +158,7 @@ class BaseLogicParser:
         os.makedirs(generated_dir, exist_ok=True)
 
         import sys
+
         if generated_dir not in sys.path:
             sys.path.insert(0, generated_dir)
 
