@@ -12,7 +12,7 @@ def find_combinations(lists: list[list[Any]]) -> list[tuple[Any, ...]]:
 
 
 def get_actions_from_capacity_set(cgs, capacity_set):
-    """Return action combinations that satisfy the given capacity set."""
+    """Return flat action labels enabled by any capacity in capacity_set."""
 
     def get_actions_from_capacity(cgs, cap):
         """Return actions available for capacity cap."""
@@ -24,13 +24,9 @@ def get_actions_from_capacity_set(cgs, capacity_set):
         return result
 
     result = []
-    a = []
     for elem in capacity_set:
         for cap in elem:
-            a.append(get_actions_from_capacity(cgs, cap))
-        a = find_combinations(a)
-        for x in a:
-            if x not in result:
-                result.append(x)
-        a = []
+            for action in get_actions_from_capacity(cgs, cap):
+                if action not in result:
+                    result.append(action)
     return result

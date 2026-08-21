@@ -82,14 +82,11 @@ class TestBoundedAtlPreImageIntegration:
             test_data_dir, "costCGS/RBATL/rbatl_3agents_medium_6states_costs.txt"
         )
         trans_cache = build_transition_cache(cgs, "1")
-        # From earlier probe: action A|A|^ from s0 reaches dests 1 and 3.
         only_s1 = compute_pre_states(
             cgs, "1", {"s1"}, [100, 100, 100], trans_cache, "rbatl"
         )
         all_reachable = compute_pre_states(
             cgs, "1", {"s1", "s3"}, [100, 100, 100], trans_cache, "rbatl"
         )
-        assert "s0" not in only_s1 or "s0" in all_reachable
-        # If s0 can force {s1,s3} via A|..., it must not force {s1} alone.
-        if "s0" in all_reachable:
-            assert "s0" not in only_s1
+        assert "s0" not in only_s1
+        assert "s0" in all_reachable

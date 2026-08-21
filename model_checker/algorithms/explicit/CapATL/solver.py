@@ -27,11 +27,7 @@ from model_checker.parsers.game_structures.cgs import CapCGSProtocol
 
 
 def _extract_coalition(val_str):
-    """Extract coalition from CapATL formula operator string.
-
-    CapATL uses format <{agents},bound>Op, e.g., <{1,2},3>F
-    This extracts just the coalition part: {1,2}
-    """
+    """Extract coalition set from CapATL operator string, e.g. <{1,2}>F -> {1,2}."""
     start = val_str.find("{")
     end = val_str.find("}")
     return val_str[start : end + 1]

@@ -26,6 +26,11 @@ logger = logging.getLogger(__name__)
 
 def _core_oatl_checking(cgs, formula):
     """Core OATL logic."""
+    if not hasattr(cgs, "get_cost_for_action"):
+        return create_error_response(
+            "validation", "OATL requires a costCGS model with action costs"
+        )
+
     cgs._oatl_cost_cache = {}
     cgs._oatl_base_action_cache = {}
 

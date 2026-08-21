@@ -262,9 +262,12 @@ def succ(cgs, pk_for_Y):
                 if succ_caps is None:
                     new_know_list.append([])
                     continue
-                # Current knowledge & New info
-                new_know = set(set_capacity[agent - 1]) & set(succ_caps)
+                observed = {asgn[agent - 1] for asgn in succ_caps}
+                new_know = set(set_capacity[agent - 1]) & observed
                 new_know_list.append(list(new_know))
+
+            if any(len(know) == 0 for know in new_know_list):
+                continue
 
             new_know_tuple = tuple(tuple(k) for k in new_know_list)
             successors.append(p_knowledge(succ_name, new_know_tuple, agents_tot))

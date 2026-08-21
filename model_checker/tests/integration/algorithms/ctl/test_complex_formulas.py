@@ -30,5 +30,5 @@ class TestCTLComplexFormulas:
         result = _core_ctl_checking(cgs, "EF(AG(EX p))")
         states = extract_states_from_result(result)
 
-        assert states is not None
-        assert len(states) >= 1
+        assert states == {"s0", "s1"}
+        assert ": True" in result.get("initial_state", "")

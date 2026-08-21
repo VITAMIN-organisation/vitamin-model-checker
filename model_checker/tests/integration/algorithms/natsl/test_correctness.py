@@ -1,4 +1,4 @@
-"""NatSL model checking: strategy specifications, error cases."""
+"""NatSL model checking: strategy specifications with sat/unsat pins."""
 
 import pytest
 
@@ -8,9 +8,6 @@ from model_checker.algorithms.explicit.NatSL.Alternated.natSL import (
 from model_checker.algorithms.explicit.NatSL.Sequential.natSL import (
     model_checking,
 )
-from model_checker.tests.helpers.synthetic_models import (
-    generate_capcgs_linear_chain_model,
-)
 
 
 @pytest.mark.integration
@@ -18,63 +15,36 @@ from model_checker.tests.helpers.synthetic_models import (
 class TestNatSLErrorHandling:
     """Test NatSL error handling for invalid inputs."""
 
-    @pytest.mark.parametrize(
-        "formula,expected_satisfiability",
-        [
-            ("", None),
-            ("INVALID_SYNTAX", False),
-        ],
-    )
-    def test_natsl_error_handling(
-        self, natatl_standard_model, formula, expected_satisfiability
-    ):
-        """Test NatSL error handling for invalid inputs."""
-        result = model_checking(formula, natatl_standard_model.filename)
-        assert (
-            "error" in result or result.get("Satisfiability") == expected_satisfiability
-        )
+    def test_natsl_invalid_syntax_returns_error(self, natatl_standard_model):
+        result = model_checking("INVALID_SYNTAX", natatl_standard_model.filename)
+        assert "error" in result
+
+    def test_natsl_empty_formula_returns_error(self, natatl_standard_model):
+        result = model_checking("", natatl_standard_model.filename)
+        assert "error" in result
 
 
 @pytest.mark.integration
 @pytest.mark.model_checking
 class TestNatSLCorrectness:
-    """Test NatSL model checking with representative models."""
+    """NatSL sat and unsat pins on the standard NatATL fixture."""
 
     def test_natsl_known_satisfiable_formula(self, natatl_standard_model):
-        """E{1}x:(x,1)F a on the standard model is satisfiable (proposition a reachable)."""
+        """E{1}x:(x,1)F a is satisfiable (proposition a reachable)."""
         result = model_checking("E{1}x:(x,1)F a", natatl_standard_model.filename)
-        assert (
-            "error" not in result
-        ), f"NatSL should not error on valid formula: {result}"
-        assert "Satisfiability" in result
+        assert "error" not in result, result
         assert result["Satisfiability"] is True
 
+    def test_natsl_unsatisfiable_not_eventually(self, natatl_standard_model):
+        """E{1}x:(x,1)!F a is unsatisfiable when a is reachable under bound 1."""
+        result = model_checking("E{1}x:(x,1)!F a", natatl_standard_model.filename)
+        assert "error" not in result, result
+        assert result["Satisfiability"] is False
+
     def test_natsl_alternated_existential_only_formula(self, natatl_standard_model):
-        """Alternated semantics must handle existential-only formulas without error."""
+        """Alternated semantics: existential-only F a is satisfiable."""
         result = model_checking_alternated(
             "E{1}x:(x,1)F a", natatl_standard_model.filename
         )
-        assert (
-            "error" not in result
-        ), f"NatSL Alternated should not error on valid formula: {result}"
-        assert result["Satisfiability"] is True
-
-
-@pytest.mark.integration
-@pytest.mark.model_checking
-class TestCapATLSyntheticModels:
-    """CapATL on in-memory synthetic capCGS chains."""
-
-    def test_capatl_synthetic_linear_chain(self, temp_file):
-        """Synthetic capCGS generator must assign one capacity row per agent."""
-        from model_checker.algorithms.explicit.CapATL.CapATL import (
-            model_checking as capatl_check,
-        )
-
-        content = generate_capcgs_linear_chain_model(
-            num_states=4, num_agents=2, prop_names=["p"]
-        )
-        model_path = temp_file(content)
-        result = capatl_check("<{1}, 1>F p", model_path)
         assert "error" not in result, result
-        assert "True" in result.get("initial_state", "")
+        assert result["Satisfiability"] is True

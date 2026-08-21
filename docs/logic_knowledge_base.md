@@ -546,9 +546,8 @@ RBATL and RABATL extend ATL with vector cost bounds on coalition strategies over
 CapATL is designed for models with explicit capacity constraints (`capCGS`), often involving knowledge (capability) and agent-scoped properties.
 
 **Standard Syntax:**
-- **Capacity Operator**: `<{A}, k> p`
-    - `A`: A set of agents.
-    - `k`: A positive integer bound on the total capacity utilized.
+- **Coalition modality**: `<{A}> phi` (paper-style agent set; capacities constrain
+  available actions via the `capCGS` model, not a formula numeric bound).
 - **Knowledge (Capability)**: `Ki p` (Agent `i` has the capability/knowledge of `p`).
 - **Agent Property**: `i is prop` (Agent `i` currently possesses property `prop`).
 
@@ -557,39 +556,35 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 **Parser Location:** `model_checker/parsers/formulas/CapATL/parser.py`
 
 **Supported Syntax:**
-1.  **Coalition**: `<{agent1,agent2,...}, k>` (Must use curly braces).
+1.  **Coalition**: `<{agent1,agent2,...}>` (curly braces required; no `, k`).
 2.  **Capability**: `K1(p)`, `K2(K3 p)`.
 3.  **Agent Properties**: `1 is active`, `2 is critical`.
 4.  **Temporal Operators**: `X`, `F`, `G`, `U`, and binary `R` (Release).
 
 **Validation Rules:**
 > [!NOTE]
-> **Operator Support (W):** Weak Until (`W`) is not part of CapATL path syntax and remains unsupported. Release (`R`) is accepted as a binary operator (`<{A}, k> phi R psi`) and evaluated by the CapATL solver (greatest fixpoint). Input spacing in `<{A}, k>` is optional; the AST normalizes to a space after the comma.
+> **Operator Support (W):** Weak Until (`W`) is not part of CapATL path syntax and remains unsupported. Release (`R`) is accepted as a binary operator (`<{A}> phi R psi`) and evaluated by the CapATL solver (greatest fixpoint).
 - **Model Requirement**: Can only be verified against `capCGS` models.
+- **Legacy syntax**: NatATL-style `<{A}, k>` is rejected.
 
 **Formula Examples:**
 ```text
-<{1,2}, 3> F g
-<{1}, 1> G a
-<{1,2,3}, 2> X a
-<{1}, 1> a R g
-<{1}, 5> false R g
+<{1,2}> F g
+<{1}> G a
+<{1,2,3}> X a
+<{1}> a R g
+<{1}> false R g
 ```
 
 ### Comparison: Theory vs Implementation
 
 | Aspect | Theory | Implementation |
 | :--- | :--- | :--- |
-| **Coalition** | <{A}, k> | `<{A}, k>` (Braces required; see note on `k`) |
+| **Coalition** | ⟨A⟩ / `<{A}>` | `<{A}>` (braces required; no formula `k`) |
+| **Capacities** | Model / knowledge | `capCGS` sections + Pre over capacity knowledge |
 | **Capability** | Ki p | Parsed as `Ki (...)`; **not evaluated** by the CapATL solver yet |
 | **Agent Prop** | i is p | Surface syntax documented; agent-scoped `i is p` is not fully wired in the solver |
 | **Temporal** | X, U, R (F/G sugar) | `X, F, G, U, R` (`W` unsupported) |
-
-> [!NOTE]
-> **Capacity bound `k`:** The parser requires `<{A}, k>`, but the current CapATL
-> solver extracts only the agent set and does **not** apply `k` when computing
-> winning sets. Formulas that differ only in `k` currently yield the same result.
-> Capacities still constrain available actions via the `capCGS` model sections.
 
 > [!NOTE]
 > **`Ki` / `i is p`:** These forms appear in the CapATL grammar and docs, but the
@@ -652,7 +647,7 @@ ATL with wallet-aware coalitions over `WalletCGS` models.
 > embeds optional balance guards (`:wallet(agent, op, value)`) inside the same prefix,
 > so the grammar uses a dedicated `<< ... >>` token. That avoids clashing with other
 > bracket conventions in VITAMIN: OATL/RBATL `<1><5>` (coalition then cost bound),
-> NatATL/CapATL `<{1}, k>`, and OL `<Jk>`. OATL's two bracket groups are separate tokens;
+> NatATL `<{1}, k>`, CapATL `<{1}>`, and OL `<Jk>`. OATL's two bracket groups are separate tokens;
 > Wallet's double brackets are one nested delimiter around agents plus guards.
 
 **Examples:**
@@ -914,7 +909,8 @@ VITAMIN does **not** support an empty strategic coalition written as `<>`. In AT
 | Strategic coalition (ATL) | `<1> F p`, `<1,2> G p` | `<> F p` |
 | Linear path eventually (LTL) | `F p` | `<> F p` |
 | Cost-bounded strategy (OATL / RBATL) | `<1><5> F p` | `<> F p`, `<1> F p` without bound |
-| Capacity-bound strategy (NatATL / CapATL) | `<{1}, 5> F p` | `<> F p` |
+| Capacity / strategy-bound (NatATL) | `<{1}, 5> F p` | `<> F p` |
+| Capacity coalition (CapATL) | `<{1}> F p` | `<> F p` |
 | IATL universal coalition | `[1] G p` | `[] G p` (empty `[]` rejected) |
 
 **Where rejection is enforced:**
@@ -924,7 +920,7 @@ VITAMIN does **not** support an empty strategic coalition written as `<>`. In AT
 | ATL / ATLF | `<1>`, `<1,2>` | `<> ` rejected (precheck + parser) |
 | IATL | `<1>` exist, `[1]` forall | `<> ` and `[]` rejected |
 | NatATL | `<{1,2}, k>` | `<\s*>` rejected |
-| CapATL | `<{1,2}, k>` | `<\s*>` rejected |
+| CapATL | `<{1,2}>` | `<\s*>` rejected |
 | OATL / COTL | `<1><5>` | `<\s*>` rejected; bound required |
 | RBATL / RABATL | `<1><5>` or `<1><2,2>` | `<\s*>` rejected; bound required |
 | OL | `<J5>` (cost, not agents) | N/A |
@@ -985,7 +981,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **OATL** | Branching | `<A><k>X`, `F`, `G`, `U` | `<1,2><5>` (per-step cost bound) | costCGS |
 | **OL** | Linear | `<Jk>X`, `F`, `G`, `U`, `R`, `W` | `<J5>` (Demonic) | costCGS |
 | **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U` | `<1><10,5>` (Vectors) | costCGS |
-| **CapATL** | Branching | `<A,k>X`, `F`, `G`, `U`, `R`, `Ki`, `i is p` | `<{1,2}, k>` | capCGS |
+| **CapATL** | Branching | `<{A}>X`, `F`, `G`, `U`, `R`, `Ki`, `i is p` | `<{1,2}>` | capCGS |
 | **COTL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><k>` (cost-bounded) | costCGS |
 | **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
 | **ICTL** | Branching | `EX`, `AX`, `EF`, `AF`, `EG`, `AG`, `EU`, `AU`, `ER`, `AR` | `E`, `A`; `->` / `not` intuitionistic | BirelationalMatrix |

@@ -86,7 +86,7 @@ def succ_in_W(succw, W, dict_W):
 
 
 def pre(cgs, W, coal_Y):
-    """Pre-image for CapATL: elements whose successors are in W with unique state-action and in W."""
+    """Pre-image for CapATL: Omega_Y elements whose every successor is in W."""
     p_group = []
     omega_Y = Omega_Y(cgs, coal_Y)
 
@@ -100,11 +100,7 @@ def pre(cgs, W, coal_Y):
 
     for j in omega_Y:
         j_succ = succ(cgs, j)
-        if (
-            j_succ
-            and succ_in_W(j_succ, W, dict_W)
-            and unique_state_action_couple(j_succ, W)
-        ):
+        if j_succ and succ_in_W(j_succ, W, dict_W):
             if j not in p_group:
                 p_group.append(j)
 

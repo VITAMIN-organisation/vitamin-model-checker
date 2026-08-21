@@ -75,10 +75,10 @@ class TestBasicModelCheckingWorkflow:
         assert cotl_states == {"s0", "s2", "s3", "s4", "s5"}
         assert ": True" in cotl_result.get("initial_state", "")
 
-        capatl_result = capatl_check("<{1},5>F g", str(capatl_path))
+        capatl_result = capatl_check("<{1}>F g", str(capatl_path))
         assert "error" not in capatl_result
         cap_states = extract_states_from_result(capatl_result)
-        assert cap_states == {"q2"}
+        assert cap_states == {"q0", "q1", "q2"}
 
         ol_result = ol_check("<J2> F r", str(ol_path))
         assert "error" not in ol_result

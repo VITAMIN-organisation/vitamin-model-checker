@@ -1,9 +1,8 @@
-"""BitVectorStateSet: empty set, add/remove, intersection/union/difference, threshold, indices conversion."""
+"""BitVectorStateSet: empty set, add/remove, intersection/union/difference, indices conversion."""
 
 import pytest
 
 from model_checker.algorithms.explicit.shared.bit_vector import (
-    BIT_VECTOR_THRESHOLD,
     BitVectorStateSet,
 )
 
@@ -191,13 +190,6 @@ class TestBitVectorStateSet:
         bv = BitVectorStateSet(10, [1, 2, 3])
         repr_str = repr(bv)
         assert "BitVectorStateSet" in repr_str
-
-    def test_bit_vector_threshold(self):
-        """Test threshold used to choose bit-vector pre-image paths."""
-        assert 100 < BIT_VECTOR_THRESHOLD
-        assert BIT_VECTOR_THRESHOLD - 1 < BIT_VECTOR_THRESHOLD
-        assert BIT_VECTOR_THRESHOLD >= BIT_VECTOR_THRESHOLD
-        assert 1000 >= BIT_VECTOR_THRESHOLD
 
 
 @pytest.mark.unit

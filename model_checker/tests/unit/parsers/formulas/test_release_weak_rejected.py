@@ -31,8 +31,8 @@ def test_release_weak_rejected(logic, formula):
 def test_capatl_accepts_binary_release():
     """CapATL path formulas include Release; binary R must parse."""
     parser = FormulaParserFactory.get_parser_instance("CapATL")
-    result = parser.parse("<{1}, 1> p R q", n_agent=3)
-    assert result == ("<{1}, 1>R", "p", "q")
+    result = parser.parse("<{1}> p R q", n_agent=3)
+    assert result == ("<{1}>R", "p", "q")
     assert not parser.errors
 
 

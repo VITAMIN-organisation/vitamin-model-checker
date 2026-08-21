@@ -12,18 +12,21 @@ from model_checker.tests.helpers.model_helpers import load_test_model
 @pytest.mark.unit
 @pytest.mark.model_checking
 class TestRBATLPreImage:
-    """Test RBATL compute_pre_states function."""
+    """Exact Pre pins on the medium RBATL cost fixture."""
 
-    def test_pre_returns_subset_of_states(self, test_data_dir):
-        """compute_pre_states returns a set of state names contained in the model states."""
+    def test_pre_forces_only_states_that_cannot_escape_target(self, test_data_dir):
+        """From s0, action A|A|^ reaches both s1 and s3, so Pre({s1}) excludes s0."""
         cgs = load_test_model(
             test_data_dir, "costCGS/RBATL/rbatl_3agents_medium_6states_costs.txt"
         )
-        all_states = set(cgs.states)
         trans_cache = build_transition_cache(cgs, "1")
-        result = compute_pre_states(
-            cgs, "1", {"s1"}, [10, 10, 10], trans_cache, "rbatl"
+        only_s1 = compute_pre_states(
+            cgs, "1", {"s1"}, [100, 100, 100], trans_cache, "rbatl"
         )
-        assert isinstance(result, set)
-        assert all(isinstance(s, str) for s in result)
-        assert result <= all_states
+        s1_and_s3 = compute_pre_states(
+            cgs, "1", {"s1", "s3"}, [100, 100, 100], trans_cache, "rbatl"
+        )
+        assert only_s1 == {"s1"}
+        assert s1_and_s3 == {"s0", "s1", "s3"}
+        assert "s0" not in only_s1
+        assert "s0" in s1_and_s3

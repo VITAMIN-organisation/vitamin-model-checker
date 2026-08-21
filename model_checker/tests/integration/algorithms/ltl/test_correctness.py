@@ -27,109 +27,73 @@ class TestLTLErrorHandling:
 
 @pytest.mark.integration
 @pytest.mark.model_checking
-class TestLTLCorrectness:
-    """Test LTL model checking correctness for temporal operators."""
-
-    def test_ltl_eventually_reachable_proposition(self, ctl_small_model):
-        """Test F operator for eventually reachable proposition."""
-        result = model_checking("F q", ctl_small_model.filename)
-        assert "error" not in result
-        assert "res" in result and result["res"].startswith("Result: ")
-        assert "initial_state" in result and "Initial state" in result["initial_state"]
-        assert result["initial_state"].strip().endswith("True")
-
-    def test_ltl_globally_violated_proposition(self, ctl_small_model):
-        """Test G operator for a proposition that does not hold on all paths."""
-        result = model_checking("G p", ctl_small_model.filename)
-        assert "error" not in result
-        assert "res" in result and result["res"].startswith("Result: ")
-        assert "initial_state" in result and "Initial state" in result["initial_state"]
-        assert result["initial_state"].strip().endswith("False")
-
-    def test_ltl_eventually_goal_on_minimal_model(self, ltl_minimal_model):
-        """Test F operator for eventually reaching goal on the minimal LTL model."""
-        result = model_checking("F goal", ltl_minimal_model.filename)
-        assert "error" not in result
-        assert "res" in result and result["res"].startswith("Result: ")
-        assert "initial_state" in result and "Initial state" in result["initial_state"]
-        assert result["initial_state"].strip().endswith("True")
-
-
 @pytest.mark.semantic
-@pytest.mark.model_checking
 class TestLTLSemantics:
-    """LTL semantics on a small model with known labelling."""
-
-    def test_ltl_semantics_linear_chain(self, temp_file):
-        """F p, F q, G q on a 3-state chain: s0->s1->s2; p at s0,s2, q at s2."""
-        content = generate_linear_chain(
-            3, num_agents=2, prop_names=["p", "q"], action_label="AC"
-        )
-        path = temp_file(content)
-
-        for formula, expected in [("F p", True), ("F q", True), ("G q", False)]:
-            result = model_checking(formula, path)
-            assert "error" not in result
-            assert "res" in result and result["res"].startswith("Result: ")
-            assert "initial_state" in result
-            assert (
-                result["initial_state"]
-                .strip()
-                .endswith("True" if expected else "False")
-            )
+    """LTL sure-win oracles: Result {satisfied}/{} and initial-state truth."""
 
     @pytest.mark.parametrize(
-        "formula,expected_satisfied",
+        "formula,expected_res,expected_initial",
         [
-            ("F q", True),
-            ("G p", False),
-            ("F p", True),
+            ("F q", "{satisfied}", True),
+            ("F p", "{satisfied}", True),
+            ("G p", "{}", False),
+            ("X q", "{satisfied}", True),
+            ("p U q", "{satisfied}", True),
         ],
     )
     def test_ltl_semantics_ctl_fixture(
-        self, ctl_small_model, formula, expected_satisfied
+        self, ctl_small_model, formula, expected_res, expected_initial
     ):
-        """Table-driven LTL semantics on the shared CTL fixture (CGS compatible)."""
+        """Pinned LTL bridge results on ctl_1agent_4states."""
         result = model_checking(formula, ctl_small_model.filename)
         assert "error" not in result
-        assert "res" in result and result["res"].startswith("Result: ")
-        assert "initial_state" in result
-        suffix = "True" if expected_satisfied else "False"
+        assert result["res"] == f"Result: {expected_res}"
+        suffix = "True" if expected_initial else "False"
         assert result["initial_state"].strip().endswith(suffix)
 
-
-@pytest.mark.integration
-@pytest.mark.model_checking
-class TestLTLCounterexample:
-    """When the formula does not hold at the initial state, result is False."""
-
-    def test_ltl_counterexample_globally_false(self, temp_file):
-        """G q is false at s0 on a chain where q holds only at the last state."""
+    def test_ltl_semantics_linear_chain(self, temp_file):
+        """3-state chain s0->s1->s2; p at s0,s2; q at s2."""
         content = generate_linear_chain(
             3, num_agents=2, prop_names=["p", "q"], action_label="AC"
         )
         path = temp_file(content)
-        result = model_checking("G q", path)
-        assert "error" not in result
-        assert "res" in result and "initial_state" in result
-        assert result["initial_state"].strip().endswith("False")
 
-    def test_ltl_counterexample_eventually_false_on_minimal(self, ltl_minimal_model):
-        """Formula that cannot be satisfied on the minimal model yields False or error."""
+        cases = [
+            ("F p", "{satisfied}", True),
+            ("F q", "{satisfied}", True),
+            ("G q", "{}", False),
+            ("X q", "{}", False),
+            ("p U q", "{}", False),
+        ]
+        for formula, expected_res, expected_initial in cases:
+            result = model_checking(formula, path)
+            assert "error" not in result, result
+            assert result["res"] == f"Result: {expected_res}"
+            suffix = "True" if expected_initial else "False"
+            assert result["initial_state"].strip().endswith(suffix)
+
+    def test_ltl_eventually_goal_on_minimal_model(self, ltl_minimal_model):
+        """F goal is sure-win on the minimal LTL fixture."""
+        result = model_checking("F goal", ltl_minimal_model.filename)
+        assert "error" not in result
+        assert result["res"] == "Result: {satisfied}"
+        assert result["initial_state"].strip().endswith("True")
+
+    def test_ltl_counterexample_globally_false_on_minimal(self, ltl_minimal_model):
+        """G goal fails on the minimal LTL fixture."""
         result = model_checking("G goal", ltl_minimal_model.filename)
-        assert "error" in result or (
-            "initial_state" in result
-            and result["initial_state"].strip().endswith("False")
-        )
+        assert "error" not in result
+        assert result["res"] == "Result: {}"
+        assert result["initial_state"].strip().endswith("False")
 
 
 @pytest.mark.integration
 @pytest.mark.model_checking
 class TestLTLNashFunctions:
-    """Basic tests for LTL Nash equilibrium API (exists_nash)."""
+    """LTL Nash equilibrium API (exists_nash) with pinned Satisfiability."""
 
-    def test_model_checking_exists_nash_returns_result_dict(self, ctl_small_model):
-        """model_checking_exists_nash runs without crash and returns Satisfiability and Complexity Bound."""
+    def test_model_checking_exists_nash_f_q_is_satisfiable(self, ctl_small_model):
+        """exists_nash for F q on the CTL fixture is satisfiable within bound 2."""
         result = model_checking_exists_nash(
             ctl_small_model.filename,
             "F q",
@@ -137,7 +101,5 @@ class TestLTLNashFunctions:
             agents=[1],
         )
         assert isinstance(result, dict)
-        assert "Satisfiability" in result
-        assert "Complexity Bound" in result
-        assert result["Satisfiability"] in (True, False)
+        assert result.get("Satisfiability") is True
         assert 1 <= result["Complexity Bound"] <= 2

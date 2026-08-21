@@ -51,7 +51,7 @@ class TestCapATLScalability:
         """CapATL completes within the time bound on cycle models."""
         model_path = temp_file(_capatl_cycle_content(num_states))
         start_time = time.time()
-        result = model_checking("<{1}, 1>F p", model_path)
+        result = model_checking("<{1}>F p", model_path)
         elapsed = time.time() - start_time
         assert "error" not in result, f"{case_id}: {result}"
         assert (

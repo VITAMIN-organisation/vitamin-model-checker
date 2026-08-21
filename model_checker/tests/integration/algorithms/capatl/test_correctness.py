@@ -22,22 +22,22 @@ class TestCapATLErrorHandling:
 
     def test_capatl_nonexistent_atomic_proposition(self, capatl_model):
         """Test CapATL with non-existent atomic proposition."""
-        result = _core_capatl_checking(capatl_model, "<{1,2},5>F nonexistent")
+        result = _core_capatl_checking(capatl_model, "<{1,2}>F nonexistent")
         assert "error" in result or "does not exist" in result.get("res", "").lower()
 
     def test_capatl_invalid_coalition(self, capatl_model):
         """Test CapATL with invalid coalition (agent number out of range)."""
-        result = _core_capatl_checking(capatl_model, "<{99},5>F p")
+        result = _core_capatl_checking(capatl_model, "<{99}>F p")
         assert "error" in result
 
-    def test_capatl_negative_capacity(self, capatl_model):
-        """Test CapATL with negative capacity (should be invalid)."""
-        result = _core_capatl_checking(capatl_model, "<{1,2},-5>F p")
+    def test_capatl_legacy_numeric_bound_rejected(self, capatl_model):
+        """NatATL-style <{A}, k> is rejected; CapATL has no formula bound k."""
+        result = _core_capatl_checking(capatl_model, "<{1,2},5>F p")
         assert "error" in result or "Syntax error" in result.get("res", "")
 
-    def test_capatl_missing_capacity_value(self, capatl_model):
-        """Test CapATL with missing capacity value."""
-        result = _core_capatl_checking(capatl_model, "<{1,2}>F p")
+    def test_capatl_empty_coalition_rejected(self, capatl_model):
+        """Empty coalition modality is invalid."""
+        result = _core_capatl_checking(capatl_model, "<>F p")
         assert "error" in result or "Syntax error" in result.get("res", "")
 
 
@@ -45,30 +45,50 @@ class TestCapATLErrorHandling:
 @pytest.mark.model_checking
 @pytest.mark.semantic
 class TestCapATLSemantics:
-    """Result format and winning states for CapATL."""
+    """Exact winning states on the 3-agent capacity fixture."""
 
-    def test_capatl_exact_winning_states(self, capatl_model):
-        """<{1},5>F g holds at q2 on the example capacity model."""
-        result = _core_capatl_checking(capatl_model, "<{1},5>F g")
+    def test_capatl_eventually_winning_states(self, capatl_model):
+        """Agent 1 can force g from every state (q0 via B**, q1 via q0, q2 already)."""
+        result = _core_capatl_checking(capatl_model, "<{1}>F g")
         assert "error" not in result
-        assert "res" in result
-        assert "initial_state" in result
-        states = extract_states_from_result(result)
-        assert states == {"q2"}
-        assert ": False" in result.get("initial_state", "")
+        assert extract_states_from_result(result) == {"q0", "q1", "q2"}
+        assert ": True" in result.get("initial_state", "")
 
-    def test_capatl_eventually_contains_goal_states(self, capatl_model):
-        """Every state already labelled g also satisfies F g."""
-        eventually = _core_capatl_checking(capatl_model, "<{1},5>F g")
-        assert "error" not in eventually
-        assert {"q2"} <= extract_states_from_result(eventually)
+    def test_capatl_next_winning_states(self, capatl_model):
+        """X g holds at q0 (B** to q2) and at q2 (self-loop), not at q1."""
+        result = _core_capatl_checking(capatl_model, "<{1}>X g")
+        assert "error" not in result
+        assert extract_states_from_result(result) == {"q0", "q2"}
+        assert ": True" in result.get("initial_state", "")
+
+    def test_capatl_globally_only_goal(self, capatl_model):
+        """G g holds only where g already holds (q2)."""
+        result = _core_capatl_checking(capatl_model, "<{1}>G g")
+        assert "error" not in result
+        assert extract_states_from_result(result) == {"q2"}
+        assert ": False" in result.get("initial_state", "")
 
     def test_capatl_release_matches_globally_for_false_left(self, capatl_model):
         """false R phi is the dual of G phi; results should agree on the example model"""
-        globally_result = _core_capatl_checking(capatl_model, "<{1}, 5>G g")
-        release_result = _core_capatl_checking(capatl_model, "<{1}, 5>false R g")
+        globally_result = _core_capatl_checking(capatl_model, "<{1}>G g")
+        release_result = _core_capatl_checking(capatl_model, "<{1}>false R g")
         assert "error" not in globally_result
         assert "error" not in release_result
         assert extract_states_from_result(
             globally_result
         ) == extract_states_from_result(release_result)
+
+    def test_capatl_synthetic_linear_chain(self, temp_file):
+        """<{1}>F p holds in every state of a 4-state synthetic capCGS chain."""
+        from model_checker.tests.helpers.synthetic_models import (
+            generate_capcgs_linear_chain_model,
+        )
+
+        content = generate_capcgs_linear_chain_model(
+            num_states=4, num_agents=2, prop_names=["p"]
+        )
+        model_path = temp_file(content)
+        result = model_checking("<{1}>F p", model_path)
+        assert "error" not in result, result
+        assert extract_states_from_result(result) == {"s0", "s1", "s2", "s3"}
+        assert ": True" in result.get("initial_state", "")

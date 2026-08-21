@@ -1,4 +1,4 @@
-"""NatATL Recall: scenarios where memory (recall) is required, vs memoryless ATL."""
+"""NatATL Recall: scenarios with pinned Satisfiability (sat and unsat)."""
 
 import pytest
 
@@ -14,36 +14,34 @@ from model_checker.tests.helpers.model_helpers import (
 @pytest.mark.integration
 @pytest.mark.semantic
 class TestNatATLRecallCritical:
-    """Test scenarios where Perfect Recall is essential."""
+    """Pinned Satisfiability cases for NatATL Recall."""
 
-    def test_recall_needed_for_ambiguous_path(self, temp_file):
-        """Verify scenarios where agent must remember past state to choose action."""
+    def test_linear_chain_bound_one_cannot_reach_distant_goal(self, temp_file):
+        """On a 4-state chain, bound-1 natural strategies cannot force F goal at s3.
+
+        Memoryless and recall both return False for <{1},1> F goal on this model;
+        this pins the unsat oracle rather than claiming a recall-only win.
+        """
         content = build_cgs_model_content(
             transitions=[
-                ["I", "a", "0", "0"],  # s0->s0(I), s0->s1(a)
-                ["0", "I", "a", "0"],  # s1->s1(I), s1->s2(a)
-                ["0", "0", "I", "a"],  # s2->s2(I), s2->s3(a)
-                ["0", "0", "0", "I"],  # s3->s3(I)
+                ["I", "a", "0", "0"],
+                ["0", "I", "a", "0"],
+                ["0", "0", "I", "a"],
+                ["0", "0", "0", "I"],
             ],
             state_names=["s0", "s1", "s2", "s3"],
             initial_state="s0",
-            # s0, s1, s2 have 'processing' (1), 'goal' (0)
-            # s3 has 'processing' (0), 'goal' (1)
             labelling=[["1", "0"], ["1", "0"], ["1", "0"], ["0", "1"]],
             num_agents=1,
             prop_names=["processing", "goal"],
         )
         parser = load_cgs_from_content(temp_file, content)
 
-        formula = "<{1}, 1> F goal"
-        result = model_checking(formula, parser.filename)
+        result = model_checking("<{1}, 1> F goal", parser.filename)
 
-        assert (
-            "error" not in result
-        ), f"Model checking returned error: {result.get('error')}"
-        assert "Satisfiability" in result
-        assert isinstance(result["Satisfiability"], bool)
-        assert result.get("Complexity Bound") <= 4
+        assert "error" not in result, result
+        assert result.get("Satisfiability") is False
+        assert result.get("Complexity Bound") == 1
 
     def test_recall_unsatisfiable_formula_returns_false(self, temp_file):
         """When goal is only at a state that is unreachable from s0, Satisfiability is False."""
@@ -55,9 +53,9 @@ class TestNatATLRecallCritical:
             ],
             state_names=["s0", "s1", "s2"],
             initial_state="s0",
-            labelling=[["0"], ["0"], ["1"]],
+            labelling=[["0", "0"], ["0", "0"], ["0", "1"]],
             num_agents=1,
-            prop_names=["goal"],
+            prop_names=["processing", "goal"],
         )
         cgs = load_cgs_from_content(temp_file, content)
         result = model_checking("<{1}, 1>F goal", cgs.filename)

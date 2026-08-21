@@ -36,21 +36,17 @@ class TestCTLTotalTransitions:
 class TestCTLEUAuSemantics:
     """CTL EU and AU operators (explicit semantics tests)."""
 
-    def test_eu_operator_returns_state_set(self, cgs_simple_parser):
-        """E[p U q] (existential until) returns a state set without error."""
+    def test_eu_operator_exact_states(self, cgs_simple_parser):
+        """E[p U q] on atl_2agents_4states_simple is {s0,s1,s3}."""
         result = _core_ctl_checking(cgs_simple_parser, "E[p U q]")
         assert "error" not in result
-        states = extract_states_from_result(result)
-        assert states is not None
-        assert states <= set(cgs_simple_parser.states)
+        assert extract_states_from_result(result) == {"s0", "s1", "s3"}
 
-    def test_au_operator_returns_state_set(self, cgs_simple_parser):
-        """A[p U q] (universal until) returns a state set without error."""
+    def test_au_operator_exact_states(self, cgs_simple_parser):
+        """A[p U q] on atl_2agents_4states_simple is {s1,s3}."""
         result = _core_ctl_checking(cgs_simple_parser, "A[p U q]")
         assert "error" not in result
-        states = extract_states_from_result(result)
-        assert states is not None
-        assert states <= set(cgs_simple_parser.states)
+        assert extract_states_from_result(result) == {"s1", "s3"}
 
 
 class TestCTLErrorHandling:
