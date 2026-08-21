@@ -70,7 +70,7 @@ class IATLParser(BaseLogicParser):
         self.build()
 
     def t_RELEASE(self, t):
-        r"R|release\b"
+        r"R(?![a-zA-Z0-9_])|release\b"
         t.value = "R"
         return t
 

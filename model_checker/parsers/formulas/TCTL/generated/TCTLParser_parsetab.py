@@ -5,7 +5,7 @@ _tabversion = "3.10"
 
 _lr_method = "LALR"
 
-_lr_signature = "rightNOTAND CONST DOT EVENTUALLY EXIST FALSE FORALL GEQ GLOBALLY GREATER IMPLIES LEQ LESS LPAREN NEXT NOT OR PROP RPAREN TIME_SEP TRUE UNTILexpression : FALSE\n        | TRUEexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : FORALL expression UNTIL expression\n        | EXIST expression UNTIL expression\n        | FORALL LPAREN expression UNTIL expression RPAREN\n        | EXIST LPAREN expression UNTIL expression RPARENexpression : FORALL GLOBALLY expression\n        | FORALL EVENTUALLY expression\n        | EXIST GLOBALLY expression\n        | EXIST EVENTUALLY expressionexpression : NOT expressionexpression : LPAREN expression RPARENexpression : PROP DOT expressionexpression : expression TIME_SEP expressionexpression : PROPexpression : PROP LEQ CONST\n        | PROP LESS CONST\n        | PROP GEQ CONST\n        | PROP GREATER CONST\n        "
+_lr_signature = "rightIMPLIESleftORleftANDrightNOTAND CONST DOT EVENTUALLY EXIST FALSE FORALL GEQ GLOBALLY GREATER IMPLIES LEQ LESS LPAREN NEXT NOT OR PROP RPAREN TIME_SEP TRUE UNTILexpression : FALSE\n        | TRUEexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : FORALL expression UNTIL expression\n        | EXIST expression UNTIL expression\n        | FORALL LPAREN expression UNTIL expression RPAREN\n        | EXIST LPAREN expression UNTIL expression RPARENexpression : FORALL GLOBALLY expression\n        | FORALL EVENTUALLY expression\n        | EXIST GLOBALLY expression\n        | EXIST EVENTUALLY expressionexpression : NOT expressionexpression : LPAREN expression RPARENexpression : PROP DOT expressionexpression : expression TIME_SEP expressionexpression : PROPexpression : PROP LEQ CONST\n        | PROP LESS CONST\n        | PROP GEQ CONST\n        | PROP GREATER CONST\n        "
 
 _lr_action_items = {
     "FALSE": (
@@ -424,7 +424,7 @@ _lr_action_items = {
             9,
             9,
             -14,
-            9,
+            -3,
             9,
             9,
             9,
@@ -490,8 +490,8 @@ _lr_action_items = {
             10,
             10,
             -14,
-            10,
-            10,
+            -3,
+            -4,
             10,
             10,
             10,
@@ -556,8 +556,8 @@ _lr_action_items = {
             11,
             11,
             -14,
-            11,
-            11,
+            -3,
+            -4,
             11,
             11,
             11,
@@ -622,9 +622,9 @@ _lr_action_items = {
             12,
             12,
             -14,
-            12,
-            12,
-            12,
+            -3,
+            -4,
+            -5,
             12,
             12,
             12,
@@ -928,7 +928,7 @@ _lr_productions = [
         3,
         "p_expression_binary",
         "parser.py",
-        151,
+        156,
     ),
     (
         "expression -> expression OR expression",
@@ -936,7 +936,7 @@ _lr_productions = [
         3,
         "p_expression_binary",
         "parser.py",
-        152,
+        157,
     ),
     (
         "expression -> expression IMPLIES expression",
@@ -944,7 +944,7 @@ _lr_productions = [
         3,
         "p_expression_binary",
         "parser.py",
-        153,
+        158,
     ),
     (
         "expression -> FORALL expression UNTIL expression",
@@ -952,7 +952,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        157,
+        162,
     ),
     (
         "expression -> EXIST expression UNTIL expression",
@@ -960,7 +960,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        158,
+        163,
     ),
     (
         "expression -> FORALL LPAREN expression UNTIL expression RPAREN",
@@ -968,7 +968,7 @@ _lr_productions = [
         6,
         "p_expression_ternary",
         "parser.py",
-        159,
+        164,
     ),
     (
         "expression -> EXIST LPAREN expression UNTIL expression RPAREN",
@@ -976,7 +976,7 @@ _lr_productions = [
         6,
         "p_expression_ternary",
         "parser.py",
-        160,
+        165,
     ),
     (
         "expression -> FORALL GLOBALLY expression",
@@ -984,7 +984,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        167,
+        172,
     ),
     (
         "expression -> FORALL EVENTUALLY expression",
@@ -992,7 +992,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        168,
+        173,
     ),
     (
         "expression -> EXIST GLOBALLY expression",
@@ -1000,7 +1000,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        169,
+        174,
     ),
     (
         "expression -> EXIST EVENTUALLY expression",
@@ -1008,7 +1008,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        170,
+        175,
     ),
     (
         "expression -> NOT expression",
@@ -1016,7 +1016,7 @@ _lr_productions = [
         2,
         "p_expression_not",
         "parser.py",
-        174,
+        179,
     ),
     (
         "expression -> LPAREN expression RPAREN",
@@ -1024,7 +1024,7 @@ _lr_productions = [
         3,
         "p_expression_group",
         "parser.py",
-        178,
+        183,
     ),
     (
         "expression -> PROP DOT expression",
@@ -1032,7 +1032,7 @@ _lr_productions = [
         3,
         "p_expression_freeze",
         "parser.py",
-        182,
+        187,
     ),
     (
         "expression -> expression TIME_SEP expression",
@@ -1040,16 +1040,16 @@ _lr_productions = [
         3,
         "p_expression_clock_constraint_on_expr",
         "parser.py",
-        186,
+        191,
     ),
-    ("expression -> PROP", "expression", 1, "p_expression_prop", "parser.py", 190),
+    ("expression -> PROP", "expression", 1, "p_expression_prop", "parser.py", 195),
     (
         "expression -> PROP LEQ CONST",
         "expression",
         3,
         "p_expression_time",
         "parser.py",
-        194,
+        199,
     ),
     (
         "expression -> PROP LESS CONST",
@@ -1057,7 +1057,7 @@ _lr_productions = [
         3,
         "p_expression_time",
         "parser.py",
-        195,
+        200,
     ),
     (
         "expression -> PROP GEQ CONST",
@@ -1065,7 +1065,7 @@ _lr_productions = [
         3,
         "p_expression_time",
         "parser.py",
-        196,
+        201,
     ),
     (
         "expression -> PROP GREATER CONST",
@@ -1073,6 +1073,6 @@ _lr_productions = [
         3,
         "p_expression_time",
         "parser.py",
-        197,
+        202,
     ),
 ]

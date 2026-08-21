@@ -85,12 +85,12 @@ class OLParser(BaseLogicParser):
     t_DEMONIC = OL_DEMONIC_TOKEN
 
     def t_RELEASE(self, t):
-        r"R|release\b"
+        r"R(?![a-zA-Z0-9_])|release\b"
         t.value = "R"
         return t
 
     def t_WEAK(self, t):
-        r"W|weak\b"
+        r"W(?![a-zA-Z0-9_])|weak\b"
         t.value = "W"
         return t
 

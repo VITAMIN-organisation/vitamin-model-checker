@@ -138,7 +138,12 @@ class TOLParser(BaseLogicParser):
                 "PROP",
             ]
         )
-        self.precedence = (("right", "NOT"),)
+        self.precedence = (
+            ("right", "IMPLIES"),
+            ("left", "OR"),
+            ("left", "AND"),
+            ("right", "NOT"),
+        )
         self.build()
 
     # --- Specific Tokens ---

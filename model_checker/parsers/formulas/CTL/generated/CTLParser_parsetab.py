@@ -1018,7 +1018,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        87,
+        89,
     ),
     (
         "expression -> EXIST expression UNTIL expression",
@@ -1026,7 +1026,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        88,
+        90,
     ),
     (
         "expression -> FORALL LPAREN expression UNTIL expression RPAREN",
@@ -1034,7 +1034,7 @@ _lr_productions = [
         6,
         "p_expression_ternary",
         "parser.py",
-        89,
+        91,
     ),
     (
         "expression -> EXIST LPAREN expression UNTIL expression RPAREN",
@@ -1042,7 +1042,7 @@ _lr_productions = [
         6,
         "p_expression_ternary",
         "parser.py",
-        90,
+        92,
     ),
     (
         "expression -> FORALL LBRACKET expression UNTIL expression RBRACKET",
@@ -1050,7 +1050,7 @@ _lr_productions = [
         6,
         "p_expression_ternary",
         "parser.py",
-        91,
+        93,
     ),
     (
         "expression -> EXIST LBRACKET expression UNTIL expression RBRACKET",
@@ -1058,7 +1058,7 @@ _lr_productions = [
         6,
         "p_expression_ternary",
         "parser.py",
-        92,
+        94,
     ),
     (
         "expression -> FORALL GLOBALLY expression",
@@ -1066,7 +1066,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        99,
+        101,
     ),
     (
         "expression -> FORALL NEXT expression",
@@ -1074,7 +1074,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        100,
+        102,
     ),
     (
         "expression -> FORALL EVENTUALLY expression",
@@ -1082,7 +1082,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        101,
+        103,
     ),
     (
         "expression -> EXIST GLOBALLY expression",
@@ -1090,7 +1090,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        102,
+        104,
     ),
     (
         "expression -> EXIST NEXT expression",
@@ -1098,7 +1098,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        103,
+        105,
     ),
     (
         "expression -> EXIST EVENTUALLY expression",
@@ -1106,7 +1106,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        104,
+        106,
     ),
     (
         "expression -> expression AND expression",
@@ -1138,7 +1138,7 @@ _lr_productions = [
         3,
         "p_expression_group_bracket",
         "parser.py",
-        108,
+        110,
     ),
     (
         "expression -> NOT expression",

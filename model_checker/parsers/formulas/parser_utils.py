@@ -5,7 +5,6 @@ Coalition checks, lexer token checks, and pre-parse validation live here.
 
 import re
 from collections.abc import Sequence
-from typing import Any
 
 from model_checker.parsers.syntax_patterns import (
     AGENT_LIST,
@@ -20,7 +19,6 @@ from model_checker.parsers.syntax_patterns import (
 )
 
 PROPOSITION_TOKEN_PATTERN = PROPOSITION_TOKEN
-PROPOSITION_AST_PATTERN = PROPOSITION_FULL_RE
 
 _INVALID_PROPOSITION_MSG = "expected identifier matching [a-zA-Z][a-zA-Z0-9_]*"
 
@@ -393,7 +391,6 @@ def validate_ast(
 # Re-export for CGS modules that already import from parser_utils.
 __all__ = [
     "CoalitionValueError",
-    "PROPOSITION_AST_PATTERN",
     "BOOLEAN_AST_OPERATORS",
     "PROPOSITION_TOKEN_PATTERN",
     "natsl_temporal_atom_from_parsed_formula",

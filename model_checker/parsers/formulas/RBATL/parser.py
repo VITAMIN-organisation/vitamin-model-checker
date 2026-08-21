@@ -34,6 +34,7 @@ _RBATL_VALID_OPERATORS = (
     frozenset({"U", "X", "F", "G", "UNTIL", "NEXT", "EVENTUALLY", "GLOBALLY"})
     | BOOLEAN_AST_OPERATORS
 )
+_DEFAULT_BOUND_LIMIT = 1_000_000
 
 
 class RBATLParser(BaseLogicParser):
@@ -57,7 +58,7 @@ class RBATLParser(BaseLogicParser):
             ]
         )
         self.max_coalition = 0
-        self.bound_limit = 1_000_000
+        self.bound_limit = _DEFAULT_BOUND_LIMIT
         self.build()
 
     t_PROP = PROPOSITION_TOKEN_PATTERN
@@ -84,9 +85,7 @@ class RBATLParser(BaseLogicParser):
 
     def parse(self, formula, n_agent=0, max_bound=None, **kwargs):
         self.max_coalition = n_agent
-        if max_bound is not None:
-            self.bound_limit = max_bound
-
+        self.bound_limit = max_bound if max_bound is not None else _DEFAULT_BOUND_LIMIT
         return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:

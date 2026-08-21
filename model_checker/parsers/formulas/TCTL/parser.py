@@ -5,7 +5,7 @@ What it handles:
 - AST generation using specialized Expr nodes.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from model_checker.parsers.formulas.parser_utils import run_common_prechecks
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
@@ -119,7 +119,12 @@ class TCTLParser(BaseLogicParser):
             ]
         )
 
-        self.precedence = (("right", "NOT"),)
+        self.precedence = (
+            ("right", "IMPLIES"),
+            ("left", "OR"),
+            ("left", "AND"),
+            ("right", "NOT"),
+        )
         self.build()
 
     # --- Specific Tokens ---

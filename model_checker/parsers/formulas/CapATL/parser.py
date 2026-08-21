@@ -93,16 +93,16 @@ class CapATLParser(BaseLogicParser):
 
     # --- Specific Tokens ---
     def t_RELEASE(self, t):
-        r"R|release\b"
+        r"R(?![a-zA-Z0-9_])|release\b"
         t.value = "R"
         return t
 
     def t_IS(self, t):
-        r"is|IS"
+        r"is\b|IS\b"
         return t
 
     def t_KCAP(self, t):
-        r"K|kcap"
+        r"K(?![a-zA-Z0-9_])|kcap\b"
         t.value = "K"
         return t
 

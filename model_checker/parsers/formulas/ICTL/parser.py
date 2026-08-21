@@ -62,17 +62,17 @@ class ICTLParser(BaseLogicParser):
     t_PROP = PROPOSITION_TOKEN_PATTERN
 
     def t_FORALL(self, t):
-        r"A|forall\b"
+        r"A(?=[FGXUR\s(\[]|$)|\bforall\b"
         t.value = "A"
         return t
 
     def t_EXIST(self, t):
-        r"E|exist\b"
+        r"E(?=[FGXUR\s(\[]|$)|\bexist\b"
         t.value = "E"
         return t
 
     def t_RELEASE(self, t):
-        r"R|release\b"
+        r"R(?![a-zA-Z0-9_])|release\b"
         t.value = "R"
         return t
 

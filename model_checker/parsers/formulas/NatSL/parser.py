@@ -52,11 +52,11 @@ class NatSLParser(BaseLogicParser):
     t_BOUND = r"\{\d+\}"
 
     def t_EXIST(self, t):
-        r"E"
+        r"E(?![a-zA-Z0-9_])"
         return t
 
     def t_FORALL(self, t):
-        r"A"
+        r"A(?![a-zA-Z0-9_])"
         return t
 
     def t_AND(self, t):

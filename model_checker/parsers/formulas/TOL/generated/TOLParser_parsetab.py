@@ -5,7 +5,7 @@ _tabversion = "3.10"
 
 _lr_method = "LALR"
 
-_lr_signature = "rightNOTAND CONST DEMONIC DOT EVENTUALLY FALSE GEQ GLOBALLY GREATER IMPLIES LEQ LESS LPAREN NEXT NOT OR PROP RELEASE RPAREN TIME_SEP TRUE UNTIL WEAKexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : DEMONIC expression UNTIL expression\n        | DEMONIC expression WEAK expression\n        | DEMONIC expression RELEASE expressionexpression : DEMONIC GLOBALLY expression\n        | DEMONIC NEXT expression\n        | DEMONIC EVENTUALLY expressionexpression : NOT expressionexpression : LPAREN expression RPARENexpression : FALSE\n        | TRUEexpression : PROP DOT expressionexpression : expression TIME_SEP expressionexpression : PROP LEQ CONST\n        | PROP LESS CONST\n        | PROP GEQ CONST\n        | PROP GREATER CONST\n        expression : PROP"
+_lr_signature = "rightIMPLIESleftORleftANDrightNOTAND CONST DEMONIC DOT EVENTUALLY FALSE GEQ GLOBALLY GREATER IMPLIES LEQ LESS LPAREN NEXT NOT OR PROP RELEASE RPAREN TIME_SEP TRUE UNTIL WEAKexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : DEMONIC expression UNTIL expression\n        | DEMONIC expression WEAK expression\n        | DEMONIC expression RELEASE expressionexpression : DEMONIC GLOBALLY expression\n        | DEMONIC NEXT expression\n        | DEMONIC EVENTUALLY expressionexpression : NOT expressionexpression : LPAREN expression RPARENexpression : FALSE\n        | TRUEexpression : PROP DOT expressionexpression : expression TIME_SEP expressionexpression : PROP LEQ CONST\n        | PROP LESS CONST\n        | PROP GEQ CONST\n        | PROP GREATER CONST\n        expression : PROP"
 
 _lr_action_items = {
     "DEMONIC": (
@@ -306,7 +306,7 @@ _lr_action_items = {
             8,
             -10,
             8,
-            8,
+            -1,
             8,
             8,
             8,
@@ -358,8 +358,8 @@ _lr_action_items = {
             9,
             -10,
             9,
-            9,
-            9,
+            -1,
+            -2,
             9,
             9,
             9,
@@ -410,8 +410,8 @@ _lr_action_items = {
             10,
             -10,
             10,
-            10,
-            10,
+            -1,
+            -2,
             10,
             10,
             10,
@@ -462,9 +462,9 @@ _lr_action_items = {
             11,
             -10,
             11,
-            11,
-            11,
-            11,
+            -1,
+            -2,
+            -3,
             11,
             11,
             11,
@@ -814,7 +814,7 @@ _lr_productions = [
         3,
         "p_expression_binary",
         "parser.py",
-        180,
+        185,
     ),
     (
         "expression -> expression OR expression",
@@ -822,7 +822,7 @@ _lr_productions = [
         3,
         "p_expression_binary",
         "parser.py",
-        181,
+        186,
     ),
     (
         "expression -> expression IMPLIES expression",
@@ -830,7 +830,7 @@ _lr_productions = [
         3,
         "p_expression_binary",
         "parser.py",
-        182,
+        187,
     ),
     (
         "expression -> DEMONIC expression UNTIL expression",
@@ -838,7 +838,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        186,
+        191,
     ),
     (
         "expression -> DEMONIC expression WEAK expression",
@@ -846,7 +846,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        187,
+        192,
     ),
     (
         "expression -> DEMONIC expression RELEASE expression",
@@ -854,7 +854,7 @@ _lr_productions = [
         4,
         "p_expression_ternary",
         "parser.py",
-        188,
+        193,
     ),
     (
         "expression -> DEMONIC GLOBALLY expression",
@@ -862,7 +862,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        199,
+        204,
     ),
     (
         "expression -> DEMONIC NEXT expression",
@@ -870,7 +870,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        200,
+        205,
     ),
     (
         "expression -> DEMONIC EVENTUALLY expression",
@@ -878,7 +878,7 @@ _lr_productions = [
         3,
         "p_expression_unary",
         "parser.py",
-        201,
+        206,
     ),
     (
         "expression -> NOT expression",
@@ -886,7 +886,7 @@ _lr_productions = [
         2,
         "p_expression_not",
         "parser.py",
-        212,
+        217,
     ),
     (
         "expression -> LPAREN expression RPAREN",
@@ -894,17 +894,17 @@ _lr_productions = [
         3,
         "p_expression_group",
         "parser.py",
-        216,
+        221,
     ),
-    ("expression -> FALSE", "expression", 1, "p_expression_boolean", "parser.py", 220),
-    ("expression -> TRUE", "expression", 1, "p_expression_boolean", "parser.py", 221),
+    ("expression -> FALSE", "expression", 1, "p_expression_boolean", "parser.py", 225),
+    ("expression -> TRUE", "expression", 1, "p_expression_boolean", "parser.py", 226),
     (
         "expression -> PROP DOT expression",
         "expression",
         3,
         "p_expression_freeze",
         "parser.py",
-        225,
+        230,
     ),
     (
         "expression -> expression TIME_SEP expression",
@@ -912,7 +912,7 @@ _lr_productions = [
         3,
         "p_expression_clock_constraint_on_expr",
         "parser.py",
-        229,
+        234,
     ),
     (
         "expression -> PROP LEQ CONST",
@@ -920,7 +920,7 @@ _lr_productions = [
         3,
         "p_expression_time_atomic_constraint",
         "parser.py",
-        233,
+        238,
     ),
     (
         "expression -> PROP LESS CONST",
@@ -928,7 +928,7 @@ _lr_productions = [
         3,
         "p_expression_time_atomic_constraint",
         "parser.py",
-        234,
+        239,
     ),
     (
         "expression -> PROP GEQ CONST",
@@ -936,7 +936,7 @@ _lr_productions = [
         3,
         "p_expression_time_atomic_constraint",
         "parser.py",
-        235,
+        240,
     ),
     (
         "expression -> PROP GREATER CONST",
@@ -944,7 +944,7 @@ _lr_productions = [
         3,
         "p_expression_time_atomic_constraint",
         "parser.py",
-        236,
+        241,
     ),
-    ("expression -> PROP", "expression", 1, "p_expression_prop", "parser.py", 241),
+    ("expression -> PROP", "expression", 1, "p_expression_prop", "parser.py", 246),
 ]

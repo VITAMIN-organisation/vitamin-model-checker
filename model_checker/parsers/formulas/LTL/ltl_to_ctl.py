@@ -8,8 +8,12 @@ def ltl_to_ctl(ltl_formula):
     temporal operators and wraps bare U occurrences so downstream components
     that expect an A-prefixed shape can accept the string.
     """
-    # Prefix X/F/G with A when not already prefixed by A or E
-    ltl_formula = re.sub(r"(?<![AE])([XFG])", r"A\1", ltl_formula)
+    # Prefix X/F/G with A when not already prefixed by A or E, respecting token boundaries
+    pattern = r"(?<![AE])(?<![a-z0-9_])([XFG])(?=[XFG\s(!]|$|[a-z](?![a-zA-Z0-9_]))"
+    prev = None
+    while prev != ltl_formula:
+        prev = ltl_formula
+        ltl_formula = re.sub(pattern, r"A\1", ltl_formula)
 
     # Wrap bare U occurrences with A(...) on both sides; tolerate simple atoms or parens
     until_pattern = (

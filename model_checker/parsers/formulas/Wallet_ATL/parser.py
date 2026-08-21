@@ -272,8 +272,7 @@ class Wallet_ATLParser(BaseLogicParser):
 
         if n_agent is not None and max_coalition is None:
             max_coalition = n_agent
-        if max_coalition is not None:
-            self.MAX_COALITION = max_coalition
+        self.MAX_COALITION = max_coalition if max_coalition is not None else 0
 
         try:
             res = super().parse(normalized, **kwargs)

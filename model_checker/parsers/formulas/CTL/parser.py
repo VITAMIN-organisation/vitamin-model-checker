@@ -74,11 +74,13 @@ class CTLParser(BaseLogicParser):
     t_PROP = PROPOSITION_TOKEN_PATTERN
 
     def t_FORALL(self, t):
-        r"A|forall"
+        r"A(?=[FGXU\s(\[]|$)|\bforall\b"
+        t.value = "A"
         return t
 
     def t_EXIST(self, t):
-        r"E|exist"
+        r"E(?=[FGXU\s(\[]|$)|\bexist\b"
+        t.value = "E"
         return t
 
     # --- Grammar Rules ---
