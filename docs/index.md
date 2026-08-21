@@ -10,13 +10,21 @@ formats, logic implementations, or tests.
 |---|---|
 | Understand the package structure | [Architecture](architecture.md) |
 | Add or integrate a new logic | [Adding a New Logic](adding_a_new_logic.md) |
-| Understand model and formula files | [File Formats](file_formats.md) |
+| Author model and formula files | [File Formats](file_formats.md) |
+| Look up syntax and theory vs implementation | [Logic Knowledge Base](logic_knowledge_base.md) |
+| Audit ICTL algorithm correctness | [ICTL Algorithm](ICTL/algorithm.md) |
+| Audit IATL algorithm correctness | [IATL Algorithm](IATL/algorithm.md) |
 | See how this repo fits with VMI and Workbench | [VITAMIN Stack](vitamin-stack.md) |
-| Look up formula syntax for a logic | [Logic Knowledge Base](logic_knowledge_base.md) |
-| ICTL theory, algorithm, and correctness | [ICTL Algorithm](ICTL/algorithm.md) |
 | Contribute to this repository | [Contributing](contributing.md) |
 | Browse Python package docs | [API Overview](api/overview.md) |
 | Check deployment ports | [Deployment Ports](deployment-ports.md) |
+
+Doc roles:
+
+- **Knowledge base** - theory, surface syntax, short theory/impl tables.
+- **Algorithm pages** (`docs/<Logic>/algorithm.md`) - denotations, validation,
+  pipelines, and what the code actually computes.
+- **File formats** - how to write `.txt` models and formulas.
 
 ## What This Repository Owns
 

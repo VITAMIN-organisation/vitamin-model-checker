@@ -50,9 +50,11 @@ model_checker/
 ### Parser Layer
 
 Model parsers read `.txt` model files and build in-memory game structures.
-Current built-in model types are:
+Current built-in model types include:
 
 - `CGS` - standard concurrent game structures
+- `BirelationalMatrix` - ICTL relation-labelled matrices (`0`/`R`/`P`/`P,R`)
+- `BCGS` - CGS plus boolean `Preorder` (IATL)
 - `costCGS` - CGS with action/transition costs
 - `capCGS` - CGS with agent capacities
 - `WalletCGS` - CGS with per-agent wallet balances (Wallet_ATL)
@@ -60,7 +62,8 @@ Current built-in model types are:
 
 The checker ships 20 logics. Recent additions integrated via VMI: `Wallet_ATL`,
 `TOL`, `TCTL`, `ICTL`, and `IATL`. See
-[Logic Knowledge Base](logic_knowledge_base.md) for syntax details.
+[Logic Knowledge Base](logic_knowledge_base.md) for syntax details and
+[File Formats](file_formats.md) for model file layout.
 
 Formula parsers live under `parsers/formulas/<Logic>/` and parse formulas into
 trees used by the algorithms. Most are built with PLY.

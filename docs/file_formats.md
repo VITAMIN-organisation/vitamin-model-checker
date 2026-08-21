@@ -1,13 +1,16 @@
 # File Formats
 
-This page describes the model and formula files used by
-`vitamin-model-checker`. It is written for people creating examples, fixtures,
-or VMI bundles.
+This page describes the **model and formula file conventions** used by
+`vitamin-model-checker`. It is for people creating examples, fixtures, or VMI
+bundles. It does not define operator denotations; those live in
+[logic_knowledge_base.md](logic_knowledge_base.md) and per-logic
+`docs/<Logic>/algorithm.md` pages.
 
 ## Model Files
 
-Model files are plain `.txt` files. The parser detects the model type from the
-section headers.
+Model files are plain `.txt` files. Generic loaders detect a type from section
+headers. When checking a formula, the engine also uses the logic metadata
+`model_type` (for example ICTL always loads `BirelationalMatrix`).
 
 Use a simple file name such as:
 
@@ -18,9 +21,11 @@ cotl_model.txt
 
 ## Supported Model Types
 
-| Model type | Used by | What it adds |
+| Model type | Used by | What it adds / how detected |
 |---|---|---|
-| `CGS` | ATL, CTL, LTL, NatATL, NatSL, ICTL, IATL | Standard concurrent game structure. |
+| `CGS` | ATL, CTL, LTL, NatATL, NatSL, ... | Standard concurrent game structure (default when no extension headers). |
+| `BirelationalMatrix` | ICTL | Same sections as CGS; `Transition` cells are `0`/`R`/`P`/`P,R`. Selected via ICTL metadata (not by a unique header). |
+| `BCGS` | IATL | CGS transitions plus boolean `Preorder` section (detected when `Preorder` is present). |
 | `costCGS` | OATL, OL, RBATL, RABATL, COTL | Cost/resource information for actions and transitions. |
 | `capCGS` | CapATL | Capability declarations and assignments. |
 | `WalletCGS` | Wallet_ATL | Per-state wallet balances for each agent. |
@@ -158,6 +163,41 @@ s1: 80 60
 Use this format for Wallet_ATL models. Action strings can include wallet-aware
 codes such as `D20` (deposit) or `B50` (bid).
 
+## BirelationalMatrix Sections (ICTL)
+
+ICTL reuses the CGS section layout (`Transition`, `Name_State`,
+`Initial_State`, `Atomic_propositions`, `Labelling`; `Number_of_agents` optional
+and defaults to `1`). Cells in `Transition` are relation labels, not joint
+actions:
+
+| Cell | Meaning |
+|---|---|
+| `0` | no relation |
+| `R` | transition only |
+| `P` | knowledge preorder only |
+| `P,R` | both (typical diagonal) |
+
+Prefer `P` or `P,R` on the diagonal. Bare `*` is a CGS idle convention and is
+not a valid ICTL preorder marker. Full validation (C1/C2 and frame rules):
+[ICTL/algorithm.md](ICTL/algorithm.md).
+
+## BCGS Sections (IATL)
+
+IATL models are CGS files with an extra boolean `Preorder` matrix:
+
+```text
+Transition
+...
+Preorder
+1 1
+0 1
+...
+```
+
+`Transition` cells use ordinary joint-action strings. `Preorder` entries are
+`0` or `1`. Detected when a `Preorder` header is present. Details:
+[IATL/algorithm.md](IATL/algorithm.md).
+
 ## timedCGS Sections
 
 `timedCGS` extends costCGS with three timed sections:
@@ -209,8 +249,8 @@ The first formula is treated as the primary formula by tools that need one.
 | COTL | `<1,2><5> G p` | costCGS |
 | CapATL | `<{1}, 3> F (K1 p)` | capCGS |
 | Wallet_ATL | `<<1>>X auction_active` | WalletCGS |
-| ICTL | `EX e` or `AG (p -> EF q)` | Birelational matrix (see [ICTL/algorithm.md](ICTL/algorithm.md)) |
-| IATL | `<1>G a` or `[1,2]F goal` | CGS |
+| ICTL | `EX e` or `AG (p -> EF q)` | BirelationalMatrix |
+| IATL | `<1>G a` or `[1,2]F goal` | BCGS |
 | TCTL | `AG a` or `EF crossing` | timedCGS |
 | TOL | `{J5}F a` | timedCGS |
 

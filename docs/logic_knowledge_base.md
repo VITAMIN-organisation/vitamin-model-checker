@@ -2,12 +2,18 @@
 
 ## Overview
 
-This document provides a comprehensive knowledge base for all temporal logics implemented in the VITAMIN model checker. For each logic, it covers:
+This is the **cross-logic theory and syntax map** for VITAMIN. For each logic it
+covers:
 
-1.  **Theoretical Background**: Standard syntax and semantics from literature (e.g., Baier/Katoen and Jamroga).
-2.  **Current Implementation**: Detailed grammar, supported keywords, and validation rules in VITAMIN.
-3.  **Comparison**: Mapping between formal theory and implementation.
-4.  **Model Syntax**: Requirements for writing models compatible with the logic.
+1. **Theoretical background** - standard syntax and semantics from the literature.
+2. **Current implementation** - surface grammar, model type, and how theory maps to code.
+3. **Comparison** - short theory vs implementation table.
+4. **Shared policies** - empty coalitions, proposition tokens, and model formats.
+
+For denotations, fixpoints, validation proofs, and pipeline details, use the
+per-logic `docs/<Logic>/algorithm.md` pages (for example
+[ICTL/algorithm.md](ICTL/algorithm.md)). For how to author `.txt` models, use
+[file_formats.md](file_formats.md).
 
 **Logic names:** Full names are used only for logics defined in the VITAMIN paper and standard references (CTL, LTL, ATL). Other implemented logics (OATL, OL, COTL, etc.) are listed by acronym only; their expansions are not fixed in the project literature.
 
@@ -107,6 +113,12 @@ CTL is a branching-time logic defined over computation trees. Formulas are evalu
 - `EF p`: Eventually p (reachability).
 - `AG (p -> AF q)`: Always if p, then eventually q on all paths (liveness/response).
 
+**Traces (optional):** When `generate_trace=True`, the returned path is a
+**reachability path into or out of the denotation** of the root formula. It is
+**not** a full CTL path witness/counterexample (for example it need not exhibit
+a violating suffix for `AG`, nor a lassopath for `EG`/`AF`). Treat traces as
+debugging hints only; trust the satisfying state set for semantics.
+
 ### Current Implementation
 
 **Parser Location:** `model_checker/parsers/formulas/CTL/parser.py`
@@ -150,6 +162,8 @@ E (p U [q && AG r])
 
 In VITAMIN, LTL is implemented as **game-theoretic sure-win checking** over CGS models: the checker searches for a strategy profile that guarantees the formula on all plays consistent with that strategy (via strategy pruning and CTL-backed evaluation), not classical path-by-path LTL model checking on a single linear trace.
 
+> **Not classical path-LTL.** Do not interpret a True/False result as "every / some path of the unreduced CGS satisfies LTL phi". The engine enumerates natural strategies (default complexity bound `k=5` for the grand coalition), prunes the CGS, then checks an **A-prefixed CTL-shaped rewrite** of the formula. The rewrite (`ltl_to_ctl`) is a parsing bridge, not a semantics-preserving embedding of LTL into CTL.
+
 ### Current Implementation
 
 **Parser Location:** `model_checker/parsers/formulas/LTL/parser.py`
@@ -157,10 +171,10 @@ In VITAMIN, LTL is implemented as **game-theoretic sure-win checking** over CGS 
 **Supported Syntax:**
 1.  **Operators**: `X`, `F`, `G`, `U` (and keyword aliases).
 2.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
-3.  **No quantifiers**: `E`/`A` and coalition brackets are rejected.
+3.  **No quantifiers**: `E`/`A` and coalition brackets are rejected in the LTL surface language (the backend injects `A` after rewrite).
 
 **Validation Rules:**
-- No coalitions or path quantifiers.
+- No coalitions or path quantifiers in user input.
 - `R` and `W` are **not** in the LTL surface syntax.
 
 **Formula Examples:**
@@ -175,9 +189,10 @@ p U q
 | Aspect | Classical path-LTL | VITAMIN implementation |
 | :--- | :--- | :--- |
 | **Semantics** | Single infinite path | Sure-win / strategy-based over CGS |
-| **Path quantifiers** | None | None (enforced) |
+| **Path quantifiers** | None | User cannot write `A`/`E`; rewrite inserts `A` |
 | **Temporal ops** | X, F, G, U, R, W | `X`, `F`, `G`, `U` only |
 | **Release / Weak** | R, W | Not supported |
+| **Strategy bound** | N/A | Default `k=5` natural strategies |
 
 ---
 
@@ -675,8 +690,7 @@ implication and negation are intuitionistic: `phi -> psi` is checked at all
 `P`-refinements of the current state.
 
 **Well-behaved frames (paper):** confluence constraints **C1** and **C2** between
-`P` and `R`. This implementation also enforces **C3** (not in EUMAS25b); see
-[ICTL/algorithm.md](ICTL/algorithm.md).
+`P` and `R` (EUMAS Def. 1). See [ICTL/algorithm.md](ICTL/algorithm.md).
 
 **Standard syntax (state formulas):**
 - Boolean: `->`, `not`, `/\`, `\/` (implication is primitive; no excluded middle).
@@ -694,21 +708,22 @@ Classical CTL complement dualities (for example `AF phi` as `S \\ EG(~phi)`) are
 
 ### Current Implementation
 
-**Parser location:** `model_checker/parsers/formulas/ICTL/parser.py`
+**Parser:** `model_checker/parsers/formulas/ICTL/parser.py` (`ICTLParser`)
 
-**Checker location:** `model_checker/algorithms/explicit/ICTL/`
+**Checker:** `model_checker/algorithms/explicit/ICTL/`
 
-**Model loader:** `model_checker/algorithms/explicit/ICTL/util/graph.read_file` (dedicated
-`N x N` matrix format; not the standard CGS parser). Cell labels: `0`, `R`, `P`,
-`P,R`, `*` on the diagonal.
+**Model loader:** `parsers/game_structures/birelational_matrix/`
+(`BirelationalMatrix`, a `CGS` subclass). Cell labels: `0`, `R`, `P`, `P,R`.
+Diagonal cells should be `P` or `P,R` so reflexivity of `P` holds. Metadata:
+`model_type: "BirelationalMatrix"`.
 
 **Supported syntax:**
 1. **Quantifiers:** `E` / `exist`, `A` / `forall`.
 2. **Temporal:** `X`, `U`, `R`; sugar `F` / `G` (also `eventually`, `globally`, etc.).
 3. **Boolean:** `&&`, `||`, `!` / `not`, `->` / `implies`.
-4. **Propositions:** dedicated lexer pattern so `EX`, `AG`, etc. are not atoms; mixed-case
-   names such as `Goal` are supported. Single uppercase letters (for example `P`) are not
-   valid proposition tokens.
+4. **Propositions:** standard alphabet `[a-zA-Z][a-zA-Z0-9_]*`. Path/temporal
+   tokens (`E`, `A`, `X`, `F`, `G`, `U`, `R`, keywords) are lexed separately so
+   forms such as `EX` / `AG` are operators, not atoms.
 
 **Semantic highlights (set-based model checking):**
 - `phi -> psi`, `not phi`: upward closure (`^up`) along `P`.
@@ -728,16 +743,15 @@ E p R q
 !(e -> h)
 ```
 
-**Model type:** birelational matrix. VMI metadata lists `CGS` for compatibility; see
-[ICTL/algorithm.md](ICTL/algorithm.md) for validation (C1/C2/C3), denotations, and the
-model-checking algorithm.
+**Model type:** `BirelationalMatrix`. Algorithm, C1/C2 validation, and denotations:
+[ICTL/algorithm.md](ICTL/algorithm.md).
 
 ### Comparison: Theory vs Implementation
 
 | Aspect | Theory (EUMAS25b) | Implementation |
 | :--- | :--- | :--- |
-| **Model** | Birelational frame + monotone valuation | Matrix loader + `check_conditions_hold` |
-| **Frame constraints** | C1, C2 (well-behaved) | C1, C2, plus **C3** (stricter) |
+| **Model** | Birelational frame + monotone valuation | `BirelationalMatrix` + `check_conditions_hold` |
+| **Frame constraints** | C1, C2 (well-behaved) | C1, C2 (EUMAS Def. 1); no paper C3 |
 | **`->`, `not`** | Intuitionistic (`^up`) | `handle_implies`, `handle_not` with `^up` |
 | **`AX`** | `Pre_forall([[phi]])` | `handle_ax` = `Pre_forall` (no `^up`) |
 | **`AF` / `AG`** | `A(T U phi)` / `A(bottom R phi)` | `handle_af` / `handle_ag` (direct fixpoints) |
@@ -782,8 +796,9 @@ On finitely-branching BCGS, perfect-recall and memoryless semantics coincide
 
 **Checker:** `model_checker/algorithms/explicit/IATL/`
 
-**Model loader:** `model_checker/algorithms/explicit/IATL/util/graph.read_file`
-(BCGS: `Transition` + boolean `Preorder` matrix + CGS-style labelling).
+**Model loader:** `parsers/game_structures/bcgs/` (`BCGS`, a `CGS` subclass).
+Files use CGS `Transition` cells (joint actions) plus a boolean `Preorder`
+section. Metadata: `model_type: "BCGS"`.
 
 **Coalition pre-images (Proposition 2):**
 
@@ -807,14 +822,14 @@ On finitely-branching BCGS, perfect-recall and memoryless semantics coincide
 p -> q
 ```
 
-**Model type:** BCGS with separate `Preorder` section. See
+**Model type:** `BCGS` with separate `Preorder` section. See
 [IATL/algorithm.md](IATL/algorithm.md) for validation, denotations, and pipeline.
 
 ### Comparison: Theory vs Implementation
 
 | Aspect | Theory (KR 2025) | Implementation |
 | :--- | :--- | :--- |
-| **Model** | BCGS + monotone valuation | `read_file` + `check_conditions_hold` |
+| **Model** | BCGS + monotone valuation | `BCGS` + `check_conditions_hold` |
 | **Frame constraints** | C1, C2 per coalition | `_check_well_behaved_c1/c2` |
 | **`->`, `!`** | Intuitionistic (`^up`) | `handle_implies`, `handle_not` |
 | **`[A] X`** | `Pre_f(A, [[phi]])` | `handle_coalition_next_forall` = `Pre_f` |
@@ -924,17 +939,30 @@ VITAMIN does **not** support an empty strategic coalition written as `<>`. In AT
 Atomic identifiers for propositions and variables must follow a shared alphabet and must not clash with reserved syntax keywords.
 
 **Standard alphabet (models and most logics):**
-- Pattern: `[a-zA-Z][a-zA-Z0-9_]*`
-- Logics: CTL, LTL, ATL, NatATL, NatSL, OATL, OL, RBATL, CapATL, COTL, IATL, Wallet_ATL
+- Pattern: `[a-zA-Z][a-zA-Z0-9_]*` (`PROPOSITION_TOKEN` in `syntax_patterns.py`)
+- Logics: CTL, LTL, ATL, NatATL, NatSL, OATL, OL, RBATL, CapATL, COTL, ICTL,
+  Wallet_ATL
 - Examples: `p`, `Goal`, `safe_1`
-- Validation: `validate_proposition_identifier()` in `model_checker/parsers/formulas/parser_utils.py` (CGS models and Family-B formula AST post-validation via `validate_ast()`)
+- Validation: `validate_proposition_identifier()` in
+  `model_checker/parsers/formulas/parser_utils.py` (CGS models and Family-B
+  formula AST post-validation via `validate_ast()`)
 
 **Reserved keywords (case-insensitive):** `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`
 
 **Lexer-specific proposition patterns (modal compound disambiguation):**
-- **ICTL, TCTL, TOL**: `[a-z][a-zA-Z0-9_]*` or `[A-Z][a-z][a-zA-Z0-9_]*` so tokens like `EX`, `EF`, and `AG` are not read as proposition names. Mixed-case names such as `Goal` are supported; all-caps operator-shaped names and single uppercase letters (for example `P`) are not.
-- **NatSL temporal atoms**: Use the standard alphabet above. Single uppercase `E` / `A` are rejected after `F` / `!F` because they are quantifier tokens in the NatSL lexer.
-- **CTL pre-validation**: Bare temporal operators at formula start are detected with token-boundary rules, so proposition names such as `Goal` or `Flux` are not mistaken for `G` / `F` operators.
+- **IATL, TCTL, TOL**: `ICTL_PROPOSITION_TOKEN` /
+  `TCTL_TOL_PROPOSITION_TOKEN` =
+  `[a-z][a-zA-Z0-9_]*` or `[A-Z][a-z][a-zA-Z0-9_]*`. Mixed-case names such as
+  `Goal` are supported; all-caps operator-shaped names and single uppercase
+  letters (for example `P`) are not proposition tokens.
+- **ICTL**: uses the standard alphabet above; `E` / `A` / temporal tokens are
+  separate lexer rules (not the restricted `ICTL_PROPOSITION_TOKEN` pattern).
+- **NatSL temporal atoms**: Use the standard alphabet above. Single uppercase
+  `E` / `A` are rejected after `F` / `!F` because they are quantifier tokens in
+  the NatSL lexer.
+- **CTL pre-validation**: Bare temporal operators at formula start are detected
+  with token-boundary rules, so proposition names such as `Goal` or `Flux` are
+  not mistaken for `G` / `F` operators.
 
 **Known limitation (CTL, LTL, ATL, NatATL, and related logics):** A proposition whose name is exactly a modal operator token (for example `F`, `E`, or `EX`) may be unparseable in some positions because the lexer reads it as syntax. Prefer descriptive names (`Goal`, `safe_1`) over single-letter operator aliases.
 
@@ -960,8 +988,8 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **CapATL** | Branching | `<A,k>X`, `F`, `G`, `U`, `R`, `Ki`, `i is p` | `<{1,2}, k>` | capCGS |
 | **COTL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><k>` (cost-bounded) | costCGS |
 | **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
-| **ICTL** | Branching | `EX`, `AX`, `EF`, `AF`, `EG`, `AG`, `EU`, `AU`, `ER`, `AR` | `E`, `A`; `->` / `not` intuitionistic | Birelational matrix |
-| **IATL** | Branching | `<A>X`, `<A>F/G/U/R`, `[A]X`, `[A]F/G/U/R` | `<1>` exist, `[1]` forall; `->` / `!` intuitionistic | BCGS + `Preorder` |
+| **ICTL** | Branching | `EX`, `AX`, `EF`, `AF`, `EG`, `AG`, `EU`, `AU`, `ER`, `AR` | `E`, `A`; `->` / `not` intuitionistic | BirelationalMatrix |
+| **IATL** | Branching | `<A>X`, `<A>F/G/U/R`, `[A]X`, `[A]F/G/U/R` | `<1>` exist, `[1]` forall; `->` / `!` intuitionistic | BCGS |
 | **TCTL** | Branching | `EF`, `AG`, clock bounds | `A`, `E` + clocks | timedCGS |
 | **TOL** | Linear | `{Jk}X`, `F`, `G`, `U`, `R`, `W` | `{J5}` per-step obstruction | timedCGS |
 
@@ -971,11 +999,12 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 <a id="model-syntax"></a>
 ## Model Syntax
 
-VITAMIN supports six model formats. The parser picks the type from the
-sections present in the file. Canonical details also appear in [file_formats.md](file_formats.md).
+VITAMIN supports several model formats. Content-based detection (for generic
+loaders) and logic metadata (for `create_model_parser_for_logic`) both matter;
+canonical authoring details are in [file_formats.md](file_formats.md).
 
 ### CGS (Concurrent Game Structure)
-The base model for CTL, LTL, ATL, NatATL, and NatSL.
+The base model for CTL, LTL, ATL, NatATL, NatSL, and related CGS logics.
 
 **File Sections:**
 1.  **Transition**: Matrix (States x States) of joint action profiles. Each non-zero cell lists one or more joints separated by commas. A joint is either compact (`AC` = agent 1 plays `A`, agent 2 plays `C`) or explicit (`A|C`, `IDLE|MOVE`). Both forms are the same per-agent move vector; checkers normalize them to `|`-separated profiles. Use `*` for a full-agent wildcard and `0` for no transition. Every state must have at least one successor (total relation); use a `*` self-loop on terminal states. Cost table keys are normalized to the same pipe form at load time.
@@ -993,13 +1022,19 @@ The base model for CTL, LTL, ATL, NatATL, and NatSL.
 **Example Action Format:**
 For 2 agents, `AC` and `A|C` both mean Agent 1 performs `A` and Agent 2 performs `C`. Prefer compact single-character names in examples; use `|` when an action name has more than one character.
 
-### BCGS (Birelational CGS)
-Used for IATL and related birelational loaders. Edge labels include `P`, `R`, `P,R`.
-Loader: `model_checker/parsers/game_structures/birelational/`.
+### BirelationalMatrix (ICTL)
+Used for ICTL. Loader:
+`model_checker/parsers/game_structures/birelational_matrix/`.
+Same sectioned layout as CGS, but `Transition` cells are relation labels
+`0` / `R` / `P` / `P,R` (not joint actions). Metadata forces this type for ICTL;
+generic content detection alone still sees an ordinary CGS-shaped file. See
+[ICTL/algorithm.md](ICTL/algorithm.md).
 
-ICTL uses the same matrix cell vocabulary but is loaded by
-`model_checker/algorithms/explicit/ICTL/util/graph.read_file` (see
-[ICTL/algorithm.md](ICTL/algorithm.md)).
+### BCGS (Birelational Concurrent Game Structure)
+Used for IATL. Loader: `model_checker/parsers/game_structures/bcgs/`.
+CGS-style joint-action `Transition` matrix plus a boolean `Preorder` section
+(`0`/`1`). Detected when a `Preorder` header is present. Metadata:
+`model_type: "BCGS"`. See [IATL/algorithm.md](IATL/algorithm.md).
 
 ### costCGS (CGS with Costs)
 Used for OATL, OL, RBATL, RABATL, and COTL.

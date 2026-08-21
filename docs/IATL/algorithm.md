@@ -1,8 +1,10 @@
 # IATL - Implementation Reference
 
-This document describes how IATL (Intuitionistic Alternating-time Temporal Logic) is
-defined and model-checked in `model_checker/algorithms/explicit/IATL/`. It is the
-normative reference for behaviour in this codebase.
+This document is the **algorithm correctness reference** for IATL: denotations,
+well-behaved BCGS checks, coalition pre-images, fixpoints, and the code path in
+`model_checker/algorithms/explicit/IATL/`. For surface syntax and a short theory
+overview, see [logic_knowledge_base.md](../logic_knowledge_base.md). For model
+file layout, see [file_formats.md](../file_formats.md).
 
 ## Overview
 
@@ -64,7 +66,9 @@ Additional BCGS rules enforced at load time:
 
 ### File format
 
-Models are text files read by `util/graph.read_file` (not the standard CGS parser).
+Models are loaded by `parsers/game_structures/bcgs/bcgs.py` (`BCGS`, a `CGS`
+subclass). After ordinary CGS parsing, `validate_model_structure` calls
+`check_conditions_hold`.
 
 Sections:
 
@@ -87,8 +91,6 @@ Number_of_agents
 
 `Preorder` is a `0`/`1` matrix (not the ICTL `P`/`R` cell labels). `Transition`
 uses CGS joint-action strings.
-
-`read_file` calls `check_conditions_hold` before returning the model dict.
 
 ## Formula language
 
@@ -246,13 +248,14 @@ Coalition labels are parsed from node values with `coalition_from_node` in
 | Shared module | Use in IATL |
 |-------------|---------------|
 | `ICTL/util/graph.get_preorder` | Transitive P-upset |
+| `shared/graph_relations.labeled_pairs` | Preorder edge extraction |
 | `shared/fixpoint_iter` | `F`, `G`, `U`, `R` fixpoints |
 | `shared/result_formatters` | Result formatting |
 | `engine/execution.create_model_checking_entry` | VMI entry point |
 | `parsers/formulas/parser_utils` | Coalition validation |
 
-IATL keeps its own `preimage.py` because BCGS models use string matrix cells and
-a dict-based loader, while explicit ATL uses the `CGS` class and bitmask graph.
+IATL keeps its own `preimage.py` because BCGS uses coalition-masked joint-action
+cells; ICTL pre-images are plain R-edge predecessors.
 
 ### Complexity
 
@@ -268,17 +271,16 @@ pre-image caching avoids rebuilding coalition move groups on every fixpoint step
 | `IATL/solver.py` | `solve_tree` dispatch |
 | `IATL/operators.py` | Operator handlers |
 | `IATL/preimage.py` | `Pre_d`, `Pre_f`, transition cache |
-| `IATL/util/graph.py` | `read_file`, `get_actions` |
 | `IATL/util/validation.py` | `check_conditions_hold` |
+| `parsers/game_structures/bcgs/` | BCGS model loader |
 | `parsers/formulas/IATL/parser.py` | Formula parser |
 
-Parser metadata: `model_type: "CGS"` (BCGS files use the extended `Preorder` section).
+Parser metadata: `model_type: "BCGS"`.
 
 ## Tests
 
 | Path | Coverage |
 |------|----------|
-| `tests/integration/algorithms/iatl/test_smoke.py` | Load, pre-images, operator smoke, `!p` with custom states |
 | `tests/integration/algorithms/iatl/test_correctness.py` | Pinned fixture, `Pre_d`/`Pre_f`, `[A]X` = `Pre_f`, `F`/`G` encodings, excluded-middle countermodel, `^up` on `!` |
 | `tests/fixtures/CGS/IATL/iatl_2agents_2states_minimal.txt` | Minimal 2-agent BCGS |
-| `tests/fixtures/CGS/IATL/iatl_figure2_proposition1.txt` | IATL allows !<A>X p && !<A>X !p where ATL cannot (undetermined p) |
+| `tests/fixtures/CGS/IATL/iatl_figure2_proposition1.txt` | IATL allows `!<A>X p && !<A>X !p` where ATL cannot (undetermined `p`) |

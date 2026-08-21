@@ -1,9 +1,11 @@
 # TCTL - Implementation Reference
 
-This document describes how **Timed Computation Tree Logic (TCTL)** is
-model-checked in `model_checker/algorithms/explicit/TCTL/`. It follows Chapter 6
-(regional transition system, TCTL-minus fragment, satisfaction relation, and the
-`rsat` labelling algorithm).
+This document is the **algorithm correctness reference** for TCTL: zone-graph RTS,
+`rsat` labelling, freeze/guards, and the code path in
+`model_checker/algorithms/explicit/TCTL/`. It follows Chapter 6 (regional
+transition system, TCTL-minus fragment). For syntax overview see
+[logic_knowledge_base.md](../logic_knowledge_base.md); for model files see
+[file_formats.md](../file_formats.md).
 
 ## Overview
 
@@ -148,4 +150,4 @@ All temporal operators share `timed_predecessors` in
 |------|----------|
 | `tests/integration/algorithms/tctl/test_correctness.py` | Temporal ops, guards, FREEZE |
 | `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared timedCGS with TOL |
-| `parsers/game_structures/timed_cgs/tests/test_zone_graph.py` | Zone graph paths and guards |
+| `tests/unit/parsers/models/timed_cgs/test_zone_graph.py` | Zone graph paths and guards |

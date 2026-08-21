@@ -1,4 +1,4 @@
-"""Graph extraction and model file loading for ICTL."""
+"""P-upset construction for ICTL (transitive closure of preorder edges)."""
 
 import numpy as np
 

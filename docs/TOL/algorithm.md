@@ -1,9 +1,11 @@
 # TOL - Implementation Reference
 
-This document describes how **Timed Obstruction Logic (TOL)** is model-checked in
-`model_checker/algorithms/explicit/TOL/`. It follows the syntax, semantics, and
-algorithms of Leneutre, Malvone, and Ortiz (AAMAS 2025, Timed Obstruction Logic),
-adapted to the VITAMIN `timedCGS` surface syntax.
+This document is the **algorithm correctness reference** for TOL: obstruction
+pre-images, zone-graph evaluation, and the code path in
+`model_checker/algorithms/explicit/TOL/`. It follows Leneutre, Malvone, and Ortiz
+(AAMAS 2025), adapted to VITAMIN `timedCGS` surface syntax. For syntax overview
+see [logic_knowledge_base.md](../logic_knowledge_base.md); for model files see
+[file_formats.md](../file_formats.md).
 
 ## Overview
 
@@ -166,7 +168,6 @@ Shared timed helpers: `parsers/game_structures/timed_cgs/semantics.py`.
 
 | Path | Coverage |
 |------|----------|
-| `tests/integration/algorithms/tol/test_smoke.py` | Zero-cost pipeline |
 | `tests/integration/algorithms/tol/test_correctness.py` | Paper `▼` semantics on weighted fixture |
 | `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared zero-cost fixture with TCTL |
 | `tests/fixtures/timedCGS/tol_cost_2states.txt` | Two-state obstruction-cost fixture |

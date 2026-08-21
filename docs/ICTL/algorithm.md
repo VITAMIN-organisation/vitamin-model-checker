@@ -1,8 +1,10 @@
 # ICTL - Implementation Reference
 
-This document describes how ICTL (Intuitionistic CTL) is defined and
-model-checked in `model_checker/algorithms/explicit/ICTL/`. It is the normative
-reference for behaviour in this codebase.
+This document is the **algorithm correctness reference** for ICTL: denotations,
+well-behavedness checks, fixpoint shapes, and the code path that implements them
+in `model_checker/algorithms/explicit/ICTL/`. For surface syntax and a short
+theory overview, see [logic_knowledge_base.md](../logic_knowledge_base.md). For
+how to write model files, see [file_formats.md](../file_formats.md).
 
 ## Overview
 
@@ -25,7 +27,7 @@ evolving knowledge while `R` models system dynamics.
 A frame is `F = <S, P, R>` where:
 
 - `S` is a finite set of states.
-- `P` is a preorder on `S` (reflexive, transitive, antisymmetric in validated models).
+- `P` is a partial order on `S` in validated models (reflexive, transitive, antisymmetric).
 - `R` is serial: every state has at least one `R`-successor.
 
 An **R-path** from `s` is an infinite sequence `s0, s1, s2, ...` with `s0 = s` and
@@ -40,9 +42,11 @@ satisfy **valuation monotonicity**:
 if s <=_P s' then V(s) subseteq V(s')
 ```
 
-### Structural constraints (C1, C2, C3)
+### Well-behavedness (EUMAS Def. 1)
 
-Validated models must satisfy confluence between `P` and `R`.
+Validated models must satisfy confluence between `P` and `R`. EUMAS25b Definition 1
+uses exactly two conditions; Theorem 1 proves they are necessary and sufficient for
+ICTL monotonicity. There is no third confluence axiom in the paper.
 
 **C1** (forward simulation along `P`):
 
@@ -56,18 +60,21 @@ if s <=_P s' and s -R-> t, then exists t' with s' -R-> t' and t <=_P t'
 if s <=_P s' and s' -R-> t', then exists t with s -R-> t and t <=_P t'
 ```
 
-**C3** (additional constraint enforced by this implementation, not in EUMAS25b):
+`check_conditions_hold` in `util/validation.py` also enforces:
 
-```text
-if s -P-> y and y -R-> z, then exists u with s -R-> u and u -P-> z
-```
+- square adjacency matrix
+- serial `R` (cells `R` or `P,R`)
+- reflexive, transitive, antisymmetric `P` (cells `P` or `P,R`)
+- monotone labelling along `P`
 
-All three are checked in `util/validation.py` via `check_conditions_hold`.
+Negative cases live in `tests/unit/algorithms/ictl/test_validation_negative.py`.
 
 ### Matrix file format
 
-ICTL models are **not** loaded through the standard CGS parser. They use a dedicated
-`N x N` matrix text file read by `util/graph.read_file`.
+ICTL models use the sectioned text format shared with CGS, loaded by
+`parsers/game_structures/birelational_matrix/birelational_matrix.py`
+(`BirelationalMatrix`, a `CGS` subclass). After ordinary CGS parsing,
+`validate_model_structure` calls `check_conditions_hold`.
 
 Each cell `(i, j)` is one of:
 
@@ -76,10 +83,12 @@ Each cell `(i, j)` is one of:
 | `0` | no relation |
 | `R` | transition only |
 | `P` | preorder only |
-| `P,R` | both |
-| `*` | reflexive loop on the diagonal (treated as `(s_i, s_i)`) |
+| `P,R` | both (typical diagonal for reflexive knowledge and a self-loop) |
 
-File sections (in any order of blocks, each introduced by a header line):
+Prefer `P` or `P,R` on the diagonal so reflexivity of `P` holds. Bare `*` is a
+CGS idle/self-loop convention and is not a valid ICTL preorder marker.
+
+File sections (each introduced by a header line):
 
 ```text
 Transition
@@ -94,14 +103,15 @@ Labelling
 ...
 ```
 
+`Number_of_agents` is optional; if omitted, `BirelationalMatrix` defaults it to `1`.
 `Labelling` rows are boolean vectors over `Atomic_propositions` (0/1).
 
-At load time, `read_file` parses the file and calls `check_conditions_hold`. Invalid
-models raise `AssertionError`.
+Invalid structure raises during load (`ValueError` from CGS checks, or
+`AssertionError` from ICTL well-behavedness checks).
 
 ## Formula language
 
-The PLY parser lives in `parsers/formulas/ICTL/ictl_ply_parser.py`.
+The PLY parser is `parsers/formulas/ICTL/parser.py` (`ICTLParser`).
 
 ### Core grammar
 
@@ -111,8 +121,10 @@ phi ::= p | phi /\ phi | phi \/ phi | phi -> phi | not phi
       | A X phi | A(phi U psi) | A(phi R psi)
 ```
 
-- Atoms: lowercase identifiers (`e`, `p1`, `safe_1`) or mixed-case names with a lowercase second letter (`Goal`, `safe_1` via lowercase branch). This keeps sugar such as `EX` / `AG` distinct from proposition names.
-- Negation: `not phi` or `! phi` (no `bot` literal; handled as intuitionistic negation).
+- Atoms: identifiers matching `[a-zA-Z][a-zA-Z0-9_]*` (for example `e`, `Goal`).
+  Path quantifiers and temporal tokens (`E`/`A`/`X`/`F`/`G`/`U`/`R`, and keywords)
+  are lexed separately so forms such as `EX` / `AG` are operators, not atoms.
+- Negation: `not phi` or `! phi`.
 - Implication: `->`, `>`, or `implies`.
 - Conjunction / disjunction: `&&`, `&`, `and` / `||`, `|`, `or`.
 - Path quantifiers: `E` / `exist`, `A` / `forall`.
@@ -121,12 +133,12 @@ phi ::= p | phi /\ phi | phi \/ phi | phi -> phi | not phi
 **Release syntax:** use spaced form `E p R q`. Bracketed forms like `E[p R q]` fail
 because `R` is the release token.
 
-There are no coalition quantifiers.
+There are no coalition quantifiers. Parser metadata declares
+`model_type: "BirelationalMatrix"`.
 
 ### Sugar (`F` / `G`)
 
-The parser accepts `F` / `eventually` and `G` / `globally` as unary temporal
-operators after `E` or `A`:
+The parser accepts `F` / `eventually` and `G` / `globally` after `E` or `A`:
 
 | Surface syntax | Paper encoding | Handler |
 |----------------|----------------|---------|
@@ -135,8 +147,8 @@ operators after `E` or `A`:
 | `AF phi` | `A(T U phi)` | `handle_af` |
 | `AG phi` | `A(bottom R phi)` | `handle_ag` |
 
-Sugar is **not** rewritten at parse time to `U` / `R` forms. The solver dispatches
-directly to the dedicated handler for each sugar operator.
+Sugar is not rewritten to `U` / `R` at parse time. The solver calls the dedicated
+handler for each sugar operator.
 
 ## Semantic denotations
 
@@ -153,7 +165,7 @@ s^up = { t in S | s <=_P t }
 ```
 
 `get_preorder` in `util/graph.py` builds this map. `ICTLModelChecker.upward_closure`
-stores it; `states_with_upset_in(target)` implements the upward-closure operator:
+stores it; `states_with_upset_in(target)` implements:
 
 ```text
 X^up = { s in S | s^up subseteq X }
@@ -167,7 +179,7 @@ X^up = { s in S | s^up subseteq X }
 | `phi /\ psi` | `[[phi]] intersect [[psi]]` |
 | `phi \/ psi` | `[[phi]] union [[psi]]` |
 | `phi -> psi` | `([[phi]]^c union [[psi]])^up` |
-| `not phi` | `[[phi]]^c^up` (same as `phi -> bot` with empty codomain) |
+| `not phi` | `([[phi]]^c)^up` (intuitionistic negation) |
 
 ### Next and pre-images
 
@@ -176,90 +188,56 @@ X^up = { s in S | s^up subseteq X }
 | `E X phi` | `Pre_exists([[phi]])` |
 | `A X phi` | `Pre_forall([[phi]])` |
 
-`Pre_forall([[phi]])` is computed as `S \\ Pre_exists(S \\ [[phi]])`.
+`Pre_exists(X)` is implemented by collecting R-predecessors of `X`.
+`Pre_forall(X)` keeps states whose entire R-successor set is contained in `X`
+(equivalent to `S \\ Pre_exists(S \\ X)` when `R` is serial).
 
-Upward closure (`^up`) applies to intuitionistic connectives only (`->`, `not`), not
-to `AX` (EUMAS25b Proposition 5, Figure 7).
+Upward closure (`^up`) applies only to intuitionistic connectives (`->`, `not`),
+not to `AX` (EUMAS25b Proposition 5, Figure 7).
 
 ### Until (least fixpoint)
 
-`E(phi1 U phi2)` and `A(phi1 U phi2)` use the least fixpoint:
+`E(phi1 U phi2)` and `A(phi1 U phi2)` use:
 
 ```text
 g(X) = [[phi2]] union ([[phi1]] intersect Pre_op(X))
 ```
 
-`Pre_op` is `Pre_exists` for `E`, `Pre_forall` for `A`. Implemented incrementally in
-`handle_eu` / `handle_au`:
-
-```text
-Q1 := emptyset;  Q3 := [[phi2]]
-while Q3 not subseteq Q1:
-    Q1 := Q1 union Q3
-    Q3 := Pre_op(Q1) intersect [[phi1]]
-```
+`Pre_op` is `Pre_exists` for `E`, `Pre_forall` for `A`. Handlers: `handle_eu` /
+`handle_au`.
 
 ### Release (greatest fixpoint)
 
-`E(phi1 R phi2)` and `A(phi1 R phi2)` use the greatest fixpoint:
+`E(phi1 R phi2)` and `A(phi1 R phi2)` use:
 
 ```text
 g(X) = [[phi2]] intersect ([[phi1]] union Pre_op(X))
 ```
 
-Implemented in `handle_er` / `handle_ar` via `shared/fixpoint_iter.greatest_fixpoint`.
+Handlers: `handle_er` / `handle_ar` / `handle_ag` use
+`shared/fixpoint_iter.greatest_fixpoint`; `handle_eg` uses an equivalent manual loop.
 
-### Eventually and globally (sugar handlers)
+### Eventually and globally
 
-`EF` / `EG` / `AF` / `AG` are surface syntax for the paper encodings above. Classical
-CTL complement dualities (for example `AF phi` as `S \\ EG(~phi)`) are **not** used,
-because they are not valid in ICTL (EUMAS25b Proposition 3).
+`EF` / `EG` / `AF` / `AG` follow the paper encodings above. Classical CTL
+complement dualities (for example `AF phi` as `S \\ EG(~phi)`) are **not** used;
+they are invalid in ICTL (EUMAS25b Proposition 3).
 
-**`EF phi`** (`handle_ef`) -- least fixpoint reachability along `R` (same as `E(T U phi)`):
-
-```text
-Q := emptyset;  T := [[phi]]
-while T not subseteq Q:
-    Q := Q union T
-    T := Pre_exists(Q)
-```
-
-**`EG phi`** (`handle_eg`) -- greatest fixpoint (same as `E(bottom R phi)`):
-
-```text
-Q := S;  T := [[phi]]
-while Q != T:
-    Q := T
-    T := Pre_exists(Q) intersect [[phi]]
-```
-
-**`AF phi`** (`handle_af`) -- least fixpoint (same as `A(T U phi)`):
-
-```text
-Q := emptyset;  T := [[phi]]
-while T not subseteq Q:
-    Q := Q union T
-    T := Pre_forall(Q)
-```
-
-**`AG phi`** (`handle_ag`) -- greatest fixpoint (same as `A(bottom R phi)`):
-
-```text
-Q := S;  T := [[phi]]
-while Q != T:
-    Q := T
-    T := Pre_forall(Q) intersect [[phi]]
-```
+| Operator | Fixpoint shape |
+|----------|----------------|
+| `EF phi` | least: grow from `[[phi]]` under `Pre_exists` |
+| `EG phi` | greatest: shrink under `Pre_exists` intersect `[[phi]]` |
+| `AF phi` | least: grow from `[[phi]]` under `Pre_forall` |
+| `AG phi` | greatest: shrink under `Pre_forall` intersect `[[phi]]` |
 
 ## Model-checking pipeline
 
-Evaluation is **bottom-up** on the formula parse tree. Each node holds a string
-encoding of a state set; children are evaluated before parents.
+Evaluation is bottom-up on the formula parse tree.
 
 ```mermaid
 flowchart TD
-    load["read_file + check_conditions_hold"]
-    parse["do_parsingICTL"]
+    load["BirelationalMatrix.read_file + check_conditions_hold"]
+    parse["ICTLParser.parse"]
     tree["ICTLModelChecker.build_tree"]
     solve["solve_tree"]
     result["format result + initial state check"]
@@ -271,23 +249,23 @@ flowchart TD
 
 | Function | Purpose |
 |----------|---------|
-| `model_checking(formula, filename)` | VMI-compatible wrapper |
-| `run_model_checking(formula, checker)` | Parse, build tree, solve on a loaded checker |
+| `model_checking(formula, filename)` | Public entry (`vitamin.benchmarks` / VMI) |
+| `_core_ictl_checking(model, formula)` | Evaluate on an already-loaded `BirelationalMatrix` |
 
 ### Checker setup (`checker.py`)
 
 On construction, `ICTLModelChecker`:
 
-1. Extracts **R-edges** from matrix cells not in `0` or `P`.
-2. Extracts **P-edges** from cells `P` or `P,R`.
+1. Extracts **R-edges** from cells other than `0` / `P`.
+2. Extracts **P-edges** from cells `P` / `P,R`.
 3. Builds `upward_closure` via transitive closure of `P`.
 
 `build_tree` resolves atoms to state sets using the labelling matrix.
 
 ### Solver dispatch (`solver.py`)
 
-`solve_tree` walks the formula tree post-order. Unary and binary node labels are
-matched with `verifyICTL` and routed to handlers in `operators.py`.
+`solve_tree` walks the formula tree post-order and routes node labels to handlers
+in `operators.py`.
 
 ### Operator summary
 
@@ -315,18 +293,28 @@ and formula.
 | `ICTL/solver.py` | `solve_tree` dispatch |
 | `ICTL/operators.py` | Per-operator state-set updates |
 | `ICTL/preimage.py` | R-pre-images |
-| `ICTL/util/graph.py` | `read_file`, `labeled_pairs`, `get_preorder` |
-| `ICTL/util/validation.py` | `check_conditions_hold` |
-| `ICTL/util/generators.py` | `generate_experiment_model` (tests) |
-| `parsers/formulas/ICTL/` | PLY parser and `ICTLParser` wrapper |
+| `ICTL/util/graph.py` | `get_preorder` (P-upset transitive closure) |
+| `ICTL/util/validation.py` | `check_conditions_hold` (C1/C2 and frame checks) |
+| `ICTL/util/generators.py` | Optional experiment-model helper |
+| `shared/graph_relations.py` | `labeled_pairs` used by validation |
+| `parsers/game_structures/birelational_matrix/` | Model loader |
+| `parsers/formulas/ICTL/` | PLY parser (`ICTLParser`) |
 
-ICTL is not registered under `vitamin.benchmarks`. Parser metadata lists
-`model_type: "CGS"` for VMI compatibility; models still use the matrix format above.
+## Canonical fixture
+
+`tests/integration/algorithms/ictl/fixtures/experiment_2x3.txt` is a
+well-behaved 6-state chain (atoms `e`, `h`, `c`) used by integration pins.
+Pinned formulas and expected sets live in
+`tests/integration/algorithms/ictl/test_correctness.py`
+(`TestFixtureSemantics`, until/release suites).
+
+Figure 5 / Proposition 3 (next dualities fail) is covered by an in-memory
+countermodel in the same test module and must itself pass C1/C2.
 
 ## Tests
 
 | Path | Coverage |
 |------|----------|
-| `tests/integration/algorithms/ictl/test_smoke.py` | Generator validation, basic runs |
-| `tests/integration/algorithms/ictl/test_correctness.py` | `^up`, `AX` = `Pre_forall`, `AF`/`AG` paper encodings, Figure 5 countermodel, fixture semantics |
-| `tests/integration/algorithms/ictl/fixtures/experiment_2x3.txt` | Deterministic 6-state model |
+| `tests/integration/algorithms/ictl/test_correctness.py` | `^up`, `AX` = `Pre_forall`, sugar encodings, Figure 5, fixture semantics |
+| `tests/unit/algorithms/ictl/test_validation_negative.py` | Reject non-well-behaved frames (C1/C2, seriality, preorder) |
+| `tests/unit/parsers/formulas/` (ICTL cases) | Parser surface syntax |
