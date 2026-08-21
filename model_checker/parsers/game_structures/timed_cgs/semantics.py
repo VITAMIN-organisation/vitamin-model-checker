@@ -35,18 +35,22 @@ def zone_graph_pre_image_states(
     target_states,
     constraints: tuple | str | None,
 ) -> set[str]:
-    """States with a timed edge into target_states under the clock guard."""
-    if not constraints:
-        return discrete_pre_image_states(tcgs, target_states)
+    """Locations that can move into ``target_states`` under an optional clock guard.
+
+    Without a guard this is ordinary discrete predecessor. With a guard, only
+    zone-graph steps that satisfy the timed constraint are considered.
+    """
+    from model_checker.parsers.game_structures.timed_cgs.regions import (
+        timed_predecessors,
+    )
+
     target_names = {str(state) for state in target_states}
-    clock_constraints, _ = DBMAdapter.parse_constraints([constraints], tcgs.clocks_dict)
-    result: set[str] = set()
-    for source, target in tcgs.get_edges():
-        if target not in target_names:
-            continue
-        if zone_graph.has_path_from(target, clock_constraints):
-            result.add(source)
-    return result
+    if not constraints:
+        return discrete_pre_image_states(tcgs, target_names)
+
+    targets = {state for state in zone_graph.states if state.location in target_names}
+    predecessors = timed_predecessors(zone_graph, tcgs, targets, constraints)
+    return {predecessor.location for predecessor in predecessors}
 
 
 def extract_closest_constraint(node: "Expr") -> str | None:

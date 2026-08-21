@@ -32,8 +32,13 @@ def minimal_zone_graph(minimal_tcgs) -> ZoneGraph:
 
 
 @pytest.mark.unit
-def test_zone_graph_builder(minimal_zone_graph):
-    assert len(minimal_zone_graph.states) > 0
+def test_initial_zone_is_clocks_at_zero(minimal_zone_graph, minimal_tcgs):
+    initial = minimal_zone_graph.initial_time_state
+    assert initial is not None
+    assert initial.location == minimal_tcgs.initial_state
+    for clock_idx in range(1, initial.zone.size):
+        assert initial.zone.elements[clock_idx][0].constant == 0
+        assert initial.zone.elements[0][clock_idx].constant == 0
 
 
 @pytest.mark.unit

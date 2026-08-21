@@ -15,6 +15,7 @@ from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.timed_cgs.formula_clocks import (
     collect_formula_clocks,
     extend_timed_cgs_clocks,
+    max_constants_from_formula,
 )
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
@@ -36,7 +37,8 @@ def _core_model_checking(formula: str, filename: str) -> dict[str, Any]:
     formula_clocks = collect_formula_clocks(ast, set(tcgs.clocks))
     extend_timed_cgs_clocks(tcgs, formula_clocks)
 
-    zone_graph = ZoneGraph(tcgs)
+    formula_max = max_constants_from_formula(ast, tcgs.clocks_dict)
+    zone_graph = ZoneGraph(tcgs, extra_max_constants=formula_max)
     solve_tree(tcgs, zone_graph, ast)
 
     init_state = str(tcgs.initial_state)

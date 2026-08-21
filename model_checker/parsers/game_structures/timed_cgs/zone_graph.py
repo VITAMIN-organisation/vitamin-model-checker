@@ -89,8 +89,11 @@ def _expand_discrete_successors(
 
 
 def _initial_zone(tcgs: TimedCGS, max_constants: list[int]) -> DBM | None:
-    """Initial zone at the initial location, intersected with its invariants and normalized."""
+    """Build the start zone: all clocks at zero, closed under the location invariant."""
     zone = DBM(len(tcgs.clocks))
+    for clock_idx in range(1, zone.size):
+        zone.add_constraint(clock_idx, 0, 0, "<=")
+        zone.add_constraint(0, clock_idx, 0, "<=")
     loc_idx = tcgs.get_index_by_state_name(tcgs.initial_state)
     if tcgs.invariants_arr[loc_idx]:
         DBMAdapter.apply_location_invariants(zone, tcgs, loc_idx)
@@ -102,15 +105,21 @@ def _initial_zone(tcgs: TimedCGS, max_constants: list[int]) -> DBM | None:
 
 def _build_zone_graph(
     tcgs: TimedCGS,
-) -> tuple[dict[TimeState, list[TimeState]], set[TimeState]]:
+    extra_max_constants: list[int] | None = None,
+) -> tuple[dict[TimeState, list[TimeState]], set[TimeState], TimeState | None]:
+    """Explore reachable symbolic states from the zero-clock initial zone."""
     zone_graph: dict[TimeState, list[TimeState]] = {}
     all_states: set[TimeState] = set()
 
     max_constants = DBMAdapter.get_max_clock_constraints(tcgs)
+    if extra_max_constants:
+        for idx, value in enumerate(extra_max_constants):
+            if idx < len(max_constants):
+                max_constants[idx] = max(max_constants[idx], int(value))
 
     initial_zone = _initial_zone(tcgs, max_constants)
     if initial_zone is None:
-        return zone_graph, all_states
+        return zone_graph, all_states, None
 
     initial_state = TimeState(location=tcgs.initial_state, zone=initial_zone)
     all_states.add(initial_state)
@@ -126,13 +135,24 @@ def _build_zone_graph(
             tcgs, current_state, zone_graph, all_states, waitlist, max_constants
         )
 
-    return zone_graph, all_states
+    return zone_graph, all_states, initial_state
 
 
 class ZoneGraph:
-    def __init__(self, tcgs: TimedCGS):
+    def __init__(
+        self,
+        tcgs: TimedCGS,
+        extra_max_constants: list[int] | None = None,
+    ):
+        """Finite symbolic graph of (location, zone) pairs for timed model checking.
+
+        ``extra_max_constants`` raises per-clock extrapolation bounds using
+        constants that appear only in the formula, not in the automaton.
+        """
         self.tcgs = tcgs
-        self.graph, self.states = _build_zone_graph(tcgs)
+        self.graph, self.states, self.initial_time_state = _build_zone_graph(
+            tcgs, extra_max_constants
+        )
         self.reverse_graph = reverse_adjacency(self.graph, self.states)
 
     def _backward_path_starts(self, target_location: str) -> list[TimeState]:

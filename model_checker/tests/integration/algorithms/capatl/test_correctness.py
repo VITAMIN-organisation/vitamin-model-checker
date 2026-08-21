@@ -48,7 +48,7 @@ class TestCapATLSemantics:
     """Result format and winning states for CapATL."""
 
     def test_capatl_exact_winning_states(self, capatl_model):
-        """<{1},5>F g holds only at q2 on the example capCGS model."""
+        """<{1},5>F g holds at q2 on the example capacity model."""
         result = _core_capatl_checking(capatl_model, "<{1},5>F g")
         assert "error" not in result
         assert "res" in result
@@ -56,6 +56,12 @@ class TestCapATLSemantics:
         states = extract_states_from_result(result)
         assert states == {"q2"}
         assert ": False" in result.get("initial_state", "")
+
+    def test_capatl_eventually_contains_goal_states(self, capatl_model):
+        """Every state already labelled g also satisfies F g."""
+        eventually = _core_capatl_checking(capatl_model, "<{1},5>F g")
+        assert "error" not in eventually
+        assert {"q2"} <= extract_states_from_result(eventually)
 
     def test_capatl_release_matches_globally_for_false_left(self, capatl_model):
         """false R phi is the dual of G phi; results should agree on the example model"""

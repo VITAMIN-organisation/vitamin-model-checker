@@ -16,13 +16,13 @@ from model_checker.algorithms.explicit.CapATL.utils import (
 
 
 def handle_not(cgs, node):
-    """Handle NOT operator: complement of child's pointed knowledge set."""
+    """Pointed-knowledge states that do not satisfy the negated operand."""
     all_pk = set(pointed_knowledge_set(cgs))
     node.value = all_pk - node.left.value
 
 
 def handle_next(cgs, node, coal_str):
-    """Handle NEXT operator: coalition can force next transition to target."""
+    """States from which the coalition can force the operand in one step."""
     target = list(node.left.value)
     omega_w = pi_omega_Y(cgs, target, coal_str)
     pre_w = pre(cgs, omega_w, coal_str)
@@ -30,21 +30,19 @@ def handle_next(cgs, node, coal_str):
 
 
 def handle_eventually(cgs, node, coal_str):
-    """Handle EVENTUALLY operator: least fixpoint for coalition reachability."""
+    """States from which the coalition can force phi in finitely many steps."""
     target = list(node.left.value)
 
     w_old = set()
     w_new = set(pi_omega_Y(cgs, target, coal_str))
     while not w_new.issubset(w_old):
         w_old |= w_new
-        w_new = set(pre(cgs, list(w_old), coal_str)) & set(
-            pi_omega_Y(cgs, target, coal_str)
-        )
+        w_new = set(pre(cgs, list(w_old), coal_str))
     node.value = set(pi_theta(cgs, list(w_old)))
 
 
 def handle_globally(cgs, node, coal_str):
-    """Handle GLOBALLY operator: greatest fixpoint for coalition invariance."""
+    """States from which the coalition can keep phi true forever."""
     target = list(node.left.value)
 
     w_old = set(pi_omega_Y(cgs, target, coal_str))
@@ -60,23 +58,23 @@ def handle_globally(cgs, node, coal_str):
 
 
 def handle_and(cgs, node):
-    """Handle AND operator: intersection of two pointed knowledge sets."""
+    """Pointed-knowledge states that satisfy both operands."""
     node.value = node.left.value & node.right.value
 
 
 def handle_or(cgs, node):
-    """Handle OR operator: union of two pointed knowledge sets."""
+    """Pointed-knowledge states that satisfy at least one operand."""
     node.value = node.left.value | node.right.value
 
 
 def handle_implies(cgs, node):
-    """Handle IMPLIES operator: (NOT left) OR right"""
+    """Pointed-knowledge states that satisfy classical implication of the operands."""
     all_pk = set(pointed_knowledge_set(cgs))
     node.value = (all_pk - node.left.value) | node.right.value
 
 
 def handle_until(cgs, node, coal_str):
-    """Handle UNTIL operator: least fixpoint for coalition until property."""
+    """States from which the coalition can force psi while keeping phi until then."""
     left_w = pi_omega_Y(cgs, list(node.left.value), coal_str)
     right_w = pi_omega_Y(cgs, list(node.right.value), coal_str)
 
@@ -89,7 +87,7 @@ def handle_until(cgs, node, coal_str):
 
 
 def handle_release(cgs, node, coal_str):
-    """Handle RELEASE: greatest fixpoint nu X. psi intersect (phi union Pre(X))"""
+    """States from which the coalition can keep psi until (and including) phi releases it."""
     left_w = set(pi_omega_Y(cgs, list(node.left.value), coal_str))
     right_w = set(pi_omega_Y(cgs, list(node.right.value), coal_str))
 

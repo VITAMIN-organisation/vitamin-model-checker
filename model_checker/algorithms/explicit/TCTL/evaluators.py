@@ -75,7 +75,7 @@ def handle_clock_expr(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
 
 
 def handle_freeze(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
-    """y.reset(phi): evaluate phi with formula clock y reset to 0."""
+    """Label regions that satisfy the operand after resetting the freeze clock."""
     operand_clocks = set(collect_formula_clocks(node.operand, set(tcgs.clocks)))
     if node.clock not in operand_clocks:
         node.satisfying_regions = set(node.operand.satisfying_regions)
@@ -95,4 +95,8 @@ def handle_freeze(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
 def initial_location_satisfied(
     zone_graph: "ZoneGraph", location: str, regions: RegionSet
 ) -> bool:
+    """Return whether the model's initial symbolic state satisfies the formula."""
+    initial = getattr(zone_graph, "initial_time_state", None)
+    if initial is not None and initial.location == location:
+        return initial in regions or region_matches_label(initial, regions)
     return bool(regions_at_location(zone_graph, location) & regions)

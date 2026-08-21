@@ -113,8 +113,11 @@ def universal_natatl_recall(
 def existential_natatl_sequential(
     model_path: str, formula: str, *, allow_direct_solution: bool = True
 ) -> tuple[bool, list[Any], int, Any]:
-    """
-    Search for existential strategies and collect pruned trees (Sequential).
+    """Find existential natural strategies that make the CTL goal hold after pruning.
+
+    When ``allow_direct_solution`` is true, return as soon as one winning strategy
+    is found. Otherwise collect every successful pruned tree for later universal
+    checking (Sequential NatSL).
     """
     found_solution = False
     (
@@ -152,8 +155,6 @@ def existential_natatl_sequential(
                 if allow_direct_solution:
                     return (True, [], height, cgs)
                 pruned_trees.append(tree_copy)
-                continue
-            pruned_trees.append(tree_copy)
         i += 1
 
     return (False, pruned_trees, height, cgs)
@@ -165,18 +166,11 @@ def existential_natatl_alternated(
     universal_formulas,
     start_time: float,
 ) -> bool:
-    """
-    Search for existential strategy that survives all universal challenges (Alternated).
+    """Return True if some existential strategy survives every universal challenge.
 
-    Alternated semantics (per logic_knowledge_base.md): verification alternates
-    between existential search and universal validation at each step. Concretely:
-    1. For each existential strategy candidate (tree pruned by existential formula),
-       run universal_natatl_recall for every universal formula.
-    2. Only return True when an existential candidate passes all universal challenges.
-    3. When there are no universal formulas, existential success alone is sufficient.
-
-    This differs from Sequential semantics, where all existential candidates are
-    collected first and then validated against all universal strategies in one pass.
+    Unlike Sequential NatSL, each successful existential candidate is checked
+    against the universal formulas immediately, instead of collecting all
+    existential trees first.
     """
     (
         k,

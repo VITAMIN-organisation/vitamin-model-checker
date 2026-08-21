@@ -52,7 +52,7 @@ def test_ltl_to_ctl_preserves_multi_letter_propositions():
 
     assert ltl_to_ctl("F Goal") == "AF Goal"
     assert ltl_to_ctl("X Flux") == "AX Flux"
-    assert ltl_to_ctl("FG Goal") == "AFAG Goal"
-    assert ltl_to_ctl("Xp") == "AXp"
-    assert ltl_to_ctl("FGp") == "AFAGp"
-    assert ltl_to_ctl("AXp") == "AXp"
+    assert ltl_to_ctl("FG Goal") == "AF AG Goal"
+    assert ltl_to_ctl("Xp") == "AX p"
+    assert ltl_to_ctl("FGp") == "AF AG p"
+    assert ltl_to_ctl("AXp") == "AX p"

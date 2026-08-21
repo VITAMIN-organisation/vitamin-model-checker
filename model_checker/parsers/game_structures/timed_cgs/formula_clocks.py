@@ -1,4 +1,8 @@
-"""Formula clocks Y for timed logics (disjoint from automaton clocks X)."""
+"""Formula clocks introduced by timed formulas (freeze / real-time guards).
+
+These clocks are not part of the automaton declaration; they are added to the
+timedCGS before the zone graph is built so freeze quantification can be evaluated.
+"""
 
 import re
 
@@ -19,12 +23,53 @@ def _is_freeze_node(node) -> bool:
 
 
 def collect_formula_clocks(node, model_clocks: set[str]) -> tuple[str, ...]:
-    """Collect formula clock names from a timed-logic AST."""
+    """Return freeze/guard clock names that appear in the formula but not the model."""
     if node is None:
         return ()
     found: set[str] = set()
     _walk_formula_clocks(node, model_clocks, found)
     return tuple(sorted(found))
+
+
+_BOUND_CONSTANT_RE = re.compile(r"([a-zA-Z][a-zA-Z0-9_]*)\s*(?:<=|>=|<|>|==)\s*(\d+)")
+
+
+def max_constants_from_formula(node, clocks_dict: dict[str, int]) -> list[int]:
+    """Largest constant per clock used in formula guards.
+
+    Needed so zone extrapolation keeps distinctions required by the formula,
+    not only those present in automaton invariants and transition guards.
+    """
+    maxima = [0] * len(clocks_dict)
+    if node is None:
+        return maxima
+    _walk_formula_max_constants(node, clocks_dict, maxima)
+    return maxima
+
+
+def _record_constraint_maxima(
+    text: str, clocks_dict: dict[str, int], maxima: list[int]
+) -> None:
+    for clock, value_str in _BOUND_CONSTANT_RE.findall(str(text)):
+        if clock in clocks_dict:
+            idx = clocks_dict[clock]
+            maxima[idx] = max(maxima[idx], int(value_str))
+
+
+def _walk_formula_max_constants(
+    node, clocks_dict: dict[str, int], maxima: list[int]
+) -> None:
+    constraints = getattr(node, "constraints", None)
+    if constraints is not None:
+        if isinstance(constraints, tuple):
+            _record_constraint_maxima("".join(constraints), clocks_dict, maxima)
+        else:
+            _record_constraint_maxima(str(constraints), clocks_dict, maxima)
+
+    for attr in ("operand", "left", "right", "formula", "subject"):
+        child = getattr(node, attr, None)
+        if child is not None:
+            _walk_formula_max_constants(child, clocks_dict, maxima)
 
 
 def _walk_formula_clocks(node, model_clocks: set[str], found: set[str]) -> None:
@@ -47,7 +92,7 @@ def _walk_formula_clocks(node, model_clocks: set[str], found: set[str]) -> None:
 
 
 def extend_timed_cgs_clocks(tcgs, formula_clocks: tuple[str, ...]) -> None:
-    """Append formula clocks to tcgs.clocks and clocks_dict (mutates tcgs)."""
+    """Register formula clocks on the timed model so zones can track them."""
     for name in formula_clocks:
         if name in tcgs.clocks_dict:
             continue

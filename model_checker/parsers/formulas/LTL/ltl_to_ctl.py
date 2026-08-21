@@ -1,34 +1,66 @@
 import re
 
+_KEYWORD_TO_SYMBOL = (
+    (re.compile(r"\buntil\b", re.IGNORECASE), "U"),
+    (re.compile(r"\beventually\b", re.IGNORECASE), "F"),
+    (re.compile(r"\bglobally\b", re.IGNORECASE), "G"),
+    (re.compile(r"\bnext\b", re.IGNORECASE), "X"),
+)
 
-def ltl_to_ctl(ltl_formula):
-    """Lightweight string rewrite from LTL notation to a CTL-shaped form.
+# Separate glued temporal operators / single-letter atoms so the CTL lexer
+# sees distinct tokens (Xp, FGp). Do not split inside multi-letter names (Goal).
+# Also split after an existing path quantifier (AXp -> AX p).
+_COMPACT_TEMPORAL = re.compile(
+    r"(?:(?<![A-Za-z0-9_])|(?<=[AE]))([XFG])(?=[XFG]|[a-zA-Z_](?![a-zA-Z0-9_]))"
+)
 
-    Not semantics-preserving: this only adds universal path quantifiers before
-    temporal operators and wraps bare U occurrences so downstream components
-    that expect an A-prefixed shape can accept the string.
+# Add a universal path quantifier before each bare temporal operator.
+_PREFIX_TEMPORAL = re.compile(r"(?<![AE])(?<![a-zA-Z0-9_])([XFG])(?=\s|[(!]|$)")
+
+# Separate glued quantified temporals: AGAFp -> AG AF p (after compact/prefix).
+_ADJACENT_QUANTIFIED = re.compile(r"(A[XFG])(?=A[XFG])")
+
+_UNTIL_PATTERN = re.compile(
+    r"(\([^()]*\)|A\([^()]*\)|[a-zA-Z]\w*)\s*U\s*"
+    r"(\([^()]*\)|A\([^()]*\)|[a-zA-Z]\w*)"
+)
+
+
+def ltl_to_ctl(ltl_formula: str) -> str:
+    """Adapt an LTL formula string for the CTL-backed sure-win checker.
+
+    Turns the user formula into a universally quantified CTL-shaped string that
+    the CTL parser accepts after strategy pruning. This is a syntactic bridge
+    for VITAMIN's strategic LTL mode, not a classical LTL-to-CTL embedding.
     """
-    # Prefix X/F/G with A when not already prefixed by A or E, respecting token boundaries
-    pattern = r"(?<![AE])(?<![a-z0-9_])([XFG])(?=[XFG\s(!]|$|[a-z](?![a-zA-Z0-9_]))"
-    prev = None
-    while prev != ltl_formula:
-        prev = ltl_formula
-        ltl_formula = re.sub(pattern, r"A\1", ltl_formula)
+    formula = ltl_formula.strip()
+    for pattern, replacement in _KEYWORD_TO_SYMBOL:
+        formula = pattern.sub(replacement, formula)
 
-    # Wrap bare U occurrences with A(...) on both sides; tolerate simple atoms or parens
-    until_pattern = (
-        r"(\([^()]*\)|A\([^()]*\)|[a-zA-Z]\w*)\s*U\s*"
-        r"(\([^()]*\)|A\([^()]*\)|[a-zA-Z]\w*)"
-    )
+    prev = None
+    while prev != formula:
+        prev = formula
+        formula = _COMPACT_TEMPORAL.sub(r"\1 ", formula)
+
+    prev = None
+    while prev != formula:
+        prev = formula
+        formula = _PREFIX_TEMPORAL.sub(r"A\1 ", formula)
+
+    prev = None
+    while prev != formula:
+        prev = formula
+        formula = _ADJACENT_QUANTIFIED.sub(r"\1 ", formula)
+
     placeholder = "__U_PLACEHOLDER__"
-    while placeholder in ltl_formula:
+    while placeholder in formula:
         placeholder = f"{placeholder}_X"
 
-    # Iterate until no raw U matches remain
     while True:
-        new_formula = re.sub(until_pattern, rf"A(\1{placeholder}\2)", ltl_formula)
-        if new_formula == ltl_formula:
+        new_formula = _UNTIL_PATTERN.sub(rf"A(\1 {placeholder} \2)", formula)
+        if new_formula == formula:
             break
-        ltl_formula = new_formula
+        formula = new_formula
 
-    return ltl_formula.replace(placeholder, "U")
+    formula = formula.replace(placeholder, "U")
+    return re.sub(r"\s+", " ", formula).strip()

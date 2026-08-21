@@ -129,8 +129,8 @@ def test_forward_transition_with_reset(minimal_tcgs):
         minimal_tcgs, zone, source_idx=0, target_idx=1
     )
     assert successor_zone is not None
-    # So x >= 0. Because s1 has invariant x <= 2, x should be bounded by 2.
-    assert successor_zone.elements[1][0].constant == 2
+    # Discrete step with reset yields clocks at the reset value; delay is separate.
+    assert successor_zone.elements[1][0].constant == 0
     assert successor_zone.elements[0][1].constant == 0
 
     # restore

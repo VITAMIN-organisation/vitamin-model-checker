@@ -8,34 +8,50 @@ _PREORDER_CELLS = frozenset({"P", "P,R"})
 _TRANSITION_CELLS = frozenset({"R", "P,R"})
 
 
-def _check_birelational_constraint(
-    graph,
-    source_indices,
-    target_indices,
-    source_labels,
-    target_labels,
-) -> bool:
-    """Validate one birelational compatibility rule over matrix edge labels."""
-    source_labels = set(source_labels)
-    target_labels = set(target_labels)
-    return all(
-        # For each relevant target-side index y
-        any(
-            # there exists a source-side index u
-            not all(
-                # such that not every candidate index forms both required edges:
-                # u -> y labeled as target, and y -> u labeled as source.
-                graph[u, y] in target_labels and graph[y, u] in source_labels
-                for y in target_indices
-            )
-            for u in source_indices
-            # Keep only u values that participate in the source label family.
-            if any(graph[u, y] in source_labels for y in target_indices)
-        )
-        for y in target_indices
-        # Keep only y values that are reachable via the target label family.
-        if any(graph[u, y] in target_labels for u in source_indices)
-    )
+def _check_c1(graph: np.ndarray) -> bool:
+    """Check forward confluence of transitions along the knowledge preorder.
+
+    If a more informative state s' refines s, every R-successor of s must be
+    matched by an R-successor of s' that is at least as informative.
+    """
+    n = graph.shape[0]
+    for s in range(n):
+        for s_prime in range(n):
+            if graph[s, s_prime] not in _PREORDER_CELLS:
+                continue
+            for t in range(n):
+                if graph[s, t] not in _TRANSITION_CELLS:
+                    continue
+                if not any(
+                    graph[s_prime, t_prime] in _TRANSITION_CELLS
+                    and graph[t, t_prime] in _PREORDER_CELLS
+                    for t_prime in range(n)
+                ):
+                    return False
+    return True
+
+
+def _check_c2(graph: np.ndarray) -> bool:
+    """Check backward confluence of transitions along the knowledge preorder.
+
+    If s' refines s, every R-successor of s' must be matched by an R-successor
+    of s that is no more informative than that successor.
+    """
+    n = graph.shape[0]
+    for s in range(n):
+        for s_prime in range(n):
+            if graph[s, s_prime] not in _PREORDER_CELLS:
+                continue
+            for t_prime in range(n):
+                if graph[s_prime, t_prime] not in _TRANSITION_CELLS:
+                    continue
+                if not any(
+                    graph[s, t] in _TRANSITION_CELLS
+                    and graph[t, t_prime] in _PREORDER_CELLS
+                    for t in range(n)
+                ):
+                    return False
+    return True
 
 
 def _check_graph_shape(graph: np.ndarray) -> None:
@@ -61,7 +77,7 @@ def _check_antisymmetric(preorder: np.ndarray) -> None:
 
 
 def _check_transitive(preorder: np.ndarray) -> None:
-    # If s ->p t ->p u then s ->p u (boolean matrix multiply = 2-step preorder paths).
+    # Knowledge order must be transitive: if s refines t and t refines u, then s refines u.
     preorder_int = preorder.astype(np.int8)
     two_step = np.matmul(preorder_int, preorder_int).astype(bool)
     if np.any(two_step & ~preorder):
@@ -69,26 +85,10 @@ def _check_transitive(preorder: np.ndarray) -> None:
 
 
 def _check_inference_constraints(graph: np.ndarray) -> None:
-    state_indices = range(graph.shape[0])
-
-    # C1/C2: transition-like source labels against preorder-like target labels.
-    if not _check_birelational_constraint(
-        graph,
-        state_indices,
-        state_indices,
-        _TRANSITION_CELLS,
-        _PREORDER_CELLS,
-    ):
-        raise AssertionError("The graph does not satisfy conditions C1 and C2.")
-    # C3: same check with source/target label families swapped.
-    if not _check_birelational_constraint(
-        graph,
-        state_indices,
-        state_indices,
-        _PREORDER_CELLS,
-        _TRANSITION_CELLS,
-    ):
-        raise AssertionError("The graph does not satisfy condition C3.")
+    if not _check_c1(graph):
+        raise AssertionError("The graph does not satisfy condition C1.")
+    if not _check_c2(graph):
+        raise AssertionError("The graph does not satisfy condition C2.")
 
 
 def _preorder_successors(graph: np.ndarray, states) -> dict:
@@ -103,7 +103,7 @@ def _preorder_successors(graph: np.ndarray, states) -> dict:
 def _check_labeling_respects_preorder(
     preorder_successors, matrix_prop, states_list
 ) -> None:
-    """Labels are monotone along preorder: V(s) subset V(s') when s <= s'."""
+    """Ensure atoms never disappear when knowledge grows along the preorder."""
     state_index = {str(state): idx for idx, state in enumerate(states_list)}
     for state, greater_states in preorder_successors.items():
         state_row = matrix_prop[state_index[state]]
@@ -126,10 +126,10 @@ def _check_model_metadata(model: Any) -> None:
 
 
 def check_conditions_hold(model: Any) -> None:
-    """Validate that ``model`` describes a well-formed ICTL birelational model.
+    """Reject models that are not valid well-behaved ICTL birelational frames.
 
-    Enforces C1, C2, and C3 birelational constraints, plus preorder and
-    labeling rules.
+    Checks serial transitions, a partial knowledge order, confluence between
+    knowledge and time (C1/C2), and monotone atomic labelling.
     """
     graph = model.graph
     preorder = np.vectorize(lambda cell: cell in _PREORDER_CELLS, otypes=[bool])(graph)

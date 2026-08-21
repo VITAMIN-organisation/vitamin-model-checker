@@ -178,11 +178,11 @@ class TestPaperCountermodels:
 class TestReleaseOperators:
     def test_existential_release_on_fixture(self):
         model = _load_cgs_file(str(_EXPERIMENT_MODEL))
-        assert _states_from_checker(model, "E e R h") == {"s2"}
+        assert _states_from_checker(model, "E e R h") == {"s2", "s3", "s4", "s5"}
 
     def test_universal_release_on_fixture(self):
         model = _load_cgs_file(str(_EXPERIMENT_MODEL))
-        assert _states_from_checker(model, "A e R h") == set()
+        assert _states_from_checker(model, "A e R h") == {"s2", "s3", "s4", "s5"}
 
 
 class TestUntilOperators:
@@ -191,7 +191,7 @@ class TestUntilOperators:
         [
             ("E e U h", {"s1", "s2", "s3", "s4", "s5"}, False),
             ("A e U h", {"s2", "s3", "s4", "s5"}, False),
-            ("E e U c", set(), False),
+            ("E e U c", {"s1", "s2", "s3", "s4", "s5"}, False),
         ],
     )
     def test_until_on_fixture(self, formula, expected_states, initial_satisfied):
@@ -205,19 +205,19 @@ class TestUntilOperators:
 
 
 class TestFixtureSemantics:
-    """Pinned results for the deterministic experiment_2x3 fixture."""
+    """Pinned results for the well-behaved experiment_2x3 fixture."""
 
     @pytest.mark.parametrize(
         ("formula", "expected_states", "initial_satisfied"),
         [
-            ("EX e", {"s0", "s1", "s3"}, True),
+            ("EX e", {"s0", "s1", "s2", "s3", "s4", "s5"}, True),
             ("EF e", {"s0", "s1", "s2", "s3", "s4", "s5"}, True),
-            ("AG e", set(), False),
-            ("!(e -> h)", {"s1", "s4"}, False),
-            ("AX e", {"s0", "s3"}, True),
-            ("AX h", {"s4", "s5"}, False),
-            ("EG e", {"s1"}, False),
-            ("AF e", {"s0", "s1", "s3", "s4", "s5"}, True),
+            ("AG e", {"s1", "s2", "s3", "s4", "s5"}, False),
+            ("!(e -> h)", set(), False),
+            ("AX e", {"s1", "s2", "s3", "s4", "s5"}, False),
+            ("AX h", {"s2", "s3", "s4", "s5"}, False),
+            ("EG e", {"s1", "s2", "s3", "s4", "s5"}, False),
+            ("AF e", {"s1", "s2", "s3", "s4", "s5"}, False),
         ],
     )
     def test_formula_result(self, formula, expected_states, initial_satisfied):

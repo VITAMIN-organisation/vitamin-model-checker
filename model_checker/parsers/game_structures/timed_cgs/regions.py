@@ -1,4 +1,4 @@
-"""Region-level helpers for TCTL rsat on the zone graph."""
+"""Helpers that lift discrete location facts onto zone-graph regions for TCTL."""
 
 from typing import TYPE_CHECKING
 
@@ -58,11 +58,16 @@ def regions_with_clock_guard(
 
 
 def region_matches_label(region: TimeState, label: RegionSet) -> bool:
-    """True when label covers region at the same location (zone inclusion)."""
+    """Return whether ``region`` is covered by the labelled set.
+
+    Used after operations that change the zone (for example a clock reset):
+    the resulting symbolic state still counts as satisfying the formula when
+    some labelled zone at the same location contains it.
+    """
     for other in label:
         if other.location != region.location:
             continue
-        if other.zone == region.zone or other.zone.includes(region.zone):
+        if other.zone == region.zone or region.zone.includes(other.zone):
             return True
     return False
 
@@ -70,6 +75,7 @@ def region_matches_label(region: TimeState, label: RegionSet) -> bool:
 def region_with_clock_reset(
     tcgs: "TimedCGS", region: TimeState, clock_name: str
 ) -> TimeState:
+    """Copy of ``region`` with the named clock reset to zero."""
     clock_index = tcgs.clocks_dict[clock_name] + 1
     zone = region.zone.copy()
     zone.reset(clock_index, 0)
@@ -82,7 +88,11 @@ def timed_predecessors(
     targets: RegionSet,
     guard: str | tuple | None = None,
 ) -> RegionSet:
-    """Backward step in the zone graph (delay and discrete edges)."""
+    """Symbolic states that can reach ``targets`` in one zone-graph step.
+
+    Includes both delay and discrete successors. When ``guard`` is given, only
+    predecessors whose zone satisfies that guard are kept.
+    """
     if not targets:
         return set()
 

@@ -80,8 +80,6 @@ def forward_transition_zone(
         return None
     for clock_idx, reset_value in resets:
         successor.reset(clock_idx, reset_value)
-    if resets:
-        successor.up()
     if tcgs.invariants_arr[target_idx]:
         apply_location_invariants(successor, tcgs, target_idx)
     return successor if not successor.is_empty() else None

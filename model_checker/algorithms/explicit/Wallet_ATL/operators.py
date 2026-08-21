@@ -17,7 +17,7 @@ from .preimage import (
 
 
 def handle_wallet_coalition_globally(cgs, node, transition_cache):
-    """Handle <<A:wallet(...)>>G operator."""
+    """States where the coalition can keep phi forever under the wallet guards."""
     coalition, coalition_agents, constraints = extract_coalition_and_constraints(
         node.value
     )
@@ -36,18 +36,19 @@ def handle_wallet_coalition_globally(cgs, node, transition_cache):
 
 
 def handle_wallet_coalition_next(cgs, node, transition_cache):
-    """Handle <<A:wallet(...)>>X operator."""
+    """States that satisfy the wallet guards and can force phi in one step."""
     coalition, coalition_agents, constraints = extract_coalition_and_constraints(
         node.value
     )
     states = parse_state_set_literal(node.left.value)
     wallet_states = apply_wallet_constraints(cgs, coalition_agents, constraints, states)
     pre_states = pre(cgs, coalition, wallet_states, transition_cache)
-    node.value = str(tuple(sorted({str(s) for s in pre_states})))
+    result = apply_wallet_constraints(cgs, coalition_agents, constraints, pre_states)
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 def handle_wallet_coalition_eventually(cgs, node, transition_cache):
-    """Handle <<A:wallet(...)>>F operator."""
+    """States that satisfy the wallet guards and can force phi eventually."""
     coalition, coalition_agents, constraints = extract_coalition_and_constraints(
         node.value
     )
@@ -69,7 +70,7 @@ def handle_wallet_coalition_eventually(cgs, node, transition_cache):
 
 
 def handle_wallet_coalition_until(cgs, node, transition_cache):
-    """Handle <<A:wallet(...)>>U operator."""
+    """States where the coalition can force psi while keeping phi under wallet guards."""
     coalition, coalition_agents, constraints = extract_coalition_and_constraints(
         node.value
     )
