@@ -4,7 +4,6 @@ import pytest
 
 from model_checker.algorithms.explicit.OATL.OATL import _core_oatl_checking
 from model_checker.algorithms.explicit.OATL.preimage import (
-    _cost_cache,
     _get_cached_cost,
 )
 from model_checker.algorithms.explicit.shared.cost_utils import cost_to_scalar
@@ -74,7 +73,8 @@ class TestOATLCostScalar:
             costs_for_actions={"A": "s0$1:100", "*": "s1$0:0"},
         )
         cgs = load_costcgs_from_content(temp_file, content)
-        _cost_cache.clear()
+        if hasattr(cgs, "_oatl_cost_cache"):
+            cgs._oatl_cost_cache.clear()
 
         raw = cgs.get_cost_for_action("A", "s0")
         assert raw == [1, 100]

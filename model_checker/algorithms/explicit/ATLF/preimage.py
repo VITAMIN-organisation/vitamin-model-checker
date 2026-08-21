@@ -1,5 +1,6 @@
 """Pre-image computation for ATLF (real-valued semantics in [0,1])."""
 
+import ast
 from typing import TYPE_CHECKING
 
 from model_checker.parsers.game_structures.cgs import cgs_actions
@@ -78,8 +79,6 @@ def pre(
 ) -> list[tuple[str, float]]:
     """Compute the ATLF pre-image as a list of (state, value) pairs."""
     if isinstance(atom_values, str):
-        import ast
-
         atom_values = ast.literal_eval(atom_values)
 
     atom_dict = dict(atom_values)

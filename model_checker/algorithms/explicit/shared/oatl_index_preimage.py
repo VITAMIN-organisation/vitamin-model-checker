@@ -161,7 +161,7 @@ def cross_state_names(
     solve_context: SolveContext,
     base_action_cache: dict,
     has_affordable_action_fn,
-    early_stop: set[str] = None,
+    exclude_accumulated: set[str] = None,
 ) -> set[str]:
     """State-name wrapper around index-space cost-bounded pre-image."""
     target_indices = state_names_to_indices(cgs, target_states)
@@ -175,7 +175,7 @@ def cross_state_names(
         has_affordable_action_fn,
     )
     result = {cgs.get_state_name_by_index(idx) for idx in pre_state_indices}
-    if early_stop is not None:
-        early_stop_str = {str(state) for state in early_stop}
-        result = {state for state in result if state not in early_stop_str}
+    if exclude_accumulated is not None:
+        exclude_accumulated_str = {str(state) for state in exclude_accumulated}
+        result = {state for state in result if state not in exclude_accumulated_str}
     return result

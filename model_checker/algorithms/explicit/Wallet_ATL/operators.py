@@ -43,7 +43,7 @@ def handle_wallet_coalition_next(cgs, node, transition_cache):
     states = parse_state_set_literal(node.left.value)
     wallet_states = apply_wallet_constraints(cgs, coalition_agents, constraints, states)
     pre_states = pre(cgs, coalition, wallet_states, transition_cache)
-    node.value = str(tuple(sorted({str(s) for s in pre_states & wallet_states})))
+    node.value = str(tuple(sorted({str(s) for s in pre_states})))
 
 
 def handle_wallet_coalition_eventually(cgs, node, transition_cache):

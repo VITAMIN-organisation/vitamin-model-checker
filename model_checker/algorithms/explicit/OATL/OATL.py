@@ -7,10 +7,6 @@ while each chosen transition has cost at most `k`.
 
 import logging
 
-from model_checker.algorithms.explicit.OATL.preimage import (
-    _base_action_cache,
-    _cost_cache,
-)
 from model_checker.algorithms.explicit.OATL.solver import solve_tree
 from model_checker.algorithms.explicit.shared import (
     build_resolved_formula_tree,
@@ -30,8 +26,8 @@ logger = logging.getLogger(__name__)
 
 def _core_oatl_checking(cgs, formula):
     """Core OATL logic."""
-    _cost_cache.clear()
-    _base_action_cache.clear()
+    cgs._oatl_cost_cache = {}
+    cgs._oatl_base_action_cache = {}
 
     parser = FormulaParserFactory.get_parser_instance("OATL")
     res_parsing = parser.parse(formula, n_agent=cgs.get_number_of_agents())

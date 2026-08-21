@@ -5,7 +5,7 @@ Extends standard CTL operators to produce execution traces that demonstrate
 why formulas hold or fail, aiding debugging and result interpretation.
 """
 
-from model_checker.algorithms.explicit.CTL.fixpoint import (
+from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     least_fixpoint,
     least_fixpoint_with_trace,
 )
@@ -78,7 +78,11 @@ def handle_ef_with_trace(
         new_states, new_preds = pre_image_exist_with_trace(cached_edges, T)
         return T.union(new_states), new_preds
 
-    result, predecessors = least_fixpoint_with_trace(target, update_with_trace)
+    result, predecessors = least_fixpoint_with_trace(
+        target,
+        update_with_trace,
+        normalize_state_set_func=lambda s: {str(x) for x in s},
+    )
 
     op = OperatorWithTrace()
     op.result_states = result
@@ -224,7 +228,11 @@ def handle_eu_with_trace(
         filtered_preds = {s: p for s, p in new_preds.items() if s in phi_set}
         return result_states, filtered_preds
 
-    result, predecessors = least_fixpoint_with_trace(psi_states, update_with_trace)
+    result, predecessors = least_fixpoint_with_trace(
+        psi_states,
+        update_with_trace,
+        normalize_state_set_func=lambda s: {str(x) for x in s},
+    )
 
     op = OperatorWithTrace()
     op.result_states = result

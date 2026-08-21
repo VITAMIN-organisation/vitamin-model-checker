@@ -8,6 +8,7 @@ from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_not,
     handle_or,
 )
+from model_checker.algorithms.explicit.shared.solver_core import solve_formula_tree
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 from .operators import (
@@ -59,23 +60,15 @@ def _walletatl_binary_key(parser_instance: Any, val: Any) -> str | None:
 
 def solve_tree(cgs, node, transition_cache: dict | None = None) -> None:
     """Recursively solve Wallet_ATL formula tree bottom-up."""
-    if node.left is not None:
-        solve_tree(cgs, node.left, transition_cache)
-    if node.right is not None:
-        solve_tree(cgs, node.right, transition_cache)
-
     parser_instance = FormulaParserFactory.get_parser_instance("Wallet_ATL")
-    if node.right is None:
-        key = _walletatl_unary_key(parser_instance, node.value)
-        if key and key in _UNARY:
-            if key == "NOT":
-                _UNARY[key](cgs, node)
-            else:
-                _UNARY[key](cgs, node, transition_cache)
-    elif node.left is not None and node.right is not None:
-        key = _walletatl_binary_key(parser_instance, node.value)
-        if key and key in _BINARY:
-            if key in ["AND", "OR", "IMPLIES"]:
-                _BINARY[key](cgs, node)
-            else:
-                _BINARY[key](cgs, node, transition_cache)
+    solve_formula_tree(
+        cgs,
+        node,
+        parser_instance,
+        _UNARY,
+        _BINARY,
+        _walletatl_unary_key,
+        _walletatl_binary_key,
+        {"NOT", "AND", "OR", "IMPLIES"},
+        extra_args=(transition_cache,),
+    )

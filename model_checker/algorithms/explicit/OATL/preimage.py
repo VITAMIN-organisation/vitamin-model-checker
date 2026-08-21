@@ -2,15 +2,15 @@
 
 from model_checker.algorithms.explicit.shared.cost_utils import cost_to_scalar
 
-_cost_cache: dict[tuple, float] = {}
-_base_action_cache: dict[tuple, str] = {}
-
 
 def _get_cached_cost(cgs, action: str, state_name: str) -> float:
     """Return cost for (action, state_name), using cache when possible."""
+    if not hasattr(cgs, "_oatl_cost_cache"):
+        cgs._oatl_cost_cache = {}
+
     cache_key = (action, state_name)
-    if cache_key in _cost_cache:
-        return _cost_cache[cache_key]
+    if cache_key in cgs._oatl_cost_cache:
+        return cgs._oatl_cost_cache[cache_key]
 
     cost = 0.0
     try:
@@ -24,7 +24,7 @@ def _get_cached_cost(cgs, action: str, state_name: str) -> float:
             except (KeyError, IndexError, AttributeError, TypeError):
                 pass
 
-    _cost_cache[cache_key] = cost
+    cgs._oatl_cost_cache[cache_key] = cost
     return cost
 
 

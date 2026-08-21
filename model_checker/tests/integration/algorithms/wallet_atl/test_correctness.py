@@ -45,7 +45,7 @@ class TestWalletATLSemantics:
         [
             ("<<1>>F q", {"s0", "s1"}, True),
             ("<<1>>X p", {"s0"}, True),
-            ("<<1>>X q", {"s1"}, False),
+            ("<<1>>X q", {"s0", "s1"}, True),
             ("<<1>>G p", {"s0"}, True),
         ],
     )

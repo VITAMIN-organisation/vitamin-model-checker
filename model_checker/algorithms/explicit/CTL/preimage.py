@@ -4,6 +4,9 @@ from typing import Any
 
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
+# Below this edge count, a linear scan is faster than building a reverse-index dict.
+_SMALL_GRAPH_THRESHOLD = 50
+
 
 def _build_reverse_index(
     transitions: list[tuple[Any, Any]],
@@ -26,7 +29,7 @@ def pre_image_exist(
     """Existential pre-image (EX): states with at least one successor in target_states."""
     target_states = {str(s) for s in target_states}
 
-    if len(transitions) < 50 and reverse_index is None:
+    if len(transitions) < _SMALL_GRAPH_THRESHOLD and reverse_index is None:
         predecessors = set()
         target_strs = {str(s) for s in target_states}
         for source, target in transitions:

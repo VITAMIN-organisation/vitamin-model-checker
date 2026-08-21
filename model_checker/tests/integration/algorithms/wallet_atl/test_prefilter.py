@@ -30,7 +30,7 @@ def test_wallet_atl_short_circuits_on_false_atl(wallet_atl_model):
     In wallet_1agent_2states.txt, `<<1>> G q` is False in standard ATL.
     """
     formula = "<< 1 : wallet(1, >= 10) >> G q"
-    
+
     with patch(
         "model_checker.algorithms.explicit.Wallet_ATL.Wallet_ATL.solve_tree"
     ) as mock_solve_tree:
@@ -52,7 +52,7 @@ def test_wallet_atl_proceeds_on_true_atl(wallet_atl_model):
     In wallet_1agent_2states.txt, `<<1>> F q` is True.
     """
     formula = "<< 1 : wallet(1, >= 10) >> F q"
-    
+
     with patch(
         "model_checker.algorithms.explicit.Wallet_ATL.Wallet_ATL.solve_tree"
     ) as mock_solve_tree:

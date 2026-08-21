@@ -1,7 +1,6 @@
 """Handler functions for all OATL operators (unary: NOT/<Jn>X/<Jn>F/<Jn>G; binary: OR/AND/IMPLIES/<Jn>U)."""
 
 from model_checker.algorithms.explicit.OATL.preimage import (
-    _base_action_cache,
     has_affordable_action,
     min_action_cost,
 )
@@ -37,7 +36,7 @@ def handle_coalition_globally(cgs, node, solve_context: SolveContext):
             coalition,
             p,
             solve_context,
-            _base_action_cache,
+            cgs._oatl_base_action_cache,
             has_affordable_action,
         )
 
@@ -60,7 +59,7 @@ def handle_coalition_next(cgs, node, solve_context: SolveContext):
                         coalition,
                         target,
                         solve_context,
-                        _base_action_cache,
+                        cgs._oatl_base_action_cache,
                         has_affordable_action,
                     )
                 }
@@ -107,7 +106,7 @@ def handle_coalition_eventually(cgs, node, solve_context: SolveContext):
                 safe_indices,
                 agents,
                 solve_context["graph"],
-                _base_action_cache,
+                cgs._oatl_base_action_cache,
             )
             if not actions:
                 continue
@@ -142,9 +141,9 @@ def handle_coalition_until(cgs, node, solve_context: SolveContext):
                 coalition,
                 p,
                 solve_context,
-                _base_action_cache,
+                cgs._oatl_base_action_cache,
                 has_affordable_action,
-                early_stop=p,
+                exclude_accumulated=p,
             )
         )
 

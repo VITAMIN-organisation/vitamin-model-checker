@@ -12,6 +12,7 @@ from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_not,
     handle_or,
 )
+from model_checker.algorithms.explicit.shared.solver_core import solve_formula_tree
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 _UNARY = {
@@ -62,40 +63,18 @@ def solve_tree(cgs, node, solve_context, cache=None):
     if cache is None:
         cache = {}
 
-    node_key = (
-        str(node.value)
-        + (str(node.left) if node.left else "")
-        + (str(node.right) if node.right else "")
-    )
-    if node_key in cache:
-        node.value = cache[node_key]
-        return
 
-    if node.left:
-        solve_tree(cgs, node.left, solve_context, cache)
-    if node.right:
-        solve_tree(cgs, node.right, solve_context, cache)
-
-    val = node.value
+def solve_tree(cgs, node, solve_context):
+    """Recursively solve the OATL formula tree."""
     parser = FormulaParserFactory.get_parser_instance("OATL")
-    if node.right is None:
-        if node.left is None:
-            cache[node_key] = node.value
-            return
-        key = _oatl_unary_key(parser, val)
-        if key is None or key not in _UNARY:
-            raise ValueError(f"Unsupported OATL unary operator: {val!r}")
-        if key == "NOT":
-            _UNARY[key](cgs, node)
-        else:
-            _UNARY[key](cgs, node, solve_context)
-    elif node.left and node.right:
-        key = _oatl_binary_key(parser, val)
-        if key is None or key not in _BINARY:
-            raise ValueError(f"Unsupported OATL binary operator: {val!r}")
-        if key in ["AND", "OR", "IMPLIES"]:
-            _BINARY[key](cgs, node)
-        else:
-            _BINARY[key](cgs, node, solve_context)
-
-    cache[node_key] = node.value
+    solve_formula_tree(
+        cgs,
+        node,
+        parser,
+        _UNARY,
+        _BINARY,
+        _oatl_unary_key,
+        _oatl_binary_key,
+        {"NOT", "AND", "OR", "IMPLIES"},
+        extra_args=(solve_context,),
+    )

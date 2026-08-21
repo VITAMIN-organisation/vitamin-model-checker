@@ -14,6 +14,7 @@ from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_not,
     handle_or,
 )
+from model_checker.algorithms.explicit.shared.solver_core import solve_formula_tree
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 if TYPE_CHECKING:
@@ -67,24 +68,15 @@ def solve_tree(
     cgs: "CGS", node: Any, transition_cache: dict[str, Any] | None = None
 ) -> None:
     """Evaluate the formula tree bottom-up, storing satisfying states at each node."""
-    if node.left is not None:
-        solve_tree(cgs, node.left, transition_cache)
-    if node.right is not None:
-        solve_tree(cgs, node.right, transition_cache)
-
-    val = node.value
-    parser_instance = FormulaParserFactory.get_parser_instance("ATL")
-    if node.right is None:
-        key = _atl_unary_key(parser_instance, val)
-        if key and key in _UNARY:
-            if key == "NOT":
-                _UNARY[key](cgs, node)
-            else:
-                _UNARY[key](cgs, node, transition_cache)
-    elif node.left is not None and node.right is not None:
-        key = _atl_binary_key(parser_instance, val)
-        if key and key in _BINARY:
-            if key in ["AND", "OR", "IMPLIES"]:
-                _BINARY[key](cgs, node)
-            else:
-                _BINARY[key](cgs, node, transition_cache)
+    parser = FormulaParserFactory.get_parser_instance("ATL")
+    solve_formula_tree(
+        cgs,
+        node,
+        parser,
+        _UNARY,
+        _BINARY,
+        _atl_unary_key,
+        _atl_binary_key,
+        {"NOT", "AND", "OR", "IMPLIES"},
+        extra_args=(transition_cache,),
+    )

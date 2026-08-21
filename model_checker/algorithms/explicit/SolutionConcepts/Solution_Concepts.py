@@ -45,15 +45,16 @@ def is_not_nash(
                 original_strategy_part = current_strategy[agent_index]
 
                 current_strategy[agent_index] = deviation
-
-                if pruning(cgs, model, agents, ctl_formula, current_strategy):
-                    logger.info(
-                        "Profitable deviation found for agent %s: %s", agent, deviation
-                    )
+                try:
+                    if pruning(cgs, model, agents, ctl_formula, current_strategy):
+                        logger.info(
+                            "Profitable deviation found for agent %s: %s",
+                            agent,
+                            deviation,
+                        )
+                        return True
+                finally:
                     current_strategy[agent_index] = original_strategy_part
-                    return True
-
-                current_strategy[agent_index] = original_strategy_part
 
     return False
 

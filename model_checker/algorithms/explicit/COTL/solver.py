@@ -6,6 +6,7 @@ from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_not,
     handle_or,
 )
+from model_checker.algorithms.explicit.shared.solver_core import solve_formula_tree
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cgs import cgs_actions
 
@@ -66,30 +67,18 @@ def _cotl_binary_key(parser_instance, val):
 
 def solve_tree(cgs, node, solve_context):
     """Recursively solve the COTL formula tree bottom-up."""
-    if node.left is not None:
-        solve_tree(cgs, node.left, solve_context)
-    if node.right is not None:
-        solve_tree(cgs, node.right, solve_context)
-
     parser = FormulaParserFactory.get_parser_instance("COTL")
-    if node.right is None:
-        if node.left is None:
-            return
-        key = _cotl_unary_key(parser, node.value)
-        if key is None or key not in _UNARY:
-            raise ValueError(f"Unsupported COTL unary operator: {node.value!r}")
-        if key == "NOT":
-            _UNARY[key](cgs, node)
-        else:
-            _UNARY[key](cgs, node, solve_context)
-    elif node.left is not None and node.right is not None:
-        key = _cotl_binary_key(parser, node.value)
-        if key is None or key not in _BINARY:
-            raise ValueError(f"Unsupported COTL binary operator: {node.value!r}")
-        if key in ["AND", "OR", "IMPLIES"]:
-            _BINARY[key](cgs, node)
-        else:
-            _BINARY[key](cgs, node, solve_context)
+    solve_formula_tree(
+        cgs,
+        node,
+        parser,
+        _UNARY,
+        _BINARY,
+        _cotl_unary_key,
+        _cotl_binary_key,
+        {"NOT", "AND", "OR", "IMPLIES"},
+        extra_args=(solve_context,),
+    )
 
 
 def build_solve_context(graph):

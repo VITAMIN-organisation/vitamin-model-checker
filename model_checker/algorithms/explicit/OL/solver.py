@@ -17,6 +17,7 @@ from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_not,
     handle_or,
 )
+from model_checker.algorithms.explicit.shared.solver_core import solve_formula_tree
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
 _UNARY = {
@@ -72,33 +73,19 @@ def solve_tree(cgs, node, cache: dict = None):
     if cache is None:
         cache = {}
 
-    node_key = (
-        str(node.value)
-        + (str(node.left) if node.left else "")
-        + (str(node.right) if node.right else "")
-    )
-    if node_key in cache:
-        node.value = cache[node_key]
-        return
-
-    if node.left:
-        solve_tree(cgs, node.left, cache)
-    if node.right:
-        solve_tree(cgs, node.right, cache)
-
     parser = FormulaParserFactory.get_parser_instance("OL")
-    val = node.value
-    if node.right is None:
-        key = _ol_unary_key(parser, val)
-        if key and key in _UNARY:
-            _UNARY[key](cgs, node)
-    elif node.left and node.right:
-        key = _ol_ternary_key(parser, val)
-        if key and key in TERNARY_EVALUATORS:
-            handle_demonic_ternary(cgs, node, TERNARY_EVALUATORS[key])
-        else:
-            key = _ol_binary_key(parser, val)
-            if key and key in _BINARY:
-                _BINARY[key](cgs, node)
-
-    cache[node_key] = node.value
+    solve_formula_tree(
+        cgs,
+        node,
+        parser,
+        _UNARY,
+        _BINARY,
+        _ol_unary_key,
+        _ol_binary_key,
+        {"NOT", "AND", "OR", "IMPLIES"},
+        extra_args=(),
+        ternary_map=TERNARY_EVALUATORS,
+        ternary_key_fn=_ol_ternary_key,
+        ternary_handler=handle_demonic_ternary,
+        cache=cache,
+    )

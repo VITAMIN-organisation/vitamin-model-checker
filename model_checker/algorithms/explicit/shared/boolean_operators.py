@@ -1,16 +1,13 @@
 """Boolean operators on formula tree nodes (AND, OR, NOT, IMPLIES)."""
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from model_checker.algorithms.explicit.shared.boolean_semantics import (
     compute_boolean_result,
 )
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 from model_checker.utils.literals import parse_state_set_literal
-
-if TYPE_CHECKING:
-    pass
 
 
 def _set_node_state_set(node: Any, state_set) -> None:
