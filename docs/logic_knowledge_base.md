@@ -145,251 +145,31 @@ debugging hints only; trust the satisfying state set for semantics.
 
 ### Current Implementation
 
-**Parser Location:** `model_checker/parsers/formulas/CTL/parser.py`
-
-**Supported Syntax:**
-1.  **Quantifiers**: `E` (exist), `A` (forall).
-2.  **Operators**: `X` (next), `F` (eventually), `G` (globally/always), `U` (until). Release (`AR`/`ER`) is **not** in the CTL surface syntax.
-3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*` (Letter start, then alphanumerics/underscores).
-4.  **Grouping**: Parentheses `()` and square brackets `[]` are both supported. (Note: `[]` is unique to CTL).
-
-**Validation Rules:**
-- **Quantifier Requirement**: In CTL, every temporal operator (X, F, G, U) MUST be preceded by a path quantifier (A or E).
-- **No coalition brackets**: CTL uses `E` / `A`, not ATL-style `<...>` coalitions. For existential reachability use `EF p`, not `<> F p` (empty `<>` is rejected in coalition logics and is not valid CTL syntax).
-- **Propositions**: Cannot match reserved keywords like `and`, `or`, `exists`, etc.
-
-**Formula Examples:**
-```text
-EX p
-AX [p && q]
-EF (p -> AG q)
-A (p U q)
-E (p U [q && AG r])
-```
-
-### Comparison: Theory vs Implementation
-
-| Aspect | Theory | Implementation |
-| :--- | :--- | :--- |
-| **Quantifiers** | E, A | `E`, `A` (also `exist`, `forall`) |
-| **Temporal Ops** | X, F, G, U | `X`, `F`, `G`, `U` (also `next`, `eventually`, etc.) |
-| **Boolean Ops** | AND, OR, NOT, IMPLIES | `&&`, `\|\|`, `!`, `->` (plus keywords) |
-| **Grouping** | ( ) | `( )` and `[ ]` |
-| **State Props** | p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
-
----
-
-<a id="ltl---linear-temporal-logic"></a>
-## LTL
-
-### Theoretical Background
-
-In VITAMIN, LTL is implemented as **game-theoretic sure-win checking** over CGS models: the checker searches for a strategy profile that guarantees the formula on all plays consistent with that strategy (via strategy pruning and CTL-backed evaluation), not classical path-by-path LTL model checking on a single linear trace.
-
-> **Not classical path-LTL.** Do not interpret a True/False result as "every / some path of the unreduced CGS satisfies LTL phi". The engine enumerates natural strategies (default complexity bound `k=5` for the grand coalition), prunes the CGS, then checks an **A-prefixed CTL-shaped rewrite** of the formula. The rewrite (`ltl_to_ctl`) is a parsing bridge, not a semantics-preserving embedding of LTL into CTL.
-
-### Current Implementation
-
-**Parser Location:** `model_checker/parsers/formulas/LTL/parser.py`
-
-**Supported Syntax:**
-1.  **Operators**: `X`, `F`, `G`, `U` (and keyword aliases).
-2.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
-3.  **No quantifiers**: `E`/`A` and coalition brackets are rejected in the LTL surface language (the backend injects `A` after rewrite).
-
-**Validation Rules:**
-- No coalitions or path quantifiers in user input.
-- `R` and `W` are **not** in the LTL surface syntax.
-
-**Formula Examples:**
-```text
-G p
-F (p && G q)
-p U q
-```
-
-### Comparison: Theory vs Implementation
-
-| Aspect | Classical path-LTL | VITAMIN implementation |
-| :--- | :--- | :--- |
-| **Semantics** | Single infinite path | Sure-win / strategy-based over CGS |
-| **Path quantifiers** | None | User cannot write `A`/`E`; rewrite inserts `A` |
-| **Temporal ops** | X, F, G, U, R, W | `X`, `F`, `G`, `U` only |
-| **Release / Weak** | R, W | Not supported |
-| **Strategy bound** | N/A | Default `k=5` natural strategies |
-
----
-
-<a id="atl--atlf---alternating-time-temporal-logic"></a>
-## ATL / ATLF - Alternating-time Temporal Logic
-
-### Theoretical Background
-
-ATL extends CTL with coalition operators `[A]` (in VITAMIN written as `<A>`) to reason about the capabilities of agents. It is evaluated over Concurrent Game Structures (CGS).
-
-**Standard Syntax:**
-- **Coalition Operators:**
-    - `<{1,2}> p`: Coalition of agents 1 and 2 has a strategy to ensure p.
-- **Temporal Operators (same as CTL):** `X`, `F`, `G`, `U`.
-
-**Semantics:**
-- `<A> p` means agents in `A` have a strategy such that for all strategies of the other agents, `p` holds.
-- **ATLF (Fixed-point ATL)**: Evaluated using fixed-point reasoning with real-valued semantics. Truth values are in the range `[0, 1]` rather than binary booleans.
-
-**Standard Examples:**
-- `<1> F win`: Agent 1 can eventually win regardless of others.
-- `<1,2> G safe`: Agents 1 and 2 can maintain safety.
-
-### Current Implementation
-
-**Parser Location:** `model_checker/parsers/formulas/ATL/parser.py`
-
-**Supported Syntax:**
-1.  **Coalition Syntax**: `<1,2>` (Angle brackets, comma-separated agent indices). Braces `{ }` are NOT used in the implementation's surface syntax for plain ATL.
-2.  **Operators**: `X`, `F`, `G`, `U`.
-3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
-4.  **Validation**: Agent indices must be in range `[1, n_agent]`. Empty coalition `<>` is rejected.
-
-**Formula Examples:**
-```text
-<1> F win
-<1,2> G (p -> <3> F q)
-<1> (p U q)
-```
-
-### Comparison: Theory vs Implementation
-
-| Aspect | Theory | Implementation |
-| :--- | :--- | :--- |
-| **Coalition** | <{1,2}> | `<1,2>` |
-| **Temporal Ops** | X, F, G, U | `X`, `F`, `G`, `U` |
-| **Propositions** | p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
-| **Valuation** | Binary (ATL) / [0,1] (ATLF) | Handled by model checker |
-
----
-
-<a id="natatl--natatlf---natural-atl"></a>
-## NatATL / NatATLF
-
-### Theoretical Background
-
-NatATL extends ATL with a bound `k` on **strategy complexity** (maximum condition-token depth in synthesized strategies), not on how many agents may act at once. **NatATLF** uses the same syntax and delegates to the NatATL Memoryless solver.
-
-**Standard Syntax:**
-- **Capacity Operator**: `<{A}, k> p`
-    - `A`: A set of agents.
-    - `k`: Positive integer bound on strategy complexity.
-
-### Current Implementation
-
-**Parser Location:** `model_checker/parsers/formulas/NatATL/parser.py`
-
-**Supported Syntax:**
-1.  **Canonical Form**: `<{1,2}, 3>` (Angle brackets, curly braces for agent set, comma, then positive integer bound).
-2.  **Operators**: `X`, `F`, `G`, `U`.
-3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
-
-**Validation Rules:**
-- **Braces Required**: Unlike standard ATL, NatATL MUST use curly braces for the agent set `<{...}, k>`.
-- **Bound Required**: The capacity bound `k` is mandatory.
-
-**Formula Examples:**
-```text
-<{1,2}, 3> F goal
-<{1}, 1> G active
-```
-
-### Comparison: Theory vs Implementation
-
-| Aspect | Theory | Implementation |
-| :--- | :--- | :--- |
-| **Coalition** | <{A}, k> | `<{A}, k>` (Braces required) |
-| **Bound k** | Strategy complexity | Mandatory integer (condition-token depth) |
-| **Temporal Ops** | X, F, G, U | `X`, `F`, `G`, `U` |
-| **Propositions** | p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
-
-### Memory Models and Variants
-
-The behavior of agents in NatATL depends on the **Memory Model** selected during verification. These variants use the same syntax but different underlying algorithms in the VITAMIN engine:
-
-1.  **NatATL Memoryless (Standard)**:
-    - Agents act based only on the current state.
-    - This matches the standard strategic reasoning of vanilla ATL and is typically the default behavior.
-2.  **NatATL Recall**:
-    - Agents can remember the full history of the path taken.
-    - History-dependent strategies are often essential for satisfying complex capacity constraints that apply over multiple steps.
-3.  **NatATL Recall Filter**:
-    - Runs the same recall verification as NatATL Recall.
-    - An ATL conversion step may run for diagnostics; **recall verification always runs**. ATL UNSAT does not short-circuit recall checking.
-
-**Return contract:** NatATL Memoryless, Recall, and NatATLF report boolean `Satisfiability` plus `res` / `initial_state` (not CTL-style winning state sets).
-
----
-
-<a id="natsl---natural-strategy-logic"></a>
-## NatSL
-
-### Theoretical Background
-
-NatSL is a strategy logic incorporating natural language bindings and strategy quantifiers with explicit memory/resource bounds.
-
-**Standard Syntax:**
-- **Quantifiers:**
-    - `Ex: p`: There exists a strategy `x` such that `p`.
-    - `Ax: p`: For all strategies `x`, `p`.
-    - `E{k}x: p`: Existential with bound `k`.
-- **Bindings**: `(x, 1)` binds strategy `x` to agent `1`.
-- **Separator**: `:` separates the quantifier/binding prefix from the temporal formula.
-
-### Current Implementation
-
 **Parser Location:** `model_checker/parsers/formulas/NatSL/parser.py`
 
-**Improved Logic Support:**
-- **Identifiers**: Strategy variables and temporal atoms use the shared atomic proposition alphabet `[a-zA-Z][a-zA-Z0-9_]*` (same as CGS models and NatATL). Examples: `p`, `Goal`, `safe_1`, `win`.
-- **Temporal operators**: The temporal expression is limited to `F` (Eventually) or `!F` (Not Eventually).
+**Implemented Logic Support:**
+- **Quantifiers:** bounded existential and universal natural-strategy quantifiers, e.g. `E{2}x` and `A{1}y`.
+- **Identifiers:** strategy variables support multi-character identifiers such as `controller`, `opponent`, and `strategy1`.
+- **Bindings:** strategy variables are explicitly bound to agents, e.g. `(controller,1)`.
+- **Temporal operators:** the one-goal fragment supports `F`, `G`, and `X`, together with their negated forms.
+- **Executable quantifier fragment:** ordered prefixes of the form `E* A*`, including purely existential prefixes.
+- **Evaluation:** mixed bounded prefixes are checked directly; they are not decomposed into independent NatATL formulas.
 
-    > [!NOTE]
-    > **Why only F / !F?** NatSL is currently implemented by reducing formulas to **NatATL**. While NatATL supports `G` (Globally) and `X` (Next), the NatSL engine is optimized for reachability properties.
-    >
-    > **Extensibility**:
-    > - Support for **`G`** and **`X`** can be added in future versions as they map directly to single NatATL operators.
-    > - Full **LTL** (nested operators like `G(p -> F q)`) is NOT currently planned for NatSL due to the extreme computational complexity (P-SPACE) and the memory-intensive nature of strategy logic verification. For complex temporal requirements, use the standard **LTL** or **CTL** logic types.
-    >
-    > **Parser edge case**: Temporal atoms cannot be the single uppercase letters `E` or `A` (NatSL quantifier tokens), and cannot match reserved keywords (`eventually`, `not`, etc.). All other valid model proposition names are accepted after `F` / `!F`.
+A representative formula is:
 
+    E{2}controllerA{1}opponent:
+    (controller,1)(opponent,2)Fgoal
 
-**Syntax Components:**
-1.  **Quantifier**: `E` or `A` followed by optional bound `{k}` and variable name.
-2.  **Binding**: `(var, agent)` mapping.
-3.  **Expression**: Only `F prop` or `!F prop`.
+Natural strategies are represented as ordered condition/action decision lists.
+The strategy bound limits their complexity.
 
-**Formula Examples:**
-```text
-E{3}x : (x, 1) F goal
-Ax Ay : (x, 1)(y, 2) F win
-E{2}myVar : (myVar, 1) !F fail
-```
-
-### Comparison: Theory vs Implementation
-
-| Aspect | Theory | Implementation |
-| :--- | :--- | :--- |
-| **Quantifiers** | Ex, Ax | `E{bound}x`, `A{bound}x` |
-| **Variables** | Any identifier | `[A-Za-z_][A-Za-z0-9_]*` |
-| **Propositions**| Any identifier | `[A-Za-z_][A-Za-z0-9_]*` (same rule for temporal atoms after `F` / `!F`) |
-| **Temporal** | Full LTL/CTL | Only `F` or `!F` currently |
-| **Reduced Form**| RED(SL) -> NatATL | Automatic conversion |
-
-> [!NOTE]
-> **`!F` reduction:** `E{k}x:(x,a)!F p` converts to `!<{a},k>F p` (no NatATL strategy
-> to eventually reach `p`), not to an explicit avoid formula such as
-> `<{a},k>G !p`. On many models both agree; they can diverge when an agent can
-> avoid `p` forever without being able to force reaching it.
+NatSL uses exact action pruning. If a selected action is unavailable in a state
+covered by the strategy, that strategy profile is inadmissible; no implicit
+idle-action fallback is introduced.
 
 ### Execution Semantics
 
-NatSL supports two distinct semantic interpretations of strategy quantification sequences:
+NatSL exposes two execution schedules over the same strategy-quantification semantics:
 
 1.  **Sequential Semantics**:
     - Existential strategy quantifiers ($\exists$) are evaluated first to find a set of winning strategy trees. 

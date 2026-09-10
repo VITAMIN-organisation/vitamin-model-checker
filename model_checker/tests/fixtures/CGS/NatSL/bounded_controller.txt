@@ -1,0 +1,20 @@
+Transition
+B A 0
+0 A B
+0 0 A,B
+Unknown_Transition_by
+0 0 0
+0 0 0
+0 0 0
+Name_State
+s0 s1 s2
+Initial_State
+s0
+Atomic_propositions
+ready goal
+Labelling
+0 0
+1 0
+0 1
+Number_of_agents
+1

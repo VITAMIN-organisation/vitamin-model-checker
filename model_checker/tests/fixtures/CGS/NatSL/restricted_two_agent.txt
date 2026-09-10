@@ -1,0 +1,17 @@
+Transition
+BC,BD AC,AD
+0 AC,AD,BC,BD
+Unknown_Transition_by
+0 0 0 0
+0 0 0 0
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+goal
+Labelling
+0
+1
+Number_of_agents
+2

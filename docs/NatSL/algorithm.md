@@ -1,62 +1,72 @@
 # NatSL - Algorithm Reference
 
-Scope: denotations and code path for NatSL in
-`model_checker/algorithms/explicit/NatSL/`.
+NatSL is implemented under `model_checker/algorithms/explicit/NatSL/`.
 
-## Model
+## Supported fragment
 
-- Type: `CGS`
-- Formulas reduce to NatATL-style goals for checking.
+The current checker implements a restricted one-goal fragment with bounded natural strategies.
 
-## Formula language
+The executable quantifier prefix has the form:
 
-Parser: `parsers/formulas/NatSL/parser.py`
+    E* A*
 
-```text
-E{k}x : (x, a) F p
-Ax Ay : (x, 1)(y, 2) F win
-E{k}x : (x, a) !F p
-```
+including purely existential prefixes.
 
-Current temporal fragment after bindings: `F p` or `!F p` only.
+Example:
 
-## Semantic denotations
+    E{2}controllerA{1}opponent:
+    (controller,1)(opponent,2)Fgoal
 
-Two execution modes:
+Strategy variables may use multi-character identifiers such as `controller`, `opponent`, and `strategy1`.
 
-| Mode | Path | Meaning |
-|---|---|---|
-| Sequential | `NatSL/Sequential/` | Existential strategies first, then universal checks |
-| Alternated | `NatSL/Alternated/` | Alternate existential / universal exploration |
+Supported temporal goals are `F`, `G`, and `X`, including their negated forms.
 
-`!F` reduction maps to a negated NatATL eventually form (see knowledge base
-note on possible divergence from an explicit avoid formula).
+## Semantics
 
-Implementation techniques (recall pruning / condition cache via NatATL): [algorithm_design.md](../algorithm_design.md).
+Quantifier order is preserved by the NatSL parser.
 
-## Theory vs implementation
+For example,
 
-| Aspect | Theory | Implementation |
-|---|---|---|
-| Temporal fragment | Often richer | Only `F` / `!F` |
-| Reduction | RED(SL) -> NatATL | Automatic |
-| Semantics modes | Sequential / alternated | Separate packages |
+    E{2}xA{1}y:(x,1)(y,2)Fgoal
 
-## Model-checking pipeline
+asks for an existential bounded strategy for `x` that succeeds against every admissible bounded strategy for `y`.
 
-```text
-CGS.read_file -> NatSLParser.parse -> reduce to NatATL-shaped goal
-  -> Sequential or Alternated checker -> result
-```
+Mixed prefixes are evaluated directly and are not decomposed into independent NatATL checks.
 
-## Code map
+## Natural strategies
 
-| Path | Role |
-|---|---|
-| `NatSL/Sequential/` | Sequential semantics |
-| `NatSL/Alternated/` | Alternated semantics |
-| `NatSL/shared_recall.py` | Shared helpers |
+Natural strategies are represented as ordered condition/action decision lists.
 
-## Tests
+The quantifier bound limits their complexity.
 
-NatSL parser and algorithm tests under `model_checker/tests/`.
+## Exact action pruning
+
+NatSL uses exact action pruning.
+
+When a strategy selects an action, joint actions inconsistent with that choice are removed.
+
+If the selected action is unavailable in a covered state, the strategy profile is inadmissible. NatSL does not introduce an implicit idle-action fallback.
+
+## Execution modes
+
+The two public implementations share the same semantic core:
+
+- `Alternated/natSL.py`: space-oriented lazy search.
+- `Sequential/natSL.py`: time-oriented search.
+
+Both modes are required to agree on satisfiability.
+
+## Implementation map
+
+- `NatSL/core.py`: shared bounded-strategy model-checking core.
+- `parsers/formulas/NatSL/parser.py`: NatSL parser.
+- `tests/unit/algorithms/natsl/`: semantic regression tests.
+- `tests/fixtures/CGS/NatSL/`: NatSL CGS fixtures.
+- `examples/NatSL/`: runnable examples.
+- `experiments/natsl/`: reproducible scalability experiments.
+
+## Current boundaries
+
+The checker does not claim support for arbitrary Strategy Logic, repeated quantifier alternation, arbitrary LTL objectives, recall strategies, or epistemic guards.
+
+Unsupported fragments are rejected explicitly.

@@ -43,7 +43,11 @@ nav:
     - ATLF: ATLF/algorithm.md
     - NatATL: NatATL/algorithm.md
     - NatATLF: NatATLF/algorithm.md
-    - NatSL: NatSL/algorithm.md
+    - NatSL:
+      - Algorithm: NatSL/algorithm.md
+      - Semantics: NatSL/semantics.md
+      - Experiments: NatSL/experiments.md
+      - Logistics robot: NatSL/logistics_robot.md
     - OATL: OATL/algorithm.md
     - OL: OL/algorithm.md
     - RBATL: RBATL/algorithm.md

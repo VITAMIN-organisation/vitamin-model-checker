@@ -1,0 +1,23 @@
+Transition
+STA,SVA MTA MVA 0
+0 SVA STA MTA,MVA
+0 0 STA,SVA,MTA,MVA 0
+0 0 0 STA,SVA,MTA,MVA
+Unknown_Transition_by
+0 0 0 0
+0 0 0 0
+0 0 0 0
+0 0 0 0
+Name_State
+q0 qaligned qoptimal qfailure
+Initial_State
+q0
+Atomic_propositions
+init aligned optimal suboptimal failure
+Labelling
+1 0 0 1 0
+0 1 0 1 0
+0 0 1 0 0
+0 0 0 0 1
+Number_of_agents
+3

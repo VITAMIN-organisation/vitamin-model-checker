@@ -1,0 +1,24 @@
+{
+  "actions_per_universal_agent": 2,
+  "agents": [2, 3, 4, 5],
+  "bounds": [1, 2, 3, 4],
+  "logical_cpu_count": 12,
+  "mode": "space",
+  "physical_cpu_count": 10,
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+  "python": "3.12.2 (tags/v3.12.2:6abddd9, Feb  6 2024, 21:26:36) [MSC v.1937 64 bit (AMD64)]",
+  "python_executable": ".venv\\Scripts\\python.exe",
+  "repetitions": 3,
+  "run_id": "20260902T135103Z",
+  "scales": [
+    {"atomic_propositions": 3, "states": 6},
+    {"atomic_propositions": 5, "states": 10},
+    {"atomic_propositions": 7, "states": 14},
+    {"atomic_propositions": 9, "states": 18}
+  ],
+  "selected_architecture": "space-efficient alternating depth-first",
+  "started_utc": "2026-09-02T13:51:03.725308+00:00",
+  "system_memory_gb": 15.692,
+  "timeout_seconds": 120.0
+}

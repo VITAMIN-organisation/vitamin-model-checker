@@ -4,6 +4,26 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- Restricted executable NatSL one-goal checker with ordered bounded strategy
+  quantification and shared `space`/`time` semantics.
+- Multi-character NatSL strategy variables.
+- NatSL semantic regression tests and dedicated CGS fixtures.
+- Runnable NatSL examples, including a logistics-robot case study.
+- Reproducible NatSL scalability benchmark with curated recorded results.
+
+### Changed
+
+- Mixed bounded NatSL prefixes are evaluated directly instead of being
+  decomposed into independent NatATL checks.
+- NatSL uses exact action pruning: strategies selecting unavailable actions are
+  treated as inadmissible rather than repaired with an implicit idle action.
+- NatSL documentation now describes the implemented `E* A*` one-goal fragment
+  and its deliberate boundaries.
+
 ## [1.6.3] - 2026-08-26
 
 ### Fixed

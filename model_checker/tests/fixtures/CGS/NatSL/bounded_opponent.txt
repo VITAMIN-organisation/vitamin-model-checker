@@ -1,0 +1,20 @@
+Transition
+0 AC AD
+0 AD AC
+0 0 AC,AD
+Unknown_Transition_by
+0 0 0 0 0 0
+0 0 0 0 0 0
+0 0 0 0 0 0
+Name_State
+s0 s1 s2
+Initial_State
+s0
+Atomic_propositions
+phase goal
+Labelling
+0 0
+1 0
+0 1
+Number_of_agents
+2

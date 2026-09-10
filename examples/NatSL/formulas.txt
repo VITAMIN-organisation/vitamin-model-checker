@@ -1,0 +1,14 @@
+# Unrestricted-opponent shortcut: true.
+E{1}xA{1}y:(x,1)(y,2)Fgoal
+
+# On bounded_opponent.txt: true for universal bound 1.
+E{1}xA{1}y:(x,1)(y,2)Fgoal
+
+# On bounded_opponent.txt: false for universal bound 2.
+E{1}xA{2}y:(x,1)(y,2)Fgoal
+
+# On bounded_controller.txt: false with constant strategies only.
+E{1}x:(x,1)Fgoal
+
+# On bounded_controller.txt: true with a two-rule strategy.
+E{2}x:(x,1)Fgoal

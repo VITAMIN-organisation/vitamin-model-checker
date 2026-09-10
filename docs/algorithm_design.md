@@ -215,7 +215,7 @@ re-running CTL on identical conditions is redundant.
   `LTL/pruning.py`).
 - Recall: tree pruning + `ctl_model_checking_cached`
   (`NatATL/Recall/condition_cache.py`).
-- NatSL: reuses NatATL recall pruning paths.
+- NatSL: uses its shared bounded-strategy core with exact action pruning; inadmissible strategies are rejected instead of receiving an implicit idle-action fallback.
 
 **Advantage:** Cuts repeated CTL checks inside strategy enumeration.
 

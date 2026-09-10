@@ -64,3 +64,6 @@ ictl_err.log
 
 # Generated docs
 site/
+
+# Locally generated NatSL experiment runs
+experiments/natsl/results/
