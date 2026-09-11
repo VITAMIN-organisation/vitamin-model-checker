@@ -1,8 +1,8 @@
 """Tests for Automaton.acceptance_condition(), backed by real Spot automata.
 
-Requires Spot (conda-forge, linux-64/osx-64 only, see environment.yml); run
-from the `automata-mc` conda env (e.g. under WSL on Windows, since Spot has no
-win-64 build). Skipped entirely if spot isn't importable.
+Requires Spot: `pip install spottl` on Linux, or conda-forge elsewhere (see
+docs/ATL_STAR/algorithm.md) — Spot has no win-64 build either way, so run
+from WSL on Windows. Skipped entirely if spot isn't importable.
 """
 
 # ruff: noqa: E402  -- imports deliberately follow importorskip("spot") below, to skip this whole file cleanly if Spot isn't installed

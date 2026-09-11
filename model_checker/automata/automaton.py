@@ -36,7 +36,8 @@ class Automaton:
         """
         if spot is None:
             raise ImportError("Spot is required for Automaton.from_ltl() "
-                               "(conda-forge, linux-64/osx-64 only; see environment.yml)")
+                               "(pip install spottl on Linux, or conda-forge elsewhere; "
+                               "see docs/ATL_STAR/algorithm.md)")
 
         graph = spot.translate(formula, "parity", "deterministic")
         graph = spot.change_parity(graph, spot.parity_kind_max, spot.parity_style_odd)
@@ -53,7 +54,8 @@ class Automaton:
         """
         if spot is None:
             raise ImportError("Spot is required for Automaton.acceptance_condition() "
-                               "(conda-forge, linux-64/osx-64 only; see environment.yml)")
+                               "(pip install spottl on Linux, or conda-forge elsewhere; "
+                               "see docs/ATL_STAR/algorithm.md)")
 
         return self._classify(self._priorities())
 

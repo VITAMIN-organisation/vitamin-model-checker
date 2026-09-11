@@ -40,7 +40,9 @@ def solve(game: Game) -> GameSolution:
             at all, or `player_states` isn't a proper partition.
     """
     if spot is None:
-        raise ImportError("Spot is required for solve() (conda-forge, linux-64/osx-64 only; see environment.yml)")
+        raise ImportError("Spot is required for solve() "
+                           "(pip install spottl on Linux, or conda-forge elsewhere; "
+                           "see docs/ATL_STAR/algorithm.md)")
     if game.objective is None:
         raise ValueError("Game.objective must be set before solving (arena.py leaves it None on purpose)")
     if not game.arena.initial_states:

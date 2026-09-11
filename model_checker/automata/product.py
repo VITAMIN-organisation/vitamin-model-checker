@@ -7,7 +7,11 @@ from .automaton import Automaton, spot
 from .transition_system import TransitionSystem
 
 try:
-    import buddy  # bundled with spot's conda-forge package
+    # exposed as a top-level shim once `spot` itself is imported, by both
+    # conda-forge's package and the pip-installable `spottl` (which nests
+    # the real module at `spot.buddy`); `automaton`'s `import spot` above
+    # runs first, so this always resolves when Spot is present at all
+    import buddy
 except ImportError:  # pragma: no cover
     buddy = None
 
@@ -37,7 +41,9 @@ def product(
     """
 
     if spot is None or buddy is None:
-        raise ImportError("Spot is required for product()")
+        raise ImportError("Spot is required for product() "
+                           "(pip install spottl on Linux, or conda-forge elsewhere; "
+                           "see docs/ATL_STAR/algorithm.md)")
     spot_mod, buddy_mod = spot, buddy
 
     graph = automaton.graph
