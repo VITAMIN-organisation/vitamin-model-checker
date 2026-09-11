@@ -35,9 +35,17 @@ def test_product_pairs_states_and_only_keeps_compatible_transitions():
     for ts_state, aut_state in result.states:
         assert ts_state in {"s0", "s1"}
         assert 0 <= aut_state < automaton.graph.num_states()
-    # the self-loop on {"a","b"} keeps stepping the automaton until it's stable
-    last_state = ("s1", max(q for s, q in result.states if s == "s1"))
-    assert result.successors(last_state, frozenset({"a", "b"})) == {last_state}
+    # the self-loop on {"a","b"} keeps stepping the automaton until it's stable —
+    # find that fixed point directly instead of assuming which raw state number
+    # Spot assigns it, which is an implementation detail that varies by version
+    s1_states = [state for state in result.states if state[0] == "s1"]
+    fixed_points = [
+        state
+        for state in s1_states
+        if result.successors(state, frozenset({"a", "b"})) == {state}
+    ]
+    assert len(fixed_points) == 1
+    assert result.successors(fixed_points[0], frozenset({"a", "b"})) == {fixed_points[0]}
 
 
 def test_product_returns_automaton_acceptance_as_objective():
