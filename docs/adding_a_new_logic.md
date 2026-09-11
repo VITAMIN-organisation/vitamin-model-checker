@@ -194,18 +194,26 @@ The formula file can contain multiple semicolon-terminated formulas.
 
 ## COTL Example
 
-COTL is a useful example because it reuses OATL syntax and runs over `costCGS`.
+COTL shares OATL surface syntax but has its own parser and algorithm over
+`costCGS`.
 
 What it needs:
 
-1. no new parser, because `COTL` maps to `OATLParser`,
+1. a dedicated parser under `model_checker/parsers/formulas/COTL/` (subclassing
+   `OATLParser` when syntax matches),
 2. `COTL` listed as cost-based in `model_parser_factory.py`,
 3. an algorithm module under `algorithms/explicit/COTL/`,
 4. entry points for parser, benchmark callable, and metadata,
 5. integration tests and example costCGS models.
 
-The important lesson is that parser reuse should be explicit. If syntax is the
-same, register the existing parser and keep algorithm behavior separate.
+Register the parser with its own entry point, for example:
+
+```toml
+COTL = "model_checker.parsers.formulas.COTL.parser:COTLParser"
+```
+
+Do not point the `COTL` entry point at `OATL.parser:OATLParser`; that breaks
+parser discovery and formula validation.
 
 ## Advanced Manual Checklist
 

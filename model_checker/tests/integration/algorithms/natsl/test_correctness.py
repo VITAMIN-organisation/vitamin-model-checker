@@ -2,12 +2,7 @@
 
 import pytest
 
-from model_checker.algorithms.explicit.NatSL.Alternated.natSL import (
-    model_checking as model_checking_alternated,
-)
-from model_checker.algorithms.explicit.NatSL.Sequential.natSL import (
-    model_checking,
-)
+from model_checker.algorithms.explicit.NatSL.core import model_checking
 
 
 @pytest.mark.integration
@@ -34,17 +29,24 @@ class TestNatSLCorrectness:
         result = model_checking("E{1}x:(x,1)F a", natatl_standard_model.filename)
         assert "error" not in result, result
         assert result["Satisfiability"] is True
+        assert result["res"] == "Result: True"
+        assert result["initial_state"].endswith("True")
 
     def test_natsl_unsatisfiable_not_eventually(self, natatl_standard_model):
         """E{1}x:(x,1)!F a is unsatisfiable when a is reachable under bound 1."""
         result = model_checking("E{1}x:(x,1)!F a", natatl_standard_model.filename)
         assert "error" not in result, result
         assert result["Satisfiability"] is False
+        assert result["res"] == "Result: False"
+        assert result["initial_state"].endswith("False")
 
-    def test_natsl_alternated_existential_only_formula(self, natatl_standard_model):
-        """Alternated semantics: existential-only F a is satisfiable."""
-        result = model_checking_alternated(
-            "E{1}x:(x,1)F a", natatl_standard_model.filename
+    def test_natsl_space_mode_existential_only_formula(self, natatl_standard_model):
+        """Space schedule: existential-only F a is satisfiable."""
+        result = model_checking(
+            "E{1}x:(x,1)F a",
+            natatl_standard_model.filename,
+            mode="space",
         )
         assert "error" not in result, result
         assert result["Satisfiability"] is True
+        assert result["Mode"] == "space-efficient"

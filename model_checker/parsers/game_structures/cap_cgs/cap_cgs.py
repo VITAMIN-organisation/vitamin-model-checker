@@ -14,9 +14,9 @@ class CapCGS(CGS):
     """Parser and in-memory representation for a CapCGS model file.
 
     Adds capacity sections (Capacities, Capacities_assignment,
-    Actions_for_capacities) on top of the base CGS. Use read_file(path) to load
-    a file; then use get_capacities(), get_capacities_assignment(), and
-    get_action_capacities() for capacity data.
+    Actions_for_capacities) on top of the base CGS. After read_file(path), use
+    capacities_list, capacities_assignment, action_capacities, and
+    get_capacities_assignment() for capacity data.
     """
 
     def __init__(self):

@@ -33,6 +33,7 @@ from model_checker.algorithms.explicit.CTL.CTL import (
     model_checking as ctl_model_checking,
 )
 from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.error_handler import create_error_response
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 
 
@@ -509,8 +510,27 @@ class RestrictedNatSL1GEvaluator:
             result["Materialized domain sizes"] = {
                 variable: len(domain) for variable, domain in self.materialized_domains.items()
             }
+
+        # NatATL-style backend compatibility fields (decision problem, not a state set).
+        initial_state = (
+            self.cgs.initial_state if hasattr(self.cgs, "initial_state") else "s0"
+        )
+        result["res"] = f"Result: {satisfiable}"
+        result["initial_state"] = f"Initial state {initial_state}: {satisfiable}"
         return result
 
 
 def model_checking(formula: str, model: str | Path, mode: str = "space") -> dict:
-    return RestrictedNatSL1GEvaluator(parse_formula(formula), model, mode).run()
+    """Public NatSL entry point. ``mode`` is ``space`` (default) or ``time``."""
+    try:
+        if not formula or not str(formula).strip():
+            return create_error_response("validation", "Formula not entered")
+        if not model:
+            return create_error_response("validation", "Model file not specified")
+        return RestrictedNatSL1GEvaluator(parse_formula(formula), model, mode).run()
+    except FileNotFoundError as exc:
+        return create_error_response("system", str(exc))
+    except (ValueError, TypeError) as exc:
+        return create_error_response("validation", str(exc))
+    except Exception as exc:
+        return create_error_response("syntax", str(exc))

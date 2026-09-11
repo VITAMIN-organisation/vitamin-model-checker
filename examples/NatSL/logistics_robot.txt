@@ -3,7 +3,7 @@ STA,SVA MTA MVA 0
 0 SVA STA MTA,MVA
 0 0 STA,SVA,MTA,MVA 0
 0 0 0 STA,SVA,MTA,MVA
-Unkown_Transition_by
+Unknown_Transition_by
 0 0 0 0
 0 0 0 0
 0 0 0 0

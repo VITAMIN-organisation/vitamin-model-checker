@@ -1,1 +1,0 @@
-"""NatSL Alternated semantics package."""

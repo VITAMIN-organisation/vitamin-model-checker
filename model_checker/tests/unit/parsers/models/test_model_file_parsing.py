@@ -216,3 +216,28 @@ class TestExtensionSectionInitialState:
         parser.read_file(str(path))
         assert parser.initial_state == "q0"
         assert parser.initial_state in parser.states
+
+    def test_capcgs_exposes_capacity_data(self, test_data_dir):
+        path = (
+            test_data_dir / "capCGS" / "CAPATL" / "capatl_3agents_3states_example.txt"
+        )
+        if not path.exists():
+            pytest.skip("capCGS example not found")
+        parser = CapCGS()
+        parser.read_file(str(path))
+        assert parser.capacities_list == ["c", "cap", "cop"]
+        assert parser.capacities_assignment == [
+            ["1", "0", "0"],
+            ["1", "0", "0"],
+            ["0", "1", "1"],
+        ]
+        assert parser.action_capacities == [
+            ["c", "A", "B"],
+            ["cap", "A"],
+            ["cop", "B"],
+        ]
+        assert parser.get_capacities_assignment() == [
+            ["1", "c"],
+            ["2", "c"],
+            ["3", "cap", "cop"],
+        ]

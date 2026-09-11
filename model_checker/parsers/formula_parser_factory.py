@@ -60,3 +60,22 @@ class FormulaParserFactory:
             FormulaParserFactory._local.instances[logic_name] = instance
 
         return instance
+
+    @staticmethod
+    def clear_cache() -> None:
+        """Drop cached parser classes and thread-local parser instances."""
+        with FormulaParserFactory._lock:
+            FormulaParserFactory._parser_classes.clear()
+        if hasattr(FormulaParserFactory._local, "instances"):
+            FormulaParserFactory._local.instances.clear()
+
+    @staticmethod
+    def warmup(logic_names: list[str] | None = None) -> None:
+        """Pre-instantiate parsers to reduce first-request latency."""
+        from model_checker.discovery import get_entry_points
+
+        names = logic_names
+        if names is None:
+            names = sorted(ep.name for ep in get_entry_points("vitamin.parsers"))
+        for name in names:
+            FormulaParserFactory.get_parser_instance(name)

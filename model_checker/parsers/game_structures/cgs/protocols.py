@@ -80,12 +80,22 @@ class CapCGSProtocol(CGSProtocol, Protocol):
     """Extension of CGSProtocol for capability CGS (used by CapATL)."""
 
     @property
+    def capacities_list(self) -> list[str]:
+        """Capacity names from the Capacities section."""
+        ...
+
+    @property
+    def capacities_assignment(self) -> Any:
+        """Raw agent x capacity assignment matrix from the model file."""
+        ...
+
+    @property
     def action_capacities(self) -> Any:
-        """Action capacity data."""
+        """Capacity-to-action mappings from Actions_for_capacities."""
         ...
 
     def get_capacities_assignment(self) -> Any:
-        """Return capacity assignment per agent."""
+        """Return capacity names assigned to each agent."""
         ...
 
 

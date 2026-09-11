@@ -59,7 +59,11 @@ def discover_logic_resource(
             try:
                 return ep.load()
             except Exception as e:
-                error_msg = f"{resource_type_label} '{logic_name}' is registered via entry points but failed to load: {e}"
+                error_msg = (
+                    f"{resource_type_label} '{logic_name}' is registered via entry "
+                    f"points but failed to load: {e}"
+                )
                 logger.error(error_msg)
+                raise ImportError(error_msg) from e
 
     raise LookupError(f"Unknown {resource_type_label.lower()}: '{logic_name}'.")

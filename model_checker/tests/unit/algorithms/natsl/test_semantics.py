@@ -25,7 +25,12 @@ def both_modes(formula, model, expected):
         model_checking(formula, model, mode=mode)
         for mode in ("time", "space")
     ]
+    for result in results:
+        assert "error" not in result, result
     assert [result["Satisfiability"] for result in results] == [expected, expected]
+    for result in results:
+        assert result["res"] == f"Result: {expected}"
+        assert str(result["initial_state"]).rstrip().endswith(str(expected))
     return results
 
 
@@ -93,21 +98,23 @@ def test_controller_bound_two_finds_conditional_strategy():
 
 
 def test_out_of_fragment_prefix_is_rejected():
-    with pytest.raises(ValueError, match=r"E\* A\*"):
-        model_checking(
-            "A{1}xE{1}y:(x,1)(y,2)Fgoal",
-            SHORTCUT_MODEL,
-            mode="space",
-        )
+    result = model_checking(
+        "A{1}xE{1}y:(x,1)(y,2)Fgoal",
+        SHORTCUT_MODEL,
+        mode="space",
+    )
+    assert "error" in result
+    assert "E* A*" in result["error"]["message"]
 
 
 def test_unknown_proposition_is_rejected():
-    with pytest.raises(ValueError, match="Unknown proposition"):
-        model_checking(
-            "E{1}x:(x,1)Fmissing",
-            CONTROLLER_MODEL,
-            mode="space",
-        )
+    result = model_checking(
+        "E{1}x:(x,1)Fmissing",
+        CONTROLLER_MODEL,
+        mode="space",
+    )
+    assert "error" in result
+    assert "Unknown proposition" in result["error"]["message"]
 
 
 def test_non_total_local_joint_action_table_is_rejected():
@@ -139,12 +146,10 @@ Number_of_agents
         path = Path(directory) / "non_total.txt"
         path.write_text(model, encoding="utf-8")
 
-        with pytest.raises(
-            ValueError,
-            match="Non-total local joint-action",
-        ):
-            model_checking(
-                "E{1}xA{1}y:(x,1)(y,2)Fgoal",
-                path,
-                mode="space",
-            )
+        result = model_checking(
+            "E{1}xA{1}y:(x,1)(y,2)Fgoal",
+            path,
+            mode="space",
+        )
+        assert "error" in result
+        assert "Non-total local joint-action" in result["error"]["message"]
