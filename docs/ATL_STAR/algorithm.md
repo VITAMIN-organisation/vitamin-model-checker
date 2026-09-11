@@ -36,14 +36,25 @@ reduced to a 2-player parity game:
 Needs `model_checker/automata/` (vendored, wraps Spot) — no other logic
 here depends on it.
 
-## Requires Spot (conda-forge only, not pip)
+## Requires Spot
+
+No official PyPI wheel from the Spot team. On Linux, the community
+[`spottl`](https://pypi.org/project/spottl/) package gives one anyway
+(imports as `spot`):
+
+```bash
+pip install spottl
+```
+
+On macOS, or to pin an exact Spot version, use conda-forge instead:
 
 ```bash
 conda install -c conda-forge spot
 ```
 
-No PyPI wheel exists. The rest of VITAMIN works without it; a missing
-Spot returns an `"environment"`-type error instead of crashing on import.
+Neither path has a Windows build; use WSL there. The rest of VITAMIN
+works without Spot either way; a missing Spot returns an
+`"environment"`-type error instead of crashing on import.
 
 ## Model-checking pipeline
 

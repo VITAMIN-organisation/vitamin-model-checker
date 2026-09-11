@@ -14,8 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   needed because ATL* allows a coalition operator to appear anywhere
   inside a path formula, not only at the formula's own root. Runs over
   plain `CGS`, no new game-structure type. Requires
-  [Spot](https://spot.lre.epita.fr/) (conda-forge only, no PyPI wheel);
-  the rest of VITAMIN works without it, see
+  [Spot](https://spot.lre.epita.fr/) — `pip install spottl` on Linux, or
+  conda-forge elsewhere; the rest of VITAMIN works without it, see
   `docs/ATL_STAR/algorithm.md`.
 - `model_checker/automata/`, a vendored, logic-agnostic ω-automata and
   parity-game-solving library (wraps Spot) backing ATL*'s reduction —
