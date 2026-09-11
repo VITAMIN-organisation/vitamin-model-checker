@@ -18,6 +18,7 @@ def _load_bcgs(filename):
     model.read_file(filename)
     return model
 
+
 _FIXTURE = (
     Path(__file__).resolve().parents[3]
     / "fixtures"

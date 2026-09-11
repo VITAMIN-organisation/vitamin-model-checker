@@ -31,14 +31,33 @@ DEFAULT_STATES = 6
 DEFAULT_PROPOSITIONS = ("phase", "signal", "goal")
 DEFAULT_SCALES = ((6, 3), (10, 5), (14, 7), (18, 9))
 RESULT_FIELDS = (
-    "timestamp_utc", "run_id", "status", "mode", "scale_id", "agents",
-    "universal_agents", "bound_k", "states", "atomic_propositions",
-    "actions_per_universal_agent", "repetition", "timeout_seconds",
-    "wall_seconds", "cpu_seconds", "peak_rss_mb", "satisfiable",
-    "existential_candidates", "universal_profiles_checked",
-    "unrestricted_opponent_checks", "unrestricted_opponent_shortcuts",
-    "complete_profile_checks", "raw_domain_size_per_universal_agent",
-    "raw_profile_space_upper_bound", "formula", "model_file", "error",
+    "timestamp_utc",
+    "run_id",
+    "status",
+    "mode",
+    "scale_id",
+    "agents",
+    "universal_agents",
+    "bound_k",
+    "states",
+    "atomic_propositions",
+    "actions_per_universal_agent",
+    "repetition",
+    "timeout_seconds",
+    "wall_seconds",
+    "cpu_seconds",
+    "peak_rss_mb",
+    "satisfiable",
+    "existential_candidates",
+    "universal_profiles_checked",
+    "unrestricted_opponent_checks",
+    "unrestricted_opponent_shortcuts",
+    "complete_profile_checks",
+    "raw_domain_size_per_universal_agent",
+    "raw_profile_space_upper_bound",
+    "formula",
+    "model_file",
+    "error",
 )
 
 
@@ -94,8 +113,7 @@ def build_model(
             matrix[state][destination].append(profile)
 
     transition_rows = [
-        " ".join(",".join(cell) if cell else "0" for cell in row)
-        for row in matrix
+        " ".join(",".join(cell) if cell else "0" for cell in row) for row in matrix
     ]
     zero_rows = [" ".join("0" for _ in range(number_of_states))] * number_of_states
     states = [f"s{index}" for index in range(number_of_states)]
@@ -108,16 +126,25 @@ def build_model(
             int((state + index) % (index + 2) == 0)
             for index in range(1, proposition_count - 2)
         ]
-        labels.append(" ".join(str(value) for value in (phase, signal, goal, *extra_labels)))
+        labels.append(
+            " ".join(str(value) for value in (phase, signal, goal, *extra_labels))
+        )
 
     sections = [
-        "Transition", *transition_rows,
-        "Unknown_Transition_by", *zero_rows,
-        "Name_State", " ".join(states),
-        "Initial_State", "s0",
-        "Atomic_propositions", " ".join(propositions),
-        "Labelling", *labels,
-        "Number_of_agents", str(number_of_agents),
+        "Transition",
+        *transition_rows,
+        "Unknown_Transition_by",
+        *zero_rows,
+        "Name_State",
+        " ".join(states),
+        "Initial_State",
+        "s0",
+        "Atomic_propositions",
+        " ".join(propositions),
+        "Labelling",
+        *labels,
+        "Number_of_agents",
+        str(number_of_agents),
     ]
     return "\n".join(sections) + "\n"
 
@@ -132,8 +159,7 @@ def build_formula(number_of_agents: int, bound: int) -> str:
         f"A{{{bound}}}{variable}" for variable in selected[1:]
     )
     bindings = "".join(
-        f"({variable},{agent})"
-        for agent, variable in enumerate(selected, start=1)
+        f"({variable},{agent})" for agent, variable in enumerate(selected, start=1)
     )
     return f"{prefix}:{bindings}Fgoal"
 
@@ -162,7 +188,9 @@ def raw_domain_size(bound: int, proposition_count: int = 3, actions: int = 2) ->
                 continue
             next_used = list(used)
             next_used[index] += 1
-            total += available * actions * count_prefixes(remaining - cost, tuple(next_used))
+            total += (
+                available * actions * count_prefixes(remaining - cost, tuple(next_used))
+            )
         return total
 
     return actions * count_prefixes(bound - 1, (0,) * len(costs))
@@ -203,36 +231,67 @@ def _parse_worker_output(stdout: str) -> dict:
     marker = "NATSL_BENCHMARK_RESULT="
     for line in reversed(stdout.splitlines()):
         if line.startswith(marker):
-            return json.loads(line[len(marker):])
+            return json.loads(line[len(marker) :])
     raise RuntimeError("Worker produced no machine-readable result")
 
 
 def execute_point(
-    agents: int, bound: int, repetition: int, model: Path, formula: str,
-    timeout: float, run_id: str, states: int, propositions: int,
+    agents: int,
+    bound: int,
+    repetition: int,
+    model: Path,
+    formula: str,
+    timeout: float,
+    run_id: str,
+    states: int,
+    propositions: int,
 ) -> dict:
     domain_size = raw_domain_size(bound, propositions)
     base = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "run_id": run_id, "status": "error", "mode": SELECTED_MODE,
+        "run_id": run_id,
+        "status": "error",
+        "mode": SELECTED_MODE,
         "scale_id": f"S{states}-P{propositions}",
-        "agents": agents, "universal_agents": agents - 1, "bound_k": bound,
-        "states": states, "atomic_propositions": propositions,
-        "actions_per_universal_agent": 2, "repetition": repetition,
-        "timeout_seconds": timeout, "wall_seconds": "", "cpu_seconds": "",
-        "peak_rss_mb": "", "satisfiable": "", "existential_candidates": "",
-        "universal_profiles_checked": "", "unrestricted_opponent_checks": "",
-        "unrestricted_opponent_shortcuts": "", "complete_profile_checks": "",
+        "agents": agents,
+        "universal_agents": agents - 1,
+        "bound_k": bound,
+        "states": states,
+        "atomic_propositions": propositions,
+        "actions_per_universal_agent": 2,
+        "repetition": repetition,
+        "timeout_seconds": timeout,
+        "wall_seconds": "",
+        "cpu_seconds": "",
+        "peak_rss_mb": "",
+        "satisfiable": "",
+        "existential_candidates": "",
+        "universal_profiles_checked": "",
+        "unrestricted_opponent_checks": "",
+        "unrestricted_opponent_shortcuts": "",
+        "complete_profile_checks": "",
         "raw_domain_size_per_universal_agent": domain_size,
         "raw_profile_space_upper_bound": domain_size ** (agents - 1),
-        "formula": formula, "model_file": str(model), "error": "",
+        "formula": formula,
+        "model_file": str(model),
+        "error": "",
     }
-    command = [sys.executable, str(Path(__file__).resolve()), "--worker", str(model), formula]
+    command = [
+        sys.executable,
+        str(Path(__file__).resolve()),
+        "--worker",
+        str(model),
+        formula,
+    ]
     outer_start = time.perf_counter()
     try:
         completed = subprocess.run(
-            command, cwd=PROJECT_ROOT, text=True, capture_output=True,
-            timeout=timeout, check=False,
+            command,
+            cwd=PROJECT_ROOT,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
         )
         outer_elapsed = time.perf_counter() - outer_start
         if completed.returncode != 0:
@@ -242,8 +301,10 @@ def execute_point(
         payload = _parse_worker_output(completed.stdout)
         result = payload["result"]
         base.update(
-            status="completed", wall_seconds=payload["wall_seconds"],
-            cpu_seconds=payload["cpu_seconds"], peak_rss_mb=payload["peak_rss_mb"],
+            status="completed",
+            wall_seconds=payload["wall_seconds"],
+            cpu_seconds=payload["cpu_seconds"],
+            peak_rss_mb=payload["peak_rss_mb"],
             satisfiable=result["Satisfiability"],
             existential_candidates=result["Existential candidates"],
             universal_profiles_checked=result["Universal profiles checked"],
@@ -279,8 +340,10 @@ def write_summary(results_csv: Path, summary_csv: Path) -> list[dict]:
     grouped: dict[tuple[int, int, int, int], list[dict[str, str]]] = {}
     for row in read_rows(results_csv):
         key = (
-            int(row["states"]), int(row["atomic_propositions"]),
-            int(row["agents"]), int(row["bound_k"]),
+            int(row["states"]),
+            int(row["atomic_propositions"]),
+            int(row["agents"]),
+            int(row["bound_k"]),
         )
         grouped.setdefault(key, []).append(row)
     summary: list[dict] = []
@@ -290,24 +353,34 @@ def write_summary(results_csv: Path, summary_csv: Path) -> list[dict]:
         memories = [float(row["peak_rss_mb"]) for row in completed]
         checks = [int(row["universal_profiles_checked"]) for row in completed]
         statuses = {row["status"] for row in group}
-        status = "completed" if statuses == {"completed"} else (
-            "timeout" if "timeout" in statuses else "partial/error"
+        status = (
+            "completed"
+            if statuses == {"completed"}
+            else ("timeout" if "timeout" in statuses else "partial/error")
         )
         domain_size = raw_domain_size(bound, propositions)
-        summary.append({
-            "scale_id": f"S{states}-P{propositions}",
-            "states": states, "atomic_propositions": propositions,
-            "agents": agents, "universal_agents": agents - 1, "bound_k": bound,
-            "status": status, "completed_repetitions": len(completed),
-            "total_repetitions": len(group),
-            "median_wall_seconds": statistics.median(times) if times else "",
-            "min_wall_seconds": min(times) if times else "",
-            "max_wall_seconds": max(times) if times else "",
-            "median_peak_rss_mb": statistics.median(memories) if memories else "",
-            "median_universal_profiles_checked": statistics.median(checks) if checks else "",
-            "raw_domain_size_per_universal_agent": domain_size,
-            "raw_profile_space_upper_bound": domain_size ** (agents - 1),
-        })
+        summary.append(
+            {
+                "scale_id": f"S{states}-P{propositions}",
+                "states": states,
+                "atomic_propositions": propositions,
+                "agents": agents,
+                "universal_agents": agents - 1,
+                "bound_k": bound,
+                "status": status,
+                "completed_repetitions": len(completed),
+                "total_repetitions": len(group),
+                "median_wall_seconds": statistics.median(times) if times else "",
+                "min_wall_seconds": min(times) if times else "",
+                "max_wall_seconds": max(times) if times else "",
+                "median_peak_rss_mb": statistics.median(memories) if memories else "",
+                "median_universal_profiles_checked": (
+                    statistics.median(checks) if checks else ""
+                ),
+                "raw_domain_size_per_universal_agent": domain_size,
+                "raw_profile_space_upper_bound": domain_size ** (agents - 1),
+            }
+        )
     fields = tuple(summary[0]) if summary else ("agents", "bound_k", "status")
     with summary_csv.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
@@ -320,6 +393,7 @@ def plot_summary(summary: list[dict], output_dir: Path, timeout: float) -> None:
     """Create individual fixed-k/fixed-agent plots and compact summaries."""
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         import numpy as np
@@ -328,16 +402,21 @@ def plot_summary(summary: list[dict], output_dir: Path, timeout: float) -> None:
 
     agents = sorted({int(row["agents"]) for row in summary})
     bounds = sorted({int(row["bound_k"]) for row in summary})
-    scales = sorted({
-        (int(row["states"]), int(row["atomic_propositions"])) for row in summary
-    })
+    scales = sorted(
+        {(int(row["states"]), int(row["atomic_propositions"])) for row in summary}
+    )
     lookup = {
-        (int(row["states"]), int(row["atomic_propositions"]),
-         int(row["agents"]), int(row["bound_k"])): row
+        (
+            int(row["states"]),
+            int(row["atomic_propositions"]),
+            int(row["agents"]),
+            int(row["bound_k"]),
+        ): row
         for row in summary
     }
     by_k_dir, by_agents_dir, heatmaps_dir = (
-        output_dir / "plots_by_k", output_dir / "plots_by_agents",
+        output_dir / "plots_by_k",
+        output_dir / "plots_by_agents",
         output_dir / "heatmaps_by_scale",
     )
     for directory in (by_k_dir, by_agents_dir, heatmaps_dir):
@@ -372,19 +451,28 @@ def plot_summary(summary: list[dict], output_dir: Path, timeout: float) -> None:
         for scale_index, scale in enumerate(scales):
             states, propositions = scale
             rows = [
-                lookup.get((states, propositions, agent, fixed))
-                if by_bound else lookup.get((states, propositions, fixed, bound))
+                (
+                    lookup.get((states, propositions, agent, fixed))
+                    if by_bound
+                    else lookup.get((states, propositions, fixed, bound))
+                )
                 for agent, bound in (
                     [(agent, fixed) for agent in x_values]
-                    if by_bound else [(fixed, bound) for bound in x_values]
+                    if by_bound
+                    else [(fixed, bound) for bound in x_values]
                 )
             ]
             values, timeout_points = values_and_timeouts(rows, x_values)
             line = axis.plot(x_values, values, marker="o", label=scale_label(scale))[0]
             if timeout_points:
                 offset = (scale_index - (len(scales) - 1) / 2) * 0.025
-                axis.scatter([x + offset for x in timeout_points], [timeout] * len(timeout_points),
-                             marker="^", s=58, color=line.get_color())
+                axis.scatter(
+                    [x + offset for x in timeout_points],
+                    [timeout] * len(timeout_points),
+                    marker="^",
+                    s=58,
+                    color=line.get_color(),
+                )
 
     # Explicitly requested: one graph for each fixed k.
     for bound in bounds:
@@ -393,27 +481,45 @@ def plot_summary(summary: list[dict], output_dir: Path, timeout: float) -> None:
         decorate(axis, "Number of agents", f"Verification time at k={bound}")
         axis.set_xticks(agents)
         axis.legend(title="Model scale")
-        axis.text(0.01, 0.01, "Triangles denote timeout runs.",
-                  transform=axis.transAxes, fontsize=8)
+        axis.text(
+            0.01,
+            0.01,
+            "Triangles denote timeout runs.",
+            transform=axis.transAxes,
+            fontsize=8,
+        )
         save(fig, by_k_dir / f"runtime_k_{bound}")
 
     # Explicitly requested: one graph for each fixed number of agents.
     for agent_count in agents:
         fig, axis = plt.subplots(figsize=(7.2, 4.5))
         plot_scales(axis, bounds, agent_count, by_bound=False)
-        decorate(axis, "Universal strategy-complexity bound k",
-                 f"Verification time with {agent_count} agents")
+        decorate(
+            axis,
+            "Universal strategy-complexity bound k",
+            f"Verification time with {agent_count} agents",
+        )
         axis.set_xticks(bounds)
         axis.legend(title="Model scale")
-        axis.text(0.01, 0.01, "Triangles denote timeout runs.",
-                  transform=axis.transAxes, fontsize=8)
+        axis.text(
+            0.01,
+            0.01,
+            "Triangles denote timeout runs.",
+            transform=axis.transAxes,
+            fontsize=8,
+        )
         save(fig, by_agents_dir / f"runtime_agents_{agent_count}")
 
     def subplot_grid(items: list[int], by_bound: bool, stem: str, title: str) -> None:
         columns = 2
         rows_count = math.ceil(len(items) / columns)
-        fig, axes = plt.subplots(rows_count, columns, figsize=(12, 4.4 * rows_count),
-                                 squeeze=False, sharey=True)
+        fig, axes = plt.subplots(
+            rows_count,
+            columns,
+            figsize=(12, 4.4 * rows_count),
+            squeeze=False,
+            sharey=True,
+        )
         for axis, item in zip(axes.flat, items):
             x_values = agents if by_bound else bounds
             plot_scales(axis, x_values, item, by_bound)
@@ -423,21 +529,35 @@ def plot_summary(summary: list[dict], output_dir: Path, timeout: float) -> None:
                 f"k={item}" if by_bound else f"{item} agents",
             )
             axis.set_xticks(x_values)
-        for axis in axes.flat[len(items):]:
+        for axis in axes.flat[len(items) :]:
             axis.set_visible(False)
         handles, labels = axes.flat[0].get_legend_handles_labels()
         fig.suptitle(title, y=0.99)
-        fig.legend(handles, labels, title="Model scale", loc="upper center",
-                   bbox_to_anchor=(0.5, 0.95), ncol=min(len(scales), 4))
+        fig.legend(
+            handles,
+            labels,
+            title="Model scale",
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.95),
+            ncol=min(len(scales), 4),
+        )
         fig.tight_layout(rect=(0, 0, 1, 0.86))
         fig.savefig((output_dir / stem).with_suffix(".png"), dpi=220)
         fig.savefig((output_dir / stem).with_suffix(".pdf"))
         plt.close(fig)
 
-    subplot_grid(bounds, True, "summary_by_k",
-                 "NatSL verification time: one panel per strategy bound")
-    subplot_grid(agents, False, "summary_by_agents",
-                 "NatSL verification time: one panel per agent count")
+    subplot_grid(
+        bounds,
+        True,
+        "summary_by_k",
+        "NatSL verification time: one panel per strategy bound",
+    )
+    subplot_grid(
+        agents,
+        False,
+        "summary_by_agents",
+        "NatSL verification time: one panel per agent count",
+    )
 
     # One pair of heatmaps for every state/AP scale.
     for states, propositions in scales:
@@ -451,7 +571,9 @@ def plot_summary(summary: list[dict], output_dir: Path, timeout: float) -> None:
                 if row:
                     value = row.get("median_wall_seconds", "")
                     if value != "":
-                        matrix[row_index, column_index] = math.log10(max(float(value), 1e-6))
+                        matrix[row_index, column_index] = math.log10(
+                            max(float(value), 1e-6)
+                        )
                         annotations[row_index][column_index] = f"{float(value):.2g}s"
                     elif row["status"] == "timeout":
                         matrix[row_index, column_index] = math.log10(timeout)
@@ -461,11 +583,22 @@ def plot_summary(summary: list[dict], output_dir: Path, timeout: float) -> None:
                 search_annotations[row_index][column_index] = f"{profiles:.2e}"
 
         for data, annotations_data, cmap, prefix, color_label, graph_title in (
-            (matrix, annotations, "viridis", "runtime", "log10(seconds)",
-             f"Verification time: {states} states / {propositions} APs"),
-            (search_matrix, search_annotations, "magma", "strategy_space",
-             "log10(number of profiles)",
-             f"Raw profile-space upper bound: {states} states / {propositions} APs"),
+            (
+                matrix,
+                annotations,
+                "viridis",
+                "runtime",
+                "log10(seconds)",
+                f"Verification time: {states} states / {propositions} APs",
+            ),
+            (
+                search_matrix,
+                search_annotations,
+                "magma",
+                "strategy_space",
+                "log10(number of profiles)",
+                f"Raw profile-space upper bound: {states} states / {propositions} APs",
+            ),
         ):
             fig, axis = plt.subplots(figsize=(7.2, 4.2))
             image = axis.imshow(data, aspect="auto", cmap=cmap)
@@ -478,8 +611,15 @@ def plot_summary(summary: list[dict], output_dir: Path, timeout: float) -> None:
                 for column_index in range(len(bounds)):
                     label = annotations_data[row_index][column_index]
                     if label:
-                        axis.text(column_index, row_index, label, ha="center",
-                                  va="center", color="white", fontsize=8)
+                        axis.text(
+                            column_index,
+                            row_index,
+                            label,
+                            ha="center",
+                            va="center",
+                            color="white",
+                            fontsize=8,
+                        )
             fig.colorbar(image, ax=axis).set_label(color_label)
             save(fig, heatmaps_dir / f"{prefix}_S{states}_P{propositions}")
 
@@ -489,20 +629,32 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--agents", nargs="+", type=int, default=[2, 3, 4, 5])
     parser.add_argument("--bounds", nargs="+", type=int, default=[1, 2, 3, 4])
     parser.add_argument(
-        "--scales", nargs="+", metavar="STATES:APS",
+        "--scales",
+        nargs="+",
+        metavar="STATES:APS",
         help="Model scales, e.g. --scales 6:3 10:5 14:7 18:9",
     )
-    parser.add_argument("--states", type=int, help="Backward-compatible single-scale state count")
-    parser.add_argument("--propositions", type=int,
-                        help="Atomic propositions for --states (default: ceil(states/2))")
+    parser.add_argument(
+        "--states", type=int, help="Backward-compatible single-scale state count"
+    )
+    parser.add_argument(
+        "--propositions",
+        type=int,
+        help="Atomic propositions for --states (default: ceil(states/2))",
+    )
     parser.add_argument("--repetitions", type=int, default=3)
     parser.add_argument("--timeout", type=float, default=120.0)
-    parser.add_argument("--output", type=Path,
-        default=PROJECT_ROOT / "benchmark_results" / "local_run")
+    parser.add_argument(
+        "--output", type=Path, default=PROJECT_ROOT / "benchmark_results" / "local_run"
+    )
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--no-plots", action="store_true")
-    parser.add_argument("--quick", action="store_true", help="Run agents=2, k=1..2 once")
-    parser.add_argument("--worker", nargs=2, metavar=("MODEL", "FORMULA"), help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--quick", action="store_true", help="Run agents=2, k=1..2 once"
+    )
+    parser.add_argument(
+        "--worker", nargs=2, metavar=("MODEL", "FORMULA"), help=argparse.SUPPRESS
+    )
     return parser.parse_args()
 
 
@@ -516,7 +668,9 @@ def parse_scales(arguments: argparse.Namespace) -> list[tuple[int, int]]:
                 states_text, propositions_text = item.split(":", 1)
                 parsed.append((int(states_text), int(propositions_text)))
             except (ValueError, TypeError) as exc:
-                raise SystemExit(f"Invalid scale {item!r}; expected STATES:APS") from exc
+                raise SystemExit(
+                    f"Invalid scale {item!r}; expected STATES:APS"
+                ) from exc
     elif arguments.states is not None:
         propositions = arguments.propositions or math.ceil(arguments.states / 2)
         parsed = [(arguments.states, propositions)]
@@ -554,16 +708,21 @@ def main() -> int:
     configuration = {
         "run_id": run_id,
         "selected_architecture": "space-efficient alternating depth-first",
-        "mode": SELECTED_MODE, "agents": sorted(set(arguments.agents)),
+        "mode": SELECTED_MODE,
+        "agents": sorted(set(arguments.agents)),
         "bounds": sorted(set(arguments.bounds)),
         "scales": [
             {"states": states, "atomic_propositions": propositions}
             for states, propositions in scales
         ],
-        "actions_per_universal_agent": 2, "repetitions": arguments.repetitions,
-        "timeout_seconds": arguments.timeout, "python": sys.version,
-        "python_executable": sys.executable, "platform": platform.platform(),
-        "processor": platform.processor(), "logical_cpu_count": os.cpu_count(),
+        "actions_per_universal_agent": 2,
+        "repetitions": arguments.repetitions,
+        "timeout_seconds": arguments.timeout,
+        "python": sys.version,
+        "python_executable": sys.executable,
+        "platform": platform.platform(),
+        "processor": platform.processor(),
+        "logical_cpu_count": os.cpu_count(),
         "started_utc": datetime.now(timezone.utc).isoformat(),
     }
     try:
@@ -582,13 +741,21 @@ def main() -> int:
             "Use --resume or select a different --output directory."
         )
     if arguments.resume and configuration_path.exists():
-        existing_configuration = json.loads(configuration_path.read_text(encoding="utf-8"))
+        existing_configuration = json.loads(
+            configuration_path.read_text(encoding="utf-8")
+        )
         comparison_keys = (
-            "mode", "agents", "bounds", "scales",
-            "actions_per_universal_agent", "repetitions", "timeout_seconds",
+            "mode",
+            "agents",
+            "bounds",
+            "scales",
+            "actions_per_universal_agent",
+            "repetitions",
+            "timeout_seconds",
         )
         mismatches = [
-            key for key in comparison_keys
+            key
+            for key in comparison_keys
             if existing_configuration.get(key) != configuration.get(key)
         ]
         if mismatches:
@@ -614,10 +781,15 @@ def main() -> int:
     completed_keys: set[tuple[int, int, int, int, int]] = set()
     if arguments.resume:
         for row in read_rows(results_csv):
-            completed_keys.add((
-                int(row["states"]), int(row["atomic_propositions"]),
-                int(row["agents"]), int(row["bound_k"]), int(row["repetition"]),
-            ))
+            completed_keys.add(
+                (
+                    int(row["states"]),
+                    int(row["atomic_propositions"]),
+                    int(row["agents"]),
+                    int(row["bound_k"]),
+                    int(row["repetition"]),
+                )
+            )
     points = [
         (states, propositions, agents, bound, repetition)
         for states, propositions in scales
@@ -625,22 +797,39 @@ def main() -> int:
         for bound in sorted(set(arguments.bounds))
         for repetition in range(1, arguments.repetitions + 1)
     ]
-    for index, (states, propositions, agents, bound, repetition) in enumerate(points, start=1):
+    for index, (states, propositions, agents, bound, repetition) in enumerate(
+        points, start=1
+    ):
         key = (states, propositions, agents, bound, repetition)
         if key in completed_keys:
-            print(f"[{index}/{len(points)}] skip S={states}, P={propositions}, "
-                  f"n={agents}, k={bound}, r={repetition}")
+            print(
+                f"[{index}/{len(points)}] skip S={states}, P={propositions}, "
+                f"n={agents}, k={bound}, r={repetition}"
+            )
             continue
         formula = build_formula(agents, bound)
-        print(f"[{index}/{len(points)}] run S={states}, P={propositions}, "
-              f"n={agents}, k={bound}, r={repetition}", flush=True)
+        print(
+            f"[{index}/{len(points)}] run S={states}, P={propositions}, "
+            f"n={agents}, k={bound}, r={repetition}",
+            flush=True,
+        )
         row = execute_point(
-            agents, bound, repetition, models[(states, propositions, agents)], formula,
-            arguments.timeout, run_id, states, propositions,
+            agents,
+            bound,
+            repetition,
+            models[(states, propositions, agents)],
+            formula,
+            arguments.timeout,
+            run_id,
+            states,
+            propositions,
         )
         append_row(results_csv, row)
-        print(f"  -> {row['status']} in {float(row['wall_seconds']):.3f}s; "
-              f"universal profiles={row['universal_profiles_checked'] or 'n/a'}", flush=True)
+        print(
+            f"  -> {row['status']} in {float(row['wall_seconds']):.3f}s; "
+            f"universal profiles={row['universal_profiles_checked'] or 'n/a'}",
+            flush=True,
+        )
 
     summary = write_summary(results_csv, summary_csv)
     if not arguments.no_plots:

@@ -56,13 +56,19 @@ def _ictl_unary_key(parser_instance: Any, val: Any) -> str | None:
         return "AX"
     if parser_instance.verify("EXIST", val) and parser_instance.verify("NEXT", val):
         return "EX"
-    if parser_instance.verify("FORALL", val) and parser_instance.verify("GLOBALLY", val):
+    if parser_instance.verify("FORALL", val) and parser_instance.verify(
+        "GLOBALLY", val
+    ):
         return "AG"
     if parser_instance.verify("EXIST", val) and parser_instance.verify("GLOBALLY", val):
         return "EG"
-    if parser_instance.verify("FORALL", val) and parser_instance.verify("EVENTUALLY", val):
+    if parser_instance.verify("FORALL", val) and parser_instance.verify(
+        "EVENTUALLY", val
+    ):
         return "AF"
-    if parser_instance.verify("EXIST", val) and parser_instance.verify("EVENTUALLY", val):
+    if parser_instance.verify("EXIST", val) and parser_instance.verify(
+        "EVENTUALLY", val
+    ):
         return "EF"
     return None
 

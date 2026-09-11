@@ -88,6 +88,11 @@ def test_formula_parser_valid_and_invalid(
         from model_checker.parsers.formulas.TOL import DemonicOp
 
         assert isinstance(result_valid, DemonicOp)
+    elif logic == "NatSL":
+        from model_checker.parsers.formulas.NatSL.parser import NatSLFormula
+
+        assert isinstance(result_valid, NatSLFormula)
+        assert result_valid.goal.operator in {"F", "G", "X"}
     else:
         assert_parse_structure(result_valid, description=logic)
         blob = str(result_valid)

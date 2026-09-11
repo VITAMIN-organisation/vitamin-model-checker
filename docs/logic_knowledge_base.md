@@ -780,8 +780,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **NatATL (ML)** | Branching | `<A,k>X`, `<A,k>F`, `<A,k>G`, `<A,k>U` | `<{1,2}, k>` (k = strategy complexity) | CGS |
 | **NatATL (Rec)** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` (k = strategy complexity) | CGS |
 | **NatATLF** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` | CGS (delegates to memoryless) |
-| **NatSL (Seq)** | Branching | `Ex`, `Ax`, `F`, `!F` | `Ex:{k}x:(x,1)` (Sequential) | CGS |
-| **NatSL (Alt)** | Branching | `Ex`, `Ax`, `F`, `!F` | `Ex:{k}x:(x,1)` (Alternated) | CGS |
+| **NatSL** | Branching | `E{k}x`, `A{k}y`, `F`/`G`/`X` | `E{k}xA{m}y:(x,1)(y,2)Fgoal`; schedule `space`/`time` | CGS |
 | **OATL** | Branching | `<A><k>X`, `F`, `G`, `U` | `<1,2><5>` (per-step cost bound) | costCGS |
 | **OL** | Linear | `<Jk>X`, `F`, `G`, `U`, `R`, `W` | `<J5>` (Demonic) | costCGS |
 | **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U` | `<1><10,5>` (Vectors) | costCGS |

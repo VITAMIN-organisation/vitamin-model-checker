@@ -3,8 +3,7 @@ from model_checker.parsers.formulas.NatSL.parser import parse_formula
 
 def test_multichar_strategy_variables():
     parsed = parse_formula(
-        "E{2}controllerA{1}opponent:"
-        "(controller,1)(opponent,2)Fgoal"
+        "E{2}controllerA{1}opponent:" "(controller,1)(opponent,2)Fgoal"
     )
 
     assert [q.kind for q in parsed.quantifiers] == ["E", "A"]

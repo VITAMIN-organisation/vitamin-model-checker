@@ -69,7 +69,10 @@ def _hard_prune_agent_action(
                     continue
 
                 # Current fixtures use compact one-character-per-agent profiles.
-                if len(joint_action) > tuple_index and joint_action[tuple_index] == action:
+                if (
+                    len(joint_action) > tuple_index
+                    and joint_action[tuple_index] == action
+                ):
                     kept.append(joint_action)
 
             row[column] = ",".join(kept) if kept else 0
@@ -163,7 +166,9 @@ def _condition_cost(condition: str) -> int:
     return len(condition.replace("!", " ! ").split())
 
 
-def _conditions(atomic_propositions: list[str], max_cost: int) -> tuple[tuple[str, int], ...]:
+def _conditions(
+    atomic_propositions: list[str], max_cost: int
+) -> tuple[tuple[str, int], ...]:
     """Generate a deterministic propositional guard vocabulary."""
     generated: set[str] = set()
     output: list[tuple[str, int]] = []
@@ -173,10 +178,16 @@ def _conditions(atomic_propositions: list[str], max_cost: int) -> tuple[tuple[st
     for size in range(1, max_literals + 1):
         for chosen in itertools.combinations(propositions, size):
             for signs in itertools.product((False, True), repeat=size):
-                literals = [f"!{p}" if negated else p for p, negated in zip(chosen, signs)]
+                literals = [
+                    f"!{p}" if negated else p for p, negated in zip(chosen, signs)
+                ]
                 connectors = (None,) if size == 1 else ("and", "or")
                 for connector in connectors:
-                    condition = literals[0] if connector is None else f" {connector} ".join(literals)
+                    condition = (
+                        literals[0]
+                        if connector is None
+                        else f" {connector} ".join(literals)
+                    )
                     cost = _condition_cost(condition)
                     if cost <= max_cost and condition not in generated:
                         generated.add(condition)
@@ -221,7 +232,9 @@ def generate_agent_strategies(
                 yield {"condition_action_pairs": list(pairs)}
 
 
-def _serialize_assignment(assignment: dict[str, Strategy]) -> dict[str, list[dict[str, str]]]:
+def _serialize_assignment(
+    assignment: dict[str, Strategy],
+) -> dict[str, list[dict[str, str]]]:
     return {
         variable: [
             {"condition": condition, "action": action}
@@ -267,21 +280,31 @@ class RestrictedNatSL1GEvaluator:
                 f"got {sorted(bound_agents)}"
             )
         if any(cell == "*" for row in self.cgs.graph for cell in row):
-            raise ValueError("Wildcard '*' transitions are not supported by this prototype")
+            raise ValueError(
+                "Wildcard '*' transitions are not supported by this prototype"
+            )
 
         self.variable_to_agent = dict(formula.bindings)
         self.actions_by_agent = self._validate_and_extract_actions()
         if any(not actions for actions in self.actions_by_agent.values()):
-            raise ValueError("Every bound agent must have at least one action in the model")
+            raise ValueError(
+                "Every bound agent must have at least one action in the model"
+            )
 
-        self.existential_quantifiers = tuple(q for q in formula.quantifiers if q.kind == "E")
-        self.universal_quantifiers = tuple(q for q in formula.quantifiers if q.kind == "A")
+        self.existential_quantifiers = tuple(
+            q for q in formula.quantifiers if q.kind == "E"
+        )
+        self.universal_quantifiers = tuple(
+            q for q in formula.quantifiers if q.kind == "A"
+        )
         self.materialized_domains: dict[str, tuple[Strategy, ...]] = {}
         if mode == "time":
             for quantifier in formula.quantifiers:
                 domain = tuple(self._filtered_domain(quantifier))
                 if not domain:
-                    raise ValueError(f"Empty admissible strategy domain for {quantifier.variable}")
+                    raise ValueError(
+                        f"Empty admissible strategy domain for {quantifier.variable}"
+                    )
                 self.materialized_domains[quantifier.variable] = domain
 
     def _validate_and_extract_actions(self) -> dict[int, tuple[str, ...]]:
@@ -351,7 +374,9 @@ class RestrictedNatSL1GEvaluator:
             for suffix in self._assignment_product(quantifiers, index + 1):
                 yield {quantifier.variable: strategy, **suffix}
         if not saw_strategy:
-            raise ValueError(f"Empty admissible strategy domain for {quantifier.variable}")
+            raise ValueError(
+                f"Empty admissible strategy domain for {quantifier.variable}"
+            )
 
     def _apply_assignment(
         self, assignment: dict[str, Strategy], base_graph: list | None = None
@@ -399,16 +424,18 @@ class RestrictedNatSL1GEvaluator:
         else:
             self.stats.complete_profile_checks += 1
 
-        return str(
-            (ctl_result or {}).get("initial_state", "")
-        ).rstrip().endswith("True")
+        return (
+            str((ctl_result or {}).get("initial_state", "")).rstrip().endswith("True")
+        )
 
     def _check_bounded_universals(
         self, existential_assignment: dict[str, Strategy], existential_graph: list
     ) -> tuple[bool, dict[str, Strategy]]:
         last_trace = dict(existential_assignment)
         saw_compatible_profile = False
-        for universal_assignment in self._assignment_product(self.universal_quantifiers):
+        for universal_assignment in self._assignment_product(
+            self.universal_quantifiers
+        ):
             full_graph = self._apply_assignment(universal_assignment, existential_graph)
             if full_graph is None:
                 self.stats.incompatible_universal_profiles += 1
@@ -419,12 +446,16 @@ class RestrictedNatSL1GEvaluator:
             if not self._check_graph(full_graph, unrestricted_opponents=False):
                 return False, last_trace
         if not saw_compatible_profile:
-            raise ValueError("No compatible bounded universal strategy profile was generated")
+            raise ValueError(
+                "No compatible bounded universal strategy profile was generated"
+            )
         return True, last_trace
 
     def _space_run(self) -> tuple[bool, dict[str, Strategy]]:
         last_trace: dict[str, Strategy] = {}
-        for existential_assignment in self._assignment_product(self.existential_quantifiers):
+        for existential_assignment in self._assignment_product(
+            self.existential_quantifiers
+        ):
             self.stats.existential_candidates += 1
             existential_graph = self._apply_assignment(existential_assignment)
             if existential_graph is None:
@@ -453,7 +484,9 @@ class RestrictedNatSL1GEvaluator:
         last_trace: dict[str, Strategy] = {}
 
         # Phase 1: materialized existential generation and unrestricted checks.
-        for existential_assignment in self._assignment_product(self.existential_quantifiers):
+        for existential_assignment in self._assignment_product(
+            self.existential_quantifiers
+        ):
             self.stats.existential_candidates += 1
             existential_graph = self._apply_assignment(existential_assignment)
             if existential_graph is None:
@@ -481,7 +514,9 @@ class RestrictedNatSL1GEvaluator:
         return False, last_trace
 
     def run(self) -> dict:
-        satisfiable, trace = self._time_run() if self.mode == "time" else self._space_run()
+        satisfiable, trace = (
+            self._time_run() if self.mode == "time" else self._space_run()
+        )
         result = {
             "Satisfiability": satisfiable,
             "Mode": "time-efficient" if self.mode == "time" else "space-efficient",
@@ -508,7 +543,8 @@ class RestrictedNatSL1GEvaluator:
         }
         if self.mode == "time":
             result["Materialized domain sizes"] = {
-                variable: len(domain) for variable, domain in self.materialized_domains.items()
+                variable: len(domain)
+                for variable, domain in self.materialized_domains.items()
             }
 
         # NatATL-style backend compatibility fields (decision problem, not a state set).

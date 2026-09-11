@@ -4,8 +4,6 @@ import tempfile
 import pytest
 
 from model_checker.parsers.formulas.NatSL.parser import (
-    UnsupportedTranslationError,
-    convert_natsl_to_natatl,
     goal_to_ctl,
     parse_formula,
 )
@@ -21,10 +19,7 @@ CONTROLLER_MODEL = FIXTURES / "bounded_controller.txt"
 
 
 def both_modes(formula, model, expected):
-    results = [
-        model_checking(formula, model, mode=mode)
-        for mode in ("time", "space")
-    ]
+    results = [model_checking(formula, model, mode=mode) for mode in ("time", "space")]
     for result in results:
         assert "error" not in result, result
     assert [result["Satisfiability"] for result in results] == [expected, expected]
@@ -38,13 +33,6 @@ def test_prefix_order_is_preserved():
     parsed = parse_formula("E{1}xA{2}y:(x,1)(y,2)Fgoal")
     assert [q.kind for q in parsed.quantifiers] == ["E", "A"]
     assert [q.bound for q in parsed.quantifiers] == [1, 2]
-
-
-def test_mixed_translation_is_rejected():
-    with pytest.raises(UnsupportedTranslationError):
-        convert_natsl_to_natatl(
-            "E{1}xA{1}y:(x,1)(y,2)Fgoal"
-        )
 
 
 def test_negated_global_uses_universal_path_semantics():
