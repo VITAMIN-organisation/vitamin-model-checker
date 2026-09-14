@@ -142,11 +142,26 @@ AA s0$1,2:3,4
 
 ## capCGS Sections
 
-`capCGS` adds capability information:
+`capCGS` adds capability information for CapATL:
 
-- `Capacities`
-- `Capacities_assignment`
-- `Actions_for_capacities`
+```text
+Capacities
+c cap cop
+Capacities_assignment
+1 0 0
+1 0 0
+0 1 1
+Actions_for_capacities
+c A B
+cap A
+cop B
+```
+
+- `Capacities` - space-separated capacity/resource names.
+- `Capacities_assignment` - `agents x capacities` matrix of `0`/`1` values.
+  Row `i` is agent `i`; column `j` is capacity `j` (same order as `Capacities`).
+- `Actions_for_capacities` - one line per capacity: `capacity_name action1 action2 ...`
+  listing actions associated with that capacity.
 
 Use this format for CapATL-style capability reasoning.
 

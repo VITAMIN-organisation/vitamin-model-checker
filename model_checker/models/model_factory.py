@@ -120,7 +120,12 @@ def detect_model_type_from_content(content: str) -> str:
     return "CGS"
 
 
-_MODEL_TYPE_CONSTRUCTORS: dict[str, Callable[[], CGS | CostCGS | CapCGS | BCGS | BirelationalMatrix | TimedCGS | WalletCGS]] = {
+_MODEL_TYPE_CONSTRUCTORS: dict[
+    str,
+    Callable[
+        [], CGS | CostCGS | CapCGS | BCGS | BirelationalMatrix | TimedCGS | WalletCGS
+    ],
+] = {
     "CGS": CGS,
     "costCGS": CostCGS,
     "capCGS": CapCGS,

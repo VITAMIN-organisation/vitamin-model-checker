@@ -49,10 +49,10 @@ If the selected action is unavailable in a covered state, the strategy profile i
 
 ## Execution modes
 
-The two public implementations share the same semantic core:
+The public entry point is `NatSL/core.py` `model_checking(..., mode=)`:
 
-- `Alternated/natSL.py`: space-oriented lazy search.
-- `Sequential/natSL.py`: time-oriented search.
+- `mode="space"`: space-oriented lazy search (former Alternated schedule).
+- `mode="time"`: time-oriented materialized search (former Sequential schedule).
 
 Both modes are required to agree on satisfiability.
 

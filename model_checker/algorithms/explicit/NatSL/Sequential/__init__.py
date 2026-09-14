@@ -1,1 +1,0 @@
-"""NatSL Sequential semantics package."""

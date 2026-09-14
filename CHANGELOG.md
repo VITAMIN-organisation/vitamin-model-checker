@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.6.4] - 2026-09-11
+
 ### Added
 
 - ATL* model checking (`model_checker/algorithms/explicit/ATL_STAR/`), an
@@ -26,6 +28,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - NatSL semantic regression tests and dedicated CGS fixtures.
 - Runnable NatSL examples, including a logistics-robot case study.
 - Reproducible NatSL scalability benchmark with curated recorded results.
+- NatSL success payloads now include NatATL-style `res` / `initial_state`
+  fields alongside `Satisfiability` for backend compatibility.
 
 ### Changed
 
@@ -35,6 +39,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   treated as inadmissible rather than repaired with an implicit idle action.
 - NatSL documentation now describes the implemented `E* A*` one-goal fragment
   and its deliberate boundaries.
+- Public NatSL algorithm entry is a single `NatSL` entry point
+  (`core.model_checking` with `mode="space"|"time"`). The
+  `NatSL_Sequential` / `NatSL_Alternated` packages and entry points were removed.
+
+### Fixed
+
+- NatSL runnable examples used a misspelled `Unkown_Transition_by` header that
+  broke CGS loading; examples are synced with the correct fixtures.
 
 ## [1.6.3] - 2026-08-26
 

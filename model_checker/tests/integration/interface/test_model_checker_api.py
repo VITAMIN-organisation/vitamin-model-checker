@@ -63,16 +63,9 @@ LOGIC_CONFIG: LogicConfig = {
         ).model_checking,
         ("CGS", "NATATL", "natatl_1agent_4states_standard.txt"),
     ),
-    "NatSL_Sequential": (
+    "NatSL": (
         __import__(
-            "model_checker.algorithms.explicit.NatSL.Sequential.natSL",
-            fromlist=["model_checking"],
-        ).model_checking,
-        ("CGS", "NATATL", "natatl_1agent_4states_standard.txt"),
-    ),
-    "NatSL_Alternated": (
-        __import__(
-            "model_checker.algorithms.explicit.NatSL.Alternated.natSL",
+            "model_checker.algorithms.explicit.NatSL.core",
             fromlist=["model_checking"],
         ).model_checking,
         ("CGS", "NATATL", "natatl_1agent_4states_standard.txt"),

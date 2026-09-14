@@ -2,7 +2,7 @@ Transition
 B A 0
 0 A B
 0 0 A,B
-Unkown_Transition_by
+Unknown_Transition_by
 0 0 0
 0 0 0
 0 0 0
