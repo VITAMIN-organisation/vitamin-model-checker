@@ -521,9 +521,9 @@ class RestrictedNatSL1GEvaluator:
             "Satisfiability": satisfiable,
             "Mode": "time-efficient" if self.mode == "time" else "space-efficient",
             "Algorithm": (
-                "materialized sequential two-phase evaluation"
+                "time-oriented materialized two-phase evaluation"
                 if self.mode == "time"
-                else "space-efficient alternating depth-first evaluation"
+                else "space-oriented lazy search"
             ),
             "Supported fragment": "closed Boolean memoryless restricted NatSL[1G], E* A*",
             "Backend reduction": (

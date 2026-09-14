@@ -145,39 +145,60 @@ debugging hints only; trust the satisfying state set for semantics.
 
 ### Current Implementation
 
-**Parser Location:** `model_checker/parsers/formulas/NatSL/parser.py`
+**Parser Location:** `model_checker/parsers/formulas/CTL/parser.py`
+
+**Algorithm:** `model_checker/algorithms/explicit/CTL/`
 
 **Implemented Logic Support:**
-- **Quantifiers:** bounded existential and universal natural-strategy quantifiers, e.g. `E{2}x` and `A{1}y`.
-- **Identifiers:** strategy variables support multi-character identifiers such as `controller`, `opponent`, and `strategy1`.
-- **Bindings:** strategy variables are explicitly bound to agents, e.g. `(controller,1)`.
-- **Temporal operators:** the one-goal fragment supports `F`, `G`, and `X`, together with their negated forms.
-- **Executable quantifier fragment:** ordered prefixes of the form `E* A*`, including purely existential prefixes.
-- **Evaluation:** mixed bounded prefixes are checked directly; they are not decomposed into independent NatATL formulas.
+- Path quantifiers `E` / `A` with temporal operators `X`, `F`, `G`, and `U`.
+- Boolean connectives shared with the common formula syntax.
+- Optional traces (`generate_trace=True`) are reachability hints into or out of
+  the denotation, not full CTL path witnesses.
+
+See [CTL algorithm reference](CTL/algorithm.md) for denotations and operators.
+
+---
+
+<a id="natsl---natural-strategy-logic"></a>
+## NatSL - Natural Strategy Logic
+
+### Theoretical Background
+
+NatSL quantifies over bounded natural strategies and binds those strategies to
+agents. The current checker implements a restricted one-goal fragment.
+
+**Standard Syntax:**
+- Existential / universal strategy quantifiers with complexity bounds: `E{k}x`,
+  `A{k}y`.
+- Explicit agent bindings: `(x, 1)(y, 2)`.
+- Temporal goals: `F`, `G`, `X`, and their negations.
 
 A representative formula is:
 
-    E{2}controllerA{1}opponent:
-    (controller,1)(opponent,2)Fgoal
+```text
+E{2}controller A{1}opponent: (controller, 1)(opponent, 2) F goal
+```
 
-Natural strategies are represented as ordered condition/action decision lists.
-The strategy bound limits their complexity.
+### Current Implementation
 
-NatSL uses exact action pruning. If a selected action is unavailable in a state
-covered by the strategy, that strategy profile is inadmissible; no implicit
-idle-action fallback is introduced.
+**Parser Location:** `model_checker/parsers/formulas/NatSL/parser.py`
 
-### Execution Semantics
+**Algorithm:** `model_checker/algorithms/explicit/NatSL/core.py`
 
-NatSL exposes two execution schedules over the same strategy-quantification semantics:
+**Implemented Logic Support:**
+- Ordered prefixes of the form `E* A*`, including purely existential prefixes.
+- Multi-character strategy variables and explicit agent bindings.
+- Exact action pruning (no idle-action fallback).
+- Direct evaluation of mixed bounded prefixes (no NatATL decomposition).
 
-1.  **Sequential Semantics**:
-    - Existential strategy quantifiers ($\exists$) are evaluated first to find a set of winning strategy trees. 
-    - These candidate strategies are then validated against all possible universal counter-strategies ($\forall$) defined in the formula.
-    - This reflects a "Proponent-first" view where a winning plan must be robust against any adversary.
-2.  **Alternated Semantics**:
-    - Verification alternates between existential search and universal validation at each step of the model exploration.
-    - This reflects a "Game-theoretic" view where agents react to each other's moves dynamically.
+### Execution schedules
+
+Both schedules share the same acceptance semantics:
+
+1. `mode="space"`: space-oriented lazy search.
+2. `mode="time"`: time-oriented materialized search.
+
+See [NatSL algorithm](NatSL/algorithm.md) and [NatSL semantics](NatSL/semantics.md).
 
 ---
 
@@ -780,7 +801,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **NatATL (ML)** | Branching | `<A,k>X`, `<A,k>F`, `<A,k>G`, `<A,k>U` | `<{1,2}, k>` (k = strategy complexity) | CGS |
 | **NatATL (Rec)** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` (k = strategy complexity) | CGS |
 | **NatATLF** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` | CGS (delegates to memoryless) |
-| **NatSL** | Branching | `E{k}x`, `A{k}y`, `F`/`G`/`X` | `E{k}xA{m}y:(x,1)(y,2)Fgoal`; schedule `space`/`time` | CGS |
+| **NatSL** | Branching | `E{k}x`, `A{k}y`, `F`/`G`/`X` | `E{k}x A{m}y: (x, 1)(y, 2) F goal`; schedule `space`/`time` | CGS |
 | **OATL** | Branching | `<A><k>X`, `F`, `G`, `U` | `<1,2><5>` (per-step cost bound) | costCGS |
 | **OL** | Linear | `<Jk>X`, `F`, `G`, `U`, `R`, `W` | `<J5>` (Demonic) | costCGS |
 | **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U` | `<1><10,5>` (Vectors) | costCGS |

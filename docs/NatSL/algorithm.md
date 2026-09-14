@@ -8,14 +8,17 @@ The current checker implements a restricted one-goal fragment with bounded natur
 
 The executable quantifier prefix has the form:
 
-    E* A*
+```text
+E* A*
+```
 
 including purely existential prefixes.
 
 Example:
 
-    E{2}controllerA{1}opponent:
-    (controller,1)(opponent,2)Fgoal
+```text
+E{2}controller A{1}opponent: (controller, 1)(opponent, 2) F goal
+```
 
 Strategy variables may use multi-character identifiers such as `controller`, `opponent`, and `strategy1`.
 
@@ -27,7 +30,9 @@ Quantifier order is preserved by the NatSL parser.
 
 For example,
 
-    E{2}xA{1}y:(x,1)(y,2)Fgoal
+```text
+E{2}x A{1}y: (x, 1)(y, 2) F goal
+```
 
 asks for an existential bounded strategy for `x` that succeeds against every admissible bounded strategy for `y`.
 
@@ -51,8 +56,8 @@ If the selected action is unavailable in a covered state, the strategy profile i
 
 The public entry point is `NatSL/core.py` `model_checking(..., mode=)`:
 
-- `mode="space"`: space-oriented lazy search (former Alternated schedule).
-- `mode="time"`: time-oriented materialized search (former Sequential schedule).
+- `mode="space"`: space-oriented lazy search.
+- `mode="time"`: time-oriented materialized search.
 
 Both modes are required to agree on satisfiability.
 
@@ -62,7 +67,6 @@ Both modes are required to agree on satisfiability.
 - `parsers/formulas/NatSL/parser.py`: NatSL parser.
 - `tests/unit/algorithms/natsl/`: semantic regression tests.
 - `tests/fixtures/CGS/NatSL/`: NatSL CGS fixtures.
-- `examples/NatSL/`: runnable examples.
 - `experiments/natsl/`: reproducible scalability experiments.
 
 ## Current boundaries

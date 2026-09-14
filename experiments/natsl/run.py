@@ -3,8 +3,7 @@
 
 The experiment varies model scale, number of agents, and the universal natural-
 strategy bound. Each point is executed in a separate process so that a timeout
-is enforceable and recordable. The selected checker is the space-efficient
-alternating implementation.
+is enforceable and recordable. The selected checker schedule is ``mode="space"``.
 """
 
 from __future__ import annotations
@@ -156,12 +155,12 @@ def build_formula(number_of_agents: int, bound: int) -> str:
         raise ValueError(f"At most {len(variables)} agents are supported by the syntax")
     selected = variables[:number_of_agents]
     prefix = f"E{{1}}{selected[0]}" + "".join(
-        f"A{{{bound}}}{variable}" for variable in selected[1:]
+        f" A{{{bound}}}{variable}" for variable in selected[1:]
     )
     bindings = "".join(
-        f"({variable},{agent})" for agent, variable in enumerate(selected, start=1)
+        f"({variable}, {agent})" for agent, variable in enumerate(selected, start=1)
     )
-    return f"{prefix}:{bindings}Fgoal"
+    return f"{prefix}: {bindings} F goal"
 
 
 def raw_domain_size(bound: int, proposition_count: int = 3, actions: int = 2) -> int:
@@ -645,7 +644,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--repetitions", type=int, default=3)
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument(
-        "--output", type=Path, default=PROJECT_ROOT / "benchmark_results" / "local_run"
+        "--output",
+        type=Path,
+        default=PROJECT_ROOT / "experiments" / "natsl" / "results" / "local_run",
     )
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--no-plots", action="store_true")
@@ -707,7 +708,7 @@ def main() -> int:
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     configuration = {
         "run_id": run_id,
-        "selected_architecture": "space-efficient alternating depth-first",
+        "selected_architecture": "space-oriented lazy search",
         "mode": SELECTED_MODE,
         "agents": sorted(set(arguments.agents)),
         "bounds": sorted(set(arguments.bounds)),

@@ -2,10 +2,11 @@
 
 Concrete syntax::
 
-    E{2}xA{2}y:(x,1)(y,2)Fa
+    E{2}x A{2}y: (x, 1)(y, 2) F a
 
-Quantifier order is preserved. Strategy-complexity bounds are required in
-``{k}`` form. Goals are limited to F/G/X and their negations.
+Optional whitespace is allowed around ``:``, bindings, goals, and between
+quantifiers. Bounds remain required in ``{k}`` form. Goals are limited to
+F/G/X and their negations. Quantifier order is preserved.
 """
 
 from __future__ import annotations
@@ -39,10 +40,12 @@ class NatSLFormula:
     goal: TemporalGoal
 
 
+# Allow spaces around braces/variables and between adjacent quantifiers.
 _QUANTIFIER_RE = re.compile(
-    r"\s*([EA])\{(\d+)\}([A-Za-z_][A-Za-z0-9_]*?)(?=\s*(?:[EA]\{\d+\}[A-Za-z_]|$))"
+    r"\s*([EA])\s*\{\s*(\d+)\s*\}\s*([A-Za-z_][A-Za-z0-9_]*?)"
+    r"(?=\s*(?:[EA]\s*\{\s*\d+\s*\}\s*[A-Za-z_]|$))"
 )
-_BINDING_RE = re.compile(r"\s*\(([A-Za-z_][A-Za-z0-9_]*),\s*(\d+)\)")
+_BINDING_RE = re.compile(r"\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*,\s*(\d+)\s*\)")
 _GOAL_RE = re.compile(
     r"\s*(!|not\s+)?\s*([FGX])\s*([A-Za-z_][A-Za-z0-9_.]*)\s*$",
     re.IGNORECASE,
@@ -73,6 +76,8 @@ def parse_formula(text: str) -> NatSLFormula:
     if ":" not in text:
         raise NatSLParseError("Missing ':' between quantifier prefix and bindings")
     prefix, suffix = text.split(":", 1)
+    prefix = prefix.strip()
+    suffix = suffix.strip()
 
     quantifiers: list[Quantifier] = []
     position = 0
