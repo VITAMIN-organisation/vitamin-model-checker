@@ -57,6 +57,9 @@ dev = [
     "pytest-timeout>=2.0.0",
     "pytest-xdist>=3.6.0",
 ]
+atl_star = [
+    "spottl; sys_platform == 'linux'",
+]
 docs = [
     "mkdocs>=1.5.0",
     "mkdocs-material>=9.5.0",
