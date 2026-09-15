@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e ".[dev,atl_star]"
       - name: Run unit tests
         run: |
           pytest model_checker/tests/unit/ \
@@ -51,7 +51,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -e ".[dev,atl_star]"
       - name: Run integration tests
         run: |
           pytest model_checker/tests/integration/ -v --tb=short -n auto

@@ -18,6 +18,7 @@ keywords = [
     "temporal-logic",
     "CTL",
     "ATL",
+    "ATL*",
     "LTL",
     "vitamin",
     "verification",
@@ -56,6 +57,9 @@ dev = [
     "pytest-timeout>=2.0.0",
     "pytest-xdist>=3.6.0",
 ]
+atl_star = [
+    "spottl; sys_platform == 'linux'",
+]
 docs = [
     "mkdocs>=1.5.0",
     "mkdocs-material>=9.5.0",
@@ -72,6 +76,7 @@ exclude = ["model_checker/tests*"]
 [project.entry-points."vitamin.parsers"]
 ATL = "model_checker.parsers.formulas.ATL.parser:ATLParser"
 ATLF = "model_checker.parsers.formulas.ATLF.parser:ATLFParser"
+ATL_STAR = "model_checker.parsers.formulas.ATL_STAR.parser:ATLStarParser"
 CapATL = "model_checker.parsers.formulas.CapATL.parser:CapATLParser"
 COTL = "model_checker.parsers.formulas.COTL.parser:COTLParser"
 CTL = "model_checker.parsers.formulas.CTL.parser:CTLParser"
@@ -102,6 +107,7 @@ timedCGS = "model_checker.parsers.game_structures.timed_cgs.timed_cgs:TimedCGS"
 [project.entry-points."vitamin.benchmarks"]
 ATL = "model_checker.algorithms.explicit.ATL.ATL:model_checking"
 ATLF = "model_checker.algorithms.explicit.ATLF.ATLF:model_checking"
+ATL_STAR = "model_checker.algorithms.explicit.ATL_STAR.ATL_STAR:model_checking"
 CapATL = "model_checker.algorithms.explicit.CapATL.CapATL:model_checking"
 COTL = "model_checker.algorithms.explicit.COTL.COTL:model_checking"
 CTL = "model_checker.algorithms.explicit.CTL.CTL:model_checking"
@@ -123,6 +129,7 @@ IATL = "model_checker.algorithms.explicit.IATL.IATL:model_checking"
 [project.entry-points."vitamin.metadata"]
 ATL = "model_checker.parsers.formulas.ATL:METADATA"
 ATLF = "model_checker.parsers.formulas.ATLF:METADATA"
+ATL_STAR = "model_checker.parsers.formulas.ATL_STAR:METADATA"
 CapATL = "model_checker.parsers.formulas.CapATL:METADATA"
 COTL = "model_checker.parsers.formulas.COTL:METADATA"
 CTL = "model_checker.parsers.formulas.CTL:METADATA"
