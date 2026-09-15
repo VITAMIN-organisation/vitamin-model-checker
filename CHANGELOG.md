@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.6.5] - 2026-09-15
+
+### Fixed
+
+- NatSL formulas with spaces around `:` or between quantifiers (for example
+  `E{1}x : (x, 1) F goal`) no longer fail with
+  `Invalid quantifier near ' '; expected E{k}x or A{k}x`. The parser now strips
+  the quantifier prefix and binding/goal suffix and accepts flexible whitespace
+  inside quantifier and binding tokens.
+
 ## [1.6.4] - 2026-09-11
 
 ### Added
