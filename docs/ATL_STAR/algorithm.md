@@ -62,10 +62,12 @@ realistic model sizes, the explicit-state product/arena construction here
 
 No official PyPI wheel from the Spot team. On Linux, the community
 [`spottl`](https://pypi.org/project/spottl/) package gives one anyway
-(imports as `spot`):
+(imports as `spot`), and is installed automatically as a regular
+dependency of `vitamin-model-checker` on that platform — no separate step
+or extra needed:
 
 ```bash
-pip install spottl
+pip install vitamin-model-checker
 ```
 
 On macOS, or to pin an exact Spot version, use conda-forge instead:

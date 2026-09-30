@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- `spottl` (Spot's Python bindings, Linux only) is now a regular
+  dependency instead of living under the `atl_star` extra — `pip install
+  vitamin-model-checker` alone is enough for ATL* to work, no
+  `[atl_star]` extra needed.
+
+### Fixed
+
+- ATL_STAR's elimination algorithm could generate a fresh marker
+  proposition (`__atl_star_elim_N`) that collided with a real proposition
+  already declared in the model, silently corrupting the result for that
+  edge case. The marker is now checked against the model's declared
+  propositions before use.
+
 ## [1.6.4] - 2026-09-11
 
 ### Added

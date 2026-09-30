@@ -39,6 +39,7 @@ dependencies = [
     "ply==3.11",
     "numpy>=1.26.0,<1.27.0",
     "pydantic>=2.7.0",
+    "spottl>=2.13; sys_platform == 'linux'",
 ]
 
 [project.urls]
@@ -56,9 +57,6 @@ dev = [
     "pytest-asyncio>=0.23.0",
     "pytest-timeout>=2.0.0",
     "pytest-xdist>=3.6.0",
-]
-atl_star = [
-    "spottl>=2.13; sys_platform == 'linux'",
 ]
 docs = [
     "mkdocs>=1.5.0",
