@@ -80,20 +80,6 @@ def validate_natsl_temporal_atom(atom: str) -> tuple[bool, str | None]:
     return True, None
 
 
-def natsl_temporal_atom_from_parsed_formula(parsed_formula) -> str | None:
-    """Extract the temporal proposition from a parsed NatSL AST tuple."""
-    if not isinstance(parsed_formula, tuple) or len(parsed_formula) != 3:
-        return None
-    temporal_expr = parsed_formula[2]
-    if not isinstance(temporal_expr, tuple):
-        return None
-    if len(temporal_expr) == 2:
-        return temporal_expr[1]
-    if len(temporal_expr) == 3 and temporal_expr[0] == "!":
-        return temporal_expr[2]
-    return None
-
-
 def validate_release_weak_rejected(
     formula: str, logic_name: str
 ) -> tuple[bool, str | None]:
@@ -403,7 +389,6 @@ __all__ = [
     "CoalitionValueError",
     "BOOLEAN_AST_OPERATORS",
     "PROPOSITION_TOKEN_PATTERN",
-    "natsl_temporal_atom_from_parsed_formula",
     "normalize_formula_text",
     "run_common_prechecks",
     "validate_ast",

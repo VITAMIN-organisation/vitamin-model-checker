@@ -1,11 +1,13 @@
 # NatSL scalability experiment
 
 This is the paper-oriented experiment for the restricted bounded NatSL[1G]
-prototype. It uses only the **space-efficient alternating** architecture
-(`mode="space"`). Both implementations have the same acceptance semantics, but
-this mode avoids materialising complete strategy domains and retaining every
-failed existentially pruned graph. It therefore has the more robust memory
-profile when the number of agents and the strategy bound grow.
+prototype. It uses only the space-oriented schedule (`mode="space"`). Both
+schedules have the same acceptance semantics, but `space` avoids materialising
+complete strategy domains and retaining every failed existentially pruned graph.
+It therefore has the more robust memory profile when the number of agents and
+the strategy bound grow.
+
+Developer-facing quick notes also live in `docs/NatSL/experiments.md`.
 
 ## Controlled variables
 
@@ -21,7 +23,7 @@ Within every point, the following factors are fixed:
 - one action for the existential controller;
 - two actions for each universal opponent;
 - one existential agent and `n-1` universal agents;
-- goal `Fgoal`;
+- goal `F goal`;
 - three repetitions and a fixed timeout per repetition.
 
 Every proposition vocabulary contains `phase`, `signal`, and `goal`; larger
@@ -46,10 +48,9 @@ worst-case Cartesian enumeration without changing order between configurations.
 
 ## Run
 
-From the repository root:
+From the repository root (optional plotting / RSS extras: `matplotlib`, `psutil`):
 
 ```bash
-python -m pip install -r requirements-natsl-benchmark.txt
 python -m experiments.natsl.run
 ```
 
@@ -57,7 +58,7 @@ A short validation run is:
 
 ```bash
 python -m experiments.natsl.run --quick \
-  --output benchmark_results/natsl_scalability_quick
+  --output experiments/natsl/results/natsl_scalability_quick
 ```
 
 For the paper, use a longer timeout and resume safely if interrupted:
@@ -67,13 +68,13 @@ python -m experiments.natsl.run \
   --agents 2 3 4 5 --bounds 1 2 3 4 \
   --scales 6:3 10:5 14:7 18:9 \
   --repetitions 3 --timeout 120 \
-  --output benchmark_results/reproduction_main
+  --output experiments/natsl/results/reproduction_main
 
 python -m experiments.natsl.run \
   --agents 2 3 4 5 --bounds 1 2 3 4 \
   --scales 6:3 10:5 14:7 18:9 \
   --repetitions 3 --timeout 120 \
-  --output benchmark_results/reproduction_main --resume
+  --output experiments/natsl/results/reproduction_main --resume
 ```
 
 The larger-model stress test can be reproduced with:
@@ -83,12 +84,13 @@ python -m experiments.natsl.run \
   --agents 2 3 --bounds 1 2 3 4 \
   --scales 30:15 50:25 100:50 \
   --repetitions 3 --timeout 120 \
-  --output benchmark_results/reproduction_large
+  --output experiments/natsl/results/reproduction_large
 ```
 
-The 120-second threshold keeps the complete three-repetition grid bounded by an
-overnight run even when many points explode. A different threshold is valid, but
-must be fixed before running and reported in the paper.
+Local outputs under `experiments/natsl/results/` are gitignored. The 120-second
+threshold keeps the complete three-repetition grid bounded by an overnight run
+even when many points explode. A different threshold is valid, but must be fixed
+before running and reported in the paper.
 
 The output contains `results.csv`, `summary.csv`, `configuration.json`, all
 generated models, and these PNG/PDF figure families:

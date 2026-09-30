@@ -6,7 +6,9 @@ NatSL preserves the ordered quantifier prefix.
 
 For example,
 
-    E{2}xA{1}y:(x,1)(y,2)Fgoal
+```text
+E{2}x A{1}y: (x, 1)(y, 2) F goal
+```
 
 means that an existential bounded strategy for `x` must succeed against every admissible bounded strategy for `y`.
 

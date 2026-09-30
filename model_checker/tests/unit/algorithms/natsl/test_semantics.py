@@ -30,19 +30,19 @@ def both_modes(formula, model, expected):
 
 
 def test_prefix_order_is_preserved():
-    parsed = parse_formula("E{1}xA{2}y:(x,1)(y,2)Fgoal")
+    parsed = parse_formula("E{1}x A{2}y: (x, 1)(y, 2) F goal")
     assert [q.kind for q in parsed.quantifiers] == ["E", "A"]
     assert [q.bound for q in parsed.quantifiers] == [1, 2]
 
 
 def test_negated_global_uses_universal_path_semantics():
-    goal = parse_formula("E{1}x:(x,1)!Ggoal").goal
+    goal = parse_formula("E{1}x: (x, 1) !G goal").goal
     assert goal_to_ctl(goal) == "AF !goal"
 
 
 def test_unrestricted_opponent_shortcut():
     results = both_modes(
-        "E{1}xA{1}y:(x,1)(y,2)Fgoal",
+        "E{1}x A{1}y: (x, 1)(y, 2) F goal",
         SHORTCUT_MODEL,
         True,
     )
@@ -51,7 +51,7 @@ def test_unrestricted_opponent_shortcut():
 
 def test_bounded_opponent_requires_explicit_enumeration():
     results = both_modes(
-        "E{1}xA{1}y:(x,1)(y,2)Fgoal",
+        "E{1}x A{1}y: (x, 1)(y, 2) F goal",
         OPPONENT_MODEL,
         True,
     )
@@ -61,7 +61,7 @@ def test_bounded_opponent_requires_explicit_enumeration():
 
 def test_larger_universal_bound_exposes_counterstrategy():
     both_modes(
-        "E{1}xA{2}y:(x,1)(y,2)Fgoal",
+        "E{1}x A{2}y: (x, 1)(y, 2) F goal",
         OPPONENT_MODEL,
         False,
     )
@@ -69,7 +69,7 @@ def test_larger_universal_bound_exposes_counterstrategy():
 
 def test_controller_bound_one_is_insufficient():
     both_modes(
-        "E{1}x:(x,1)Fgoal",
+        "E{1}x: (x, 1) F goal",
         CONTROLLER_MODEL,
         False,
     )
@@ -77,7 +77,7 @@ def test_controller_bound_one_is_insufficient():
 
 def test_controller_bound_two_finds_conditional_strategy():
     results = both_modes(
-        "E{2}x:(x,1)Fgoal",
+        "E{2}x: (x, 1) F goal",
         CONTROLLER_MODEL,
         True,
     )
@@ -87,7 +87,7 @@ def test_controller_bound_two_finds_conditional_strategy():
 
 def test_out_of_fragment_prefix_is_rejected():
     result = model_checking(
-        "A{1}xE{1}y:(x,1)(y,2)Fgoal",
+        "A{1}x E{1}y: (x, 1)(y, 2) F goal",
         SHORTCUT_MODEL,
         mode="space",
     )
@@ -97,7 +97,7 @@ def test_out_of_fragment_prefix_is_rejected():
 
 def test_unknown_proposition_is_rejected():
     result = model_checking(
-        "E{1}x:(x,1)Fmissing",
+        "E{1}x: (x, 1) F missing",
         CONTROLLER_MODEL,
         mode="space",
     )
@@ -135,7 +135,7 @@ Number_of_agents
         path.write_text(model, encoding="utf-8")
 
         result = model_checking(
-            "E{1}xA{1}y:(x,1)(y,2)Fgoal",
+            "E{1}x A{1}y: (x, 1)(y, 2) F goal",
             path,
             mode="space",
         )

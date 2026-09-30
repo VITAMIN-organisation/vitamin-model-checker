@@ -181,16 +181,12 @@ Add tests under `model_checker/tests/`:
 - interface tests if the public cross-logic behavior changes,
 - performance tests only when runtime behavior needs a guard.
 
-Add examples under the repo-root `examples/` directory when the logic should be
-visible to demo flows:
+Add demo models under the test fixtures when needed:
 
 ```text
-examples/<model_type>/<LogicName>/
-├── my_model.txt
-└── my_model_formula.txt
+model_checker/tests/fixtures/<model_type>/<LogicName>/
+└── my_model.txt
 ```
-
-The formula file can contain multiple semicolon-terminated formulas.
 
 ## COTL Example
 
@@ -226,7 +222,7 @@ Use this checklist when you are maintaining this repository directly:
 - [ ] Update model type mapping if needed.
 - [ ] Add or update `pyproject.toml` entry points.
 - [ ] Add tests under `model_checker/tests/`.
-- [ ] Add examples if the logic should appear in demo flows.
+- [ ] Add fixture models if the logic needs demos.
 - [ ] Run `pytest model_checker/tests/`.
 - [ ] Run benchmarks from `vitamin-benchmark-model-checker` if the change can
       affect performance.
