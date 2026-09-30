@@ -128,6 +128,19 @@ class WildcardToyCGS(ToyCGS):
         return str(action_string).split(",")
 
 
+class CollidingMarkerToyCGS(ToyCGS):
+    """Same shape as `ToyCGS`, but the model also declares a real proposition
+    named `__atl_star_elim_0` (false at every state) — the exact name
+    `_eliminate`'s fresh-proposition counter would generate first for any
+    formula with exactly one `Coalition` to eliminate. Used to confirm the
+    generated marker can never collide with a real model proposition."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.atomic_propositions = ["granted", "__atl_star_elim_0"]
+        self.matrix_prop = [[0, 0], [1, 0]]
+
+
 class CompactActionCGS:
     """Same 2-state/2-agent shape as `ToyCGS`, but using the real, compact
     one-character-per-agent action encoding (`"AC"` = agent 1 does `A`,

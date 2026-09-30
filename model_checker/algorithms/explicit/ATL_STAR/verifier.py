@@ -306,6 +306,8 @@ def _eliminate(
         inner_solution = _solve_coalition(psi, model)
         satisfying = _truth_set(inner_solution)
         name = f"{_FRESH_PROP_PREFIX}{next(counter)}"
+        while name in model.propositions:
+            name = f"{_FRESH_PROP_PREFIX}{next(counter)}"
         # A bulk dict copy plus updating only `satisfying` (typically much
         # smaller than the full state count) is cheaper at CGS scale than a
         # comprehension that re-touches every state to add a name to a few.

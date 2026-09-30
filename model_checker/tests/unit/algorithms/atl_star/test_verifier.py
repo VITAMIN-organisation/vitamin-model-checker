@@ -15,7 +15,10 @@ from model_checker.parsers.formulas.ATL_STAR.formula import (
     True_,
     Until,
 )
-from model_checker.tests.unit.algorithms.atl_star.toy_cgs import ToyCGS
+from model_checker.tests.unit.algorithms.atl_star.toy_cgs import (
+    CollidingMarkerToyCGS,
+    ToyCGS,
+)
 
 pytestmark = pytest.mark.atl_star
 
@@ -121,6 +124,23 @@ def test_sat_coalition_rejects_a_mix_of_valid_and_invalid_agent_ids(model):
     formula = Coalition(frozenset({1, 5}), Prop("granted"))
     with pytest.raises(ValueError, match="5"):
         sat(formula, model)
+
+
+def test_fresh_marker_never_collides_with_a_real_model_proposition():
+    # The model declares "__atl_star_elim_0" itself (always false) -- the
+    # exact name _eliminate would generate first for this formula's one
+    # nested Coalition. Agent 2 alone can only force F(granted) trivially at
+    # s1 (see test_granter_alone_cannot_force_granted_from_s0), so the
+    # marker's truth set is {"s1"}. Without the collision check, that marks
+    # "__atl_star_elim_0" true at s1 too, flipping Not(Prop(...)) there from
+    # true to false and making the whole conjunction unsatisfiable -- an
+    # empty result instead of the correct {"s1"}.
+    colliding_model = adapt(CollidingMarkerToyCGS())
+    inner = Coalition(frozenset({2}), Until(True_(), Prop("granted")))
+    formula = Coalition(
+        frozenset({1}), And(inner, Not(Prop("__atl_star_elim_0")))
+    )
+    assert sat(formula, colliding_model) == {"s1"}
 
 
 def test_witness_gives_the_grand_coalitions_only_forcing_move_at_s0(model):
