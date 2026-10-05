@@ -61,7 +61,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        id: buildx
+        continue-on-error: true
+      - name: Retry Docker Buildx setup (attempt 2)
+        if: steps.buildx.outcome == 'failure'
+        uses: docker/setup-buildx-action@v3
+        id: buildx-retry
+        continue-on-error: true
+      - name: Wait before final Buildx retry
+        if: steps.buildx.outcome == 'failure' && steps.buildx-retry.outcome == 'failure'
+        run: sleep 30
+      - name: Retry Docker Buildx setup (attempt 3)
+        if: steps.buildx.outcome == 'failure' && steps.buildx-retry.outcome == 'failure'
+        uses: docker/setup-buildx-action@v3
       - name: Build Docker image (cached)
         uses: docker/build-push-action@v6
         with:
