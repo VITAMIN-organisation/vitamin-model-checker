@@ -41,9 +41,7 @@ def test_parity_condition_holds_orientation_and_priorities():
 
 
 def test_parity_has_all_four_orientations():
-    orientations = {
-        (kind, style) for kind in ParityKind for style in ParityStyle
-    }
+    orientations = {(kind, style) for kind in ParityKind for style in ParityStyle}
     assert len(orientations) == 4
 
 
@@ -56,16 +54,22 @@ def test_default_priorities_are_not_shared_between_instances():
 def test_acceptance_condition_is_frozen():
     cond = AcceptanceCondition(kind=AcceptanceKind.CO_BUCHI)
     with pytest.raises(FrozenInstanceError):
-        # setattr(), not `cond.kind = ...`, so static analyzers don't flag this
-        # line as an error, the whole point of the test is that it IS invalid.
         cond.kind = AcceptanceKind.BUCHI
 
 
 def test_equal_conditions_compare_equal():
-    a = AcceptanceCondition(kind=AcceptanceKind.PARITY, parity_kind=ParityKind.MIN,
-                             parity_style=ParityStyle.EVEN, priorities={("s0", "a", "s0"): 0})
-    b = AcceptanceCondition(kind=AcceptanceKind.PARITY, parity_kind=ParityKind.MIN,
-                             parity_style=ParityStyle.EVEN, priorities={("s0", "a", "s0"): 0})
+    a = AcceptanceCondition(
+        kind=AcceptanceKind.PARITY,
+        parity_kind=ParityKind.MIN,
+        parity_style=ParityStyle.EVEN,
+        priorities={("s0", "a", "s0"): 0},
+    )
+    b = AcceptanceCondition(
+        kind=AcceptanceKind.PARITY,
+        parity_kind=ParityKind.MIN,
+        parity_style=ParityStyle.EVEN,
+        priorities={("s0", "a", "s0"): 0},
+    )
     assert a == b
 
 

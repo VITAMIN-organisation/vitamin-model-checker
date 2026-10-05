@@ -1,7 +1,6 @@
 # ATL - Algorithm Reference
 
-Scope: denotations and code path for ATL in
-`model_checker/algorithms/explicit/ATL/`.
+Scope: denotations and code path for ATL in `model_checker/algorithms/explicit/ATL/`.
 
 ## Model
 
@@ -17,8 +16,7 @@ phi ::= p | !phi | phi && psi | phi || psi | phi -> psi
       | <A> X phi | <A> F phi | <A> G phi | <A>(phi U psi)
 ```
 
-Coalition form: `<1>`, `<1,2>`. Empty `<>` is rejected. Agent ids must be in
-`1..n`.
+Coalition form: `<1>`, `<1,2>`. Empty `<>` is rejected. Agent ids must be in `1..n`.
 
 ## Semantic denotations
 

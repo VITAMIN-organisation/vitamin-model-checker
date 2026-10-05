@@ -1,6 +1,6 @@
 # Intended to be run from model_checker/ or project root.
 
-.PHONY: help install build clean format lint test test-models
+.PHONY: help install build clean format lint typecheck test test-models
 
 # Configuration
 PYTHON := python3
@@ -22,6 +22,7 @@ help:
 	@echo "  --- Quality ---"
 	@echo "  make format        Format code with black"
 	@echo "  make lint          Lint code with ruff"
+	@echo "  make typecheck     Type-check model_checker/ with basedpyright"
 	@echo "  make generate-parsers Generate parsing tables for all logics"
 	@echo "  make test          Run unit and integration tests (fast)"
 
@@ -63,6 +64,12 @@ format:
 lint:
 	@command -v ruff >/dev/null 2>&1 || { echo "Install ruff: $(PYTHON) -m pip install ruff"; exit 1; }
 	@cd $(PROJECT_ROOT) && ruff check model_checker/
+
+typecheck:
+	@command -v basedpyright >/dev/null 2>&1 || { echo "Install basedpyright: $(PYTHON) -m pip install '.[dev]'"; exit 1; }
+	@echo "Type-checking model_checker/ (baseline: .basedpyright/baseline.json)..."
+	@cd $(PROJECT_ROOT) && basedpyright --level error
+	@echo "Done."
 
 test:
 	@echo "Running unit and integration tests..."

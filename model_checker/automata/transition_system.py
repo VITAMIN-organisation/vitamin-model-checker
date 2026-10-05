@@ -11,7 +11,9 @@ class TransitionSystem:
     states: set[Hashable] = field(default_factory=set)
     initial_states: set[Hashable] = field(default_factory=set)
     alphabet: set[Hashable] = field(default_factory=set)
-    transitions: dict[tuple[Hashable, Hashable], set[Hashable]] = field(default_factory=dict)
+    transitions: dict[tuple[Hashable, Hashable], set[Hashable]] = field(
+        default_factory=dict
+    )
 
     def add_state(self, state: Hashable, *, initial: bool = False) -> None:
         """Add `state`, optionally marking it as an initial state."""
@@ -19,7 +21,9 @@ class TransitionSystem:
         if initial:
             self.initial_states.add(state)
 
-    def add_transition(self, source: Hashable, symbol: Hashable, target: Hashable) -> None:
+    def add_transition(
+        self, source: Hashable, symbol: Hashable, target: Hashable
+    ) -> None:
         """Add a transition, implicitly adding `source`/`target` as states."""
         self.add_state(source)
         self.add_state(target)

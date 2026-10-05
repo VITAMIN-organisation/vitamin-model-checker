@@ -76,6 +76,25 @@ jobs:
         run: |
           docker run --rm vitamin-model-checker:ci python -c "import model_checker; print('ok')"
 
+  lint-typecheck:
+    name: Lint and Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Ruff
+        run: make lint
+      - name: Typecheck
+        run: make typecheck
+
   packaging:
     name: Packaging and Docs
     runs-on: ubuntu-latest

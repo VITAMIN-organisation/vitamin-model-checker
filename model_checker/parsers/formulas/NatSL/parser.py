@@ -11,8 +11,8 @@ F/G/X and their negations. Quantifier order is preserved.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 
 
 class NatSLParseError(ValueError):

@@ -33,6 +33,8 @@ class Strategy:
         for state, action in self.choices.items():
             per_agent = dict(cast(Iterable[tuple[Hashable, Hashable]], action))
             if player not in per_agent:
-                raise ValueError(f"{player!r} is not one of the agents in {action!r} at state {state!r}")
+                raise ValueError(
+                    f"{player!r} is not one of the agents in {action!r} at state {state!r}"
+                )
             projected[state] = per_agent[player]
         return Strategy(projected)

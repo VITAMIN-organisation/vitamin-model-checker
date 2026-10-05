@@ -6,7 +6,12 @@ import pytest
 
 spot = pytest.importorskip("spot")
 
-from model_checker.automata.acceptance import AcceptanceCondition, AcceptanceKind, ParityKind, ParityStyle
+from model_checker.automata.acceptance import (
+    AcceptanceCondition,
+    AcceptanceKind,
+    ParityKind,
+    ParityStyle,
+)
 from model_checker.automata.automaton import Automaton
 from model_checker.automata.games.arena import concurrent_to_turnbased
 from model_checker.automata.games.game import Game
@@ -14,7 +19,9 @@ from model_checker.automata.games.solver import solve
 from model_checker.automata.product import complete, product
 from model_checker.automata.transition_system import TransitionSystem
 
-_parity_max_odd = AcceptanceCondition(kind=AcceptanceKind.PARITY, parity_kind=ParityKind.MAX, parity_style=ParityStyle.ODD)
+_parity_max_odd = AcceptanceCondition(
+    kind=AcceptanceKind.PARITY, parity_kind=ParityKind.MAX, parity_style=ParityStyle.ODD
+)
 
 
 def _toy_system():
@@ -45,7 +52,9 @@ def test_product_pairs_states_and_only_keeps_compatible_transitions():
         if result.successors(state, frozenset({"a", "b"})) == {state}
     ]
     assert len(fixed_points) == 1
-    assert result.successors(fixed_points[0], frozenset({"a", "b"})) == {fixed_points[0]}
+    assert result.successors(fixed_points[0], frozenset({"a", "b"})) == {
+        fixed_points[0]
+    }
 
 
 def test_product_treats_a_bare_string_symbol_as_a_single_ap_by_default():
@@ -130,7 +139,9 @@ def test_complete_redirects_a_missing_transition_to_a_rejecting_sink():
     product_ts.add_state(("s0", 0), initial=True)
     underlying = TransitionSystem()
     underlying.add_transition("s0", frozenset(), "s0")
-    underlying.add_transition("s0", frozenset({"a"}), "s0")  # a real action product() dropped
+    underlying.add_transition(
+        "s0", frozenset({"a"}), "s0"
+    )  # a real action product() dropped
 
     completed, completed_objective = complete(product_ts, _parity_max_odd, underlying)
     priorities = completed_objective.priorities
@@ -157,7 +168,9 @@ def test_complete_is_a_noop_when_nothing_is_missing():
     product_ts.add_transition(("s0", 0), frozenset(), ("s0", 0))
     product_ts.add_state(("s0", 0), initial=True)
     underlying = TransitionSystem()
-    underlying.add_transition("s0", frozenset(), "s0")  # exactly what product_ts already has
+    underlying.add_transition(
+        "s0", frozenset(), "s0"
+    )  # exactly what product_ts already has
 
     completed, completed_objective = complete(product_ts, _parity_max_odd, underlying)
 
@@ -215,12 +228,20 @@ def test_complete_sink_rejects_under_a_buchi_game_end_to_end():
     product_ts.add_state(("s0", 0), initial=True)
     underlying = TransitionSystem()
     underlying.add_transition("s0", "a", "s0")
-    underlying.add_transition("s0", "b", "s0")  # "b" missing from product_ts -> genuine gap
+    underlying.add_transition(
+        "s0", "b", "s0"
+    )  # "b" missing from product_ts -> genuine gap
 
-    objective = AcceptanceCondition(kind=AcceptanceKind.BUCHI, priorities={(("s0", 0), "a", ("s0", 0)): 0})
+    objective = AcceptanceCondition(
+        kind=AcceptanceKind.BUCHI, priorities={(("s0", 0), "a", ("s0", 0)): 0}
+    )
     completed, completed_objective = complete(product_ts, objective, underlying)
 
-    game = Game(arena=completed, player_states={0: set(completed.states), 1: set()}, objective=completed_objective)
+    game = Game(
+        arena=completed,
+        player_states={0: set(completed.states), 1: set()},
+        objective=completed_objective,
+    )
     solution = solve(game)
 
     sink = next(state for state in completed.states if state != ("s0", 0))
@@ -239,7 +260,11 @@ def test_complete_sink_rejects_under_a_max_even_parity_objective():
     underlying.add_transition("s0", frozenset(), "s0")
     underlying.add_transition("s0", frozenset({"a"}), "s0")
 
-    objective = AcceptanceCondition(kind=AcceptanceKind.PARITY, parity_kind=ParityKind.MAX, parity_style=ParityStyle.EVEN)
+    objective = AcceptanceCondition(
+        kind=AcceptanceKind.PARITY,
+        parity_kind=ParityKind.MAX,
+        parity_style=ParityStyle.EVEN,
+    )
     completed, completed_objective = complete(product_ts, objective, underlying)
 
     missing = [
@@ -260,7 +285,9 @@ def test_complete_requires_parity_style_for_a_parity_objective():
     underlying.add_transition("s0", frozenset(), "s0")
     underlying.add_transition("s0", frozenset({"a"}), "s0")
 
-    objective = AcceptanceCondition(kind=AcceptanceKind.PARITY)  # parity_style left unset
+    objective = AcceptanceCondition(
+        kind=AcceptanceKind.PARITY
+    )  # parity_style left unset
     with pytest.raises(ValueError, match="parity_style"):
         complete(product_ts, objective, underlying)
 

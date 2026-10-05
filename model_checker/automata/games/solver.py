@@ -43,11 +43,15 @@ def solve(game: Game) -> GameSolution:
             successor).
     """
     if spot is None:
-        raise ImportError("Spot is required for solve() "
-                           "(pip install spottl on Linux, or conda-forge elsewhere; "
-                           "see docs/ATL_STAR/algorithm.md)")
+        raise ImportError(
+            "Spot is required for solve() "
+            "(pip install spottl on Linux, or conda-forge elsewhere; "
+            "see docs/ATL_STAR/algorithm.md)"
+        )
     if game.objective is None:
-        raise ValueError("Game.objective must be set before solving (arena.py leaves it None on purpose)")
+        raise ValueError(
+            "Game.objective must be set before solving (arena.py leaves it None on purpose)"
+        )
     if not game.arena.states:
         raise ValueError("game.arena must have at least one state")
 
@@ -57,7 +61,9 @@ def solve(game: Game) -> GameSolution:
     owner0 = game.player_states.get(0, set())
     owner1 = game.player_states.get(1, set())
     if not owner0.isdisjoint(owner1) or (owner0 | owner1) != game.arena.states:
-        raise ValueError("every arena state must belong to exactly one of player_states[0]/[1]")
+        raise ValueError(
+            "every arena state must belong to exactly one of player_states[0]/[1]"
+        )
 
     # A `Strategy` records only the chosen action, not which successor it
     # led to (see strategy.py), so an arena where one action from a state
@@ -75,7 +81,9 @@ def solve(game: Game) -> GameSolution:
             )
 
     aut = spot.make_twa_graph(spot.make_bdd_dict())
-    aut.new_states(len(states) + 1)  # +1 for the throwaway reachability-anchor state, placed last
+    aut.new_states(
+        len(states) + 1
+    )  # +1 for the throwaway reachability-anchor state, placed last
     anchor = len(states)
     aut.set_init_state(anchor)
 
@@ -88,7 +96,9 @@ def solve(game: Game) -> GameSolution:
             key = (source, symbol, target)
             priority = game.objective.priorities.get(key)
             mark = [priority] if priority is not None else []
-            edge_number = aut.new_edge(state_index[source], state_index[target], true_cond, mark)
+            edge_number = aut.new_edge(
+                state_index[source], state_index[target], true_cond, mark
+            )
             edge_labels[edge_number] = key
 
     for state in game.arena.states:
@@ -101,7 +111,9 @@ def solve(game: Game) -> GameSolution:
 
     winners = spot.get_state_winners(aut)
     strategy_edges = spot.get_strategy(aut)
-    expected_length = len(states) + 1  # +1 for the anchor's own trailing entry, dropped below
+    expected_length = (
+        len(states) + 1
+    )  # +1 for the anchor's own trailing entry, dropped below
     if len(winners) != expected_length or len(strategy_edges) != expected_length:
         raise RuntimeError(
             "spot.get_state_winners()/get_strategy() returned an unexpected number of "
@@ -110,11 +122,11 @@ def solve(game: Game) -> GameSolution:
         )
 
     winning_regions: dict[int, set[Hashable]] = {0: set(), 1: set()}
-    for state, player0_wins in zip(states, winners):  # noqa: B905, deliberately not strict, see the length check above
+    for state, player0_wins in zip(states, winners[:-1], strict=True):
         winning_regions[0 if player0_wins else 1].add(state)
 
     choices: dict[int, dict[Hashable, Hashable]] = {0: {}, 1: {}}
-    for state, edge_number in zip(states, strategy_edges):  # noqa: B905, see above
+    for state, edge_number in zip(states, strategy_edges[:-1], strict=True):
         if edge_number not in edge_labels:
             continue
         _source, symbol, _target = edge_labels[edge_number]

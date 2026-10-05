@@ -54,7 +54,9 @@ def attractor(
                         choices[state] = action
                         changed = True
                         break
-            elif all(arena.successors(state, action) <= attracted for action in actions):
+            elif all(
+                arena.successors(state, action) <= attracted for action in actions
+            ):
                 attracted.add(state)
                 changed = True
 

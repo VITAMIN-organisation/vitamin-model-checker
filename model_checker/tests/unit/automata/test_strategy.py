@@ -32,10 +32,12 @@ def test_move_works_with_non_joint_plain_actions():
 
 
 def test_project_extracts_one_players_action_from_joint_actions():
-    strategy = Strategy({
-        "s0": _joint(A="a1", B="b1"),
-        "s1": _joint(A="a2", B="b2"),
-    })
+    strategy = Strategy(
+        {
+            "s0": _joint(A="a1", B="b1"),
+            "s1": _joint(A="a2", B="b2"),
+        }
+    )
 
     projected_a = strategy.project("A")
 

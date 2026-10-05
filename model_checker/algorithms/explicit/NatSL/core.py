@@ -14,14 +14,16 @@ moving to the next existential profile.
 
 from __future__ import annotations
 
-from contextlib import redirect_stdout
-from dataclasses import dataclass
 import io
 import itertools
+from collections.abc import Iterable, Iterator, Sequence
+from contextlib import redirect_stdout
+from dataclasses import dataclass
 from pathlib import Path
-import tempfile
-from typing import Iterable, Iterator, Sequence
 
+from model_checker.algorithms.explicit.CTL.CTL import (
+    model_checking as ctl_model_checking,
+)
 from model_checker.parsers.formulas.NatSL.parser import (
     NatSLFormula,
     Quantifier,
@@ -29,13 +31,9 @@ from model_checker.parsers.formulas.NatSL.parser import (
     goal_to_ctl,
     parse_formula,
 )
-from model_checker.algorithms.explicit.CTL.CTL import (
-    model_checking as ctl_model_checking,
-)
-from model_checker.utils.literals import parse_state_set_literal
-from model_checker.utils.error_handler import create_error_response
 from model_checker.parsers.game_structures.cgs.cgs import CGS
-
+from model_checker.utils.error_handler import create_error_response
+from model_checker.utils.literals import parse_state_set_literal
 
 Strategy = dict[str, list[tuple[str, str]]]
 
@@ -179,7 +177,8 @@ def _conditions(
         for chosen in itertools.combinations(propositions, size):
             for signs in itertools.product((False, True), repeat=size):
                 literals = [
-                    f"!{p}" if negated else p for p, negated in zip(chosen, signs)
+                    f"!{p}" if negated else p
+                    for p, negated in zip(chosen, signs, strict=True)
                 ]
                 connectors = (None,) if size == 1 else ("and", "or")
                 for connector in connectors:
@@ -201,7 +200,7 @@ def generate_agent_strategies(
     actions: Iterable[str], atomic_propositions: list[str], bound: int
 ) -> Iterator[Strategy]:
     """Enumerate complete memoryless decision lists with complexity at most bound."""
-    sorted_actions = tuple(sorted(set(str(action) for action in actions)))
+    sorted_actions = tuple(sorted({str(action) for action in actions}))
     if not sorted_actions or bound < 1:
         return
 
@@ -224,7 +223,7 @@ def generate_agent_strategies(
                 )
 
     seen: set[tuple[tuple[str, str], ...]] = set()
-    for prefix in prefixes(bound - 1, frozenset(), tuple()):
+    for prefix in prefixes(bound - 1, frozenset(), ()):
         for default_action in sorted_actions:
             pairs = prefix + (("T", default_action),)
             if pairs not in seen:

@@ -85,5 +85,7 @@ def test_remap_priorities_distinguishes_transitions_sharing_a_coalition_choice()
     }
     remapped = remap_priorities(ts_priorities, controlled_players={"A"})
 
-    by_target = {target: priority for (_source, _symbol, target), priority in remapped.items()}
+    by_target = {
+        target: priority for (_source, _symbol, target), priority in remapped.items()
+    }
     assert by_target == {"s1": 2, "s2": 4}

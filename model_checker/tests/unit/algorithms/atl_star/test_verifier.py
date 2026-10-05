@@ -137,9 +137,7 @@ def test_fresh_marker_never_collides_with_a_real_model_proposition():
     # empty result instead of the correct {"s1"}.
     colliding_model = adapt(CollidingMarkerToyCGS())
     inner = Coalition(frozenset({2}), Until(True_(), Prop("granted")))
-    formula = Coalition(
-        frozenset({1}), And(inner, Not(Prop("__atl_star_elim_0")))
-    )
+    formula = Coalition(frozenset({1}), And(inner, Not(Prop("__atl_star_elim_0"))))
     assert sat(formula, colliding_model) == {"s1"}
 
 
@@ -216,7 +214,9 @@ def test_witness_exposes_a_nested_coalitions_own_witness(model):
 def test_advance_follows_the_grand_coalitions_forcing_move_to_s1(model):
     formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
     result = witness(formula, model)
-    move = result.strategy.move(result.start)  # the full joint action: grand coalition == everyone
+    move = result.strategy.move(
+        result.start
+    )  # the full joint action: grand coalition == everyone
     advanced = result.advance(move)
     assert advanced is not None
     assert advanced.start[0] == "s1"

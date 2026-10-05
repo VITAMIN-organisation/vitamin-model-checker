@@ -35,7 +35,9 @@ def test_conjunction_left_associative():
 
 
 def test_and_binds_tighter_than_or():
-    assert parse("p & q | r") == Not(And(Not(And(Prop("p"), Prop("q"))), Not(Prop("r"))))
+    assert parse("p & q | r") == Not(
+        And(Not(And(Prop("p"), Prop("q"))), Not(Prop("r")))
+    )
 
 
 def test_double_symbol_and_or_are_synonyms_for_the_single_symbol_forms():
@@ -81,7 +83,9 @@ def test_coalition_over_negation_and_next():
 
 
 def test_coalition_requires_parens_for_until():
-    assert parse("<<1>>(p U q)") == Coalition(frozenset({1}), Until(Prop("p"), Prop("q")))
+    assert parse("<<1>>(p U q)") == Coalition(
+        frozenset({1}), Until(Prop("p"), Prop("q"))
+    )
 
 
 def test_bare_until_after_coalition_only_wraps_first_operand():

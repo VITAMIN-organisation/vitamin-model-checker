@@ -178,3 +178,13 @@ class TestATLStarRealEntryPoint:
         result = model_checking("p U q", cgs_simple_parser.filename)
         assert "error" in result
         assert result["error"]["type"] == "semantic"
+
+    def test_nonexistent_atomic_proposition_through_the_real_entry_point(
+        self, cgs_simple_parser
+    ):
+        """Same semantic classification as `_core_atl_star_checking`, but
+        through the registered `model_checking` entry so the outer wrapper
+        cannot rebrand an undeclared atom as `"system"`."""
+        result = model_checking("<<1>> F nonexistent", cgs_simple_parser.filename)
+        assert "error" in result
+        assert result["error"]["type"] == "semantic"

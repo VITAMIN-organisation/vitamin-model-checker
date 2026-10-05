@@ -96,8 +96,11 @@ def adapt(cgs: CGSProtocol) -> AdaptedCGS:
             continue
         source_index = cgs.get_index_by_state_name(raw_source)
         target_index = cgs.get_index_by_state_name(raw_target)
-        _record(state_names[source_index], state_names[target_index], cgs.graph[source_index][target_index])
-
+        _record(
+            state_names[source_index],
+            state_names[target_index],
+            cgs.graph[source_index][target_index],
+        )
 
     for source in self_referencing_sources:
         source_index = cgs.get_index_by_state_name(source)
@@ -113,7 +116,10 @@ def adapt(cgs: CGSProtocol) -> AdaptedCGS:
             ts.add_transition(source, action, source)
 
     props = list(cgs.atomic_propositions)
-    labels = {state: _labels_of(props, cgs.matrix_prop[index]) for index, state in enumerate(state_names)}
+    labels = {
+        state: _labels_of(props, cgs.matrix_prop[index])
+        for index, state in enumerate(state_names)
+    }
 
     return AdaptedCGS(
         transition_system=ts,
@@ -125,7 +131,9 @@ def adapt(cgs: CGSProtocol) -> AdaptedCGS:
 
 def _joint_action(profile: str, num_agents: int) -> JointAction:
     if AGENT_ACTION_SEPARATOR in profile:
-        tokens = [_normalize_action_token(t) for t in profile.split(AGENT_ACTION_SEPARATOR)]
+        tokens = [
+            _normalize_action_token(t) for t in profile.split(AGENT_ACTION_SEPARATOR)
+        ]
     else:
         tokens = [_normalize_action_token(c) for c in profile]
     if len(tokens) < num_agents:
@@ -134,7 +142,9 @@ def _joint_action(profile: str, num_agents: int) -> JointAction:
             f"expected at least {num_agents} (one per agent, {AGENT_ACTION_SEPARATOR}-separated "
             "or one character each)."
         )
-    return frozenset((agent, token) for agent, token in enumerate(tokens[:num_agents], start=1))
+    return frozenset(
+        (agent, token) for agent, token in enumerate(tokens[:num_agents], start=1)
+    )
 
 
 def _normalize_action_token(token: str) -> str:

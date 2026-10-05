@@ -3,7 +3,12 @@ from __future__ import annotations
 from collections.abc import Callable, Hashable, Iterable
 from dataclasses import replace
 
-from .acceptance import AcceptanceCondition, AcceptanceKind, ParityStyle, priority_from_mark
+from .acceptance import (
+    AcceptanceCondition,
+    AcceptanceKind,
+    ParityStyle,
+    priority_from_mark,
+)
 from .automaton import Automaton, spot
 from .transition_system import TransitionSystem
 
@@ -20,7 +25,9 @@ except ImportError:  # pragma: no cover
 def product(
     automaton: Automaton,
     transition_system: TransitionSystem,
-    label: Callable[[Hashable, Hashable], Iterable[str]] = lambda source, symbol: symbol,
+    label: Callable[
+        [Hashable, Hashable], Iterable[str]
+    ] = lambda source, symbol: symbol,
 ) -> tuple[TransitionSystem, AcceptanceCondition]:
     """Synchronous product of a property automaton and a system model.
 
@@ -44,9 +51,11 @@ def product(
     """
 
     if spot is None or buddy is None:
-        raise ImportError("Spot is required for product() "
-                           "(pip install spottl on Linux, or conda-forge elsewhere; "
-                           "see docs/ATL_STAR/algorithm.md)")
+        raise ImportError(
+            "Spot is required for product() "
+            "(pip install spottl on Linux, or conda-forge elsewhere; "
+            "see docs/ATL_STAR/algorithm.md)"
+        )
     spot_mod, buddy_mod = spot, buddy
 
     graph = automaton.graph
@@ -80,7 +89,9 @@ def product(
                 yield candidate
 
     aut_init = graph.get_init_state_number()
-    initial_pairs: list[tuple[Hashable, int]] = [(s0, aut_init) for s0 in transition_system.initial_states]
+    initial_pairs: list[tuple[Hashable, int]] = [
+        (s0, aut_init) for s0 in transition_system.initial_states
+    ]
 
     # Indexed once by source state so the BFS below does an O(1) lookup per
     # popped state instead of rescanning every transition in the system.
@@ -160,7 +171,9 @@ def complete(
         states=set(product_ts.states),
         initial_states=set(product_ts.initial_states),
         alphabet=set(product_ts.alphabet),
-        transitions={key: set(targets) for key, targets in product_ts.transitions.items()},
+        transitions={
+            key: set(targets) for key, targets in product_ts.transitions.items()
+        },
     )
     completed_priorities = dict(objective.priorities)
 
@@ -193,6 +206,8 @@ def _rejecting_sink_priority(objective: AcceptanceCondition) -> int | None:
         return 0
     if objective.kind is AcceptanceKind.PARITY:
         if objective.parity_style is None:
-            raise ValueError("a PARITY objective needs parity_style set to pick a rejecting sink color")
+            raise ValueError(
+                "a PARITY objective needs parity_style set to pick a rejecting sink color"
+            )
         return 0 if objective.parity_style is ParityStyle.ODD else 1
     raise ValueError(f"unsupported acceptance kind {objective.kind!r}")

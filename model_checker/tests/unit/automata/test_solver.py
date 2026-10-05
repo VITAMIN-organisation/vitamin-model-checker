@@ -149,7 +149,10 @@ def test_solve_handles_genuine_multicolor_parity_without_crashing():
 
     game = Game(
         arena=ts,
-        player_states={0: {"hub"}, 1: {"int_both", "int_aonly", "int_bonly", "int_neither"}},
+        player_states={
+            0: {"hub"},
+            1: {"int_both", "int_aonly", "int_bonly", "int_neither"},
+        },
         objective=AcceptanceCondition(
             kind=AcceptanceKind.PARITY,
             parity_kind=ParityKind.MAX,
@@ -224,7 +227,9 @@ def test_solve_gives_correct_verdict_for_every_initial_state_not_just_one():
 
 def test_solve_requires_at_least_one_state():
     ts = TransitionSystem()
-    game = Game(arena=ts, player_states={0: set(), 1: set()}, objective=_buchi_objective())
+    game = Game(
+        arena=ts, player_states={0: set(), 1: set()}, objective=_buchi_objective()
+    )
 
     with pytest.raises(ValueError, match="at least one state"):
         solve(game)
@@ -255,7 +260,9 @@ def test_solve_requires_every_state_owned_by_exactly_one_player():
     ts = TransitionSystem()
     ts.add_transition("s0", "a", "s0")
     ts.add_state("s0", initial=True)
-    game = Game(arena=ts, player_states={0: set(), 1: set()}, objective=_buchi_objective())
+    game = Game(
+        arena=ts, player_states={0: set(), 1: set()}, objective=_buchi_objective()
+    )
 
     with pytest.raises(ValueError, match="exactly one"):
         solve(game)
@@ -269,7 +276,11 @@ def test_solve_rejects_a_nondeterministic_arena():
     ts.add_transition("s0", "a", "s1")
     ts.add_transition("s0", "a", "s2")
     ts.add_state("s0", initial=True)
-    game = Game(arena=ts, player_states={0: {"s0", "s1", "s2"}, 1: set()}, objective=_buchi_objective())
+    game = Game(
+        arena=ts,
+        player_states={0: {"s0", "s1", "s2"}, 1: set()},
+        objective=_buchi_objective(),
+    )
 
     with pytest.raises(ValueError, match="deterministic"):
         solve(game)
@@ -281,7 +292,9 @@ def test_solve_requires_spot():
     ts = TransitionSystem()
     ts.add_transition("s0", "a", "s0")
     ts.add_state("s0", initial=True)
-    game = Game(arena=ts, player_states={0: {"s0"}, 1: set()}, objective=_buchi_objective())
+    game = Game(
+        arena=ts, player_states={0: {"s0"}, 1: set()}, objective=_buchi_objective()
+    )
 
     original_spot = solver_module.spot
     solver_module.spot = None
@@ -304,7 +317,11 @@ def test_solve_raises_if_spot_returns_the_wrong_number_of_state_winners(monkeypa
     ts = TransitionSystem()
     ts.add_transition("s0", "a", "s0")
     ts.add_state("s0", initial=True)
-    game = Game(arena=ts, player_states={0: {"s0"}, 1: set()}, objective=_buchi_objective(("s0", "a", "s0")))
+    game = Game(
+        arena=ts,
+        player_states={0: {"s0"}, 1: set()},
+        objective=_buchi_objective(("s0", "a", "s0")),
+    )
 
     real_get_state_winners = solver_module.spot.get_state_winners
     monkeypatch.setattr(
@@ -328,7 +345,11 @@ def test_parity_objective_with_no_priorities_defaults_to_a_single_color():
     game = Game(
         arena=ts,
         player_states={0: {"s0"}, 1: set()},
-        objective=AcceptanceCondition(kind=AcceptanceKind.PARITY, parity_kind=ParityKind.MAX, parity_style=ParityStyle.ODD),
+        objective=AcceptanceCondition(
+            kind=AcceptanceKind.PARITY,
+            parity_kind=ParityKind.MAX,
+            parity_style=ParityStyle.ODD,
+        ),
     )
 
     solution = solve(game)
@@ -345,7 +366,11 @@ def test_parity_objective_with_no_priorities_and_even_style_rejects():
     game = Game(
         arena=ts,
         player_states={0: {"s0"}, 1: set()},
-        objective=AcceptanceCondition(kind=AcceptanceKind.PARITY, parity_kind=ParityKind.MAX, parity_style=ParityStyle.EVEN),
+        objective=AcceptanceCondition(
+            kind=AcceptanceKind.PARITY,
+            parity_kind=ParityKind.MAX,
+            parity_style=ParityStyle.EVEN,
+        ),
     )
 
     solution = solve(game)

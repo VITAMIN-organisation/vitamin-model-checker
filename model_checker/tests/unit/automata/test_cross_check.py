@@ -24,7 +24,9 @@ def _as_buchi_game(ts: TransitionSystem, player_states, target: str) -> Game:
     return Game(
         arena=ts,
         player_states=player_states,
-        objective=AcceptanceCondition(kind=AcceptanceKind.BUCHI, priorities={(target, "loop", target): 0}),
+        objective=AcceptanceCondition(
+            kind=AcceptanceKind.BUCHI, priorities={(target, "loop", target): 0}
+        ),
     )
 
 
@@ -33,7 +35,9 @@ def _reachability_game(ts: TransitionSystem, player_states) -> Game:
 
 
 def _assert_regions_agree(ts, player_states, target):
-    oracle = solve_reachability(_reachability_game(ts, player_states), player=0, target={target})
+    oracle = solve_reachability(
+        _reachability_game(ts, player_states), player=0, target={target}
+    )
     spot_solution = solve(_as_buchi_game(ts, player_states, target))
 
     assert spot_solution.winning_regions[0] == oracle.winning_regions[0]

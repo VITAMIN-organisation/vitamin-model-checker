@@ -5,7 +5,7 @@ BCGS, BirelationalMatrix) from files and instantiates the correct parser.
 """
 
 import os
-from typing import Callable
+from collections.abc import Callable
 
 from model_checker.discovery import discover_logic_resource
 from model_checker.parsers.game_structures.bcgs.bcgs import BCGS

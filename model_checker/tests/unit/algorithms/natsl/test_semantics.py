@@ -1,14 +1,11 @@
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
-import pytest
-
+from model_checker.algorithms.explicit.NatSL.core import model_checking
 from model_checker.parsers.formulas.NatSL.parser import (
     goal_to_ctl,
     parse_formula,
 )
-from model_checker.algorithms.explicit.NatSL.core import model_checking
-
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "fixtures" / "CGS" / "NatSL"

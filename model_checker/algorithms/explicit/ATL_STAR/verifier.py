@@ -85,7 +85,9 @@ class Witness:
     def nested_witnesses_at(self, state: str) -> list[Witness]:
         """Every nested coalition's own witness that applies once a run
         following `strategy` reaches `state` (usually zero or one)."""
-        return [by_state[state] for by_state in self.nested.values() if state in by_state]
+        return [
+            by_state[state] for by_state in self.nested.values() if state in by_state
+        ]
 
     def advance(self, symbol: Hashable) -> Witness | None:
         """Follow this witness one real step under `symbol` — the full joint
@@ -112,13 +114,17 @@ class Witness:
         if not targets:
             return None
         if len(targets) > 1:
-            raise ValueError(f"{symbol!r} from {self.start!r} has {len(targets)} possible successors, not 1")
+            raise ValueError(
+                f"{symbol!r} from {self.start!r} has {len(targets)} possible successors, not 1"
+            )
         (next_state,) = targets
         if not isinstance(next_state, tuple):
             return None  # complete()'s rejecting sink: this path formula can't be satisfied from here
         nested_here = self.nested_witnesses_at(next_state[0])
         if len(nested_here) > 1:
-            raise ValueError(f"{next_state[0]!r} has {len(nested_here)} nested witnesses available at once")
+            raise ValueError(
+                f"{next_state[0]!r} has {len(nested_here)} nested witnesses available at once"
+            )
         if nested_here:
             return nested_here[0]
         return replace(self, start=next_state)
@@ -195,7 +201,9 @@ def check(cgs: CGSProtocol, formula_text: str, state: str | None = None) -> bool
     return holds(formula, model, state=state)
 
 
-def witness(formula: Coalition, model: AdaptedCGS, state: str | None = None) -> Witness | None:
+def witness(
+    formula: Coalition, model: AdaptedCGS, state: str | None = None
+) -> Witness | None:
     """The coalition's own witness strategy for `formula` at `state`
     (default: `model`'s own initial state), or `None` if `formula` doesn't
     hold there.
@@ -209,7 +217,12 @@ def witness(formula: Coalition, model: AdaptedCGS, state: str | None = None) -> 
     start = (state, solution.aut_init)
     if start not in solution.winning:
         return None
-    return Witness(strategy=solution.strategy, start=start, product_ts=solution.product_ts, nested=solution.nested)
+    return Witness(
+        strategy=solution.strategy,
+        start=start,
+        product_ts=solution.product_ts,
+        nested=solution.nested,
+    )
 
 
 def _resolve_state(model: AdaptedCGS, state: str | None) -> str:
@@ -242,16 +255,24 @@ def _solve_coalition(formula: Coalition, model: AdaptedCGS) -> _CoalitionSolutio
         )
 
     nested: dict[str, dict[str, Witness]] = {}
-    ltl_formula, labels = _eliminate(formula.path_formula, model, dict(model.labels), itertools.count(), nested)
+    ltl_formula, labels = _eliminate(
+        formula.path_formula, model, dict(model.labels), itertools.count(), nested
+    )
     automaton = Automaton.from_ltl(_render_ltl(ltl_formula))
 
-    probe = replace(model.transition_system, initial_states=set(model.transition_system.states))
-    product_ts, objective = product(automaton, probe, label=lambda source, symbol: labels[source])
+    probe = replace(
+        model.transition_system, initial_states=set(model.transition_system.states)
+    )
+    product_ts, objective = product(
+        automaton, probe, label=lambda source, symbol: labels[source]
+    )
     real_states = set(product_ts.states)
     product_ts, objective = complete(product_ts, objective, probe)
 
     game = concurrent_to_turnbased(product_ts, controlled_players=agents)
-    game.objective = replace(objective, priorities=remap_priorities(objective.priorities, agents))
+    game.objective = replace(
+        objective, priorities=remap_priorities(objective.priorities, agents)
+    )
 
     solution = solve(game)
     aut_init = automaton.graph.get_init_state_number()
@@ -345,4 +366,6 @@ def _render_ltl(formula: Formula) -> str:
         return f"({_render_ltl(formula.left)}) & ({_render_ltl(formula.right)})"
     if isinstance(formula, Until):
         return f"({_render_ltl(formula.left)}) U ({_render_ltl(formula.right)})"
-    raise ValueError(f"{formula!r} is not pure LTL, elimination should have removed every Coalition")
+    raise ValueError(
+        f"{formula!r} is not pure LTL, elimination should have removed every Coalition"
+    )

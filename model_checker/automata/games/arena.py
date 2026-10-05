@@ -10,7 +10,9 @@ from .game import Game
 JointAction: TypeAlias = frozenset[tuple[Hashable, Hashable]]
 
 
-def concurrent_to_turnbased(ts: TransitionSystem, controlled_players: set[Hashable]) -> Game:
+def concurrent_to_turnbased(
+    ts: TransitionSystem, controlled_players: set[Hashable]
+) -> Game:
     """Turn a concurrent, joint-action-labeled `TransitionSystem` into a
     turn-based 2-player Game: `controlled_players` forms player 0's
     coalition, everyone else is player 1.
@@ -31,7 +33,9 @@ def concurrent_to_turnbased(ts: TransitionSystem, controlled_players: set[Hashab
 
     for (source, symbol), targets in ts.transitions.items():
         joint_action = cast(JointAction, symbol)
-        coalition_action, opponent_action, intermediate = _split_joint_action(source, joint_action, controlled_players)
+        coalition_action, opponent_action, intermediate = _split_joint_action(
+            source, joint_action, controlled_players
+        )
 
         arena.add_transition(source, coalition_action, intermediate)
         player1_states.add(intermediate)
@@ -46,8 +50,16 @@ def _split_joint_action(
 ) -> tuple[JointAction, JointAction, Hashable]:
     """Split a joint action into the coalition's part, the opponents' part,
     and the intermediate arena state."""
-    coalition_action = frozenset((player, action) for player, action in joint_action if player in controlled_players)
-    opponent_action = frozenset((player, action) for player, action in joint_action if player not in controlled_players)
+    coalition_action = frozenset(
+        (player, action)
+        for player, action in joint_action
+        if player in controlled_players
+    )
+    opponent_action = frozenset(
+        (player, action)
+        for player, action in joint_action
+        if player not in controlled_players
+    )
     return coalition_action, opponent_action, (source, coalition_action)
 
 
@@ -66,6 +78,8 @@ def remap_priorities(
     remapped: dict[tuple[Hashable, Hashable, Hashable], int] = {}
     for (source, symbol, target), priority in priorities.items():
         joint_action = cast(JointAction, symbol)
-        _coalition_action, opponent_action, intermediate = _split_joint_action(source, joint_action, controlled_players)
+        _coalition_action, opponent_action, intermediate = _split_joint_action(
+            source, joint_action, controlled_players
+        )
         remapped[(intermediate, opponent_action, target)] = priority
     return remapped

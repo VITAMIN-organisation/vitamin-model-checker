@@ -1,11 +1,11 @@
 """Result objects with optional witness or counterexample traces."""
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class TraceType(str, Enum):
+class TraceType(StrEnum):
     WITNESS = "witness"
     COUNTEREXAMPLE = "counterexample"
 

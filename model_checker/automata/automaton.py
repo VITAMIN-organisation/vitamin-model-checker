@@ -35,9 +35,11 @@ class Automaton:
             ImportError: if Spot isn't importable.
         """
         if spot is None:
-            raise ImportError("Spot is required for Automaton.from_ltl() "
-                               "(pip install spottl on Linux, or conda-forge elsewhere; "
-                               "see docs/ATL_STAR/algorithm.md)")
+            raise ImportError(
+                "Spot is required for Automaton.from_ltl() "
+                "(pip install spottl on Linux, or conda-forge elsewhere; "
+                "see docs/ATL_STAR/algorithm.md)"
+            )
 
         graph = spot.translate(formula, "parity", "deterministic")
         graph = spot.change_parity(graph, spot.parity_kind_max, spot.parity_style_odd)
@@ -53,13 +55,17 @@ class Automaton:
             ValueError: if the acceptance is neither Büchi, co-Büchi, nor parity.
         """
         if spot is None:
-            raise ImportError("Spot is required for Automaton.acceptance_condition() "
-                               "(pip install spottl on Linux, or conda-forge elsewhere; "
-                               "see docs/ATL_STAR/algorithm.md)")
+            raise ImportError(
+                "Spot is required for Automaton.acceptance_condition() "
+                "(pip install spottl on Linux, or conda-forge elsewhere; "
+                "see docs/ATL_STAR/algorithm.md)"
+            )
 
         return self._classify(self._priorities())
 
-    def _classify(self, priorities: dict[tuple[Hashable, Hashable, Hashable], int]) -> AcceptanceCondition:
+    def _classify(
+        self, priorities: dict[tuple[Hashable, Hashable, Hashable], int]
+    ) -> AcceptanceCondition:
         """Classify this automaton's acceptance kind/orientation, attaching
         `priorities` as given rather than always recomputing our own, lets
         `product()` reuse this without paying for `_priorities()` twice."""
@@ -68,7 +74,9 @@ class Automaton:
         if acc.is_buchi():
             return AcceptanceCondition(kind=AcceptanceKind.BUCHI, priorities=priorities)
         if acc.is_co_buchi():
-            return AcceptanceCondition(kind=AcceptanceKind.CO_BUCHI, priorities=priorities)
+            return AcceptanceCondition(
+                kind=AcceptanceKind.CO_BUCHI, priorities=priorities
+            )
 
         is_parity, is_max, is_odd = acc.is_parity()
         if is_parity:

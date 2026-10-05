@@ -23,7 +23,6 @@ import sys
 import time
 from typing import Iterable
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SELECTED_MODE = "space"
 DEFAULT_STATES = 6

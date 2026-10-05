@@ -93,7 +93,9 @@ def test_acceptance_condition_requires_spot():
         automaton_module.spot = original_spot
 
 
-@pytest.mark.parametrize("formula", ["GFa & GFb", "GFa | FGb", "FGa", "Ga", "GFa & GFb & GFc"])
+@pytest.mark.parametrize(
+    "formula", ["GFa & GFb", "GFa | FGb", "FGa", "Ga", "GFa & GFb & GFc"]
+)
 def test_from_ltl_always_returns_max_odd_deterministic_parity(formula):
     # translate(f, "parity", "deterministic") alone doesn't guarantee
     # max-odd, from_ltl must normalize regardless of the formula shape

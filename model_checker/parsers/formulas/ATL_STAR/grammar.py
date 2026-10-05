@@ -64,7 +64,12 @@ _KEYWORDS = {
     "false": "FALSE",
 }
 
-_SINGLE_LETTER_KEYWORDS = {"X": "NEXT", "F": "EVENTUALLY", "G": "GLOBALLY", "U": "UNTIL"}
+_SINGLE_LETTER_KEYWORDS = {
+    "X": "NEXT",
+    "F": "EVENTUALLY",
+    "G": "GLOBALLY",
+    "U": "UNTIL",
+}
 # Case-sensitive (uppercase only) so lowercase single-letter props like "p"/"g"
 # stay available, unlike the multi-word keywords below, which are matched
 # case-insensitively since a real proposition named e.g. "until" is unlikely.
@@ -135,7 +140,9 @@ class _Parser:
     def _expect(self, kind: str) -> _Token:
         token = self._peek()
         if token.kind != kind:
-            raise ATLStarParseError(f"Expected {kind}, found {token.kind}", token.position)
+            raise ATLStarParseError(
+                f"Expected {kind}, found {token.kind}", token.position
+            )
         return self._advance()
 
     def parse_formula(self) -> Formula:
@@ -205,7 +212,9 @@ class _Parser:
         def add(token: _Token) -> int:
             agent = self._agent_id(token)
             if agent in seen:
-                raise ATLStarParseError(f"Duplicate agent id {agent} in coalition", token.position)
+                raise ATLStarParseError(
+                    f"Duplicate agent id {agent} in coalition", token.position
+                )
             seen[agent] = token.position
             return agent
 
@@ -218,7 +227,9 @@ class _Parser:
     def _agent_id(self, token: _Token) -> int:
         agent = int(token.value)
         if self._num_agents is not None and not (1 <= agent <= self._num_agents):
-            raise ATLStarParseError(f"Agent {agent} out of range [1, {self._num_agents}]", token.position)
+            raise ATLStarParseError(
+                f"Agent {agent} out of range [1, {self._num_agents}]", token.position
+            )
         return agent
 
     def _atom(self) -> Formula:

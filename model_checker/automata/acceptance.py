@@ -35,7 +35,9 @@ class AcceptanceCondition:
     kind: AcceptanceKind
     parity_kind: ParityKind | None = None
     parity_style: ParityStyle | None = None
-    priorities: dict[tuple[Hashable, Hashable, Hashable], int] = field(default_factory=dict)
+    priorities: dict[tuple[Hashable, Hashable, Hashable], int] = field(
+        default_factory=dict
+    )
 
 
 def priority_from_mark(mark) -> int | None:

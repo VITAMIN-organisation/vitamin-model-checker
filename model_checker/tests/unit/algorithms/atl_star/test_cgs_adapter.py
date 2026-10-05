@@ -52,7 +52,12 @@ def test_every_other_joint_action_self_loops_on_s0():
 def test_s1_resets_to_s0_under_every_joint_action():
     result = adapt(ToyCGS())
     ts = result.transition_system
-    for agent1, agent2 in [("req", "grant"), ("req", "deny"), ("idle", "grant"), ("idle", "deny")]:
+    for agent1, agent2 in [
+        ("req", "grant"),
+        ("req", "deny"),
+        ("idle", "grant"),
+        ("idle", "deny"),
+    ]:
         action = frozenset({(1, agent1), (2, agent2)})
         assert ts.successors("s1", action) == {"s0"}
 

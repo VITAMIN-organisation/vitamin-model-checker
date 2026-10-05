@@ -20,6 +20,10 @@ source .venv/bin/activate
 pip install -e ".[dev,docs]"
 ```
 
+ATL* and the automata library need Spot. On Linux, `spottl` is installed
+with the package above; on macOS use conda-forge (details in
+`docs/ATL_STAR/algorithm.md`). Other logics do not require Spot.
+
 ## Quick start
 
 ```python

@@ -58,7 +58,9 @@ def test_coalition_forces_response_property_regardless_of_environment():
 
     product_ts, objective = product(automaton, ts, label=_label)
     game = concurrent_to_turnbased(product_ts, controlled_players={"sys"})
-    game.objective = replace(objective, priorities=remap_priorities(objective.priorities, {"sys"}))
+    game.objective = replace(
+        objective, priorities=remap_priorities(objective.priorities, {"sys"})
+    )
 
     solution = solve(game)
 
@@ -83,7 +85,9 @@ def test_environment_cannot_force_a_property_outside_its_control():
 
     product_ts, objective = product(automaton, ts, label=_label)
     game = concurrent_to_turnbased(product_ts, controlled_players={"env"})
-    game.objective = replace(objective, priorities=remap_priorities(objective.priorities, {"env"}))
+    game.objective = replace(
+        objective, priorities=remap_priorities(objective.priorities, {"env"})
+    )
 
     solution = solve(game)
 
@@ -117,7 +121,9 @@ def test_coalition_forces_property_across_multiple_ts_states():
 
     product_ts, objective = product(automaton, ts, label=label)
     game = concurrent_to_turnbased(product_ts, controlled_players={"sys"})
-    game.objective = replace(objective, priorities=remap_priorities(objective.priorities, {"sys"}))
+    game.objective = replace(
+        objective, priorities=remap_priorities(objective.priorities, {"sys"})
+    )
 
     solution = solve(game)
 
@@ -137,7 +143,9 @@ def test_coalition_cannot_force_property_controlled_solely_by_environment():
 
     product_ts, objective = product(automaton, ts, label=label)
     game = concurrent_to_turnbased(product_ts, controlled_players={"sys"})
-    game.objective = replace(objective, priorities=remap_priorities(objective.priorities, {"sys"}))
+    game.objective = replace(
+        objective, priorities=remap_priorities(objective.priorities, {"sys"})
+    )
 
     solution = solve(game)
 
@@ -171,7 +179,9 @@ def test_genuine_parity_objective_through_the_whole_pipeline():
     assert len(set(objective.priorities.values())) > 2  # genuinely more than 2 colors
 
     game = concurrent_to_turnbased(product_ts, controlled_players={"sys"})
-    game.objective = replace(objective, priorities=remap_priorities(objective.priorities, {"sys"}))
+    game.objective = replace(
+        objective, priorities=remap_priorities(objective.priorities, {"sys"})
+    )
 
     solution = solve(game)  # regression: used to raise KeyError (see test_solver.py)
 

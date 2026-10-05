@@ -1,0 +1,15 @@
+{
+  "include": ["model_checker"],
+  "exclude": [
+    "model_checker/tests",
+    "**/__pycache__",
+    ".venv",
+    "dist",
+    "build"
+  ],
+  "typeCheckingMode": "basic",
+  "pythonVersion": "3.11",
+  "reportMissingTypeStubs": false,
+  "venvPath": ".",
+  "venv": ".venv"
+}

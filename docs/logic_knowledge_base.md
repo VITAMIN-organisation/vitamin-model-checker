@@ -799,6 +799,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **LTL** | Linear (sure-win) | `X`, `F`, `G`, `U` | None | CGS |
 | **ATL** | Branching | `<A>X`, `<A>F`, `<A>G`, `<A>U` | `<1,2>` | CGS |
 | **ATLF** | Branching | `<A>X`, `<A>F`, `<A>G`, `<A>U` | `<1,2>` | CGS (Fixed-point) |
+| **ATL_STAR** | Branching | `<<A>>` over nested path formulas (`X`/`F`/`G`/`U`, nested coalitions) | `<<1,2>>` (not Wallet_ATL's wallet guards) | CGS |
 | **NatATL (ML)** | Branching | `<A,k>X`, `<A,k>F`, `<A,k>G`, `<A,k>U` | `<{1,2}, k>` (k = strategy complexity) | CGS |
 | **NatATL (Rec)** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` (k = strategy complexity) | CGS |
 | **NatATLF** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` | CGS (delegates to memoryless) |
