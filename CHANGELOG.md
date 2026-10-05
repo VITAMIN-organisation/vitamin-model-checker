@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- `spottl` (Spot's Python bindings, Linux only) is now a regular
+  dependency instead of living under the `atl_star` extra — `pip install
+  vitamin-model-checker` alone is enough for ATL* to work, no
+  `[atl_star]` extra needed.
+
+### Fixed
+
+- ATL_STAR's elimination algorithm could generate a fresh marker
+  proposition (`__atl_star_elim_N`) that collided with a real proposition
+  already declared in the model, silently corrupting the result for that
+  edge case. The marker is now checked against the model's declared
+  propositions before use.
 ## [1.6.5] - 2026-09-15
 
 ### Fixed
@@ -20,6 +34,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- ATL* model checking (`model_checker/algorithms/explicit/ATL_STAR/`), an
+  automata-theoretic checker (reduction to 2-player parity games) rather
+  than the coalition pre-image fixpoint every other logic here uses —
+  needed because ATL* allows a coalition operator to appear anywhere
+  inside a path formula, not only at the formula's own root. Runs over
+  plain `CGS`, no new game-structure type. Requires
+  [Spot](https://spot.lre.epita.fr/) — `pip install spottl` on Linux, or
+  conda-forge elsewhere; the rest of VITAMIN works without it, see
+  `docs/ATL_STAR/algorithm.md`.
+- `model_checker/automata/`, a vendored, logic-agnostic ω-automata and
+  parity-game-solving library (wraps Spot) backing ATL*'s reduction —
+  available to any future logic that needs the same machinery.
 - Restricted executable NatSL one-goal checker with ordered bounded strategy
   quantification and shared `space`/`time` semantics.
 - Multi-character NatSL strategy variables.

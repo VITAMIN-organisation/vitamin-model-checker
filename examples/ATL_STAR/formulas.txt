@@ -1,0 +1,11 @@
+# On nested_coalition.txt: true everywhere. Agent 1 alone can always reach a
+# state where agent 2 alone can force goal to hold forever. A Coalition
+# nested inside another's path formula, which classical ATL cannot express
+# at all (its own coalition operator is always the formula's root).
+<<1>> F (<<2>> G goal)
+
+# Same model: also true everywhere. Two different temporal operators (X, F)
+# combined under one coalition, unrestricted nesting classical ATL does not
+# allow either (it always takes exactly one temporal operator right after
+# the coalition).
+<<1>> (X goal & F goal)

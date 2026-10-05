@@ -18,6 +18,7 @@ keywords = [
     "temporal-logic",
     "CTL",
     "ATL",
+    "ATL*",
     "LTL",
     "vitamin",
     "verification",
@@ -38,6 +39,7 @@ dependencies = [
     "ply==3.11",
     "numpy>=1.26.0,<1.27.0",
     "pydantic>=2.7.0",
+    "spottl>=2.13; sys_platform == 'linux'",
 ]
 
 [project.urls]
@@ -72,6 +74,7 @@ exclude = ["model_checker/tests*"]
 [project.entry-points."vitamin.parsers"]
 ATL = "model_checker.parsers.formulas.ATL.parser:ATLParser"
 ATLF = "model_checker.parsers.formulas.ATLF.parser:ATLFParser"
+ATL_STAR = "model_checker.parsers.formulas.ATL_STAR.parser:ATLStarParser"
 CapATL = "model_checker.parsers.formulas.CapATL.parser:CapATLParser"
 COTL = "model_checker.parsers.formulas.COTL.parser:COTLParser"
 CTL = "model_checker.parsers.formulas.CTL.parser:CTLParser"
@@ -102,6 +105,7 @@ timedCGS = "model_checker.parsers.game_structures.timed_cgs.timed_cgs:TimedCGS"
 [project.entry-points."vitamin.benchmarks"]
 ATL = "model_checker.algorithms.explicit.ATL.ATL:model_checking"
 ATLF = "model_checker.algorithms.explicit.ATLF.ATLF:model_checking"
+ATL_STAR = "model_checker.algorithms.explicit.ATL_STAR.ATL_STAR:model_checking"
 CapATL = "model_checker.algorithms.explicit.CapATL.CapATL:model_checking"
 COTL = "model_checker.algorithms.explicit.COTL.COTL:model_checking"
 CTL = "model_checker.algorithms.explicit.CTL.CTL:model_checking"
@@ -123,6 +127,7 @@ IATL = "model_checker.algorithms.explicit.IATL.IATL:model_checking"
 [project.entry-points."vitamin.metadata"]
 ATL = "model_checker.parsers.formulas.ATL:METADATA"
 ATLF = "model_checker.parsers.formulas.ATLF:METADATA"
+ATL_STAR = "model_checker.parsers.formulas.ATL_STAR:METADATA"
 CapATL = "model_checker.parsers.formulas.CapATL:METADATA"
 COTL = "model_checker.parsers.formulas.COTL:METADATA"
 CTL = "model_checker.parsers.formulas.CTL:METADATA"
@@ -173,6 +178,7 @@ markers = [
     "natatl: NatATL algorithm tests",
     "oatl: OATL algorithm tests",
     "capatl: CapATL algorithm tests",
+    "atl_star: ATL* algorithm tests",
     "shared: Shared utility tests",
     "complex: Complex formula tests"
 ]
@@ -277,3 +283,4 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # Allow unused imports in __init__.py
+"model_checker/tests/**/*.py" = ["E402"]  # imports after importorskip("spot")

@@ -43,8 +43,9 @@ parser = FormulaParserFactory.get_parser("CTL")
 
 ### Supported logics
 
-Built-in formula logics include ATL, ATLF, CapATL, COTL, CTL, IATL, ICTL, LTL,
-NatATL, NatATLF, NatSL, OATL, OL, RABATL, RBATL, TCTL, TOL, and Wallet_ATL. Model
+Built-in formula logics include ATL, ATLF, ATL_STAR, CapATL, COTL, CTL, IATL,
+ICTL, LTL, NatATL, NatATLF, NatSL, OATL, OL, RABATL, RBATL, TCTL, TOL, and
+Wallet_ATL. Model
 structures include CGS, BCGS, CostCGS, CapCGS, WalletCGS, and timedCGS. See
 `pyproject.toml` entry points (`vitamin.parsers`, `vitamin.models`,
 `vitamin.benchmarks`) for the full registry.

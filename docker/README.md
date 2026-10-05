@@ -42,3 +42,6 @@ docker run --rm vitamin-model-checker pytest model_checker/tests/unit
 - This image is for the library package, not a web service.
 - No HTTP port is exposed.
 - CI uses the same idea: build the package image, then run a smoke test.
+- `spottl` (Spot's Python bindings) is a regular dependency on Linux, so
+  `.[dev]` alone already installs it here (the image is Linux-based); ATL*/
+  automata tests run in this container like any other.

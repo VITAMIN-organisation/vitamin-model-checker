@@ -24,6 +24,7 @@ to locate:
 - [LTL](LTL/algorithm.md)
 - [ATL](ATL/algorithm.md)
 - [ATLF](ATLF/algorithm.md)
+- [ATL_STAR](ATL_STAR/algorithm.md)
 - [NatATL](NatATL/algorithm.md)
 - [NatATLF](NatATLF/algorithm.md)
 - [NatSL](NatSL/algorithm.md)

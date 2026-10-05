@@ -59,6 +59,7 @@ model_checker/algorithms/explicit/<Logic>/
 | Family | Logics | Model type | Core pattern |
 |---|---|---|---|
 | Classical branching | `CTL`, `ATL`, `ATLF` | `CGS` | Pre-image + fixpoints |
+| Automata-theoretic | `ATL_STAR` | `CGS` | LTL to deterministic parity automaton, producted with the CGS, solved as a 2-player game (not pre-image/fixpoints) |
 | Strategy-bounded | `NatATL`, `NatATLF`, `NatSL` | `CGS` | Strategy search / pruning |
 | Cost / resource / wallet | `OATL`, `COTL`, `RBATL`, `RABATL`, `CapATL`, `Wallet_ATL` | `costCGS` / `capCGS` / `WalletCGS` | Bound-aware coalition operators |
 | Intuitionistic | `ICTL`, `IATL` | `BirelationalMatrix` / `BCGS` | Upward closure + dual Pre |
