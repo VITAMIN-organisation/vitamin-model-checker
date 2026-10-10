@@ -49,7 +49,7 @@ here depends on it.
 |---|---|---|
 | Empty coalition | Literature may allow | Rejected (parse error) |
 | Unknown atom | Semantics typically leaves undefined | Rejected (semantic error), never silently false |
-| Strategy synthesis | Part of ATL*'s semantics | `verifier.witness(...)` only, not in `model_checking`'s result dict |
+| Strategy synthesis | Part of ATL*'s semantics | Separate `synthesize_strategy` entry point, not in `model_checking`'s result dict; only a single, non-nested coalition formula |
 
 ## Cost
 
@@ -87,21 +87,44 @@ CGS.read_file -> ATLStarParser.parse -> cgs_adapter.adapt -> verifier.sat
   -> format_model_checking_result
 ```
 
-## Strategy synthesis is a verifier-only API
+## Strategy synthesis is a separate entry point
 
 `ATL_STAR.model_checking`'s result dict is the usual satisfaction dict
 (satisfying states, whether the initial state holds), same as every other
-logic here. It does not return a strategy. Building one requires calling
-`verifier.witness(formula, model, state)` directly, a separate API this
-module also provides, not something the public entry point exposes.
+logic here. It does not return a strategy — kept that way deliberately, so
+this entry point stays focused on plain model checking.
+
+A second, separate entry point, `ATL_STAR.synthesize_strategy(formula,
+filename, state=None)`, returns one instead, as a JSON-serializable dict
+(`{"satisfied": bool, "strategy": [...] | None, ...}`, same `res`/
+`initial_state`/`error` conventions as `model_checking`) — meant to be
+imported and called directly by a consumer that specifically wants a
+strategy, not dispatched through the generic `vitamin.benchmarks`
+entry-point registry (which only knows the fixed two-argument
+`model_checking` shape).
+
+Only supports a formula whose outermost operator is a single coalition
+with no further coalition nested inside its path formula
+(`verifier.require_simple_coalition`) — a top-level boolean combination of
+coalitions (`<<1>> F p & <<2>> G q`) or a nested one
+(`<<1>> G <<2>> F p`) comes back as a "semantic" error instead. Both would
+need more than one independent strategy to represent faithfully; broader
+support is deferred to a later iteration.
+
+For the general case (nested coalitions included), `verifier.witness(formula,
+model, state)` still returns the full `Witness`, including nested witnesses
+via `Witness.nested_witnesses_at` — `strategy_export.export_strategy`/
+`synthesize_strategy` only flatten the coalition's own, top-level strategy
+to JSON, deliberately not the nested part yet.
 
 ## Code map
 
 | Path | Role |
 |---|---|
 | `ATL_STAR/ATL_STAR.py` | Entry |
-| `ATL_STAR/verifier.py` | Bottom-up elimination, LTL rendering, game construction/solving |
+| `ATL_STAR/verifier.py` | Bottom-up elimination, LTL rendering, game construction/solving, formula-shape validation |
 | `ATL_STAR/cgs_adapter.py` | CGS to `TransitionSystem` adapter |
+| `ATL_STAR/strategy_export.py` | Flattens a `Witness` into JSON-serializable rows (`export_strategy`), composes parsing/adaptation/witness/export (`synthesize_strategy`) |
 | `parsers/formulas/ATL_STAR/grammar.py` | Tokenizer/recursive-descent parser |
 | `parsers/formulas/ATL_STAR/formula.py` | Formula AST |
 | `model_checker/automata/` | Vendored `automata_mc`: `Automaton`, `product`, `complete`, `concurrent_to_turnbased`, `solve` |
@@ -111,4 +134,5 @@ module also provides, not something the public entry point exposes.
 - `model_checker/tests/unit/algorithms/atl_star/` (adapter, verifier, end-to-end)
 - `model_checker/tests/unit/parsers/formulas/test_atl_star_parser.py`
 - `model_checker/tests/integration/algorithms/atl_star/test_semantics.py`
+- `model_checker/tests/integration/algorithms/atl_star/test_strategy_synthesis.py`
 - `model_checker/tests/unit/automata/` (the vendored `automata_mc`'s own suite)

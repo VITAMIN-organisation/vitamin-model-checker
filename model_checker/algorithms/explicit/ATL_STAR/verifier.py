@@ -201,6 +201,47 @@ def check(cgs: CGSProtocol, formula_text: str, state: str | None = None) -> bool
     return holds(formula, model, state=state)
 
 
+def require_simple_coalition(formula: Formula) -> Coalition:
+    """Validate that `formula` is a single top-level `Coalition` with no
+    further `Coalition` nested inside its own path formula.
+
+    Rejects the two formula shapes `synthesize_strategy` doesn't support
+    yet: a top-level boolean combination of coalitions (e.g. `<<1>> F p &
+    <<2>> G q`, which parses to `And(Coalition, Coalition)`, not a
+    `Coalition`), and a coalition nested inside another's path formula
+    (e.g. `<<1>> G <<2>> F p`) — both would need more than one independent
+    witness strategy to represent faithfully.
+
+    Raises:
+        ValueError: `formula` isn't a `Coalition` at all, or its path
+            formula contains a nested `Coalition`.
+    """
+    if not isinstance(formula, Coalition):
+        # ValueError, not TypeError: this is a formula-shape/semantic rejection in
+        # atl_star's own vocabulary (same as every other Raises in this module),
+        # not a Python-level type error -- VITAMIN's caller classifies it as such.
+        raise ValueError(  # noqa: TRY004
+            "only a formula whose outermost operator is a single coalition "
+            f"(<<...>> ...) is supported, got {formula!r}"
+        )
+    if _contains_coalition(formula.path_formula):
+        raise ValueError(
+            f"a coalition nested inside another's path formula is not supported yet, got {formula!r}"
+        )
+    return formula
+
+
+def _contains_coalition(formula: Formula) -> bool:
+    """Whether `formula` has a `Coalition` anywhere inside it (itself included)."""
+    if isinstance(formula, Coalition):
+        return True
+    if isinstance(formula, (Not, Next)):
+        return _contains_coalition(formula.operand)
+    if isinstance(formula, (And, Until)):
+        return _contains_coalition(formula.left) or _contains_coalition(formula.right)
+    return False
+
+
 def witness(
     formula: Coalition, model: AdaptedCGS, state: str | None = None
 ) -> Witness | None:
