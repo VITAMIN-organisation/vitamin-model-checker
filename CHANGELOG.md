@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `ATL_STAR.synthesize_strategy(formula, filename, state=None)`, a separate
+  entry point returning a JSON-serializable witness strategy
+  (`{"satisfied": bool, "strategy": [...] | None, ...}`), kept out of
+  `model_checking` so that one stays focused on plain model checking. Only
+  supports a formula whose outermost operator is a single coalition with
+  no further coalition nested inside its path formula — broader formula
+  shapes are rejected with a clear "semantic" error, deferred to a later
+  iteration. See `docs/ATL_STAR/algorithm.md`.
+
 ### Changed
 
 - `spottl` (Spot's Python bindings, Linux only) is now a regular
