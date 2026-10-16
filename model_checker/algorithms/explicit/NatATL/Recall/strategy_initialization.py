@@ -74,7 +74,8 @@ def initialize(model_path: str, formula: str, cgs: CGSProtocol | None = None) ->
 
     cgs_actions.validate_agent_numbers(agents, model_parser.get_number_of_agents())
     actions_per_agent = cgs_actions.extract_actions_for_agents(
-        model_parser.graph, agents
+        model_parser.graph, agents,
+        num_agents=model_parser.get_number_of_agents(),
     )
     logger.debug("Actions per agent: %s", actions_per_agent)
 

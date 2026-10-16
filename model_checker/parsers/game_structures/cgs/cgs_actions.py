@@ -65,58 +65,76 @@ def build_action_list(action_string: str, num_agents: int) -> list[str]:
     ]
 
 
-def parse_joint_action_cell(cell: str, num_agents: int) -> list[list[str]]:
-    """Parse one transition-matrix cell into joint action choices.
+def parse_joint_action_cell(
+    cell: str, num_agents: int, *, strict_arity: bool = False
+) -> list[list[str]]:
+    """Parse positional joint actions in a CGS transition cell.
 
-    Joint moves in a cell are separated by ",". Each joint is either:
-    - one character per agent (e.g. "AC" means agent 1 does A, agent 2 does C), or
-    - tokens separated by "|" for longer names (e.g. "IDLE|MOVE").
+    Examples for two agents (position 1 belongs to agent 1):
+      ``AB,CD``                         legacy one-character notation
+      ``MOVE_FORWARD|BLOCK_PATH``       nominal per-agent action names
+      ``IDLE|BLOCK_PATH,MOVE_FORWARD|IDLE`` two transitions in one cell
 
-    Both forms denote the same per-agent move vector. Only the first num_agents
-    tokens are used. "I" and "IDLE" map to IDLE.
+    For a *single* agent, the entire unsplit token is its action name:
+    ``MOVE_FORWARD`` no longer becomes ``M``. ``I`` and ``IDLE`` normalize
+    to ``IDLE`` in either syntax.
+
+    Legacy callers still tolerate and truncate surplus positional components.
+    Strict verifiers may request ``strict_arity=True`` to reject incorrect
+    component counts, empty action names, and empty comma-separated entries.
+    The literal cell wildcard ``*`` remains handled by build_action_list().
     """
     if not isinstance(cell, str):
         return []
+    if not isinstance(num_agents, int) or num_agents < 1:
+        raise ValueError("Number of agents must be positive")
 
     raw = cell.strip()
     if not raw or raw == "*":
         return []
 
-    joint_strings = [
-        part.strip() for part in raw.split(JOINT_CHOICE_SEPARATOR) if part.strip()
-    ]
+    joint_strings = raw.split(JOINT_CHOICE_SEPARATOR)
     joint_actions: list[list[str]] = []
+    for part in joint_strings:
+        joint = part.strip()
+        if not joint:
+            if strict_arity:
+                raise ValueError(f"Empty joint-action entry in cell {cell!r}")
+            continue
 
-    for joint in joint_strings:
         if AGENT_ACTION_SEPARATOR in joint:
-            # Explicit token format: a|b|c
             tokens = [
                 normalize_action_token(t) for t in joint.split(AGENT_ACTION_SEPARATOR)
             ]
-            if len(tokens) < num_agents:
-                raise ValueError(
-                    f"Action joint '{joint}' in cell '{cell}' has {len(tokens)} token(s); "
-                    f"expected at least {num_agents} token(s) (one per agent)."
-                )
+        elif num_agents == 1:
+            # Crucial for one-agent CGSs: multi-character names are indivisible.
+            tokens = [normalize_action_token(joint)]
         else:
-            # Compact character format: treat as sequence of characters
-            chars = [normalize_action_token(ch) for ch in joint]
-            if len(chars) < num_agents:
-                raise ValueError(
-                    f"Action joint '{joint}' in cell '{cell}' has length {len(chars)}; "
-                    f"expected at least {num_agents} character(s) (one per agent)."
-                )
-            tokens = chars
+            # Backward-compatible compact encoding: one character per agent.
+            tokens = [normalize_action_token(ch) for ch in joint]
 
-        # Use only the first num_agents tokens for per-agent actions
-        tokens = tokens[:num_agents]
-        joint_actions.append(tokens)
+        if strict_arity and (
+            len(tokens) != num_agents or any(not token for token in tokens)
+        ):
+            raise ValueError(
+                f"Invalid joint-action arity or empty action in {joint!r}: "
+                f"expected exactly {num_agents} nonempty agent action(s), "
+                f"got {len(tokens)}"
+            )
+        if len(tokens) < num_agents:
+            raise ValueError(
+                f"Action joint {joint!r} in cell {cell!r} has "
+                f"{len(tokens)} agent action(s); expected at least {num_agents}"
+            )
+
+        # In permissive mode, retain VITAMIN's historical truncation behavior.
+        joint_actions.append(tokens[:num_agents])
 
     return joint_actions
 
 
 def extract_actions_for_agents(
-    graph: list[list], agents: list[int]
+    graph: list[list], agents: list[int], *, num_agents: int
 ) -> dict[str, list[str]]:
     """Return ``agent{n}`` -> action tokens from graph cells for 1-based agent ids.
 
@@ -127,11 +145,17 @@ def extract_actions_for_agents(
     actions_per_agent = {f"agent{agent}": set() for agent in agents}
 
     valid_elements = (
-        str(elem) for row in graph for elem in row if elem != 0 and elem != "*"
+        str(elem) for row in graph for elem in row if elem not in (0, "0", "", None, "*")
     )
 
-    # Infer number of agents from the largest agent index we care about
-    num_agents = max(agent_indices.values()) + 1 if agent_indices else 0
+    # A coalition may omit agents. In that case its maximum index is NOT
+    # the arity of a joint action. Callers with the CGS must supply its full
+    # number of agents to distinguish legacy "AB" from a single-agent name.
+    if type(num_agents) is not int or num_agents < 1:
+        raise ValueError("[MODEL] Number of agents must be positive")
+    validate_agent_numbers(agents, num_agents)
+    if num_agents < max(agents, default=0):
+        raise ValueError("Selected agent index exceeds total number of agents")
 
     for elem_str in valid_elements:
         if not num_agents:
@@ -145,7 +169,7 @@ def extract_actions_for_agents(
                     actions_per_agent[f"agent{agent}"].add(token)
 
     return {
-        agent_key: list(actions) for agent_key, actions in actions_per_agent.items()
+        agent_key: sorted(actions) for agent_key, actions in actions_per_agent.items()
     }
 
 

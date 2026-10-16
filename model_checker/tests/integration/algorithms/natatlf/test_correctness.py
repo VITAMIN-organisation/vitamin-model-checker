@@ -1,19 +1,18 @@
-"""NatATLF model checking: at least one formula with known result."""
-
+"""NatATLF compatibility with exact shared NatATL pruning."""
 import pytest
 
 from model_checker.algorithms.explicit.NatATLF.NatATL import model_checking
 
 
 @pytest.mark.integration
-@pytest.mark.model_checking
 class TestNatATLFCorrectness:
-    """One formula that should produce a known satisfiability result."""
-
-    def test_natatlf_known_formula_satisfiable(self, natatl_standard_model):
-        """On the standard 1-agent 4-state model, <1>Fa is satisfiable."""
+    def test_original_nondeterministic_fixture_is_rejected(self, natatl_standard_model):
         result = model_checking("<{1},1>Fa", natatl_standard_model.filename)
-        assert "error" not in result
-        assert "Satisfiability" in result
+        assert result["error"]["type"] == "model"
+        assert "Nondeterministic" in result["error"]["message"]
+
+    def test_known_formula_on_separate_valid_cgs(self, test_data_dir):
+        path = test_data_dir / "CGS/NATATL/natatl_1agent_2states_deterministic.txt"
+        result = model_checking("<{1},1>Fa", str(path))
+        assert "error" not in result, result
         assert result["Satisfiability"] is True
-        assert "res" in result

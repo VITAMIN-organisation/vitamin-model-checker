@@ -67,6 +67,11 @@ class TestBasicModelCheckingWorkflow:
         )
 
         natatl_result = natatl_mem_check("<{1},1>Fa", str(natatl_path))
+        # Preserve the old fixture as an explicit nondeterminism regression.
+        assert natatl_result["error"]["type"] == "model"
+        assert "Nondeterministic" in natatl_result["error"]["message"]
+        valid_natatl = test_data_dir / "CGS/NATATL/natatl_1agent_2states_deterministic.txt"
+        natatl_result = natatl_mem_check("<{1},1>Fa", str(valid_natatl))
         assert natatl_result.get("Satisfiability") is True
 
         cotl_result = cotl_check("<1><5>F g", str(cotl_path))

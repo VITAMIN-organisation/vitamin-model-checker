@@ -1,0 +1,28 @@
+# NATATL Recall: deterministic, fully specified 2-agent CGS.
+# Agent 1: IDLE, MOVE_FORWARD; agent 2: IDLE, BLOCK_PATH.
+# Joint actions use | for agent positions and , for alternative profiles.
+# Each state's 2 x 2 locally available profiles has exactly one successor.
+# At s0, IDLE branches to left/right depending on the opponent action.
+# At left/right, IDLE reaches goal, regardless of the opponent.
+# The alternate MOVE_FORWARD action leads to a losing trap.
+# The proposition a is FALSE initially and TRUE only at goal.
+Transition
+0 IDLE|IDLE IDLE|BLOCK_PATH 0 MOVE_FORWARD|IDLE,MOVE_FORWARD|BLOCK_PATH
+0 0 0 IDLE|IDLE,IDLE|BLOCK_PATH MOVE_FORWARD|IDLE,MOVE_FORWARD|BLOCK_PATH
+0 0 0 IDLE|IDLE,IDLE|BLOCK_PATH MOVE_FORWARD|IDLE,MOVE_FORWARD|BLOCK_PATH
+0 0 0 IDLE|IDLE,IDLE|BLOCK_PATH,MOVE_FORWARD|IDLE,MOVE_FORWARD|BLOCK_PATH 0
+0 0 0 0 IDLE|IDLE,IDLE|BLOCK_PATH,MOVE_FORWARD|IDLE,MOVE_FORWARD|BLOCK_PATH
+Name_State
+s0 left right goal trap
+Initial_State
+s0
+Atomic_propositions
+a danger
+Labelling
+0 0
+0 0
+0 0
+1 0
+0 1
+Number_of_agents
+2

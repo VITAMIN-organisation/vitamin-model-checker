@@ -1,123 +1,80 @@
-"""
-Pruning module for LTL model checker.
+"""Exact first-match pruning for the legacy CTL-backed LTL pipeline.
 
-Implements matrix-based pruning for LTL with game-theoretic solution concepts.
-Reuses modify_matrix from NatATL.Memoryless (same CGS transition format).
+Legacy generated lists may omit an explicit fallback: uncovered states then
+select the EXISTING IDLE action. This adapter never inserts transitions, never
+retains IDLE alongside another selected action, and never calls CTL on a graph
+made nonserial by an inadmissible candidate. It does not certify completeness
+of the legacy strategy generator or general LTL-to-CTL equivalence.
 """
+import copy
 
 from model_checker.algorithms.explicit.CTL.CTL import model_checking
 from model_checker.algorithms.explicit.NatATL.Memoryless.matrix_utils import (
     modify_matrix,
 )
-from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
+from model_checker.algorithms.explicit.NatATL.strategy_errors import (
+    InadmissibleStrategy,
+)
+from model_checker.parsers.game_structures.cgs import cgs_actions
 from model_checker.utils.literals import parse_state_set_literal
 
 
 def process_transition_matrix_data(cgs, model, agents, *strategies):
     graph = [row[:] for row in cgs.graph]
-    state_to_index = cgs.state_to_index
-    cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
-    actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
-    agent_actions = {}
-    for _i, agent_key in enumerate(actions_per_agent.keys()):
-        agent_actions[f"actions_{agent_key}"] = actions_per_agent[agent_key]
-
-    for strategy_index, strategy in enumerate(strategies, start=1):
-        state_sets = set()
-        temp = set()
-        for iteration, (condition, action) in enumerate(
-            strategy["condition_action_pairs"]
-        ):
-            # Cache model_checking results for conditions to avoid redundant CTL calls
-            if not hasattr(cgs, "_condition_cache"):
-                cgs._condition_cache = {}
-            cache_key = (condition, model)
-            if cache_key not in cgs._condition_cache:
-                states = model_checking(condition, model, preloaded_model=cgs)
-                cgs._condition_cache[cache_key] = states
+    n_agents = cgs.get_number_of_agents()
+    cgs_actions.validate_agent_numbers(agents, n_agents)
+    if len(agents) != len(strategies) or len(set(agents)) != len(agents):
+        raise ValueError("One strategy per distinct coalition agent is required")
+    all_states = {str(s) for s in cgs.states}
+    indices = {str(s): i for i, s in enumerate(cgs.states)}
+    if len(graph) != len(all_states) or any(len(row) != len(all_states) for row in graph):
+        raise ValueError("[MODEL] Invalid CGS dimensions")
+    if any(not any(c not in (0, "0", "", None) for c in row) for row in graph):
+        raise ValueError("[MODEL] Original CGS is non-total")
+    guard_cache = {}
+    for position, strategy in enumerate(strategies, 1):
+        pairs = strategy.get("condition_action_pairs")
+        if not isinstance(pairs, (list, tuple)) or not pairs:
+            raise ValueError("Empty legacy strategy")
+        covered = set()
+        # Preserve only the documented implicit-IDLE fallback of legacy lists.
+        for condition, action in [*pairs, ("T", "IDLE")]:
+            if condition.strip() in ("T", "true"):
+                matched = all_states
             else:
-                states = cgs._condition_cache[cache_key]
-            state_set = parse_state_set_literal(states["res"].split(": ")[1])
-
-            if iteration > 0:
-                if state_set:
-                    temp = state_sets
-                    state_sets = state_set - temp
-                else:
-                    state_sets = set(cgs.states)
-                    action = "I"
-                graph = modify_matrix(
-                    graph,
-                    state_sets,
-                    action,
-                    strategy_index,
-                    agents,
-                    num_agents=cgs.get_number_of_agents(),
-                    state_to_index=state_to_index,
-                    in_place=True,
-                )
-            else:
-                if state_set:
-                    state_sets = state_set
-                else:
-                    state_sets = set(cgs.states)
-                    action = "I"
-                graph = modify_matrix(
-                    graph,
-                    state_sets,
-                    action,
-                    strategy_index,
-                    agents,
-                    num_agents=cgs.get_number_of_agents(),
-                    state_to_index=state_to_index,
-                    in_place=True,
-                )
-
+                if condition not in guard_cache:
+                    result = model_checking(condition, model, preloaded_model=cgs)
+                    if result.get("error") or not result.get("res", "").startswith("Result: "):
+                        raise ValueError(f"Invalid strategy condition {condition!r}: {result}")
+                    guard_cache[condition] = parse_state_set_literal(result["res"][8:])
+                matched = guard_cache[condition]
+            applicable = set(matched) - covered
+            if not applicable:
+                continue  # A false or shadowed guard does nothing, not IDLE everywhere.
+            graph = modify_matrix(
+                graph, applicable, action, position, agents, num_agents=n_agents,
+                state_to_index=indices, in_place=True, allow_wildcards=True,
+            )
+            for state in applicable:
+                if not any(c not in (0, "0", "", None) for c in graph[indices[state]]):
+                    raise InadmissibleStrategy(
+                        f"Action {action!r} is not enabled for agent {agents[position-1]} "
+                        f"in state {state!r}"
+                    )
+            covered.update(applicable)
     return graph
 
 
 def pruning(cgs, model, agents, formula, current_agents):
-    if not hasattr(cgs, "_model_cache"):
-        cgs._model_cache = {}
-    if model not in cgs._model_cache:
-        cgs_template = CGS()
-        cgs_template.read_file(model)
-        cgs._model_cache[model] = cgs_template
-
-    # Create a new CGS instance and copy from cached model
-    cgs1 = CGS()
-    cached_cgs = cgs._model_cache[model]
-
-    cgs1.graph = [row[:] for row in cached_cgs.graph]
-    cgs1.states = (
-        cached_cgs.states.copy()
-        if hasattr(cached_cgs.states, "copy")
-        else cached_cgs.states
-    )
-    cgs1.number_of_agents = cached_cgs.number_of_agents
-    cgs1.atomic_propositions = (
-        cached_cgs.atomic_propositions.copy()
-        if hasattr(cached_cgs.atomic_propositions, "copy")
-        else cached_cgs.atomic_propositions
-    )
-    cgs1.initial_state = cached_cgs.initial_state
-    cgs1.matrix_prop = (
-        [row[:] for row in cached_cgs.matrix_prop] if cached_cgs.matrix_prop else []
-    )
-    cgs1.actions = cached_cgs.actions[:] if cached_cgs.actions else []
-
-    cgs1.graph = process_transition_matrix_data(cgs1, model, agents, *current_agents)
+    """Reject inadmissible candidates; propagate parse/model/backend errors."""
     try:
-        cgs_validation.validate_nat_idle_requirements(
-            cgs1.graph, cgs1.get_number_of_agents()
-        )
-    except ValueError as e:
-        error_msg = str(e)
-        if "Idle error" in error_msg or "All elements in row" in error_msg:
-            pass
-        else:
-            raise
-    result = model_checking(formula, model, preloaded_model=cgs1)
-    if result.get("initial_state", "").endswith(": True"):
-        return True
-    return False
+        graph = process_transition_matrix_data(cgs, model, agents, *current_agents)
+    except InadmissibleStrategy:
+        return False
+    pruned = copy.deepcopy(cgs)
+    pruned.graph = graph
+    result = model_checking(formula, model, preloaded_model=pruned)
+    if result.get("error") or not result.get("res", "").startswith("Result: "):
+        raise ValueError(f"CTL verification failed: {result}")
+    states = parse_state_set_literal(result["res"][8:])
+    return str(pruned.initial_state) in states

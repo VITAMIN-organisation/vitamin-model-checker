@@ -1,65 +1,32 @@
-"""
-NatATL Recall model checker.
+"""Public VITAMIN entry point for NatATL with natural recall strategies.
 
-Main entry point for verifying NatATL with recall strategies.
-Integrates tree generation, regex/boolean pruning, and CTL model checking.
+Uses the compositional NatATL AST evaluator and the automata-product Recall
+backend. In particular, this entry point does not lower nested strategic
+modalities to one global CTL formula or unfold the CGS to a fixed depth.
+
+For the supported Boolean/regular guard grammar, completed extended
+bounded enumeration provides two-valued results. Other guard grammars
+require separate completeness arguments; this API does not claim them.
 """
 
-import logging
 from typing import Any
 
-from model_checker.algorithms.explicit.NatATL.Recall.solver import (
-    solve_natatl_recall,
-)
-from model_checker.algorithms.explicit.NatATL.Recall.strategy_initialization import (  # noqa: E501
-    initialize,
+from model_checker.algorithms.explicit.NatATL.Recall.recall_compositional import (
+    check_compositional_recall,
 )
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.game_structures.cgs.cgs import CGS
-from model_checker.utils.error_handler import create_error_response
-
-logger = logging.getLogger(__name__)
 
 
 def _core_natatl_recall_checking(cgs: CGS, formula: str) -> dict[str, Any]:
-    """Core logic for NatATL with Recall."""
-    try:
-        # Initialize model and parse formula
-        (
-            k,
-            agent_actions,
-            actions_list,
-            atomic_propositions,
-            ctl_formula,
-            agents,
-            filename,
-            model_parser,
-        ) = initialize(cgs.filename, formula, cgs=cgs)
+    """Verify NatATL Recall using exact finite products, not bounded trees.
 
-        # Solve using the solver module
-        result = solve_natatl_recall(
-            k,
-            agent_actions,
-            actions_list,
-            atomic_propositions,
-            ctl_formula,
-            agents,
-            model_parser,
-            filename,
-        )
-
-        return result
-
-    except ValueError as e:
-        error_msg = str(e)
-        if "atomic proposition" in error_msg.lower() or "atom" in error_msg.lower():
-            return create_error_response("semantic", error_msg)
-        raise
-    except Exception as e:
-        logger.exception("Unexpected error during NatATL Recall checking")
-        return create_error_response(
-            "system", f"Error during NatATL Recall checking: {str(e)}"
-        )
+    A strict deterministic/total CGS preflight precedes formula evaluation.
+    Each nested strategic modality is checked with its own strategy search.
+    """
+    return check_compositional_recall(
+        cgs, formula, generator="extended", complete_supported_grammar=True
+    )
 
 
 model_checking = create_model_checking_entry("NatATL", _core_natatl_recall_checking)

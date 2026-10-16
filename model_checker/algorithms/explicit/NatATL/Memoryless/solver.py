@@ -1,14 +1,17 @@
-"""Strategy enumeration and pruning loop for NatATL memoryless verification."""
+
+"""Lazy cost-ordered search for NatATL memoryless strategies."""
 
 import logging
 from typing import Any
 
+from model_checker.algorithms.explicit.NatATL.Memoryless.lazy_generation import (
+    collective_strategies,
+)
 from model_checker.algorithms.explicit.NatATL.Memoryless.pruning import (
     pruning,
 )
-from model_checker.algorithms.explicit.shared.strategies_base import (
-    generate_guarded_action_pairs,
-    generate_strategies,
+from model_checker.algorithms.explicit.NatATL.strategy_complexity import (
+    individual_complexity,
 )
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
@@ -25,50 +28,117 @@ def solve_natatl_memoryless(
     cgs: CGSProtocol,
     model_path: str,
 ) -> dict[str, Any]:
-    """Search strategies up to complexity k; return the first one that passes pruning."""
-    found_solution = False
-    result: dict[str, Any] = {}
+    """Search profiles by increasing collective complexity.
 
-    i = 1
-    logger.info("Starting NatATL Memoryless verification (Bound k=%d)", k)
+    agent_actions is retained for the NatATLF compatibility calling convention;
+    actions_list is the authoritative per-agent action inventory in this solver.
+    """
 
-    while not found_solution and i <= k:
-        logger.debug("Checking strategies at complexity level %d", i)
+    if k < 0:
+        raise ValueError("Complexity bound must be nonnegative")
 
-        # Generate guarded action pairs for each agent
-        cartesian_products = generate_guarded_action_pairs(
-            i, agent_actions, actions_list, atomic_propositions
+    if len(agents) != len(actions_list):
+        raise ValueError("Mismatch between agents and action lists")
+
+    if len(set(agents)) != len(agents):
+        raise ValueError("Repeated coalition agent")
+
+    # Wildcard semantics are not yet supported by strict pruning.
+    if any(
+        isinstance(cell, str) and "*" in cell
+        for row in cgs.graph
+        for cell in row
+    ):
+        raise ValueError(
+            "Unsupported NatATL wildcard joint action in model"
         )
 
-        # Generate strategies for this complexity level
-        strategies_generator = generate_strategies(
-            cartesian_products, i, agents, found_solution
+    actions_by_agent = {
+        agent: list(dict.fromkeys(actions))
+        for agent, actions in zip(agents, actions_list, strict=True)
+    }
+
+    checked = 0
+    rejected = 0
+    initial = str(getattr(cgs, "initial_state", "s0"))
+
+    logger.info(
+        "Starting NatATL lazy memoryless search: k=%d",
+        k,
+    )
+
+    generator = collective_strategies(
+        agents=agents,
+        actions_by_agent=actions_by_agent,
+        propositions=atomic_propositions,
+        bound=k,
+    )
+
+    for candidate in generator:
+
+        # Sum of individual complexities.
+        cost = sum(
+            individual_complexity(
+                strategy["condition_action_pairs"]
+            )
+            for strategy in candidate
         )
 
-        # Check each strategy via pruning & model checking
-        for current_strategy in strategies_generator:
-            found_solution = pruning(
-                cgs, model_path, agents, CTLformula, current_strategy
+        if cost > k:
+            raise AssertionError(
+                "Generator exceeded the collective complexity bound"
             )
 
-            if found_solution:
-                logger.info("Solution found with strategy: %s", current_strategy)
-                result["Satisfiability"] = True
-                result["Complexity Bound"] = i
-                result["Winning Strategy per agent"] = current_strategy
-                break
+        try:
+            winning = pruning(
+                cgs,
+                model_path,
+                agents,
+                CTLformula,
+                candidate,
+            )
 
-        i += 1
+        except ValueError as exc:
+            # An unavailable action makes this candidate
+            # inadmissible, not the entire model.
+            if "not enabled" not in str(exc).lower():
+                raise
 
-    if not found_solution:
-        logger.info("No solution found after checking bound k=%d", k)
-        result["Satisfiability"] = False
-        result["Complexity Bound"] = k
+            rejected += 1
+            continue
 
-    # Add standard result fields for backend compatibility
-    initial_state = cgs.initial_state if hasattr(cgs, "initial_state") else "s0"
-    is_sat = result.get("Satisfiability", False)
-    result["res"] = f"Result: {is_sat}"
-    result["initial_state"] = f"Initial state {initial_state}: {is_sat}"
+        checked += 1
 
-    return result
+        if winning:
+            logger.info(
+                "Winning collective strategy found at cost %d",
+                cost,
+            )
+
+            return {
+                "Satisfiability": True,
+                "Complexity Bound": k,
+                "Requested Complexity Bound": k,
+                "Witness Complexity": cost,
+                "Winning Strategy per agent": candidate,
+                "Candidates Checked": checked,
+                "Candidates Rejected": rejected,
+                "res": "Result: True",
+                "initial_state": (
+                    f"Initial state {initial}: True"
+                ),
+            }
+
+    logger.info("Search exhausted up to bound k=%d", k)
+
+    return {
+        "Satisfiability": False,
+        "Complexity Bound": k,
+        "Requested Complexity Bound": k,
+        "Candidates Checked": checked,
+        "Candidates Rejected": rejected,
+        "res": "Result: False",
+        "initial_state": (
+            f"Initial state {initial}: False"
+        ),
+    }

@@ -58,6 +58,8 @@ def model_checking(formula: str, model: str) -> dict[str, Any]:
         return create_error_response("system", f"Model file not found: {model}")
     except ValueError as e:
         error_msg = str(e)
+        if "[MODEL]" in error_msg:
+            return create_error_response("model", error_msg.replace("[MODEL]", "").strip())
         if (
             "index" in error_msg.lower()
             or "dimension" in error_msg.lower()

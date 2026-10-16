@@ -27,7 +27,7 @@ class TestCGSActionExtraction:
         all_agents = list(range(1, num_agents + 1))
         cgs_actions.validate_agent_numbers(all_agents, num_agents)
         result = cgs_actions.extract_actions_for_agents(
-            cgs_simple_parser.graph, all_agents
+            cgs_simple_parser.graph, all_agents, num_agents=num_agents
         )
         assert isinstance(result, dict)
         for _agent_key, agent_actions in result.items():
@@ -38,7 +38,7 @@ class TestCGSActionExtraction:
         agents = list(range(1, num_agents + 1))
         cgs_actions.validate_agent_numbers(agents, num_agents)
         actions = cgs_actions.extract_actions_for_agents(
-            cgs_simple_parser.graph, agents
+            cgs_simple_parser.graph, agents, num_agents=num_agents
         )
         for row in cgs_simple_parser.graph:
             for elem in row:

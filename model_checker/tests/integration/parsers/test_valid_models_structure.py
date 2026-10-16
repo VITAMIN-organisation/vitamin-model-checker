@@ -123,7 +123,7 @@ class TestAllValidModelsActionOperations:
         num_agents = parser.get_number_of_agents()
         agents = list(range(1, num_agents + 1))
         cgs_actions.validate_agent_numbers(agents, num_agents)
-        actions = cgs_actions.extract_actions_for_agents(parser.graph, agents)
+        actions = cgs_actions.extract_actions_for_agents(parser.graph, agents, num_agents=num_agents)
 
         assert isinstance(
             actions, dict

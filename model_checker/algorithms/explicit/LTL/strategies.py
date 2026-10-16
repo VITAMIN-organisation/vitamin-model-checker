@@ -45,7 +45,13 @@ def generate_strategies(
             if isinstance(found_solution, list) and found_solution[0]:
                 return
 
-            cartesian_product = cartesian_products[agent_key]
+            # Constant strategies must not be lost when no atom covers all states.
+            # This does not turn the legacy restricted generator into a complete one.
+            existing = cartesian_products[agent_key]
+            actions = sorted({action for _condition, action in existing})
+            cartesian_product = list(dict.fromkeys(
+                [("T", action) for action in actions] + list(existing)
+            ))
             agent_strategies = []
 
             for r in range(1, k + 1):
@@ -116,7 +122,9 @@ def initialize(
     logger.debug("Complexity Bound: %d", k)
 
     cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
-    actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
+    actions_per_agent = cgs_actions.extract_actions_for_agents(
+        cgs.graph, agents, num_agents=cgs.get_number_of_agents()
+    )
     logger.debug("Actions picked by each agent: %s", actions_per_agent)
     agent_actions = {}
     for i, key in enumerate(actions_per_agent.keys()):

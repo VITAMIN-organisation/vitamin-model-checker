@@ -5,9 +5,15 @@ Verifies Nash Equilibrium properties by checking for profitable unilateral devia
 
 import logging
 
-from model_checker.algorithms.explicit.LTL.pruning import pruning
+from model_checker.algorithms.explicit.LTL.pruning import (
+    process_transition_matrix_data,
+    pruning,
+)
 from model_checker.algorithms.explicit.LTL.strategies import (
     generate_deviations_for_agent,
+)
+from model_checker.algorithms.explicit.NatATL.strategy_errors import (
+    InadmissibleStrategy,
 )
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
@@ -25,6 +31,7 @@ def is_not_nash(
     atomic_propositions: list[str],
 ) -> bool:
     """Return True if some agent has a profitable unilateral deviation (not Nash)."""
+    process_transition_matrix_data(cgs, model, agents, *current_strategy)
     for agent_index, agent in enumerate(agents):
         logger.debug("Checking deviations for agent %s (Index: %d)", agent, agent_index)
 
@@ -72,15 +79,18 @@ def exists_nash(
 
     Inverse of is_not_nash.
     """
-    return not is_not_nash(
-        model=(
-            cgs.filename if hasattr(cgs, "filename") else ""
-        ),  # Best effort to get filename
-        cgs=cgs,
-        agents=agents,
-        ctl_formula=ctl_formula,
-        current_strategy=current_strategy,
-        bound=bound,
-        agent_actions=agent_actions,
-        atomic_propositions=atomic_propositions,
-    )
+    try:
+        return not is_not_nash(
+            model=(
+                getattr(cgs, "filename", "")
+            ),  # Best effort to get filename
+            cgs=cgs,
+            agents=agents,
+            ctl_formula=ctl_formula,
+            current_strategy=current_strategy,
+            bound=bound,
+            agent_actions=agent_actions,
+            atomic_propositions=atomic_propositions,
+        )
+    except InadmissibleStrategy:
+        return False

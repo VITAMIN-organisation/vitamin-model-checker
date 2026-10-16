@@ -14,7 +14,6 @@ from model_checker.algorithms.explicit.shared.strategies_base import (
 )
 from model_checker.tests.helpers.model_helpers import (
     build_cgs_model_content,
-    generate_fully_connected_model,
     generate_linear_chain,
     load_cgs_from_content,
 )
@@ -23,10 +22,12 @@ NATATL_SCALING_CASES = [
     (
         "small_hand_built",
         lambda: build_cgs_model_content(
+            # A total deterministic one-agent CGS.  IDLE stutters,
+            # A advances, and the final state admits both actions.
             transitions=[
-                ["1", "1", "0"],
-                ["0", "1", "0"],
-                ["0", "0", "*"],
+                ["I", "A", "0"],
+                ["0", "I", "A"],
+                ["0", "0", "I,A"],
             ],
             state_names=["s0", "s1", "s2"],
             initial_state="s0",
@@ -101,8 +102,28 @@ class TestNatATLMatrixPruneBench:
     def test_modify_matrix_scales_on_fully_connected(self, temp_file):
         """Pruning a dense 80-state graph finishes quickly with state_to_index."""
         num_states = 80
+        # Each joint action has exactly one successor. A state has one
+        # IDLE self-loop and a distinct named MOVE_j action to each other
+        # state. The second agent has one action, BLOCK, everywhere.
+        # Unlike the generic graph generator this is a valid NatATL CGS:
+        # it has no wildcard cells or nondeterministic joint profiles.
+        transitions = [
+            [
+                "IDLE|BLOCK" if i == j else f"MOVE_{j}|BLOCK"
+                for j in range(num_states)
+            ]
+            for i in range(num_states)
+        ]
         cgs = load_cgs_from_content(
-            temp_file, generate_fully_connected_model(num_states, num_agents=2)
+            temp_file,
+            build_cgs_model_content(
+                transitions=transitions,
+                state_names=[f"s{i}" for i in range(num_states)],
+                initial_state="s0",
+                labelling=[["1"] for _ in range(num_states)],
+                num_agents=2,
+                prop_names=["p"],
+            ),
         )
         graph = [row[:] for row in cgs.graph]
         states = {f"s{i}" for i in range(0, num_states, 2)}
@@ -110,7 +131,7 @@ class TestNatATLMatrixPruneBench:
         pruned = modify_matrix(
             graph,
             states=states,
-            action="A",
+            action="IDLE",
             agent_index=1,
             agents=[1],
             num_agents=2,

@@ -19,7 +19,7 @@ class TestNatATLMemorylessSemantics:
     def test_memoryless_strategy_suffices(self, temp_file):
         """Verify memoryless strategy is sufficient for simple reachability."""
         content = build_cgs_model_content(
-            transitions=[["0", "a"], ["0", "I"]],
+            transitions=[["I", "a"], ["0", "I,a"]],
             state_names=["s0", "s1"],
             initial_state="s0",
             labelling=[["0"], ["1"]],

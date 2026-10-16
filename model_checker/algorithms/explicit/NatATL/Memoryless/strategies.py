@@ -49,7 +49,9 @@ def initialize(
     logger.debug("Involved agents: %s", agents)
 
     cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
-    actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
+    actions_per_agent = cgs_actions.extract_actions_for_agents(
+        cgs.graph, agents, num_agents=cgs.get_number_of_agents()
+    )
     logger.debug("Actions per agent: %s", actions_per_agent)
 
     agent_actions = {}

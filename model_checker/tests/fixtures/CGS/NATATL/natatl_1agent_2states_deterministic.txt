@@ -1,0 +1,16 @@
+# A valid deterministic CGS: action A advances to a, IDLE is an ordinary choice.
+Transition
+I A
+0 I,A
+Unknown_Transition_by
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+a
+Labelling
+0
+1
+Number_of_agents
+1
