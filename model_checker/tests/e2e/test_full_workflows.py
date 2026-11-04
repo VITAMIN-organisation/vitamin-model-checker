@@ -56,7 +56,10 @@ class TestBasicModelCheckingWorkflow:
     def test_additional_logics_complete_workflow(self, test_data_dir):
         """End-to-end checks for NatATL, COTL, CapATL, OL, RBATL, RABATL."""
         natatl_path = test_data_dir / "CGS/NATATL/natatl_1agent_4states_standard.txt"
-        cotl_path = test_data_dir / "costCGS/COTL/cotl_model.txt"
+        cotl_path = (
+            test_data_dir
+            / "ObstructionModel/COTL/cotl_attack_graph_3demons_6states.txt"
+        )
         capatl_path = test_data_dir / "capCGS/CAPATL/capatl_3agents_3states_example.txt"
         ol_path = test_data_dir / "costCGS/OL/ol_2agents_medium_6states_costs.txt"
         rbatl_path = (
@@ -69,10 +72,10 @@ class TestBasicModelCheckingWorkflow:
         natatl_result = natatl_mem_check("<{1},1>Fa", str(natatl_path))
         assert natatl_result.get("Satisfiability") is True
 
-        cotl_result = cotl_check("<1><5>F g", str(cotl_path))
+        cotl_result = cotl_check("<1,3><1> G !q", str(cotl_path))
         assert "error" not in cotl_result
         cotl_states = extract_states_from_result(cotl_result)
-        assert cotl_states == {"s0", "s2", "s3", "s4", "s5"}
+        assert cotl_states == {"s0", "s1", "s3"}
         assert ": True" in cotl_result.get("initial_state", "")
 
         capatl_result = capatl_check("<{1}>F g", str(capatl_path))

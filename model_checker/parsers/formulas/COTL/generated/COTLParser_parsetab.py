@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'rightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAND COALITION_DEMONIC EVENTUALLY EVENTUALLY FALSE GLOBALLY GLOBALLY IMPLIES LPAREN NEXT NEXT NOT OR PROP RELEASE RPAREN TRUE UNTIL UNTIL WEAKexpression : COALITION_DEMONIC expression UNTIL expression\n        | COALITION_DEMONIC expression WEAK expression\n        | COALITION_DEMONIC expression RELEASE expressionexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : NOT expressionexpression : LPAREN expression RPARENexpression : FALSE\n        | TRUEexpression : COALITION_DEMONIC GLOBALLY expression\n        | COALITION_DEMONIC NEXT expression\n        | COALITION_DEMONIC EVENTUALLY expressionexpression : PROP'
+_lr_signature = 'rightIMPLIESleftORleftANDrightNOTrightUNTILRELEASEWEAKrightGLOBALLYNEXTWEAK_NEXTEVENTUALLYAND EVENTUALLY EVENTUALLY FALSE GLOBALLY GLOBALLY IMPLIES LEGION LPAREN NEXT NEXT NOT OR PROP RELEASE RPAREN TRUE UNTIL UNTIL WEAK WEAK_NEXTexpression : LEGION NEXT expression\n        | LEGION WEAK_NEXT expression\n        | LEGION EVENTUALLY expression\n        | LEGION GLOBALLY expressionexpression : LEGION expression UNTIL expression\n        | LEGION expression RELEASE expression\n        | LEGION expression WEAK expression\n        | LEGION LPAREN expression UNTIL expression RPAREN\n        | LEGION LPAREN expression RELEASE expression RPAREN\n        | LEGION LPAREN expression WEAK expression RPARENexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : NOT expressionexpression : LPAREN expression RPARENexpression : FALSE\n        | TRUEexpression : PROP'
     
-_lr_action_items = {'COALITION_DEMONIC':([0,2,3,4,8,9,10,12,13,14,20,21,22,],[2,2,2,2,2,2,2,2,2,2,2,2,2,]),'NOT':([0,2,3,4,8,9,10,12,13,14,20,21,22,],[3,3,3,3,3,3,3,3,3,3,3,3,3,]),'LPAREN':([0,2,3,4,8,9,10,12,13,14,20,21,22,],[4,4,4,4,4,4,4,4,4,4,4,4,4,]),'FALSE':([0,2,3,4,8,9,10,12,13,14,20,21,22,],[5,5,5,5,5,5,5,5,5,5,5,5,5,]),'TRUE':([0,2,3,4,8,9,10,12,13,14,20,21,22,],[6,6,6,6,6,6,6,6,6,6,6,6,6,]),'PROP':([0,2,3,4,8,9,10,12,13,14,20,21,22,],[7,7,7,7,7,7,7,7,7,7,7,7,7,]),'$end':([1,5,6,7,15,17,18,19,23,24,25,26,27,28,29,],[0,-9,-10,-14,-7,-4,-5,-6,-11,-12,-13,-8,-1,-2,-3,]),'AND':([1,5,6,7,11,15,16,17,18,19,23,24,25,26,27,28,29,],[8,-9,-10,-14,8,-7,8,-4,8,8,-11,-12,-13,-8,-1,8,8,]),'OR':([1,5,6,7,11,15,16,17,18,19,23,24,25,26,27,28,29,],[9,-9,-10,-14,9,-7,9,-4,-5,9,-11,-12,-13,-8,-1,9,9,]),'IMPLIES':([1,5,6,7,11,15,16,17,18,19,23,24,25,26,27,28,29,],[10,-9,-10,-14,10,-7,10,-4,-5,10,-11,-12,-13,-8,-1,10,10,]),'GLOBALLY':([2,],[12,]),'NEXT':([2,],[13,]),'EVENTUALLY':([2,],[14,]),'UNTIL':([5,6,7,11,15,17,18,19,23,24,25,26,27,28,29,],[-9,-10,-14,20,-7,-4,-5,-6,-11,-12,-13,-8,-1,-2,-3,]),'WEAK':([5,6,7,11,15,17,18,19,23,24,25,26,27,28,29,],[-9,-10,-14,21,-7,-4,-5,-6,-11,-12,-13,-8,-1,-2,-3,]),'RELEASE':([5,6,7,11,15,17,18,19,23,24,25,26,27,28,29,],[-9,-10,-14,22,-7,-4,-5,-6,-11,-12,-13,-8,-1,-2,-3,]),'RPAREN':([5,6,7,15,16,17,18,19,23,24,25,26,27,28,29,],[-9,-10,-14,-7,26,-4,-5,-6,-11,-12,-13,-8,-1,-2,-3,]),}
+_lr_action_items = {'LEGION':([0,2,3,4,8,9,10,11,13,14,15,16,23,24,25,34,35,36,],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,]),'NOT':([0,2,3,4,8,9,10,11,13,14,15,16,23,24,25,34,35,36,],[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,]),'LPAREN':([0,2,3,4,8,9,10,11,13,14,15,16,23,24,25,34,35,36,],[3,16,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,]),'FALSE':([0,2,3,4,8,9,10,11,13,14,15,16,23,24,25,34,35,36,],[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,]),'TRUE':([0,2,3,4,8,9,10,11,13,14,15,16,23,24,25,34,35,36,],[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,]),'PROP':([0,2,3,4,8,9,10,11,13,14,15,16,23,24,25,34,35,36,],[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,]),'$end':([1,5,6,7,18,19,20,21,22,26,27,28,30,31,32,33,40,41,42,],[0,-16,-17,-18,-14,-11,-12,-13,-1,-2,-3,-4,-15,-5,-6,-7,-8,-9,-10,]),'AND':([1,5,6,7,12,17,18,19,20,21,22,26,27,28,29,30,31,32,33,37,38,39,40,41,42,],[8,-16,-17,-18,8,8,-14,-11,8,8,-1,-2,-3,-4,8,-15,-5,-6,-7,8,8,8,-8,-9,-10,]),'OR':([1,5,6,7,12,17,18,19,20,21,22,26,27,28,29,30,31,32,33,37,38,39,40,41,42,],[9,-16,-17,-18,9,9,-14,-11,-12,9,-1,-2,-3,-4,9,-15,-5,-6,-7,9,9,9,-8,-9,-10,]),'IMPLIES':([1,5,6,7,12,17,18,19,20,21,22,26,27,28,29,30,31,32,33,37,38,39,40,41,42,],[10,-16,-17,-18,10,10,-14,-11,-12,10,-1,-2,-3,-4,10,-15,-5,-6,-7,10,10,10,-8,-9,-10,]),'NEXT':([2,],[11,]),'WEAK_NEXT':([2,],[13,]),'EVENTUALLY':([2,],[14,]),'GLOBALLY':([2,],[15,]),'UNTIL':([5,6,7,12,18,19,20,21,22,26,27,28,29,30,31,32,33,40,41,42,],[-16,-17,-18,23,-14,-11,-12,-13,-1,-2,-3,-4,34,-15,-5,-6,-7,-8,-9,-10,]),'RELEASE':([5,6,7,12,18,19,20,21,22,26,27,28,29,30,31,32,33,40,41,42,],[-16,-17,-18,24,-14,-11,-12,-13,-1,-2,-3,-4,35,-15,-5,-6,-7,-8,-9,-10,]),'WEAK':([5,6,7,12,18,19,20,21,22,26,27,28,29,30,31,32,33,40,41,42,],[-16,-17,-18,25,-14,-11,-12,-13,-1,-2,-3,-4,36,-15,-5,-6,-7,-8,-9,-10,]),'RPAREN':([5,6,7,17,18,19,20,21,22,26,27,28,29,30,31,32,33,37,38,39,40,41,42,],[-16,-17,-18,30,-14,-11,-12,-13,-1,-2,-3,-4,30,-15,-5,-6,-7,40,41,42,-8,-9,-10,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'expression':([0,2,3,4,8,9,10,12,13,14,20,21,22,],[1,11,15,16,17,18,19,23,24,25,27,28,29,]),}
+_lr_goto_items = {'expression':([0,2,3,4,8,9,10,11,13,14,15,16,23,24,25,34,35,36,],[1,12,17,18,19,20,21,22,26,27,28,29,31,32,33,37,38,39,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,9 +27,16 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> COALITION_DEMONIC expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',96),
-  ('expression -> COALITION_DEMONIC expression WEAK expression','expression',4,'p_expression_ternary','parser.py',97),
-  ('expression -> COALITION_DEMONIC expression RELEASE expression','expression',4,'p_expression_ternary','parser.py',98),
+  ('expression -> LEGION NEXT expression','expression',3,'p_expression_legion_unary','parser.py',88),
+  ('expression -> LEGION WEAK_NEXT expression','expression',3,'p_expression_legion_unary','parser.py',89),
+  ('expression -> LEGION EVENTUALLY expression','expression',3,'p_expression_legion_unary','parser.py',90),
+  ('expression -> LEGION GLOBALLY expression','expression',3,'p_expression_legion_unary','parser.py',91),
+  ('expression -> LEGION expression UNTIL expression','expression',4,'p_expression_legion_binary','parser.py',96),
+  ('expression -> LEGION expression RELEASE expression','expression',4,'p_expression_legion_binary','parser.py',97),
+  ('expression -> LEGION expression WEAK expression','expression',4,'p_expression_legion_binary','parser.py',98),
+  ('expression -> LEGION LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_legion_binary','parser.py',99),
+  ('expression -> LEGION LPAREN expression RELEASE expression RPAREN','expression',6,'p_expression_legion_binary','parser.py',100),
+  ('expression -> LEGION LPAREN expression WEAK expression RPAREN','expression',6,'p_expression_legion_binary','parser.py',101),
   ('expression -> expression AND expression','expression',3,'p_expression_binary','shared_parser.py',108),
   ('expression -> expression OR expression','expression',3,'p_expression_binary','shared_parser.py',109),
   ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','shared_parser.py',110),
@@ -37,8 +44,5 @@ _lr_productions = [
   ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',118),
   ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',122),
   ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',123),
-  ('expression -> COALITION_DEMONIC GLOBALLY expression','expression',3,'p_expression_unary','parser.py',126),
-  ('expression -> COALITION_DEMONIC NEXT expression','expression',3,'p_expression_unary','parser.py',127),
-  ('expression -> COALITION_DEMONIC EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',128),
   ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',127),
 ]

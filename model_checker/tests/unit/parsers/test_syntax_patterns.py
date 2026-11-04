@@ -11,7 +11,7 @@ from model_checker.parsers.game_structures.timed_cgs.constraint_syntax import (
     RESET_RE,
 )
 from model_checker.parsers.syntax_patterns import (
-    COTL_COALITION_BOUND_TOKEN,
+    COTL_LEGION_BUDGET_TOKEN,
     NATATL_CAPACITY_RE,
     OATL_COALITION_BUDGET_TOKEN,
     PROPOSITION_FULL_RE,
@@ -72,12 +72,12 @@ def test_wallet_constraint_pattern_rejects_unknown_operator():
 
 
 @pytest.mark.unit
-def test_cotl_bound_token_rejects_zero_and_leading_zeros():
-    assert re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1><5>")
-    assert re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1,2><3>")
-    assert not re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1><0>")
-    assert not re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1><05>")
-    assert not re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1>F")
+def test_cotl_legion_token_accepts_empty_legion_and_zero_budget():
+    assert re.fullmatch(COTL_LEGION_BUDGET_TOKEN, "<1,2><3>")
+    assert re.fullmatch(COTL_LEGION_BUDGET_TOKEN, "<><0>")
+    assert not re.fullmatch(COTL_LEGION_BUDGET_TOKEN, "<1><05>")
+    assert not re.fullmatch(COTL_LEGION_BUDGET_TOKEN, "<1,><2>")
+    assert not re.fullmatch(COTL_LEGION_BUDGET_TOKEN, "<1>F")
 
 
 @pytest.mark.unit

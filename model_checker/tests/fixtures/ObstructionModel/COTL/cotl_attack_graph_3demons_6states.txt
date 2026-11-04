@@ -1,0 +1,44 @@
+# MODEL: Attack graph of the case study (Sec. 5, Figure 2) in Catta, Leneutre,
+# Malvone, Murano, "Coalition Obstruction Temporal Logic", IJCAI 2025.
+
+# LOGIC: COTL
+
+# DESCRIPTION: The attacker starts in s0 and attacks I1 (s1) or I3 (s3), then
+# I2 (s2_1 or s2_2), then the target server s2_3, where q holds. Demons 1, 2, 3
+# are the security teams ST1, ST2, ST3. ST1 can block attack a1 (edge s1 ->
+# s2_1) and ST3 can block a2 (edge s3 -> s2_2). Attacks a0^1 and a0^2 cannot be
+# blocked. ST2 can block a2^1 and a2^2, but b2^1 and b2^2 reach the target over
+# the same edges, so its actions disable nothing. The paper gives no costs or
+# budget; here every block costs 1 and the examples use budget 1. The target
+# has no outgoing edge: the attack ends there.
+
+Transition
+0 1 1 0 0 0
+0 0 0 1 0 0
+0 0 0 0 1 0
+0 0 0 0 0 1
+0 0 0 0 0 1
+0 0 0 0 0 0
+Name_State
+s0 s1 s3 s2_1 s2_2 s2_3
+Initial_State
+s0
+Atomic_propositions
+q
+Labelling
+0
+0
+0
+0
+0
+1
+Number_of_demons
+3
+Demon_actions
+1 s1 block_a1 1
+3 s3 block_a2 1
+2 s2_1 block_a21 1
+2 s2_2 block_a22 1
+Curses
+s1 block_a1,*,* s2_1
+s3 *,*,block_a2 s2_2

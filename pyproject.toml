@@ -105,6 +105,7 @@ costCGS = "model_checker.parsers.game_structures.cost_cgs.cost_cgs:CostCGS"
 capCGS = "model_checker.parsers.game_structures.cap_cgs.cap_cgs:CapCGS"
 WalletCGS = "model_checker.parsers.game_structures.wallet_cgs.wallet_cgs:WalletCGS"
 timedCGS = "model_checker.parsers.game_structures.timed_cgs.timed_cgs:TimedCGS"
+ObstructionModel = "model_checker.parsers.game_structures.obstruction_model.obstruction_model:ObstructionModel"
 
 [project.entry-points."vitamin.benchmarks"]
 ATL = "model_checker.algorithms.explicit.ATL.ATL:model_checking"

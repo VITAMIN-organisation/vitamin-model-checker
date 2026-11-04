@@ -39,7 +39,9 @@ class _ParseAdaptError(Exception):
         self.response = response
 
 
-def _parse_and_adapt(cgs: "CGS", formula: str) -> tuple[Formula, cgs_adapter.AdaptedCGS]:
+def _parse_and_adapt(
+    cgs: "CGS", formula: str
+) -> tuple[Formula, cgs_adapter.AdaptedCGS]:
     """Parse `formula` and adapt `cgs`, the boilerplate every ATL_STAR entry
     point needs before it can do its own, different thing.
 

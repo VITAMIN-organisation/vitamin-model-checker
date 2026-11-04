@@ -1,11 +1,4 @@
-"""Demonic pre-image of OATL (Catta, Leneutre, Malvone, Murano, AAMAS 2024, Sec. 4).
-
-State s is in the pre-image of X for coalition A and budget n when some
-transition from s enters X and the Demon can erase, at total cost at most n,
-every joint action whose A-part cannot reach X. That erased set is D(s, A, X)
-in the proof of Proposition 1: the joint actions extending an A-action f with
-next(f, s) disjoint from X.
-"""
+"""Demon pre-image of OATL: states where the Demon, within its budget, can force a successor into a target set."""
 
 import math
 from collections.abc import Iterable
@@ -29,10 +22,9 @@ class JointTransition:
 
 @dataclass(frozen=True)
 class CoalitionMove:
-    """An A-action at one state: where its extensions lead and the cost to erase them all.
+    """A coalition move at one state: its successors and the cost to erase all its joint actions.
 
-    `uncosted_count` extensions have no cost in the model; the caller decides
-    what they cost (see `DemonicPreimage.__call__`).
+    `uncosted_count` counts its joint actions that have no cost in the model.
     """
 
     targets: frozenset[int]
@@ -45,7 +37,7 @@ def _erase_cost(cgs, action: str, state_name: str) -> float | None:
         costs = cgs.get_cost_for_action(action, state_name)
     except KeyError:
         return None
-    # A per-agent cost vector is summed into the single Demon cost $(s, a).
+    # A cost vector (one entry per agent) is summed into one Demon cost.
     return cost_to_scalar(costs)
 
 

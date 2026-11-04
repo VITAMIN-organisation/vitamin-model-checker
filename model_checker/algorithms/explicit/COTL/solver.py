@@ -1,5 +1,15 @@
-"""Formula tree solver for COTL model checking."""
+"""Bottom-up formula tree solver for COTL."""
 
+from model_checker.algorithms.explicit.COTL.operators import (
+    handle_eventually,
+    handle_globally,
+    handle_next,
+    handle_release,
+    handle_until,
+    handle_weak_next,
+    handle_weak_until,
+)
+from model_checker.algorithms.explicit.COTL.preimage import LegionSteps
 from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_and,
     handle_implies,
@@ -8,89 +18,58 @@ from model_checker.algorithms.explicit.shared.boolean_operators import (
 )
 from model_checker.algorithms.explicit.shared.solver_core import solve_formula_tree
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.parsers.game_structures.cgs import cgs_actions
 
-from .operators import (
-    handle_coalition_eventually,
-    handle_coalition_globally,
-    handle_coalition_next,
-    handle_coalition_release,
-    handle_coalition_until,
-    handle_coalition_weak,
-)
-
+_BOOLEAN_KEYS = {"NOT", "AND", "OR", "IMPLIES"}
 _UNARY = {
     "NOT": handle_not,
-    "GLOBALLY": handle_coalition_globally,
-    "NEXT": handle_coalition_next,
-    "EVENTUALLY": handle_coalition_eventually,
+    "NEXT": handle_next,
+    "WEAK_NEXT": handle_weak_next,
+    "EVENTUALLY": handle_eventually,
+    "GLOBALLY": handle_globally,
 }
 _BINARY = {
     "OR": handle_or,
     "AND": handle_and,
     "IMPLIES": handle_implies,
-    "UNTIL": handle_coalition_until,
-    "RELEASE": handle_coalition_release,
-    "WEAK": handle_coalition_weak,
+    "UNTIL": handle_until,
+    "RELEASE": handle_release,
+    "WEAK": handle_weak_until,
 }
 
 
-def _cotl_unary_key(parser_instance, val):
-    if parser_instance.verify("NOT", val):
-        return "NOT"
-    if parser_instance.verify("COALITION_DEMONIC", val):
-        if parser_instance.verify("GLOBALLY", val):
-            return "GLOBALLY"
-        if parser_instance.verify("NEXT", val):
-            return "NEXT"
-        if parser_instance.verify("EVENTUALLY", val):
-            return "EVENTUALLY"
+def _operator_key(parser, value, boolean_keys, temporal_keys):
+    for key in boolean_keys:
+        if parser.verify(key, value):
+            return key
+    if parser.verify("LEGION", value):
+        for key in temporal_keys:
+            if parser.verify(key, value):
+                return key
     return None
 
 
-def _cotl_binary_key(parser_instance, val):
-    if parser_instance.verify("OR", val):
-        return "OR"
-    if parser_instance.verify("AND", val):
-        return "AND"
-    if parser_instance.verify("IMPLIES", val):
-        return "IMPLIES"
-    if parser_instance.verify("COALITION_DEMONIC", val):
-        if parser_instance.verify("UNTIL", val):
-            return "UNTIL"
-        if parser_instance.verify("RELEASE", val):
-            return "RELEASE"
-        if parser_instance.verify("WEAK", val):
-            return "WEAK"
-    return None
+def _unary_key(parser, value):
+    return _operator_key(
+        parser, value, ("NOT",), ("NEXT", "WEAK_NEXT", "EVENTUALLY", "GLOBALLY")
+    )
 
 
-def solve_tree(cgs, node, solve_context):
-    """Recursively solve the COTL formula tree bottom-up."""
-    parser = FormulaParserFactory.get_parser_instance("COTL")
+def _binary_key(parser, value):
+    return _operator_key(
+        parser, value, ("OR", "AND", "IMPLIES"), ("UNTIL", "RELEASE", "WEAK")
+    )
+
+
+def solve_tree(model, root) -> None:
+    """Replace each node value with the set of states satisfying its subformula."""
     solve_formula_tree(
-        cgs,
-        node,
-        parser,
+        model,
+        root,
+        FormulaParserFactory.get_parser_instance("COTL"),
         _UNARY,
         _BINARY,
-        _cotl_unary_key,
-        _cotl_binary_key,
-        {"NOT", "AND", "OR", "IMPLIES"},
-        extra_args=(solve_context,),
+        _unary_key,
+        _binary_key,
+        _BOOLEAN_KEYS,
+        extra_args=(LegionSteps(model),),
     )
-
-
-def build_solve_context(graph):
-    """Build solve context with pre-image cache and coalition agent lookup."""
-    from model_checker.algorithms.explicit.shared.oatl_index_preimage import (
-        build_pre_by_index,
-    )
-
-    num_states = len(graph)
-    return {
-        "graph": graph,
-        "pre_by_index": build_pre_by_index(graph),
-        "all_states_index": set(range(num_states)),
-        "agents_set_for": cgs_actions.get_agents_from_coalition,
-    }

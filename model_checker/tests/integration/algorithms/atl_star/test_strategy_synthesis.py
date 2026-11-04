@@ -48,14 +48,18 @@ class TestSynthesizeStrategyCore:
         json.dumps(result["strategy"])  # must not raise
         moves = result["strategy"]["moves"]
         assert all(row["agent"] == 1 for row in moves)
-        assert {(r["agent"], r["action"]) for r in moves if r["state"] == "s0"} == {(1, "a")}
+        assert {(r["agent"], r["action"]) for r in moves if r["state"] == "s0"} == {
+            (1, "a")
+        }
 
         transitions = result["strategy"]["transitions"]
         s0_transitions = [t for t in transitions if t["source"]["state"] == "s0"]
         assert s0_transitions, "expected at least one recorded transition out of s0"
         for row in s0_transitions:
             joint = dict(row["joint_action"])
-            assert joint[1] == "a"  # agent 1's committed move, present in every full joint action
+            assert (
+                joint[1] == "a"
+            )  # agent 1's committed move, present in every full joint action
             assert row["target"]["state"] == "s1"  # the only way <<1>> X p can be won
         # agent 2 isn't in the coalition, so every real response of theirs must be covered
         assert {dict(row["joint_action"])[2] for row in s0_transitions} == {"IDLE", "O"}
@@ -137,7 +141,9 @@ class TestSynthesizeStrategyRealEntryPoint:
         assert strategy["transitions"]
         for row in strategy["transitions"]:
             target = (row["target"]["state"], row["target"]["memory"])
-            assert target in positions, f"no move recorded to continue replay from {target}"
+            assert (
+                target in positions
+            ), f"no move recorded to continue replay from {target}"
         assert {memory for state, memory in positions if state == "s3"} == {0, 1}
 
     def test_an_explicit_state_is_threaded_through(self, cgs_simple_parser):

@@ -1,19 +1,11 @@
 """COTL integration test fixtures."""
 
-from pathlib import Path
-
 import pytest
 
 
 @pytest.fixture
-def cotl_model_path(test_data_dir):
-    """Path to the COTL example model (shared by test_correctness and test_semantics)."""
-    return Path(test_data_dir) / "costCGS" / "COTL" / "cotl_model.txt"
-
-
-@pytest.fixture
-def cotl_model(test_data_dir):
-    """Load COTL costCGS model (cotl_model.txt). Use when a parser is needed."""
-    from model_checker.tests.helpers.model_helpers import load_test_model
-
-    return load_test_model(test_data_dir, "costCGS/COTL/cotl_model.txt")
+def attack_graph(test_data_dir):
+    """Path of the case-study attack graph with three security teams as demons."""
+    return str(
+        test_data_dir / "ObstructionModel/COTL/cotl_attack_graph_3demons_6states.txt"
+    )

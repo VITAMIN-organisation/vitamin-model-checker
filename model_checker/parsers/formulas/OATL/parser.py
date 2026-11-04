@@ -3,7 +3,7 @@
 Supported:
 - Coalition and Demon budget (`<1,2><5>F p`, `<1><0>G p`), budget n >= 0.
 - Boolean connectives (&&, ||, !, ->) and temporal ops (X, F, G, U, R, W);
-  binary ops also in the paper's form `<1><5> (p U q)`.
+  binary ops with or without parentheses (`<1><5> (p U q)`, `<1><5> p U q`).
 
 Rejects:
 - Missing budget after a coalition (e.g., `<1>F p`).
@@ -90,8 +90,7 @@ class OATLParser(BaseLogicParser):
     # === Tokens ===
     t_PROP = PROPOSITION_TOKEN_PATTERN
     t_COALITION_DEMONIC = OATL_COALITION_BUDGET_TOKEN
-    # The paper allows any budget n >= 0 (Def. 3); budget 0 lets the Demon
-    # erase only zero-cost actions.
+    # Budget 0 is valid: the Demon can then erase only zero-cost actions.
     _bound_pattern = NON_NEGATIVE_INT
     _min_bound = 0
 
@@ -116,7 +115,7 @@ class OATLParser(BaseLogicParser):
         validate_coalition_bound_token(
             p[1], self.max_coalition, bound_pattern=self._bound_pattern
         )
-        # Both <A><n> phi U psi and the paper's <A><n> (phi U psi).
+        # Accepts <A><n> phi U psi and <A><n> (phi U psi).
         if len(p) == 5:
             p[0] = (p[1] + p[3], p[2], p[4])
         else:

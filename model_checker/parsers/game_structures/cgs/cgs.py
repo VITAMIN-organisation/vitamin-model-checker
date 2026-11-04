@@ -185,9 +185,6 @@ class CGS:
 
         Raises ValueError with a list of issues if anything is wrong.
         """
-        errors = cgs_validation.collect_model_structure_errors(self)
-        if errors:
-            raise ValueError(
-                "Model structure validation failed:\n"
-                + "\n".join(f"  - {e}" for e in errors)
-            )
+        cgs_validation.raise_structure_errors(
+            cgs_validation.collect_model_structure_errors(self)
+        )

@@ -1,9 +1,4 @@
-"""OATL temporal operators as fixpoints of the demonic pre-image.
-
-X is Proposition 1 of Catta et al. (AAMAS 2024); U and R are the least and
-greatest fixpoints of Theorem 1. F, G and W are the derived forms
-F phi = true U phi, G phi = false R phi and phi W psi = psi R (phi or psi).
-"""
+"""OATL temporal operators as fixpoints of the Demon pre-image in preimage.py."""
 
 import math
 
@@ -27,10 +22,10 @@ def _states(cgs, node_value: str) -> set[int]:
 
 
 def _solve(cgs, node, pre: DemonicPreimage, fixpoint) -> None:
-    """Store `fixpoint(step)` on the node, with `step` the bounded pre-image.
+    """Compute the fixpoint and store the resulting states on the node.
 
-    The pre-image only grows as costs fall, so pricing missing costs at +inf and
-    at 0 brackets every possible answer: if both agree, the gaps do not matter.
+    Missing costs are tried at +inf and at 0. If the two results differ, the
+    answer depends on those costs and the check fails.
     """
     coalition, bound = extract_coalition_and_cost(node.value)
 

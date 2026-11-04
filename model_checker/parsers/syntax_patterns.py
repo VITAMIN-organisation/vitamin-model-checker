@@ -59,12 +59,11 @@ NATATL_COALITION_TOKEN = rf"<{{{AGENT_LIST}}},\s*\d+>"
 # CapATL paper-style agent set: <{1,2}> (no numeric formula bound).
 CAPATL_COALITION_TOKEN = rf"<{{({AGENT_LIST})}}>"
 
-# OATL: <1,2><n>, the Demon's budget per step; any n >= 0 (Catta et al.,
-# AAMAS 2024, Def. 3).
+# OATL: <coalition><n>, n >= 0 is the Demon's budget per step.
 OATL_COALITION_BUDGET_TOKEN = rf"<{AGENT_LIST}><{NON_NEGATIVE_INT}>"
 
-# COTL: <1,2><5> with a strictly positive bound.
-COTL_COALITION_BOUND_TOKEN = rf"<{AGENT_LIST}><{POSITIVE_INT}>"
+# COTL: <legion><n>; the legion of demons may be empty, n >= 0.
+COTL_LEGION_BUDGET_TOKEN = rf"<(?:{AGENT_LIST})?><{NON_NEGATIVE_INT}>"
 
 # RBATL resource bound: <1,2><3> (bound may be a list; 0 rejected later).
 COALITION_BOUND_TOKEN = rf"<{AGENT_LIST}><{AGENT_LIST}>"

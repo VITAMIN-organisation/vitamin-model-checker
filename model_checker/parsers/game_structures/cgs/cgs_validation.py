@@ -138,18 +138,43 @@ def validate_total_transitions(graph: list[list], states) -> list[str]:
     return errors
 
 
+def raise_structure_errors(errors: list[str]) -> None:
+    """Raise one ValueError listing every structure error, if there is any."""
+    if errors:
+        raise ValueError(
+            "Model structure validation failed:\n"
+            + "\n".join(f"  - {e}" for e in errors)
+        )
+
+
+def collect_state_errors(model) -> list[str]:
+    """Check that the model has states and that its initial state is one of them."""
+    errors = []
+    if not hasattr(model, "states") or len(model.states) == 0:
+        errors.append(
+            "Model must have at least one state (Name_State section is missing or empty)"
+        )
+
+    if hasattr(model, "initial_state") and model.initial_state:
+        if hasattr(model, "states") and len(model.states) > 0:
+            if model.initial_state not in model.states:
+                errors.append(
+                    f"Initial state '{model.initial_state}' not found in state list"
+                )
+        else:
+            errors.append("Cannot validate initial state: no states defined")
+    else:
+        errors.append("Initial_State section is missing or empty")
+    return errors
+
+
 def collect_model_structure_errors(cgs) -> list[str]:
     """Run all structure checks on a CGS instance and return a list of error messages.
 
     Covers states, number of agents, initial state, transition matrix, and labelling.
     Empty list means the model structure is valid.
     """
-    errors = []
-
-    if not hasattr(cgs, "states") or len(cgs.states) == 0:
-        errors.append(
-            "Model must have at least one state (Name_State section is missing or empty)"
-        )
+    errors = collect_state_errors(cgs)
 
     try:
         num_agents = cgs.get_number_of_agents()
@@ -157,17 +182,6 @@ def collect_model_structure_errors(cgs) -> list[str]:
             errors.append("Number_of_agents must be greater than 0")
     except ValueError as e:
         errors.append(str(e))
-
-    if hasattr(cgs, "initial_state") and cgs.initial_state:
-        if hasattr(cgs, "states") and len(cgs.states) > 0:
-            if cgs.initial_state not in cgs.states:
-                errors.append(
-                    f"Initial state '{cgs.initial_state}' not found in state list"
-                )
-        else:
-            errors.append("Cannot validate initial state: no states defined")
-    else:
-        errors.append("Initial_State section is missing or empty")
 
     num_states = (
         len(cgs.states) if hasattr(cgs.states, "__len__") and len(cgs.states) > 0 else 0

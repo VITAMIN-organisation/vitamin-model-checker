@@ -1,65 +1,123 @@
-"""Coalition-sum cost pre-image helpers for COTL."""
+"""One-step operators of COTL: the states from which a legion of demons can steer the path into a target set."""
 
-from model_checker.algorithms.explicit.shared.oatl_index_preimage import cross_indices
-from model_checker.parsers.game_structures.cgs import cgs_actions
+import heapq
+import math
+from dataclasses import dataclass
 
-
-def get_cached_coalition_cost(cgs, action, state, agents_set):
-    """Return coalition-summed cost for (action, state, agents_set), using per-cgs cache."""
-    if not hasattr(cgs, "_cost_cache"):
-        cgs._cost_cache = {}
-    key = (action, state, tuple(agents_set))
-    if key in cgs._cost_cache:
-        return cgs._cost_cache[key]
-    try:
-        costs = cgs.get_cost_for_action(action, state)
-        if isinstance(costs[0], list):
-            aux = sum(costs[0][int(i) - 1] for i in agents_set)
-        else:
-            aux = sum(costs[int(i) - 1] for i in agents_set)
-    except (KeyError, IndexError, AttributeError, TypeError):
-        aux = None
-    cgs._cost_cache[key] = aux
-    return aux
+from model_checker.parsers.game_structures.obstruction_model.obstruction_model import (
+    ObstructionModel,
+)
 
 
-def min_coalition_action_cost(cgs, action_set, state, coalition, agents_set=None):
-    """Minimum coalition-summed cost among actions in action_set at state."""
-    if agents_set is None:
-        agents_set = cgs_actions.get_agents_from_coalition(coalition)
-    minimum = None
-    for action in action_set:
-        cost = get_cached_coalition_cost(cgs, action, state, agents_set)
-        if cost is None:
-            continue
-        if minimum is None or cost < minimum:
-            minimum = cost
-    return minimum
+@dataclass(frozen=True)
+class LegionChoice:
+    """A legion action at one state: its cost and the successor sets the other demons can leave."""
+
+    cost: int
+    outcomes: frozenset[frozenset[int]]
 
 
-def cross_index(
-    cgs,
-    max_cost,
-    coalition,
-    state_indices,
-    solve_context,
-    agents_set,
-    base_action_cache,
-):
-    """Cost-bounded pre-image in index space using coalition-summed costs."""
+def _cheapest_unlisted_action(
+    member_actions: list[dict[str, int]], listed: set[tuple[str, ...]]
+) -> int | None:
+    """Cost of the cheapest legion action not in `listed`, or None if every action is listed.
 
-    def affordable(cgs_inner, actions, state_name, bound):
-        cost = min_coalition_action_cost(
-            cgs_inner, actions, state_name, coalition, agents_set=agents_set
-        )
-        return cost is not None and cost <= bound
+    Best-first search over actions sorted by cost; it pops at most len(listed) + 1 actions.
+    """
+    ordered = [
+        sorted(a.items(), key=lambda item: (item[1], item[0])) for a in member_actions
+    ]
 
-    return cross_indices(
-        cgs,
-        max_cost,
-        coalition,
-        state_indices,
-        solve_context,
-        base_action_cache,
-        affordable,
+    def cost(index: tuple[int, ...]) -> int:
+        return sum(ordered[m][i][1] for m, i in enumerate(index))
+
+    start: tuple[int, ...] = (0,) * len(ordered)
+    frontier: list[tuple[int, tuple[int, ...]]] = [(cost(start), start)]
+    seen: set[tuple[int, ...]] = {start}
+    while frontier:
+        total, index = heapq.heappop(frontier)
+        if tuple(ordered[m][i][0] for m, i in enumerate(index)) not in listed:
+            return total
+        for m in range(len(index)):
+            if index[m] + 1 < len(ordered[m]):
+                following = index[:m] + (index[m] + 1,) + index[m + 1 :]
+                if following not in seen:
+                    seen.add(following)
+                    heapq.heappush(frontier, (cost(following), following))
+    return None
+
+
+def _choices_at(
+    model: ObstructionModel, state: int, members: tuple[int, ...]
+) -> tuple[LegionChoice, ...]:
+    successors = model.successors[state]
+    member_actions = [model.actions_of(state, d) for d in members]
+    # Demons with no declared action here only idle, so they add a factor of 1.
+    curses_per_action = math.prod(
+        len(declared) + 1
+        for d, declared in model.demon_actions[state].items()
+        if d not in members
     )
+
+    posts_by_action: dict[tuple[str, ...], list[frozenset[int]]] = {}
+    for curse, disabled in model.curses[state].items():
+        action = tuple(curse[d] for d in members)
+        posts_by_action.setdefault(action, []).append(successors - disabled)
+
+    choices = []
+    for action, posts in posts_by_action.items():
+        outcomes = set(posts)
+        # A curse the model does not list disables nothing.
+        if len(posts) < curses_per_action:
+            outcomes.add(successors)
+        cost = sum(costs[a] for costs, a in zip(member_actions, action, strict=True))
+        choices.append(LegionChoice(cost, frozenset(outcomes)))
+
+    # Legion actions that no listed curse extends all leave every edge enabled,
+    # so only the cheapest of them is kept.
+    unlisted_cost = _cheapest_unlisted_action(member_actions, set(posts_by_action))
+    if unlisted_cost is not None:
+        choices.append(LegionChoice(unlisted_cost, frozenset({successors})))
+    return tuple(choices)
+
+
+class LegionSteps:
+    """One-step operators for one model; each legion's choices are built once."""
+
+    def __init__(self, model: ObstructionModel):
+        self._model = model
+        self._choices: dict[tuple[int, ...], list[tuple[LegionChoice, ...]]] = {}
+
+    def _choices_for(self, legion: tuple[int, ...]) -> list[tuple[LegionChoice, ...]]:
+        if legion not in self._choices:
+            members = tuple(d - 1 for d in legion)
+            self._choices[legion] = [
+                _choices_at(self._model, s, members)
+                for s in range(len(self._model.successors))
+            ]
+        return self._choices[legion]
+
+    def _step(
+        self, legion: tuple[int, ...], budget: int, target: set[int], may_stop: bool
+    ) -> set[int]:
+        result = set()
+        for state, choices in enumerate(self._choices_for(legion)):
+            for choice in choices:
+                if choice.cost <= budget and all(
+                    (post or may_stop) and post <= target for post in choice.outcomes
+                ):
+                    result.add(state)
+                    break
+        return result
+
+    def next_in(
+        self, legion: tuple[int, ...], budget: int, target: set[int]
+    ) -> set[int]:
+        """States where the legion can force a next state, and every next state is in target."""
+        return self._step(legion, budget, target, may_stop=False)
+
+    def next_in_or_stop(
+        self, legion: tuple[int, ...], budget: int, target: set[int]
+    ) -> set[int]:
+        """States where the legion can make every next state, if any, be in target."""
+        return self._step(legion, budget, target, may_stop=True)

@@ -65,6 +65,9 @@ class TestCgsParserConstants:
             "Invariants",
             "Wallets",
             "Preorder",
+            "Number_of_demons",
+            "Demon_actions",
+            "Curses",
         }
         assert cgs_parser.EXTENSION_SECTION_HEADERS == expected
 

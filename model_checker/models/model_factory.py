@@ -1,7 +1,8 @@
 """Factory for creating game structure parser instances.
 
 Detects game structure type (CGS, costCGS, capCGS, WalletCGS, timedCGS,
-BCGS, BirelationalMatrix) from files and instantiates the correct parser.
+BCGS, BirelationalMatrix, ObstructionModel) from files and instantiates the
+correct parser.
 """
 
 import os
@@ -15,6 +16,9 @@ from model_checker.parsers.game_structures.birelational_matrix.birelational_matr
 from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
+from model_checker.parsers.game_structures.obstruction_model.obstruction_model import (
+    ObstructionModel,
+)
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.wallet_cgs.wallet_cgs import WalletCGS
 
@@ -43,6 +47,9 @@ _MODEL_SECTION_HEADERS = frozenset(
         "Capacities",
         "Capacities_assignment",
         "Actions_for_capacities",
+        "Number_of_demons",
+        "Demon_actions",
+        "Curses",
     }
 )
 
@@ -97,10 +104,12 @@ def detect_model_type_from_content(content: str) -> str:
         content: Model file content as string.
 
     Returns:
-        One of CGS, costCGS, capCGS, WalletCGS, timedCGS, BCGS, or
-        BirelationalMatrix.
+        One of CGS, costCGS, capCGS, WalletCGS, timedCGS, BCGS,
+        BirelationalMatrix, or ObstructionModel.
     """
     lines = {line.strip() for line in content.splitlines()}
+    if "Number_of_demons" in lines:
+        return "ObstructionModel"
     if "Wallets" in lines:
         return "WalletCGS"
     if "Clocks" in lines or "Clock_constraints" in lines:
@@ -133,6 +142,7 @@ _MODEL_TYPE_CONSTRUCTORS: dict[
     "timedCGS": TimedCGS,
     "BCGS": BCGS,
     "BirelationalMatrix": BirelationalMatrix,
+    "ObstructionModel": ObstructionModel,
 }
 
 

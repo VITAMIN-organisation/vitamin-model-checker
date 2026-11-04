@@ -1,9 +1,4 @@
-"""OATL model checking: `<A><n> theta` holds when the Demon can erase joint
-actions of total cost at most n per step so that, whatever coalition A does,
-some remaining path satisfies theta.
-
-The attack model and its least budget 3 come from Catta et al., AAMAS 2024, Sec. 3.
-"""
+"""OATL model checking tests; the least budget 3 on the attack model is the one stated in the OATL paper."""
 
 import pytest
 

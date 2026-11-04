@@ -1,1 +1,1 @@
-METADATA = {"model_type": "costCGS"}
+METADATA = {"model_type": "ObstructionModel"}

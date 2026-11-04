@@ -78,7 +78,10 @@ LOGIC_CONFIG: LogicConfig = {
         ("CGS", "NATATL", "natatl_1agent_4states_standard.txt"),
     ),
     "OATL": (oatl_check, ("costCGS", "OATL", "oatl_3agents_medium_6states_costs.txt")),
-    "COTL": (cotl_check, ("costCGS", "COTL", "cotl_model.txt")),
+    "COTL": (
+        cotl_check,
+        ("ObstructionModel", "COTL", "cotl_attack_graph_3demons_6states.txt"),
+    ),
     "OL": (ol_check, ("costCGS", "OL", "ol_2agents_medium_6states_costs.txt")),
     "RABATL": (
         __import__(

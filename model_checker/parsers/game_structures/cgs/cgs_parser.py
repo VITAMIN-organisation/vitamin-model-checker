@@ -37,6 +37,9 @@ EXTENSION_SECTION_HEADERS = frozenset(
         "Invariants",
         "Wallets",
         "Preorder",
+        "Number_of_demons",
+        "Demon_actions",
+        "Curses",
     }
 )
 

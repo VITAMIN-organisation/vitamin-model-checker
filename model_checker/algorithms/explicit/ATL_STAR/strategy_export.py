@@ -97,7 +97,9 @@ def export_strategy(witness: Witness) -> StrategyExport:
             short while still reporting the overall result as satisfied.
     """
     if witness.nested:
-        raise ValueError("export_strategy does not support nested coalition witnesses yet")
+        raise ValueError(
+            "export_strategy does not support nested coalition witnesses yet"
+        )
 
     outgoing: dict[Hashable, list[tuple[Hashable, Hashable]]] = {}
     for (source, symbol), targets in witness.product_ts.transitions.items():
@@ -118,7 +120,9 @@ def export_strategy(witness: Witness) -> StrategyExport:
         coalition_action = _as_joint_action(coalition_action, position=(state, memory))
 
         for agent, action in sorted(coalition_action):
-            moves.append({"state": state, "memory": memory, "agent": agent, "action": action})
+            moves.append(
+                {"state": state, "memory": memory, "agent": agent, "action": action}
+            )
 
         for symbol, target in outgoing.get(position, []):
             full_action = cast("frozenset[tuple[Hashable, Hashable]]", symbol)

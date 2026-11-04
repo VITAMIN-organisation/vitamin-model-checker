@@ -1,11 +1,4 @@
-"""
-OATL model checker over costCGS models (Catta et al., AAMAS 2024).
-
-`<A><n> theta` holds when the Demon has a strategy that, at every step, erases
-joint actions of total cost at most `n` so that, whatever coalition `A` does,
-some remaining path satisfies `theta`. Agents outside `A` resolve the
-remaining choices in the Demon's favour.
-"""
+"""OATL model checking entry point; semantics in docs/OATL/algorithm.md."""
 
 from model_checker.algorithms.explicit.OATL.solver import solve_tree
 from model_checker.algorithms.explicit.shared import (
@@ -44,6 +37,6 @@ def _core_oatl_checking(cgs, formula):
     return format_model_checking_result(root.value, initial_state, is_satisfied)
 
 
-# No ATL prefilter: <A><n> phi does not imply <A> phi, because the Demon and the
-# agents outside A cooperate, so an ATL "False" would be wrong for OATL.
+# No ATL prefilter: agents outside the coalition help the Demon, so
+# <A><n> phi can hold where ATL <A> phi fails.
 model_checking = create_model_checking_entry("OATL", _core_oatl_checking)
