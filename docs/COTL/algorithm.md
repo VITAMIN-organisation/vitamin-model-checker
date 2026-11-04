@@ -21,7 +21,7 @@ Coalition and bound: `<1,2><5>`. `R` and `W` are accepted and implemented here.
 ## Semantic denotations
 
 Cost-bounded coalition strategy synthesis via dedicated least / greatest
-fixpoints in `COTL/`, not OATL per-step filtering.
+fixpoints in `COTL/`, independent of the OATL checker.
 
 Implementation techniques (cost caches + reset, `pre_by_index`, bit-vector): [algorithm_design.md](../algorithm_design.md).
 
@@ -31,7 +31,7 @@ Implementation techniques (cost caches + reset, `pre_by_index`, bit-vector): [al
 |---|---|---|
 | Syntax | `<A><k>` | `<1,2><5>` (coalition then bound) |
 | Engine | Cost-bounded ATL | Dedicated COTL fixpoints |
-| R / W | Present | Implemented (OATL rejects them) |
+| R / W | Present | Implemented |
 
 ## Model-checking pipeline
 

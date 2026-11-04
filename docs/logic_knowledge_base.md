@@ -40,7 +40,7 @@ to locate:
 - [TCTL](TCTL/algorithm.md)
 - [TOL](TOL/algorithm.md)
 
-**Logic names:** Full names are used only for logics defined in the VITAMIN paper and standard references (CTL, LTL, ATL). Other implemented logics (OATL, OL, COTL, etc.) are listed by acronym only; their expansions are not fixed in the project literature.
+**Logic names:** Full names are used for logics defined in the VITAMIN paper and standard references (CTL, LTL, ATL), and for OATL, whose section cites its defining paper. Other implemented logics (OL, COTL, etc.) are listed by acronym only; their expansions are not fixed in the project literature.
 
 ---
 
@@ -208,57 +208,65 @@ See [NatSL algorithm](NatSL/algorithm.md) and [NatSL semantics](NatSL/semantics.
 
 ### Theoretical Background
 
-OATL extends ATL with demonic cost bounds on coalition strategies over
-`costCGS` models.
+OATL (Obstruction Alternating-time Temporal Logic) is defined in D. Catta,
+J. Leneutre, V. Malvone, A. Murano, "Obstruction Alternating-time Temporal
+Logic: a Strategic Logic to Reason about Dynamic Models", AAMAS 2024. Besides
+the agents of a `costCGS`, a single extra player, the Demon, can temporarily
+erase transitions. Erasing joint action `a` at state `s` costs `$(s, a)`.
 
 **Standard Syntax:**
-- **Bounded Coalition**: `<A><k> p`
-    - `A`: The coalition of agents.
-    - `k`: A positive integer cost bound.
-- **Operators**: Theory often includes `W` (Weak Until) and `R` (Release); see
-  implementation notes for what VITAMIN accepts.
+- **Bounded Coalition**: `[[A]]_n theta` in the paper, `<A><n> theta` in VITAMIN
+    - `A`: the coalition of agents.
+    - `n`: the Demon's budget per step.
+- **Operators**: `X`, `U`, `R` are primitive; `F`, `G`, `W` are derived.
 
-**Semantics (VITAMIN):**
-- `<A><k> phi` means coalition `A` has a strategy to enforce `phi` such that
-  **every chosen transition** has cost at most `k` (per-step affordability).
-  The bound is **not** a cumulative sum along the play (contrast with OL).
+**Semantics:**
+- `<A><n> theta` holds at `s` when the Demon has a strategy that, at each step,
+  erases a set of joint actions of total cost at most `n` (never all of them),
+  such that for every strategy of `A`, some remaining path satisfies `theta`.
+  The agents outside `A` resolve the remaining choices in the Demon's favour.
+- The budget applies to each step separately; it is not a sum along the path.
+- Example: on the Figure 1 model of the paper
+  (`tests/fixtures/costCGS/OATL/oatl_3agents_medium_6states_costs.txt`),
+  `<1,2><2> G !(r && s && g)` is false at `s0` and `<1,2><3> G !(r && s && g)`
+  is true: the least budget that stops the attack is 3, as the paper states.
 
 ### Current Implementation
 
 **Parser Location:** `model_checker/parsers/formulas/OATL/parser.py`
 
 **Supported Syntax:**
-1.  **Format**: `<coalition><bound>` (e.g., `<1,2><10>`).
+1.  **Format**: `<coalition><budget>` (e.g., `<1,2><10>`).
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W` (and their keywords).
 3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 4.  **Boolean Constants**: Supports `true` and `false`.
 
 **Validation Rules:**
-- **Bound Requirement**: A bound is mandatory for every coalition-prefixed temporal operator.
-- **Positive Bound**: The bound `k` must be a positive integer (`k >= 1`) with no leading zeros.
+- **Budget Requirement**: A budget is mandatory for every coalition-prefixed temporal operator.
+- **Budget Value**: The budget `n` is an integer `n >= 0` with no leading zeros. With `n = 0` the Demon can erase only zero-cost joint actions.
+- **Parentheses**: Binary operators may be written as in the paper, `<A><n> (phi U psi)`, or without parentheses.
+
+**Costs:** each `Costs_for_actions` entry gives the Demon's cost to erase that
+joint action at that state. A cost vector (`1:2:0`) is summed into one cost.
+A transition may have no cost; the check fails, naming the states and actions,
+only when the result depends on those missing costs.
 
 **Formula Examples:**
 ```text
 <1><5> F goal
 <1,2><10> (safe W unsafe)
-<3><2> G stable
+<1,2><3> (false R !(r && s && g))
+<1><0> X p
 ```
 
 ### Comparison: Theory vs Implementation
 
 | Aspect | Theory | Implementation |
 | :--- | :--- | :--- |
-| **Coalition** | <A> | `<1,2>` (Indices) |
-| **Cost Bound** | per-step affordability | each transition cost `<= k` (not path sum) |
-| **Temporal Ops**| X, F, G, U (often + R, W) | `X`, `F`, `G`, `U` (R/W rejected at parse) |
-| **Propositions**| p, Goal | `[a-zA-Z][a-zA-Z0-9_]*` |
-
-> [!NOTE]
-> **Operator Support (R, W):** Release (`R`) and Weak Until (`W`) are **rejected at parse time** for OATL. Use dual forms (for example `!<1><5> (!p U !q)`) or use COTL when R/W operators are required.
-
-> **Cost bound semantics:** Bound `k` limits the cost of each individual transition (per-step affordability), not the cumulative sum along a play.
->
-> **Example:** A property like `<1><5> (p R q)` would otherwise need to be written as `<1><5> !(!p U !q)` or `(<1><5> (q U (p && q)) || <1><5> G q)`, which is significantly less readable.
+| **Coalition** | `[[A]]` | `<1,2>` (indices) |
+| **Budget** | `n` in N, per step | `<n>` with `n >= 0`, per step |
+| **Temporal Ops**| X, U, R (F, G, W derived) | `X`, `F`, `G`, `U`, `R`, `W` |
+| **Algorithm** | Proposition 1 and Theorem 1 | `OATL/preimage.py` and fixpoints in `OATL/operators.py` |
 
 
 ---
@@ -304,7 +312,7 @@ OL is the linear-time cost-bounded logic paired with OATL on `costCGS` models. F
 | **Cost semantics (X)** | Step budget | **Per-step** transition cost `<= k` |
 
 > [!NOTE]
-> **Cost bound semantics:** For `F`, `G`, `U`, `R`, and `W`, bound `k` limits the **sum of transition costs along the considered path**. For `X`, `k` limits only the **next** transition. This differs from OATL, where every operator uses per-step affordability.
+> **Cost bound semantics:** For `F`, `G`, `U`, `R`, and `W`, bound `k` limits the **sum of transition costs along the considered path**. For `X`, `k` limits only the **next** transition. This differs from OATL, where the budget limits what the Demon erases at each step.
 
 ---
 
@@ -426,7 +434,7 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 
 ### Theoretical Background
 
-COTL is the cost-bounded ATL logic used with `costCGS` models. Formulas share the OATL surface syntax `<A><k> phi` but are checked by a dedicated fixpoint engine (`COTL/COTL.py`), not by OATL per-step filtering.
+COTL is the cost-bounded ATL logic used with `costCGS` models. Formulas share the OATL surface syntax `<A><k> phi` but are checked by a separate fixpoint engine (`COTL/COTL.py`) with a different meaning of the bound.
 
 ### Current Implementation
 
@@ -437,7 +445,7 @@ COTL is the cost-bounded ATL logic used with `costCGS` models. Formulas share th
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W` (R/W implemented in the COTL solver).
 3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
 
-**Semantics:** Coalition `<A><k>` requires that coalition `A` can enforce the sub-formula while keeping transition costs within bound `k` under the COTL cost interpretation (cost-bounded strategy synthesis via least/greatest fixpoints, not OATL per-step filtering).
+**Semantics:** Coalition `<A><k>` requires that coalition `A` can enforce the sub-formula while keeping transition costs within bound `k` under the COTL cost interpretation (cost-bounded strategy synthesis via least/greatest fixpoints).
 
 **Formula Examples:**
 ```text
@@ -457,7 +465,7 @@ COTL is the cost-bounded ATL logic used with `costCGS` models. Formulas share th
 | **Engine** | Cost-bounded ATL | Dedicated COTL fixpoints (not OATL solver) |
 
 > [!NOTE]
-> **COTL vs OATL:** Same parser shape, different checker. OATL uses per-step affordability in `OATL/preimage.py` and rejects R/W. COTL uses its own fixpoint operators and accepts R/W.
+> **COTL vs OATL:** Same parser shape, different checker. In OATL the bound is the Demon's erasure budget per step (see [OATL](#oatl)); in COTL it bounds the coalition's own action costs. Both accept R/W.
 
 ---
 
@@ -804,7 +812,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **NatATL (Rec)** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` (k = strategy complexity) | CGS |
 | **NatATLF** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` | CGS (delegates to memoryless) |
 | **NatSL** | Branching | `E{k}x`, `A{k}y`, `F`/`G`/`X` | `E{k}x A{m}y: (x, 1)(y, 2) F goal`; schedule `space`/`time` | CGS |
-| **OATL** | Branching | `<A><k>X`, `F`, `G`, `U` | `<1,2><5>` (per-step cost bound) | costCGS |
+| **OATL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><5>` (Demon budget per step) | costCGS |
 | **OL** | Linear | `<Jk>X`, `F`, `G`, `U`, `R`, `W` | `<J5>` (Demonic) | costCGS |
 | **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U` | `<1><10,5>` (Vectors) | costCGS |
 | **CapATL** | Branching | `<{A}>X`, `F`, `G`, `U`, `R`, `Ki`, `i is p` | `<{1,2}>` | capCGS |

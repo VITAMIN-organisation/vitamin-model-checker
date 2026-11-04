@@ -7,13 +7,13 @@ structures, caches, cleanup, and search strategies.
 
 | Technique | Used by | Code |
 |---|---|---|
-| Transition move cache | `ATL`, `ATLF`, `IATL`, `Wallet_ATL`, `RBATL`, `RABATL` | `ATL/preimage.py`, `ATLF/preimage.py`, `IATL/preimage.py`, `shared/bounded_atl_preimage.py` |
-| Bit-vector target sets | `ATL`, `OATL`, `COTL`, `RBATL`, `RABATL` | `shared/bit_vector.py` |
+| Transition move cache | `ATL`, `ATLF`, `IATL`, `Wallet_ATL`, `RBATL`, `RABATL`, `OATL` | `ATL/preimage.py`, `ATLF/preimage.py`, `IATL/preimage.py`, `shared/bounded_atl_preimage.py`, `OATL/preimage.py` |
+| Bit-vector target sets | `ATL`, `COTL`, `RBATL`, `RABATL` | `shared/bit_vector.py` |
 | Early-stop in pre-image | `ATL`, `Wallet_ATL` | `ATL/preimage.py` `early_stop` |
-| Predecessor index (`pre_by_index`) | `OATL`, `COTL` | `shared/oatl_index_preimage.py` |
-| Cost / action caches + reset | `OATL`, `COTL` | `OATL/OATL.py`, `COTL/COTL.py` |
+| Predecessor index (`pre_by_index`) | `COTL` | `shared/oatl_index_preimage.py` |
+| Cost / action caches + reset | `COTL` | `COTL/COTL.py` |
 | AST solve memo cache | `RBATL`, `RABATL` (bounded ATL solver) | `shared/bounded_atl_solver.py`, `shared/solver_core.py` |
-| ATL prefilter | `OATL`, `RBATL`, `RABATL`, `Wallet_ATL` | `engine/atl_prefilter.py`; Wallet inlines the same idea in `Wallet_ATL.py` |
+| ATL prefilter | `RBATL`, `RABATL`, `Wallet_ATL` | `engine/atl_prefilter.py`; Wallet inlines the same idea in `Wallet_ATL.py` |
 | CapATL lru + state index cache | `CapATL` | `CapATL/utils.py`, `CapATL/CapATL.py` |
 | P-upset precompute | `ICTL`, `IATL` | `ICTL/util/graph.py` `get_preorder` |
 | Zone graph | `TCTL`, `TOL` | `timed_cgs/zone_graph.py` |
@@ -46,6 +46,8 @@ repeated scans.
 - `IATL`: lazy per-coalition cache on the checker (`transition_cache_for`).
 - `ATLF` / `RBATL` / `RABATL`: build a coalition-grouped cache per operator
   call via ATLF or `shared/bounded_atl_preimage.py`.
+- `OATL`: `DemonicPreimage` expands the matrix once per check, with each joint
+  action's cost, and groups it by coalition move once per coalition.
 
 ## Bit-Vector Target Sets
 
@@ -85,24 +87,23 @@ from the graph.
 matrix each time is wasteful.
 
 **How:** `build_pre_by_index(graph)` in `shared/oatl_index_preimage.py`; passed
-in the OATL / COTL solve context.
+in the COTL solve context. Despite its name, OATL does not use this module.
 
 **Advantage:** One-step predecessor lookup in O(outdegree) of targets instead
 of O(|S|^2) matrix scans per call.
 
 ## Cost And Action Caches (With Reset)
 
-**What:** On the loaded model object:
-
-- OATL: `_oatl_cost_cache`, `_oatl_base_action_cache`
-- COTL: `_cost_cache`, `_base_action_cache`
+**What:** On the loaded model object, COTL keeps `_cost_cache` and
+`_base_action_cache`.
 
 **Why:** Cost lookups and action-mask parsing repeat across pre-image and
 fixpoint steps for the same (action, state) pairs.
 
-**How:** Fill on first use during the check. Entry points call
-`_reset_oatl_caches` / `_reset_cotl_caches` at the start of each check so a
-reused model object does not keep stale values from a previous formula.
+**How:** Fill on first use during the check. The entry point calls
+`_reset_cotl_caches` at the start of each check so a reused model object does
+not keep stale values from a previous formula. OATL keeps its per-check data
+in `DemonicPreimage` instead, so there is nothing to reset.
 
 **Advantage:** Avoids repeated cost parsing during one solve; reset keeps
 checks independent when the same CGS instance is reused.
@@ -132,12 +133,15 @@ filtering.
 
 **How:**
 
-- `OATL`, `RBATL`, `RABATL`: `engine/atl_prefilter.py` via
+- `RBATL`, `RABATL`: `engine/atl_prefilter.py` via
   `prefilter_func=run_atl_prefilter` and `resource_bounded_atl_to_atl`.
 - `Wallet_ATL`: same early-fail idea inside `_core_walletatl_checking`, not
   `run_atl_prefilter`. Rewrite with `wallet_atl_to_atl`, then
   `_core_atl_checking`; if the initial state is already False, return that
   result and skip `solve_tree`.
+
+OATL must not use it: in OATL the agents outside the coalition side with the
+Demon, so `<A><n> phi` can hold where ATL `<A> phi` fails.
 
 **Advantage:** Cheap rejection for unsatisfiable strategic goals.
 

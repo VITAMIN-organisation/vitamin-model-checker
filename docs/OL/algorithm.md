@@ -26,8 +26,8 @@ Prefix must include `J` (`<J5>`). Bound `k >= 1`.
 | `F` / `G` / `U` / `R` / `W` | Accumulated path cost `<= k` |
 | `X` | Next transition cost `<= k` |
 
-This differs from OATL (always per-step) and from TOL (per-position demonic
-deactivation on timed models).
+This differs from OATL, where the budget limits what the Demon erases at each
+step, and from TOL (per-position demonic deactivation on timed models).
 
 Shared costCGS techniques: [algorithm_design.md](../algorithm_design.md).
 
