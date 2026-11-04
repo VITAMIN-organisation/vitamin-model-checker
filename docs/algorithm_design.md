@@ -7,11 +7,9 @@ structures, caches, cleanup, and search strategies.
 
 | Technique | Used by | Code |
 |---|---|---|
-| Transition move cache | `ATL`, `ATLF`, `IATL`, `Wallet_ATL`, `RBATL`, `RABATL`, `OATL` | `ATL/preimage.py`, `ATLF/preimage.py`, `IATL/preimage.py`, `shared/bounded_atl_preimage.py`, `OATL/preimage.py` |
-| Bit-vector target sets | `ATL`, `COTL`, `RBATL`, `RABATL` | `shared/bit_vector.py` |
+| Transition move cache | `ATL`, `ATLF`, `IATL`, `Wallet_ATL`, `RBATL`, `RABATL`, `OATL`, `COTL` | `ATL/preimage.py`, `ATLF/preimage.py`, `IATL/preimage.py`, `shared/bounded_atl_preimage.py`, `OATL/preimage.py`, `COTL/preimage.py` |
+| Bit-vector target sets | `ATL`, `RBATL`, `RABATL` | `shared/bit_vector.py` |
 | Early-stop in pre-image | `ATL`, `Wallet_ATL` | `ATL/preimage.py` `early_stop` |
-| Predecessor index (`pre_by_index`) | `COTL` | `shared/oatl_index_preimage.py` |
-| Cost / action caches + reset | `COTL` | `COTL/COTL.py` |
 | AST solve memo cache | `RBATL`, `RABATL` (bounded ATL solver) | `shared/bounded_atl_solver.py`, `shared/solver_core.py` |
 | ATL prefilter | `RBATL`, `RABATL`, `Wallet_ATL` | `engine/atl_prefilter.py`; Wallet inlines the same idea in `Wallet_ATL.py` |
 | CapATL lru + state index cache | `CapATL` | `CapATL/utils.py`, `CapATL/CapATL.py` |
@@ -48,6 +46,11 @@ repeated scans.
   call via ATLF or `shared/bounded_atl_preimage.py`.
 - `OATL`: `DemonicPreimage` expands the matrix once per check, with each joint
   action's cost, and groups it by coalition move once per coalition.
+- `COTL`: `LegionSteps` builds, once per legion, each state's legion actions
+  with their cost and the successor sets the other demons can leave. Actions
+  that no listed curse extends all leave every edge, so only the cheapest one
+  is kept (best-first search, at most one candidate more than the listed
+  curses). See [COTL/algorithm.md](COTL/algorithm.md#algorithm).
 
 ## Bit-Vector Target Sets
 
@@ -77,36 +80,6 @@ until handlers.
 
 **Advantage:** Fewer coalition grouping checks on states already in the
 winning set.
-
-## Predecessor Index (`pre_by_index`)
-
-**What:** List `pre_by_index[tgt] = { sources with an edge to tgt }`, built once
-from the graph.
-
-**Why:** Cost-bounded pre-images walk predecessors often; scanning the full
-matrix each time is wasteful.
-
-**How:** `build_pre_by_index(graph)` in `shared/oatl_index_preimage.py`; passed
-in the COTL solve context. Despite its name, OATL does not use this module.
-
-**Advantage:** One-step predecessor lookup in O(outdegree) of targets instead
-of O(|S|^2) matrix scans per call.
-
-## Cost And Action Caches (With Reset)
-
-**What:** On the loaded model object, COTL keeps `_cost_cache` and
-`_base_action_cache`.
-
-**Why:** Cost lookups and action-mask parsing repeat across pre-image and
-fixpoint steps for the same (action, state) pairs.
-
-**How:** Fill on first use during the check. The entry point calls
-`_reset_cotl_caches` at the start of each check so a reused model object does
-not keep stale values from a previous formula. OATL keeps its per-check data
-in `DemonicPreimage` instead, so there is nothing to reset.
-
-**Advantage:** Avoids repeated cost parsing during one solve; reset keeps
-checks independent when the same CGS instance is reused.
 
 ## AST Solve Memo Cache
 

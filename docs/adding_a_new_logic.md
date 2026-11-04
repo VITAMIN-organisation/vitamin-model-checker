@@ -81,12 +81,12 @@ MyLogic = "model_checker.parsers.formulas.MyLogic.parser:MyLogicParser"
 
 ### Reuse An Existing Parser
 
-If your logic uses the same formula syntax as another logic, reuse that parser.
-For example, COTL uses the OATL parser:
+If your logic uses the same formula syntax as another logic, reuse that parser:
+point its entry point at the existing parser class.
 
 ```toml
 [project.entry-points."vitamin.parsers"]
-COTL = "model_checker.parsers.formulas.OATL.parser:OATLParser"
+NatATL_Recall = "model_checker.parsers.formulas.NatATL.parser:NatATLParser"
 ```
 
 This is the preferred approach when syntax is genuinely shared. Do not copy a
@@ -190,26 +190,25 @@ model_checker/tests/fixtures/<model_type>/<LogicName>/
 
 ## COTL Example
 
-COTL shares OATL surface syntax but has its own parser and algorithm over
-`costCGS`.
+COTL needed its own model type as well as its own parser and algorithm: its
+models have demons that disable edges, not agents.
 
 What it needs:
 
-1. a dedicated parser under `model_checker/parsers/formulas/COTL/` (subclassing
-   `OATLParser` when syntax matches),
-2. `COTL` listed as cost-based in `model_parser_factory.py`,
+1. a model class under `parsers/game_structures/obstruction_model/`, detected
+   in `models/model_factory.py` by its `Number_of_demons` section and added to
+   `EXTENSION_SECTION_HEADERS` in `cgs_parser.py`,
+2. a parser under `model_checker/parsers/formulas/COTL/` with `METADATA =
+   {"model_type": "ObstructionModel"}`,
 3. an algorithm module under `algorithms/explicit/COTL/`,
-4. entry points for parser, benchmark callable, and metadata,
-5. integration tests and example costCGS models.
+4. entry points for the model type, parser, benchmark callable, and metadata,
+5. integration tests and example models under `tests/fixtures/ObstructionModel/COTL/`.
 
-Register the parser with its own entry point, for example:
+Register the parser with its own entry point:
 
 ```toml
 COTL = "model_checker.parsers.formulas.COTL.parser:COTLParser"
 ```
-
-Do not point the `COTL` entry point at `OATL.parser:OATLParser`; that breaks
-parser discovery and formula validation.
 
 ## Advanced Manual Checklist
 

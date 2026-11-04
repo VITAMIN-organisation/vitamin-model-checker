@@ -43,11 +43,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - The ATL prefilter is dropped for OATL, because it could wrongly answer False.
   - Release (`R`) and Weak Until (`W`) are accepted again, also in the
     paper's parenthesised form `<A><n> (phi U psi)`.
-  - The budget may be 0, as in the paper. COTL still requires a bound >= 1.
+  - The budget may be 0, as in the paper.
   - A missing cost that decides the result is now an error instead of 0.
     Missing costs that cannot change the result are allowed.
   - The OATL test fixture is Figure 1 of the paper, with the paper's scalar
     costs restored.
+- COTL follows Catta et al., "Coalition Obstruction Temporal Logic", IJCAI
+  2025. Earlier versions checked a cost-bounded coalition of agents on a
+  `costCGS`, which is not COTL; their results should be recomputed. COTL now
+  runs on a new model type, `ObstructionModel`: a graph of states whose edges
+  demons disable at a cost (sections `Number_of_demons`, `Demon_actions`,
+  `Curses`; see `docs/file_formats.md`). `costCGS` files are rejected for COTL.
+  Related changes:
+  - `<G><n>` is a legion of demons, which may be empty (`<><0>`), with budget
+    `n >= 0` per step.
+  - Weak next is available as `WX`.
+  - Release, `G` and `W` also hold on paths that stop because the legion
+    disabled every edge out of their last state; `X`, `U` and `F` need a next
+    state.
+  - COTL no longer shares any parser or pre-image code with OATL;
+    `shared/oatl_index_preimage.py` is removed.
+  - The COTL test fixture is the attack graph of Sec. 5 of the paper.
 
 ## [1.6.5] - 2026-09-15
 

@@ -40,7 +40,7 @@ to locate:
 - [TCTL](TCTL/algorithm.md)
 - [TOL](TOL/algorithm.md)
 
-**Logic names:** Full names are used for logics defined in the VITAMIN paper and standard references (CTL, LTL, ATL), and for OATL, whose section cites its defining paper. Other implemented logics (OL, COTL, etc.) are listed by acronym only; their expansions are not fixed in the project literature.
+**Logic names:** Full names are used for logics defined in the VITAMIN paper and standard references (CTL, LTL, ATL), and for OATL and COTL, whose sections cite their defining papers. Other implemented logics (OL, etc.) are listed by acronym only; their expansions are not fixed in the project literature.
 
 ---
 
@@ -434,38 +434,58 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 
 ### Theoretical Background
 
-COTL is the cost-bounded ATL logic used with `costCGS` models. Formulas share the OATL surface syntax `<A><k> phi` but are checked by a separate fixpoint engine (`COTL/COTL.py`) with a different meaning of the bound.
+COTL (Coalition Obstruction Temporal Logic) is defined in D. Catta, J. Leneutre,
+V. Malvone, A. Murano, "Coalition Obstruction Temporal Logic: A New Obstruction
+Logic to Reason About Demon Coalitions", IJCAI 2025. It runs on an
+`ObstructionModel`: a graph of states, with no agents, whose edges several
+demons can temporarily disable. Each demon action has a cost, and the idle
+action `*` costs 0. The attacker is the path itself.
+
+**Standard Syntax:**
+- **Legion modality**: `<<G>>_n theta` in the paper, `<G><n> theta` in VITAMIN
+    - `G`: a set of demons (a legion), possibly empty.
+    - `n`: the legion's budget per step, `n >= 0`.
+- **Operators**: `X`, `X~` (weak next), `U`, `R` are primitive; `F`, `G`, `W` are derived.
+
+**Semantics:** `<G><n> theta` holds when the legion has a strategy that, at
+each step, picks one action per member of total cost at most `n`, such that
+every path left by the disabled edges satisfies `theta`, whatever the other
+demons do. A path may stop when every edge out of its last state is disabled.
+Example: on the case-study attack graph of the paper
+(`tests/fixtures/ObstructionModel/COTL/cotl_attack_graph_3demons_6states.txt`),
+`<1,3><1> G !q` holds at `s0` and `<1,2><1> G !q` does not, as Sec. 5 states.
 
 ### Current Implementation
 
-**Parser:** `COTLParser` (`model_checker/parsers/formulas/COTL/parser.py`), same `<coalition><bound>` shape as OATL.
+**Parser:** `COTLParser` (`model_checker/parsers/formulas/COTL/parser.py`).
 
 **Supported Syntax:**
-1.  **Format**: `<coalition><bound>` (e.g., `<1,2><5>`).
-2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W` (R/W implemented in the COTL solver).
+1.  **Format**: `<legion><budget>` (e.g., `<1,3><1>`, `<><0>`). Demon indices go from 1 to `Number_of_demons`.
+2.  **Temporal Operators**: `X`, `WX` (weak next), `F`, `G`, `U`, `R`, `W`. Binary operators may be written `<G><n> (phi U psi)` or without parentheses.
 3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
-
-**Semantics:** Coalition `<A><k>` requires that coalition `A` can enforce the sub-formula while keeping transition costs within bound `k` under the COTL cost interpretation (cost-bounded strategy synthesis via least/greatest fixpoints).
 
 **Formula Examples:**
 ```text
-<1><10> F goal
-<1,2><5> (p U q)
-<1><2> G safe
-<1><5> (p R q)
+<1,3><1> G !q
+<1><2> WX safe
+<><0> X p
+<1,2><3> (p U q)
 ```
 
 ### Comparison: Theory vs Implementation
 
 | Aspect | Theory | Implementation |
 | :--- | :--- | :--- |
-| **Coalition** | `<A>` | `<1,2>` (indices) |
-| **Cost bound** | `<k>` | `<5>` (integer) |
-| **Temporal ops** | X, F, G, U | `X`, `F`, `G`, `U`, `R`, `W` |
-| **Engine** | Cost-bounded ATL | Dedicated COTL fixpoints (not OATL solver) |
+| **Legion** | `<<G>>`, any subset of demons | `<1,3>`, `<>` for the empty legion |
+| **Budget** | `n` in N, per step | `<n>` with `n >= 0`, per step |
+| **Weak next** | `X~` | `WX` |
+| **Paths that stop** | Allowed | `G`, `R`, `W`, `WX` hold on them; `X`, `U`, `F` need a next state |
 
 > [!NOTE]
-> **COTL vs OATL:** Same parser shape, different checker. In OATL the bound is the Demon's erasure budget per step (see [OATL](#oatl)); in COTL it bounds the coalition's own action costs. Both accept R/W.
+> **COTL vs OATL:** both come from obstruction logic, but they share no checker
+> code. In OATL a single Demon helps against a coalition of agents on a
+> `costCGS` (see [OATL](#oatl)). In COTL a legion of demons acts against the
+> other demons and the path, on an `ObstructionModel`.
 
 ---
 
@@ -755,7 +775,8 @@ VITAMIN does **not** support an empty strategic coalition written as `<>`. In AT
 | IATL | `<1>` exist, `[1]` forall | `<> ` and `[]` rejected |
 | NatATL | `<{1,2}, k>` | `<\s*>` rejected |
 | CapATL | `<{1,2}>` | `<\s*>` rejected |
-| OATL / COTL | `<1><5>` | `<\s*>` rejected; bound required |
+| OATL | `<1><5>` | `<\s*>` rejected; bound required |
+| COTL | `<1,3><1>` | `<><0>` allowed (empty legion of demons); bound required |
 | RBATL / RABATL | `<1><5>` or `<1><2,2>` | `<\s*>` rejected; bound required |
 | OL | `<J5>` (cost, not agents) | N/A |
 | Wallet_ATL | `<<1>>` | `<<>>` invalid (lexer) |
@@ -816,7 +837,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **OL** | Linear | `<Jk>X`, `F`, `G`, `U`, `R`, `W` | `<J5>` (Demonic) | costCGS |
 | **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U` | `<1><10,5>` (Vectors) | costCGS |
 | **CapATL** | Branching | `<{A}>X`, `F`, `G`, `U`, `R`, `Ki`, `i is p` | `<{1,2}>` | capCGS |
-| **COTL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><k>` (cost-bounded) | costCGS |
+| **COTL** | Branching | `<G><n>X`, `WX`, `F`, `G`, `U`, `R`, `W` | `<1,3><1>`, `<><0>` (legion of demons, budget per step) | ObstructionModel |
 | **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
 | **ICTL** | Branching | `EX`, `AX`, `EF`, `AF`, `EG`, `AG`, `EU`, `AU`, `ER`, `AR` | `E`, `A`; `->` / `not` intuitionistic | BirelationalMatrix |
 | **IATL** | Branching | `<A>X`, `<A>F/G/U/R`, `[A]X`, `[A]F/G/U/R` | `<1>` exist, `[1]` forall; `->` / `!` intuitionistic | BCGS |
@@ -867,7 +888,7 @@ CGS-style joint-action `Transition` matrix plus a boolean `Preorder` section
 `model_type: "BCGS"`. See [IATL/algorithm.md](IATL/algorithm.md).
 
 ### costCGS (CGS with Costs)
-Used for OATL, OL, RBATL, RABATL, and COTL.
+Used for OATL, OL, RBATL and RABATL.
 - **Section**: `Transition_With_Costs`
 - **Format**: Same dimensions as the transition matrix. Cells contain cost vectors separated by colons (e.g., `1:2:0` for 3 agents).
 
@@ -887,6 +908,15 @@ Used for TOL and TCTL. Includes all costCGS sections plus:
 - **Section**: `Clocks` - clock variable names.
 - **Section**: `Clock_constraints` - bounds and resets on transitions.
 - **Section**: `Invariants` - clock invariants per state.
+
+### ObstructionModel (COTL)
+Used for COTL. Loader:
+`model_checker/parsers/game_structures/obstruction_model/`. No agents: a 0/1
+`Transition` matrix of edges (a state may have no successor), `Number_of_demons`,
+`Demon_actions` (`demon state action cost`, idle `*` implicit at cost 0) and
+`Curses` (`state a1,...,ak successor...`: the edges a joint demon action
+disables). Detected when `Number_of_demons` is present. Format:
+[file_formats.md](file_formats.md#obstructionmodel-sections-cotl).
 
 ---
 

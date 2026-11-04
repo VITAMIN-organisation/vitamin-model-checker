@@ -51,9 +51,6 @@ of states its joint actions lead to. Then `s` is in `Pre_n(A, X)` when:
 
 The Demon has to erase exactly `D(s, A, X)`: an A-action that cannot reach `X`
 must lose all its joint actions, and any other A-action keeps a path into `X`.
-The formal definition of `D` in the paper writes `next(f, s)` included in `X`;
-the text after it and the proof of Proposition 1 use the complement, which is
-what is implemented.
 
 The temporal operators are fixpoints of `Pre_n` (Theorem 1):
 

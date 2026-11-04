@@ -1132,24 +1132,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/shared/oatl_index_preimage.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 38,
-                    "endColumn": 48,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 36,
-                    "endColumn": 40,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/automata/automaton.py": [
             {
                 "code": "reportOptionalMemberAccess",

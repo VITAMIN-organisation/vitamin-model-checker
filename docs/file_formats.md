@@ -27,10 +27,11 @@ cotl_model.txt
 | `CGS` | ATL, CTL, LTL, NatATL, NatSL, ... | Standard concurrent game structure (default when no extension headers). |
 | `BirelationalMatrix` | ICTL | Same sections as CGS; `Transition` cells are `0`/`R`/`P`/`P,R`. Detected when Transition rows use only those cells and include `P` or `P,R`; ICTL metadata also forces this type. |
 | `BCGS` | IATL | CGS transitions plus boolean `Preorder` section (detected when `Preorder` is present). |
-| `costCGS` | OATL, OL, RBATL, RABATL, COTL | Cost/resource information for actions and transitions. |
+| `costCGS` | OATL, OL, RBATL, RABATL | Cost/resource information for actions and transitions. |
 | `capCGS` | CapATL | Capability declarations and assignments. |
 | `WalletCGS` | Wallet_ATL | Per-state wallet balances for each agent. |
 | `timedCGS` | TOL, TCTL | Clocks, clock constraints, and invariants on top of costCGS. |
+| `ObstructionModel` | COTL | Graph with demons that disable edges; no agents (detected by `Number_of_demons`). See [ObstructionModel Sections](#obstructionmodel-sections-cotl). |
 
 ## CGS Sections
 
@@ -225,6 +226,49 @@ Preorder
 TOL and TCTL share this model type. Integrate TOL before TCTL if both land in
 the same branch, so `timed_cgs` is present once.
 
+## ObstructionModel Sections (COTL)
+
+A COTL model has no agents: it is a graph whose edges k demons can disable.
+It keeps `Name_State`, `Initial_State`, `Atomic_propositions` and `Labelling`
+from CGS, and adds three sections. It is detected by `Number_of_demons`.
+
+```text
+Transition
+0 1 1
+0 0 0
+0 0 0
+Name_State
+s0 s1 s2
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+0
+1
+0
+Number_of_demons
+2
+Demon_actions
+1 s0 cut_bad 1
+2 s0 cut_good 1
+Curses
+s0 cut_bad,* s2
+s0 *,cut_good s1
+s0 cut_bad,cut_good s1 s2
+```
+
+| Section | Line format | Rules |
+|---|---|---|
+| `Transition` | `0`/`1` per cell | Row `i` marks the successors of state `i`. A state may have no successor. |
+| `Number_of_demons` | `k` | One integer `>= 1`. |
+| `Demon_actions` | `demon state action cost` | One line per action other than idle; `cost >= 1`. The idle action `*` is available to every demon at every state at cost 0 and is not listed. |
+| `Curses` | `state a1,...,ak successor...` | One action per demon, `*` for idle. The curse disables the edges from `state` to the listed successors, which must be edges of `Transition`. A curse that is not listed disables nothing. |
+
+Unknown states, demons or actions, a curse listed twice, a cost below 1, and a
+disabled edge that is not in `Transition` are rejected with the line number.
+Semantics: [COTL/algorithm.md](COTL/algorithm.md).
+
 ## Formula Files
 
 Formula files usually sit next to their model file and use the
@@ -262,7 +306,7 @@ The first formula is treated as the primary formula by tools that need one.
 | OL | `<J10> G p` | costCGS |
 | RBATL | `<1><10,5> F p` | costCGS |
 | RABATL | `<1><2,2> F p` | costCGS |
-| COTL | `<1,2><5> G p` | costCGS |
+| COTL | `<1,3><1> G !q` or `<><0> X p` | ObstructionModel |
 | CapATL | `<{1}> F (K1 p)` | capCGS |
 | Wallet_ATL | `<<1>>X auction_active` | WalletCGS |
 | ICTL | `EX e` or `AG (p -> EF q)` | BirelationalMatrix |
