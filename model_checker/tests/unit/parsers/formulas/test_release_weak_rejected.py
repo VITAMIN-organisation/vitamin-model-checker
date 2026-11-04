@@ -9,10 +9,6 @@ from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 @pytest.mark.parametrize(
     "logic,formula",
     [
-        ("OATL", "<1><5>R p"),
-        ("OATL", "<1><5>W p"),
-        ("OATL", "<1><5> p R q"),
-        ("OATL", "<1><5> p W q"),
         ("RBATL", "<1><5>R p"),
         ("RBATL", "<1,2><3>W q"),
         ("RBATL", "<1><5> p R q"),

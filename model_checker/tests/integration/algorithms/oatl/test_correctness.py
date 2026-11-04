@@ -1,4 +1,9 @@
-"""Tests for OATL model checking (cost-bounded coalition strategies)."""
+"""OATL model checking: `<A><n> theta` holds when the Demon can erase joint
+actions of total cost at most n per step so that, whatever coalition A does,
+some remaining path satisfies theta.
+
+The attack model and its least budget 3 come from Catta et al., AAMAS 2024, Sec. 3.
+"""
 
 import pytest
 
@@ -6,12 +11,28 @@ from model_checker.algorithms.explicit.OATL.OATL import (
     _core_oatl_checking,
     model_checking,
 )
-from model_checker.tests.helpers.model_helpers import (
-    extract_states_from_result,
-    generate_cost_cgs_linear_chain_content,
-    load_costcgs_from_content,
-)
+from model_checker.tests.helpers.model_helpers import extract_states_from_result
 from model_checker.tests.helpers.synthetic_models import build_cgs_model_content
+
+# Alice and Bob never hold root (r, s) while David holds resource 1 (g).
+ATTACK_NEVER_COMPLETED = "!(r && s && g)"
+
+
+def _one_agent_model(transitions, labelling, costs, prop_names=("p",)):
+    return build_cgs_model_content(
+        transitions=transitions,
+        state_names=[f"s{i}" for i in range(len(transitions))],
+        initial_state="s0",
+        labelling=labelling,
+        num_agents=1,
+        prop_names=list(prop_names),
+        costs_for_actions=costs,
+    )
+
+
+def _holds_initially(result) -> bool:
+    assert "error" not in result, result
+    return result["initial_state"].endswith(": True")
 
 
 @pytest.mark.unit
@@ -42,62 +63,112 @@ class TestOATLErrorHandling:
         assert "error" in result
         assert result["error"]["type"] == "semantic"
 
+    def test_missing_cost_that_decides_the_result_is_an_error(self, temp_file):
+        """B has no cost and must be erased for X p to hold, so the check fails and names it."""
+        content = _one_agent_model(
+            transitions=[["0", "A", "B"], ["0", "*", "0"], ["0", "0", "*"]],
+            labelling=[["0"], ["1"], ["0"]],
+            costs={"A": "s0$1"},
+        )
+        result = model_checking("<1><5>X p", temp_file(content))
+        assert "error" in result
+        assert "B at s0" in result["error"]["message"]
+        assert "['s0']" in result["error"]["message"]
+
+    def test_missing_cost_that_cannot_change_the_result_is_ignored(self, temp_file):
+        """B (no cost) misses p at first, but s2 then reaches p, so nothing is erased."""
+        content = _one_agent_model(
+            transitions=[["0", "A", "B"], ["0", "*", "0"], ["0", "*", "0"]],
+            labelling=[["0"], ["1"], ["0"]],
+            costs={"A": "s0$1"},
+        )
+        assert _holds_initially(model_checking("<1><5>F p", temp_file(content)))
+
 
 @pytest.mark.semantic
 @pytest.mark.model_checking
 class TestOATLSemantics:
-    """Semantics of cost-bounded eventually on small chains."""
+    """What the Demon's budget allows and how each temporal operator uses it."""
 
-    def test_oatl_eventually_with_sufficient_cost_bound(self, temp_file):
-        """Coalition <1> can reach p within per-step cost 5 on a 3-state chain.
+    @pytest.mark.parametrize(
+        "formula",
+        [
+            f"<1,2><{{n}}>G {ATTACK_NEVER_COMPLETED}",
+            f"<1,2><{{n}}>false R {ATTACK_NEVER_COMPLETED}",
+            f"<1,2><{{n}}>(false R {ATTACK_NEVER_COMPLETED})",
+        ],
+    )
+    @pytest.mark.parametrize(
+        "bound,expected_states,holds",
+        [
+            (2, {"s1", "s5"}, False),
+            (3, {"s0", "s1", "s2", "s5"}, True),
+        ],
+    )
+    def test_least_budget_that_blocks_the_attack_is_3(
+        self, oatl_model, formula, bound, expected_states, holds
+    ):
+        """Blocking Alice and Bob from s0 needs a cost-3 erasure, so budget 2 fails."""
+        result = model_checking(formula.format(n=bound), oatl_model.filename)
+        assert extract_states_from_result(result) == expected_states
+        assert _holds_initially(result) is holds
 
-        Model: s0 -> s1 -> s2 (self-loop at s2); p holds at s0 and s2;
-        each step has cost 1. Satisfying set is {s0, s1, s2}.
-        """
-        content = generate_cost_cgs_linear_chain_content(num_states=3, num_agents=1)
-        cgs = load_costcgs_from_content(temp_file, content)
+    @pytest.mark.parametrize("bound,holds", [(4, False), (5, True)])
+    def test_demon_pays_the_sum_over_every_move_that_misses_the_target(
+        self, temp_file, bound, holds
+    ):
+        """At s0, move A reaches p; B (cost 2) and C (cost 3) miss it and must both be erased."""
+        content = _one_agent_model(
+            transitions=[["0", "A", "B,C"], ["0", "*", "0"], ["0", "0", "*"]],
+            labelling=[["0"], ["1"], ["0"]],
+            costs={"A": "s0$1", "B": "s0$2", "C": "s0$3"},
+        )
+        result = model_checking(f"<1><{bound}>X p", temp_file(content))
+        assert _holds_initially(result) is holds
 
-        result = _core_oatl_checking(cgs, "<1><5>F p")
-        states = extract_states_from_result(result)
+    @pytest.mark.parametrize("b_cost,holds", [("1", False), ("0", True)])
+    def test_budget_0_erases_only_zero_cost_moves(self, temp_file, b_cost, holds):
+        """At s0, move A reaches p and B misses it; with budget 0, B can be erased only if free."""
+        content = _one_agent_model(
+            transitions=[["0", "A", "B"], ["0", "*", "0"], ["0", "0", "*"]],
+            labelling=[["0"], ["1"], ["0"]],
+            costs={"A": "s0$1", "B": f"s0${b_cost}"},
+        )
+        result = model_checking("<1><0>X p", temp_file(content))
+        assert _holds_initially(result) is holds
 
-        assert states == {
-            "s0",
-            "s1",
-            "s2",
-        }, f"OATL <1><5>F p on 3-state chain (p at s0,s2): expected {{s0,s1,s2}}, got {states}"
-
-    def test_oatl_eventually_with_tight_cost_bound(self, temp_file):
-        """Per-step cost 5 on s0->s1 and 1 on s1->s2; p only at s2.
-
-        Bound 1: only {s1,s2}. Bound 5: also s0.
-        """
+    def test_agents_outside_the_coalition_side_with_the_demon(self, temp_file):
+        """Agent 1's only move reaches p if agent 2 helps, so nothing is erased."""
         content = build_cgs_model_content(
-            transitions=[["0", "A", "0"], ["0", "0", "A"], ["0", "0", "*"]],
+            transitions=[["0", "AA", "AB"], ["0", "*", "0"], ["0", "0", "*"]],
             state_names=["s0", "s1", "s2"],
             initial_state="s0",
-            labelling=[["0"], ["0"], ["1"]],
-            num_agents=1,
+            labelling=[["0"], ["1"], ["0"]],
+            num_agents=2,
             prop_names=["p"],
-            costs_for_actions={"A": ["s0$5;s1$1"], "*": ["s2$1"]},
+            costs_for_actions={"AA": "s0$5", "AB": "s0$5"},
         )
-        cgs = load_costcgs_from_content(temp_file, content)
+        assert _holds_initially(model_checking("<1><1>X p", temp_file(content)))
 
-        tight = _core_oatl_checking(cgs, "<1><1>F p")
-        loose = _core_oatl_checking(cgs, "<1><5>F p")
-        assert extract_states_from_result(tight) == {"s1", "s2"}
-        assert ": False" in tight.get("initial_state", "")
-        assert extract_states_from_result(loose) == {"s0", "s1", "s2"}
-        assert ": True" in loose.get("initial_state", "")
+    @pytest.mark.parametrize(
+        "formula,holds",
+        [
+            ("<1><1>p U q", False),
+            ("<1><2>p U q", True),
+            ("<1><1>p W q", True),
+        ],
+    )
+    def test_until_must_reach_q_while_weak_until_may_stay_in_p(
+        self, temp_file, formula, holds
+    ):
+        """At s0 (p), A loops back (cost 2) and B goes to q.
 
-    def test_oatl_three_agent_coalition(self, oatl_model):
-        """Coalition <1,2,3> F g excludes s1 on the medium OATL fixture."""
-        result = model_checking("<1,2,3><10>F g", oatl_model.filename)
-        assert "error" not in result
-        assert extract_states_from_result(result) == {
-            "s0",
-            "s2",
-            "s3",
-            "s4",
-            "s5",
-        }
-        assert ": True" in result.get("initial_state", "")
+        U needs A erased (budget 2); W accepts looping in p forever.
+        """
+        content = _one_agent_model(
+            transitions=[["A", "B"], ["0", "*"]],
+            labelling=[["1", "0"], ["0", "1"]],
+            costs={"A": "s0$2", "B": "s0$1"},
+            prop_names=("p", "q"),
+        )
+        assert _holds_initially(model_checking(formula, temp_file(content))) is holds

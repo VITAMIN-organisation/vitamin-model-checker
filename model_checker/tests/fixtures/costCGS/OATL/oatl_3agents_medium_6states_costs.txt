@@ -1,11 +1,14 @@
-# MODEL: Three-agent cost-constrained model with 6 states (s0-s5)
-
-# PURPOSE: Three agents coordinate under cost bounds.
+# MODEL: Attack scenario of Figure 1 in Catta, Leneutre, Malvone, Murano,
+# "Obstruction Alternating-time Temporal Logic", AAMAS 2024.
 
 # LOGIC: OATL
 
-# DESCRIPTION: Each action has a cost; agents must reach goals within cost
-# bounds. Shows how resource limits affect strategies.
+# DESCRIPTION: Agents 1, 2, 3 are Alice, Bob and David. Actions: A = att,
+# R = req1, Q = req2, ^ = the figure's star. Propositions r s g h are
+# ra rb g1 g2, and s5 is the figure's s6. Demon costs are the figure's colours:
+# blue 1, black 2, red 3. The paper states that the least n for which
+# <1,2><n> G !(r && s && g) holds at s0 is 3. Self-loops carry no cost: the
+# Demon never needs to erase them.
 
 Transition
 0 AA^ ^^R AAR 0 0
@@ -19,15 +22,11 @@ s0 s1 s2 s3 s4 s5
 Initial_State
 s0
 Costs_for_actions
-AA^ s0$1:1:1;s2$1:1:1
-AAR s0$2:2:2
-AAQ s2$2:2:2
-^^R s0$3:3:3
-^^Q s2$3:3:3
-*** s1$3:3:3
-*** s3$3:3:3
-*** s4$3:3:3
-*** s5$3:3:3
+AA^ s0$1;s2$1
+AAR s0$2
+AAQ s2$2
+^^R s0$3
+^^Q s2$3
 Atomic_propositions
 r s g h
 Labelling

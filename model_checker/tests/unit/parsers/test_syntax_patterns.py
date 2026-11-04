@@ -11,8 +11,9 @@ from model_checker.parsers.game_structures.timed_cgs.constraint_syntax import (
     RESET_RE,
 )
 from model_checker.parsers.syntax_patterns import (
+    COTL_COALITION_BOUND_TOKEN,
     NATATL_CAPACITY_RE,
-    OATL_COALITION_DEMONIC_TOKEN,
+    OATL_COALITION_BUDGET_TOKEN,
     PROPOSITION_FULL_RE,
     WALLET_CONSTRAINT_RE,
 )
@@ -71,9 +72,17 @@ def test_wallet_constraint_pattern_rejects_unknown_operator():
 
 
 @pytest.mark.unit
-def test_oatl_demonic_token_rejects_zero_and_leading_zeros():
-    assert re.fullmatch(OATL_COALITION_DEMONIC_TOKEN, "<1><5>")
-    assert re.fullmatch(OATL_COALITION_DEMONIC_TOKEN, "<1,2><3>")
-    assert not re.fullmatch(OATL_COALITION_DEMONIC_TOKEN, "<1><0>")
-    assert not re.fullmatch(OATL_COALITION_DEMONIC_TOKEN, "<1><05>")
-    assert not re.fullmatch(OATL_COALITION_DEMONIC_TOKEN, "<1>F")
+def test_cotl_bound_token_rejects_zero_and_leading_zeros():
+    assert re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1><5>")
+    assert re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1,2><3>")
+    assert not re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1><0>")
+    assert not re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1><05>")
+    assert not re.fullmatch(COTL_COALITION_BOUND_TOKEN, "<1>F")
+
+
+@pytest.mark.unit
+def test_oatl_budget_token_accepts_zero_but_not_leading_zeros():
+    assert re.fullmatch(OATL_COALITION_BUDGET_TOKEN, "<1><0>")
+    assert re.fullmatch(OATL_COALITION_BUDGET_TOKEN, "<1,2><10>")
+    assert not re.fullmatch(OATL_COALITION_BUDGET_TOKEN, "<1><05>")
+    assert not re.fullmatch(OATL_COALITION_BUDGET_TOKEN, "<1>F")
