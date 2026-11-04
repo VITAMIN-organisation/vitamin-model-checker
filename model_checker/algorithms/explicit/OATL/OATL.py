@@ -1,8 +1,10 @@
 """
-OATL model checker over cost-CGS models.
+OATL model checker over costCGS models (Catta et al., AAMAS 2024).
 
-Coalition modalities `<A><k>` require coalition `A` to enforce the sub-formula
-while each chosen transition has cost at most `k`.
+`<A><n> theta` holds when the Demon has a strategy that, at every step, erases
+joint actions of total cost at most `n` so that, whatever coalition `A` does,
+some remaining path satisfies `theta`. Agents outside `A` resolve the
+remaining choices in the Demon's favour.
 """
 
 from model_checker.algorithms.explicit.OATL.solver import solve_tree
@@ -11,34 +13,16 @@ from model_checker.algorithms.explicit.shared import (
     format_model_checking_result,
     verify_initial_state,
 )
-from model_checker.algorithms.explicit.shared.oatl_index_preimage import (
-    build_pre_by_index,
-)
-from model_checker.engine.atl_prefilter import run_atl_prefilter
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.utils.error_handler import create_error_response
 
 
-def _reset_oatl_caches(cgs):
-    if not hasattr(cgs, "_oatl_cost_cache"):
-        cgs._oatl_cost_cache = {}
-    else:
-        cgs._oatl_cost_cache.clear()
-    if not hasattr(cgs, "_oatl_base_action_cache"):
-        cgs._oatl_base_action_cache = {}
-    else:
-        cgs._oatl_base_action_cache.clear()
-
-
 def _core_oatl_checking(cgs, formula):
-    """Core OATL logic."""
     if not hasattr(cgs, "get_cost_for_action"):
         return create_error_response(
             "validation", "OATL requires a costCGS model with action costs"
         )
-
-    _reset_oatl_caches(cgs)
 
     parser = FormulaParserFactory.get_parser_instance("OATL")
     res_parsing = parser.parse(formula, n_agent=cgs.get_number_of_agents())
@@ -52,11 +36,7 @@ def _core_oatl_checking(cgs, formula):
             "semantic", "One or more atoms do not exist in the model"
         )
 
-    solve_context = {
-        "graph": cgs.graph,
-        "pre_by_index": build_pre_by_index(cgs.graph),
-    }
-    solve_tree(cgs, root, solve_context)
+    solve_tree(cgs, root)
 
     initial_state = cgs.initial_state
     is_satisfied = verify_initial_state(initial_state, root.value)
@@ -64,6 +44,6 @@ def _core_oatl_checking(cgs, formula):
     return format_model_checking_result(root.value, initial_state, is_satisfied)
 
 
-model_checking = create_model_checking_entry(
-    "OATL", _core_oatl_checking, prefilter_func=run_atl_prefilter
-)
+# No ATL prefilter: <A><n> phi does not imply <A> phi, because the Demon and the
+# agents outside A cooperate, so an ATL "False" would be wrong for OATL.
+model_checking = create_model_checking_entry("OATL", _core_oatl_checking)

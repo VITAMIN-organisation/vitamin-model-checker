@@ -1,4 +1,4 @@
-"""ATL prefilter for resource-bounded logics (OATL, RBATL, RABATL)."""
+"""ATL prefilter for resource-bounded logics (RBATL, RABATL)."""
 
 from collections.abc import Callable
 from typing import Any

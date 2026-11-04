@@ -1,9 +1,13 @@
-"""Handler functions for all OATL operators (unary: NOT/<Jn>X/<Jn>F/<Jn>G; binary: OR/AND/IMPLIES/<Jn>U)."""
+"""OATL temporal operators as fixpoints of the demonic pre-image.
 
-from model_checker.algorithms.explicit.OATL.preimage import (
-    has_affordable_action,
-    min_action_cost,
-)
+X is Proposition 1 of Catta et al. (AAMAS 2024); U and R are the least and
+greatest fixpoints of Theorem 1. F, G and W are the derived forms
+F phi = true U phi, G phi = false R phi and phi W psi = psi R (phi or psi).
+"""
+
+import math
+
+from model_checker.algorithms.explicit.OATL.preimage import DemonicPreimage
 from model_checker.algorithms.explicit.shared.cost_utils import (
     extract_coalition_and_cost,
 )
@@ -11,141 +15,85 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
     least_fixpoint,
 )
-from model_checker.algorithms.explicit.shared.oatl_index_preimage import (
-    SolveContext,
-    cross_state_names,
-    dominant_action_indices,
-    pre_indices,
-)
 from model_checker.algorithms.explicit.shared.state_utils import (
+    state_indices_to_names,
     state_names_to_indices,
 )
-from model_checker.parsers.game_structures.cgs import cgs_actions
 from model_checker.utils.literals import parse_state_set_literal
 
 
-def handle_coalition_globally(cgs, node, solve_context: SolveContext):
-    """Handle <Jn>G operator: coalition can ensure phi forever within cost bound."""
-    coalition, n = extract_coalition_and_cost(node.value)
-    target = parse_state_set_literal(node.left.value)
-
-    def update(p):
-        return target & cross_state_names(
-            cgs,
-            n,
-            coalition,
-            p,
-            solve_context,
-            cgs._oatl_base_action_cache,
-            has_affordable_action,
-        )
-
-    result = greatest_fixpoint(cgs.all_states_set.copy(), update)
-    node.value = str(tuple(sorted({str(s) for s in result})))
+def _states(cgs, node_value: str) -> set[int]:
+    return state_names_to_indices(cgs, parse_state_set_literal(node_value))
 
 
-def handle_coalition_next(cgs, node, solve_context: SolveContext):
-    """Handle <Jn>X operator: coalition can force next state within cost bound."""
-    coalition, n = extract_coalition_and_cost(node.value)
-    target = parse_state_set_literal(node.left.value)
-    node.value = str(
-        tuple(
-            sorted(
-                {
-                    str(s)
-                    for s in cross_state_names(
-                        cgs,
-                        n,
-                        coalition,
-                        target,
-                        solve_context,
-                        cgs._oatl_base_action_cache,
-                        has_affordable_action,
-                    )
-                }
+def _solve(cgs, node, pre: DemonicPreimage, fixpoint) -> None:
+    """Store `fixpoint(step)` on the node, with `step` the bounded pre-image.
+
+    The pre-image only grows as costs fall, so pricing missing costs at +inf and
+    at 0 brackets every possible answer: if both agree, the gaps do not matter.
+    """
+    coalition, bound = extract_coalition_and_cost(node.value)
+
+    def run(uncosted_cost: float) -> set[int]:
+        return fixpoint(lambda target: pre(coalition, bound, target, uncosted_cost))
+
+    result = run(math.inf)
+    if pre.uncosted:
+        undecided = run(0.0) - result
+        if undecided:
+            names = sorted(state_indices_to_names(cgs, undecided))
+            raise ValueError(
+                f"OATL: the truth of '{node.value}' at states {names} depends on "
+                f"joint actions with no cost in the model: {pre.uncosted}"
             )
-        )
+    node.value = str(tuple(sorted(state_indices_to_names(cgs, result))))
+
+
+def handle_next(cgs, node, pre: DemonicPreimage) -> None:
+    phi = _states(cgs, node.left.value)
+    _solve(cgs, node, pre, lambda step: step(phi))
+
+
+def handle_eventually(cgs, node, pre: DemonicPreimage) -> None:
+    phi = _states(cgs, node.left.value)
+    _solve(cgs, node, pre, lambda step: least_fixpoint(phi, lambda t: phi | step(t)))
+
+
+def handle_globally(cgs, node, pre: DemonicPreimage) -> None:
+    phi = _states(cgs, node.left.value)
+    _solve(cgs, node, pre, lambda step: greatest_fixpoint(phi, lambda t: phi & step(t)))
+
+
+def handle_until(cgs, node, pre: DemonicPreimage) -> None:
+    phi = _states(cgs, node.left.value)
+    psi = _states(cgs, node.right.value)
+    _solve(
+        cgs,
+        node,
+        pre,
+        lambda step: least_fixpoint(psi, lambda t: psi | (phi & step(t))),
     )
 
 
-def handle_coalition_eventually(cgs, node, solve_context: SolveContext):
-    """Handle <Jn>F operator: coalition can eventually reach phi within cost bound."""
-    coalition, max_cost = extract_coalition_and_cost(node.value)
-    target = parse_state_set_literal(node.left.value)
-
-    all_states = {str(s) for s in cgs.all_states_set}
-    target_str = {str(s) for s in target}
-    min_cost_to_reach = {state: float("inf") for state in all_states}
-    for state in target_str:
-        min_cost_to_reach[state] = 0
-
-    result = set(target_str)
-    frontier = set(target_str)
-
-    while frontier:
-        target_indices = state_names_to_indices(cgs, result)
-        potential_pre = {
-            str(cgs.get_state_name_by_index(idx))
-            for idx in pre_indices(target_indices, solve_context["pre_by_index"])
-        }
-        candidates = potential_pre - result
-
-        new_states = set()
-        for state in candidates:
-            state_str = str(state)
-            current_min = min_cost_to_reach.get(state_str, float("inf"))
-            if current_min != float("inf") and current_min > max_cost:
-                continue
-
-            agents = cgs_actions.get_agents_from_coalition(coalition)
-            source_idx = cgs.get_index_by_state_name(state_str)
-            safe_indices = state_names_to_indices(cgs, result)
-            actions = dominant_action_indices(
-                cgs,
-                source_idx,
-                safe_indices,
-                agents,
-                solve_context["graph"],
-                cgs._oatl_base_action_cache,
-            )
-            if not actions:
-                continue
-
-            affordable = has_affordable_action(cgs, actions, state_str, max_cost)
-            if not affordable:
-                continue
-
-            action_cost = min_action_cost(cgs, actions, state_str)
-            if action_cost < min_cost_to_reach[state_str]:
-                min_cost_to_reach[state_str] = action_cost
-            new_states.add(state_str)
-
-        frontier = new_states
-        result.update(frontier)
-
-    node.value = str(tuple(sorted({str(s) for s in result})))
+def handle_release(cgs, node, pre: DemonicPreimage) -> None:
+    phi = _states(cgs, node.left.value)
+    psi = _states(cgs, node.right.value)
+    _solve(
+        cgs,
+        node,
+        pre,
+        lambda step: greatest_fixpoint(psi, lambda t: psi & (phi | step(t))),
+    )
 
 
-def handle_coalition_until(cgs, node, solve_context: SolveContext):
-    """Handle <Jn>U operator: coalition can ensure psi eventually while maintaining phi within cost bound."""
-    coalition, n = extract_coalition_and_cost(node.value)
-    states1 = parse_state_set_literal(node.left.value)
-    states2 = parse_state_set_literal(node.right.value)
-
-    def update_with_skip(p):
-        return p | (
-            states1
-            & cross_state_names(
-                cgs,
-                n,
-                coalition,
-                p,
-                solve_context,
-                cgs._oatl_base_action_cache,
-                has_affordable_action,
-                exclude_accumulated=p,
-            )
-        )
-
-    result = least_fixpoint(states2, update_with_skip)
-    node.value = str(tuple(sorted({str(s) for s in result})))
+def handle_weak_until(cgs, node, pre: DemonicPreimage) -> None:
+    psi = _states(cgs, node.right.value)
+    phi_or_psi = _states(cgs, node.left.value) | psi
+    _solve(
+        cgs,
+        node,
+        pre,
+        lambda step: greatest_fixpoint(
+            phi_or_psi, lambda t: phi_or_psi & (psi | step(t))
+        ),
+    )

@@ -20,6 +20,7 @@ EMPTY_COALITION_RE = re.compile(r"<\s*>")
 COMPARISON_OPERATORS = (">=", "<=", "==", ">", "<")
 COMPARISON_OPS_ALT = "|".join(COMPARISON_OPERATORS)
 POSITIVE_INT = r"[1-9]\d*"
+NON_NEGATIVE_INT = r"(?:0|[1-9]\d*)"
 
 # ICTL: lowercase atoms or mixed-case with lowercase from the second character
 # (avoids lexing EX, AX, EF, AG, ... as proposition names).
@@ -58,8 +59,12 @@ NATATL_COALITION_TOKEN = rf"<{{{AGENT_LIST}}},\s*\d+>"
 # CapATL paper-style agent set: <{1,2}> (no numeric formula bound).
 CAPATL_COALITION_TOKEN = rf"<{{({AGENT_LIST})}}>"
 
-# OATL / COTL: <1,2><5> with a strictly positive bound.
-OATL_COALITION_DEMONIC_TOKEN = rf"<{AGENT_LIST}><{POSITIVE_INT}>"
+# OATL: <1,2><n>, the Demon's budget per step; any n >= 0 (Catta et al.,
+# AAMAS 2024, Def. 3).
+OATL_COALITION_BUDGET_TOKEN = rf"<{AGENT_LIST}><{NON_NEGATIVE_INT}>"
+
+# COTL: <1,2><5> with a strictly positive bound.
+COTL_COALITION_BOUND_TOKEN = rf"<{AGENT_LIST}><{POSITIVE_INT}>"
 
 # RBATL resource bound: <1,2><3> (bound may be a list; 0 rejected later).
 COALITION_BOUND_TOKEN = rf"<{AGENT_LIST}><{AGENT_LIST}>"

@@ -1,12 +1,12 @@
 """OATL parser (PLY-based).
 
 Supported:
-- OATL formulas with coalition and demonic bounds (`<1,2><5>F p`, `<1><3>G p`).
-- Boolean connectives (&&, ||, !, ->) and temporal ops (U, G, X, F).
+- Coalition and Demon budget (`<1,2><5>F p`, `<1><0>G p`), budget n >= 0.
+- Boolean connectives (&&, ||, !, ->) and temporal ops (X, F, G, U, R, W);
+  binary ops also in the paper's form `<1><5> (p U q)`.
 
 Rejects:
-- Release (R) and Weak Until (W); use COTL when those operators are required.
-- Missing demonic bounds after a coalition (e.g., `<1>F p`).
+- Missing budget after a coalition (e.g., `<1>F p`).
 - Malformed coalitions or invalid agent indices relative to n_agent.
 - Non-ASCII, null bytes, or disallowed special characters in propositions.
 
@@ -18,8 +18,8 @@ import re
 
 from model_checker.parsers.syntax_patterns import (
     AGENT_LIST,
-    OATL_COALITION_DEMONIC_TOKEN,
-    POSITIVE_INT,
+    NON_NEGATIVE_INT,
+    OATL_COALITION_BUDGET_TOKEN,
 )
 
 from ..parser_utils import (
@@ -28,23 +28,26 @@ from ..parser_utils import (
     run_common_prechecks,
     validate_ast,
     validate_coalition_bound_token,
-    validate_release_weak_rejected,
 )
 from ..shared_parser import BaseLogicParser
 
-_OATL_MODAL_OPS = r"F|G|X|U|UNTIL|NEXT|EVENTUALLY|GLOBALLY"
+_OATL_MODAL_OPS = r"F|G|X|U|R|W|UNTIL|RELEASE|WEAK|NEXT|EVENTUALLY|GLOBALLY"
 _OATL_COALITION_OPERATOR_PATTERN = re.compile(
-    rf"^{OATL_COALITION_DEMONIC_TOKEN}({_OATL_MODAL_OPS})$",
+    rf"^{OATL_COALITION_BUDGET_TOKEN}({_OATL_MODAL_OPS})$",
     re.IGNORECASE,
 )
 _OATL_VALID_OPERATORS = (
     frozenset(
         {
             "U",
+            "R",
+            "W",
             "X",
             "F",
             "G",
             "UNTIL",
+            "RELEASE",
+            "WEAK",
             "NEXT",
             "EVENTUALLY",
             "GLOBALLY",
@@ -56,11 +59,11 @@ _MISSING_BOUND_TEMPORAL_RE = re.compile(rf"<{AGENT_LIST}>\s*[FGXURW]")
 _COALITION_BOUND_PROBE_RE = re.compile(
     rf"<{AGENT_LIST}><(?P<bound>\d+)>\s*(?P<op>[FGXURW])"
 )
-_OATL_BOUND_PRESENT_RE = re.compile(OATL_COALITION_DEMONIC_TOKEN)
+_BOUND_PRESENT_RE = re.compile(rf"<{AGENT_LIST}><\d+>")
 
 
 class OATLParser(BaseLogicParser):
-    """Parser for OATL formulas (coalition and demonic bounds, temporal ops).
+    """Parser for OATL formulas (coalition, Demon budget, temporal ops).
 
     Use parse(formula) to get an AST tuple or None on invalid input.
     Set n_agent before parsing for coalition validation.
@@ -74,6 +77,8 @@ class OATLParser(BaseLogicParser):
                 "COALITION_DEMONIC",
                 "PROP",
                 "UNTIL",
+                "RELEASE",
+                "WEAK",
                 "GLOBALLY",
                 "NEXT",
                 "EVENTUALLY",
@@ -84,22 +89,45 @@ class OATLParser(BaseLogicParser):
 
     # === Tokens ===
     t_PROP = PROPOSITION_TOKEN_PATTERN
-    t_COALITION_DEMONIC = OATL_COALITION_DEMONIC_TOKEN
+    t_COALITION_DEMONIC = OATL_COALITION_BUDGET_TOKEN
+    # The paper allows any budget n >= 0 (Def. 3); budget 0 lets the Demon
+    # erase only zero-cost actions.
+    _bound_pattern = NON_NEGATIVE_INT
+    _min_bound = 0
+
+    def t_RELEASE(self, t):
+        r"R(?![a-zA-Z0-9_])|release\b"
+        t.value = "R"
+        return t
+
+    def t_WEAK(self, t):
+        r"W(?![a-zA-Z0-9_])|weak\b"
+        t.value = "W"
+        return t
 
     # === Grammar ===
     def p_expression_ternary(self, p):
-        """expression : COALITION_DEMONIC expression UNTIL expression"""
+        """expression : COALITION_DEMONIC expression UNTIL expression
+        | COALITION_DEMONIC expression RELEASE expression
+        | COALITION_DEMONIC expression WEAK expression
+        | COALITION_DEMONIC LPAREN expression UNTIL expression RPAREN
+        | COALITION_DEMONIC LPAREN expression RELEASE expression RPAREN
+        | COALITION_DEMONIC LPAREN expression WEAK expression RPAREN"""
         validate_coalition_bound_token(
-            p[1], self.max_coalition, bound_pattern=POSITIVE_INT
+            p[1], self.max_coalition, bound_pattern=self._bound_pattern
         )
-        p[0] = (p[1] + p[3], p[2], p[4])
+        # Both <A><n> phi U psi and the paper's <A><n> (phi U psi).
+        if len(p) == 5:
+            p[0] = (p[1] + p[3], p[2], p[4])
+        else:
+            p[0] = (p[1] + p[4], p[3], p[5])
 
     def p_expression_unary(self, p):
         """expression : COALITION_DEMONIC GLOBALLY expression
         | COALITION_DEMONIC NEXT expression
         | COALITION_DEMONIC EVENTUALLY expression"""
         validate_coalition_bound_token(
-            p[1], self.max_coalition, bound_pattern=POSITIVE_INT
+            p[1], self.max_coalition, bound_pattern=self._bound_pattern
         )
         p[0] = (p[1] + p[2], p[3])
 
@@ -112,10 +140,10 @@ class OATLParser(BaseLogicParser):
         coalition_temporal_match = _COALITION_BOUND_PROBE_RE.search(formula)
         if coalition_temporal_match:
             bound_raw = coalition_temporal_match.group("bound")
-            if int(bound_raw) == 0:
+            if int(bound_raw) < self._min_bound:
                 return (
                     False,
-                    "Bound must be a positive integer (>=1) for temporal operators",
+                    f"Bound must be an integer >= {self._min_bound} for temporal operators",
                 )
             if len(bound_raw) > 1 and bound_raw.startswith("0"):
                 return (
@@ -123,12 +151,12 @@ class OATLParser(BaseLogicParser):
                     "Bound cannot have leading zeros (e.g., use <1><5>, not <1><05>)",
                 )
 
-        if _MISSING_BOUND_TEMPORAL_RE.search(
+        if _MISSING_BOUND_TEMPORAL_RE.search(formula) and not _BOUND_PRESENT_RE.search(
             formula
-        ) and not _OATL_BOUND_PRESENT_RE.search(formula):
+        ):
             return (
                 False,
-                "Temporal operators require a bound in the form <coalition><k> with k>=1 (e.g., <1><5>F p)",
+                f"Temporal operators require a bound in the form <coalition><k> with k>={self._min_bound} (e.g., <1><5>F p)",
             )
         return True, None
 
@@ -139,10 +167,6 @@ class OATLParser(BaseLogicParser):
             coalition_required=True,
             extra_invalid_regexes=(),
         )
-        if not valid:
-            return False, err
-
-        valid, err = validate_release_weak_rejected(formula, "OATL")
         if not valid:
             return False, err
 

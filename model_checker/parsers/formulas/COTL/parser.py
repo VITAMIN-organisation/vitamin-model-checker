@@ -16,7 +16,7 @@ Returns:
 import re
 
 from model_checker.parsers.syntax_patterns import (
-    OATL_COALITION_DEMONIC_TOKEN,
+    COTL_COALITION_BOUND_TOKEN,
     POSITIVE_INT,
 )
 
@@ -32,7 +32,7 @@ from ..shared_parser import BaseLogicParser
 
 _COTL_MODAL_OPS = r"F|G|X|U|R|W|UNTIL|RELEASE|WEAK|NEXT|EVENTUALLY|GLOBALLY"
 _COTL_COALITION_OPERATOR_PATTERN = re.compile(
-    rf"^{OATL_COALITION_DEMONIC_TOKEN}({_COTL_MODAL_OPS})$",
+    rf"^{COTL_COALITION_BOUND_TOKEN}({_COTL_MODAL_OPS})$",
     re.IGNORECASE,
 )
 _COTL_VALID_OPERATORS = (
@@ -78,7 +78,9 @@ class COTLParser(OATLParser):
         self.build()
 
     t_PROP = PROPOSITION_TOKEN_PATTERN
-    t_COALITION_DEMONIC = OATL_COALITION_DEMONIC_TOKEN
+    t_COALITION_DEMONIC = COTL_COALITION_BOUND_TOKEN
+    _bound_pattern = POSITIVE_INT
+    _min_bound = 1
 
     def t_RELEASE(self, t):
         r"R(?![a-zA-Z0-9_])|release\b"
