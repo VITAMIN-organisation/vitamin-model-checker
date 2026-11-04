@@ -32,6 +32,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   already declared in the model, silently corrupting the result for that
   edge case. The marker is now checked against the model's declared
   propositions before use.
+- OATL follows the semantics of Catta et al., "Obstruction Alternating-time
+  Temporal Logic", AAMAS 2024 again. `<A><n>` means the Demon can erase joint
+  actions of total cost at most `n` per step so that, whatever coalition `A`
+  does, some remaining path satisfies the formula. Earlier versions checked
+  instead whether `A` itself had one affordable move (cost `<= n`) into the
+  target, which gives different results. OATL results from those versions
+  should be recomputed. Related changes:
+  - OATL no longer shares its pre-image with COTL.
+  - The ATL prefilter is dropped for OATL, because it could wrongly answer False.
+  - Release (`R`) and Weak Until (`W`) are accepted again, also in the
+    paper's parenthesised form `<A><n> (phi U psi)`.
+  - The budget may be 0, as in the paper. COTL still requires a bound >= 1.
+  - A missing cost that decides the result is now an error instead of 0.
+    Missing costs that cannot change the result are allowed.
+  - The OATL test fixture is Figure 1 of the paper, with the paper's scalar
+    costs restored.
+
 ## [1.6.5] - 2026-09-15
 
 ### Fixed
