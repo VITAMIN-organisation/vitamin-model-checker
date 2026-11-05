@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Hashable, Iterable
 from dataclasses import replace
+from typing import cast
 
 from .acceptance import (
     AcceptanceCondition,
@@ -22,12 +23,16 @@ except ImportError:  # pragma: no cover
     buddy = None
 
 
+def _symbol_as_label(source: Hashable, symbol: Hashable) -> Iterable[str]:
+    # symbols are AP names or AP-name collections by contract; the
+    # Hashable type of a transition symbol cannot express that
+    return cast("Iterable[str]", symbol)
+
+
 def product(
     automaton: Automaton,
     transition_system: TransitionSystem,
-    label: Callable[[Hashable, Hashable], Iterable[str]] = lambda source, symbol: (
-        symbol
-    ),
+    label: Callable[[Hashable, Hashable], Iterable[str]] = _symbol_as_label,
 ) -> tuple[TransitionSystem, AcceptanceCondition]:
     """Synchronous product of a property automaton and a system model.
 
