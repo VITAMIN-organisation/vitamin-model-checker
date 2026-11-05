@@ -54,8 +54,8 @@ class TestATLFSemantics:
         atl_res_str = atl_result.get("res", "")
         atlf_res_str = atlf_result.get("res", "")
         assert "Result:" in atlf_res_str
-        assert (
-            atl_res_str != atlf_res_str
-        ), "ATLF should return real-valued result, not the same string as ATL"
+        assert atl_res_str != atlf_res_str, (
+            "ATLF should return real-valued result, not the same string as ATL"
+        )
         init_str = atlf_result.get("initial_state", "")
         assert "Initial state" in init_str and (":" in init_str)

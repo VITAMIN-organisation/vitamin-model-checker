@@ -25,9 +25,9 @@ except ImportError:  # pragma: no cover
 def product(
     automaton: Automaton,
     transition_system: TransitionSystem,
-    label: Callable[
-        [Hashable, Hashable], Iterable[str]
-    ] = lambda source, symbol: symbol,
+    label: Callable[[Hashable, Hashable], Iterable[str]] = lambda source, symbol: (
+        symbol
+    ),
 ) -> tuple[TransitionSystem, AcceptanceCondition]:
     """Synchronous product of a property automaton and a system model.
 

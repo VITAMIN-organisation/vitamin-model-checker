@@ -215,7 +215,7 @@ def model_checking_is_not_nash(
         return result
 
     logger.info(
-        "No deviation found: the natural strategy " "appears to be a Nash Equilibrium!"
+        "No deviation found: the natural strategy appears to be a Nash Equilibrium!"
     )
     result["Satisfiability"] = True
     result["Complexity Bound"] = k

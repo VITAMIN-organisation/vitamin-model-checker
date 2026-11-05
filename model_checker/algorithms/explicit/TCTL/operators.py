@@ -67,8 +67,9 @@ def handle_eu(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -
     sat_psi = node.formula.right.satisfying_regions
     node.satisfying_regions = least_fixpoint(
         sat_psi,
-        lambda regions: sat_psi
-        | (sat_phi & timed_predecessors(zone_graph, tcgs, regions, guard)),
+        lambda regions: (
+            sat_psi | (sat_phi & timed_predecessors(zone_graph, tcgs, regions, guard))
+        ),
     )
 
 
@@ -83,13 +84,15 @@ def handle_au(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: QuantifiedPath) -
     not_psi = universe - sat_psi
     unreachable = least_fixpoint(
         not_psi,
-        lambda regions: not_psi
-        | (
-            not_phi
-            & not_psi
-            & (
-                universe
-                - timed_predecessors(zone_graph, tcgs, universe - regions, guard)
+        lambda regions: (
+            not_psi
+            | (
+                not_phi
+                & not_psi
+                & (
+                    universe
+                    - timed_predecessors(zone_graph, tcgs, universe - regions, guard)
+                )
             )
         ),
     )

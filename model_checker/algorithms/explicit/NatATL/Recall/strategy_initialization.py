@@ -20,7 +20,9 @@ from model_checker.parsers.game_structures.cgs import (
 logger = logging.getLogger(__name__)
 
 
-def initialize(model_path: str, formula: str, cgs: CGSProtocol | None = None) -> tuple[
+def initialize(
+    model_path: str, formula: str, cgs: CGSProtocol | None = None
+) -> tuple[
     int,
     dict[str, list[str]],
     list[list[str]],

@@ -73,9 +73,9 @@ class TestAllValidModelsStateOperations:
         for state in parser.states:
             state_idx = parser.get_index_by_state_name(state)
             assert state_idx >= 0, f"State '{state}' not found in state list"
-            assert state_idx < len(
-                parser.states
-            ), f"State index {state_idx} out of range for state '{state}'"
+            assert state_idx < len(parser.states), (
+                f"State index {state_idx} out of range for state '{state}'"
+            )
 
             retrieved_state = parser.get_state_name_by_index(state_idx)
             assert retrieved_state == state, (
@@ -97,12 +97,11 @@ class TestAllValidModelsAtomicPropositionOperations:
         if len(parser.atomic_propositions) > 0:
             for prop in parser.atomic_propositions:
                 prop_index = proposition_index(parser.atomic_propositions, prop)
-                assert (
-                    prop_index is not None
-                ), f"Atomic proposition '{prop}' not found in atomic propositions list"
+                assert prop_index is not None, (
+                    f"Atomic proposition '{prop}' not found in atomic propositions list"
+                )
                 assert 0 <= prop_index < len(parser.atomic_propositions), (
-                    f"Atomic proposition index {prop_index} out of range "
-                    f"for '{prop}'"
+                    f"Atomic proposition index {prop_index} out of range for '{prop}'"
                 )
                 assert parser.atomic_propositions[prop_index] == prop, (
                     f"Atomic proposition mismatch: expected '{prop}', "
@@ -125,18 +124,18 @@ class TestAllValidModelsActionOperations:
         cgs_actions.validate_agent_numbers(agents, num_agents)
         actions = cgs_actions.extract_actions_for_agents(parser.graph, agents)
 
-        assert isinstance(
-            actions, dict
-        ), f"extract_actions_for_agents should return dict, got {type(actions)}"
-        assert (
-            len(actions) == num_agents
-        ), f"extract_actions_for_agents returned {len(actions)} agents, expected {num_agents}"
+        assert isinstance(actions, dict), (
+            f"extract_actions_for_agents should return dict, got {type(actions)}"
+        )
+        assert len(actions) == num_agents, (
+            f"extract_actions_for_agents returned {len(actions)} agents, expected {num_agents}"
+        )
 
         for agent_num in agents:
             agent_key = f"agent{agent_num}"
-            assert (
-                agent_key in actions
-            ), f"Agent {agent_num} missing from actions dictionary"
-            assert isinstance(
-                actions[agent_key], list
-            ), f"Actions for {agent_key} should be list, got {type(actions[agent_key])}"
+            assert agent_key in actions, (
+                f"Agent {agent_num} missing from actions dictionary"
+            )
+            assert isinstance(actions[agent_key], list), (
+                f"Actions for {agent_key} should be list, got {type(actions[agent_key])}"
+            )

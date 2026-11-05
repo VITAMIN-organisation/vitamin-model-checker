@@ -16,6 +16,6 @@ class TestCTLPreImageFunctions:
         target = {"s3"}
         expected = {"s1", "s2", "s3"}
         predecessors = pre_image_exist(edges, target)
-        assert (
-            predecessors == expected
-        ), f"pre_image_exist({target}) should return {expected} but got {predecessors}"
+        assert predecessors == expected, (
+            f"pre_image_exist({target}) should return {expected} but got {predecessors}"
+        )

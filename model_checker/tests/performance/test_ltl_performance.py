@@ -20,9 +20,9 @@ class TestLTLComplexityBounds:
         result = model_checking("Fp", cgs_simple_parser.filename)
         elapsed = time.time() - start_time
         assert "error" not in result, f"LTL model checking should not error: {result}"
-        assert (
-            elapsed < 10.0
-        ), f"LTL model checking took {elapsed:.2f}s, expected < 10s for small model"
+        assert elapsed < 10.0, (
+            f"LTL model checking took {elapsed:.2f}s, expected < 10s for small model"
+        )
 
 
 @pytest.mark.performance

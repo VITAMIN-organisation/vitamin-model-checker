@@ -96,9 +96,9 @@ def test_formula_parser_valid_and_invalid(
     else:
         assert_parse_structure(result_valid, description=logic)
         blob = str(result_valid)
-        assert any(
-            token in blob for token in ("F", "X", "G", "EF", "AG", "U")
-        ), f"{logic} valid AST {blob!r} missing a temporal operator"
+        assert any(token in blob for token in ("F", "X", "G", "EF", "AG", "U")), (
+            f"{logic} valid AST {blob!r} missing a temporal operator"
+        )
     result_invalid = parser.parse(invalid_formula, **kwargs)
     assert result_invalid is None, f"{logic} invalid formula should not parse"
 

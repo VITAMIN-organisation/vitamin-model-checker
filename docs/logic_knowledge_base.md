@@ -48,9 +48,9 @@ to locate:
 
 1.  [Boolean Logic (Shared Syntax)](#boolean-logic-shared-syntax)
 2.  [CTL - Computation Tree Logic](#ctl---computation-tree-logic)
-3.  [LTL - Linear Temporal Logic](#ltl---linear-temporal-logic)
-4.  [ATL / ATLF - Alternating-time Temporal Logic](#atl--atlf---alternating-time-temporal-logic)
-5.  [NatATL / NatATLF](#natatl--natatlf---natural-atl)
+3.  [LTL - Linear Temporal Logic](LTL/algorithm.md)
+4.  [ATL / ATLF - Alternating-time Temporal Logic](ATL/algorithm.md)
+5.  [NatATL / NatATLF](NatATL/algorithm.md)
 6.  [NatSL](#natsl---natural-strategy-logic)
 7.  [OATL](#oatl)
 8.  [OL](#ol)

@@ -39,9 +39,9 @@ def test_parsers_accept_propositions_with_modal_first_letters(logic, formula, n_
     parser = FormulaParserFactory.get_parser_instance(logic)
     kwargs = {} if n_agent is None else {"n_agent": n_agent}
     result = parser.parse(formula, **kwargs)
-    assert (
-        result is not None
-    ), f"Logic '{logic}' failed to parse '{formula}': {parser.errors}"
+    assert result is not None, (
+        f"Logic '{logic}' failed to parse '{formula}': {parser.errors}"
+    )
     blob = repr(result)
     expected_atom = formula.split()[-1]
     assert expected_atom in blob

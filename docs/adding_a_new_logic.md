@@ -103,8 +103,7 @@ model_checker/algorithms/explicit/<LogicName>/
 Expose:
 
 ```python
-def model_checking(formula: str, filename: str) -> dict:
-    ...
+def model_checking(formula: str, filename: str) -> dict: ...
 ```
 
 Inside the public function, call:

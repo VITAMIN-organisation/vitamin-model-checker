@@ -25,13 +25,13 @@ def assert_parse_structure(result, expected_structure=None, description=""):
     if isinstance(result, str):
         return
 
-    assert isinstance(
-        result, tuple
-    ), f"Parse result should be a tuple, got {type(result).__name__}: {description}"
+    assert isinstance(result, tuple), (
+        f"Parse result should be a tuple, got {type(result).__name__}: {description}"
+    )
 
-    assert (
-        len(result) >= 2
-    ), f"Parse result tuple should have at least 2 elements, got {len(result)}: {description}"
+    assert len(result) >= 2, (
+        f"Parse result tuple should have at least 2 elements, got {len(result)}: {description}"
+    )
 
 
 def load_test_model(test_data_dir, model_path: str):

@@ -285,7 +285,6 @@ class WalletCGS(CGS):
         total_agents = self.get_number_of_agents()
 
         for agent, action_str in actions.items():
-
             action_name, parameter, is_consumption, is_income = (
                 self.parse_parameterized_action(action_str)
             )

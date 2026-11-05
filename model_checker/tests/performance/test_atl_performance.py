@@ -124,9 +124,9 @@ class TestATLPerformanceLargeModels:
         if exact_all:
             assert len(states) == num_states
         else:
-            assert (
-                len(states) >= min_states
-            ), f"{formula} should hold in at least {min_states} states"
+            assert len(states) >= min_states, (
+                f"{formula} should hold in at least {min_states} states"
+            )
 
     @pytest.mark.parametrize(
         "layout,num_states,coalition,operator,target_kind",
@@ -159,9 +159,9 @@ class TestATLPerformanceLargeModels:
             _, iterations = compute_atl_fixpoint_iterations(
                 parser, target_states, "1", op
             )
-            assert (
-                iterations <= num_states
-            ), f"<1>{op} fixpoint got {iterations} iterations"
+            assert iterations <= num_states, (
+                f"<1>{op} fixpoint got {iterations} iterations"
+            )
 
     def test_atl_pre_image_scalability(self, temp_file):
         """Pre-image computation scales with state space."""

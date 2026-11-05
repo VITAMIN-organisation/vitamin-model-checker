@@ -19,9 +19,9 @@ def check_parser_performance(
     parse_time = time.time() - start_time
     assert parser is not None, f"Parser should succeed for {num_states} states"
     assert len(parser.states) == num_states, f"Expected {num_states} states"
-    assert (
-        parse_time < max_time
-    ), f"Parser took {parse_time:.2f}s for {num_states} states, expected < {max_time}s"
+    assert parse_time < max_time, (
+        f"Parser took {parse_time:.2f}s for {num_states} states, expected < {max_time}s"
+    )
     return parser, parse_time
 
 
@@ -74,7 +74,7 @@ def run_model_checking_with_timeout(
     states = extract_states_from_result(result) if isinstance(result, dict) else result
     assert states is not None, f"{formula} should return valid result"
     assert isinstance(states, set), f"{formula} result should be a set"
-    assert (
-        elapsed_time < max_time
-    ), f"{formula} computation took {elapsed_time:.2f}s, expected < {max_time}s"
+    assert elapsed_time < max_time, (
+        f"{formula} computation took {elapsed_time:.2f}s, expected < {max_time}s"
+    )
     return states, elapsed_time

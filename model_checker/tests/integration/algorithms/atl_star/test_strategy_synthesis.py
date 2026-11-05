@@ -141,9 +141,9 @@ class TestSynthesizeStrategyRealEntryPoint:
         assert strategy["transitions"]
         for row in strategy["transitions"]:
             target = (row["target"]["state"], row["target"]["memory"])
-            assert (
-                target in positions
-            ), f"no move recorded to continue replay from {target}"
+            assert target in positions, (
+                f"no move recorded to continue replay from {target}"
+            )
         assert {memory for state, memory in positions if state == "s3"} == {0, 1}
 
     def test_an_explicit_state_is_threaded_through(self, cgs_simple_parser):

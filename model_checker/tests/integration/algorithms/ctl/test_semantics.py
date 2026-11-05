@@ -46,9 +46,9 @@ class TestCTLSemanticVerificationSimpleModel:
 
         states = extract_states_from_result(result)
         assert states is not None, "Failed to extract states from result"
-        assert (
-            states == expected
-        ), f"{formula} expected {expected} ({reason}) but got {states}"
+        assert states == expected, (
+            f"{formula} expected {expected} ({reason}) but got {states}"
+        )
 
 
 @pytest.mark.semantic
@@ -89,9 +89,9 @@ class TestCTLSemanticVerificationCustomModels:
 
         states = extract_states_from_result(result)
         assert states is not None, "Failed to extract states from result"
-        assert (
-            states == expected
-        ), f"{formula} expected {expected} ({reason}) but got {states}"
+        assert states == expected, (
+            f"{formula} expected {expected} ({reason}) but got {states}"
+        )
 
     @pytest.mark.parametrize(
         "formula,expected,reason",
@@ -105,6 +105,6 @@ class TestCTLSemanticVerificationCustomModels:
 
         states = extract_states_from_result(result)
         assert states is not None, "Failed to extract states from result"
-        assert (
-            states == expected
-        ), f"{formula} expected {expected} ({reason}) but got {states}"
+        assert states == expected, (
+            f"{formula} expected {expected} ({reason}) but got {states}"
+        )

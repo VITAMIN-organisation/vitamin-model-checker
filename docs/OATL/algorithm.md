@@ -92,7 +92,7 @@ over these groups.
 ## Example
 
 On the attack model of the paper
-([oatl_3agents_medium_6states_costs.txt](../../model_checker/tests/fixtures/costCGS/OATL/oatl_3agents_medium_6states_costs.txt)),
+([oatl_3agents_medium_6states_costs.txt](https://github.com/VITAMIN-organisation/vitamin-model-checker/blob/main/model_checker/tests/fixtures/costCGS/OATL/oatl_3agents_medium_6states_costs.txt)),
 agents 1 and 2 are the attackers and the Demon blocks them:
 
 - `<1,2><2> G !(r && s && g)` is false at `s0`;
@@ -117,7 +117,7 @@ Paths below are relative to `model_checker/algorithms/explicit/`.
 
 ## Tests
 
-[test_correctness.py](../../model_checker/tests/integration/algorithms/oatl/test_correctness.py)
+[test_correctness.py](https://github.com/VITAMIN-organisation/vitamin-model-checker/blob/main/model_checker/tests/integration/algorithms/oatl/test_correctness.py)
 covers the budget threshold above, budget 0, the cost sum over A-actions,
 agents outside `A`, `U` as least and `W` as greatest fixpoint, and the
 missing-cost error.

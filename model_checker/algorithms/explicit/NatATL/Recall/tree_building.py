@@ -70,9 +70,9 @@ def tree_to_initial_CGS(
             if existing_value == "0":
                 transition_matrix[state_idx][child_idx] = action_value
             elif existing_value != action_value:
-                transition_matrix[state_idx][
-                    child_idx
-                ] = f"{existing_value},{action_value}"
+                transition_matrix[state_idx][child_idx] = (
+                    f"{existing_value},{action_value}"
+                )
             traverse(child, depth + 1)
 
     traverse(root, 0)

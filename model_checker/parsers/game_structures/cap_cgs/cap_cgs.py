@@ -58,7 +58,6 @@ class CapCGS(CGS):
 
         def process_capacities(line):
             if line:
-
                 values = line.split()
                 if values:
                     capacities_list.extend(values)

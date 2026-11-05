@@ -53,9 +53,9 @@ class TestConcurrentModelChecking:
             parallel_results = [f.result() for f in futures]
 
         for result in parallel_results:
-            assert (
-                result == sequential
-            ), "Concurrent result must equal sequential result (determinism)."
+            assert result == sequential, (
+                "Concurrent result must equal sequential result (determinism)."
+            )
 
     def test_same_model_same_logic_many_formulas_parallel(self, ctl_small_model):
         """Same CTL model, different formulas run in parallel; each result matches sequential."""
@@ -70,9 +70,9 @@ class TestConcurrentModelChecking:
 
         def check_formula(formula: str):
             result = ctl_check(formula, path)
-            assert (
-                result == sequential_by_formula[formula]
-            ), f"Parallel result for {formula} must match sequential."
+            assert result == sequential_by_formula[formula], (
+                f"Parallel result for {formula} must match sequential."
+            )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             futures = [

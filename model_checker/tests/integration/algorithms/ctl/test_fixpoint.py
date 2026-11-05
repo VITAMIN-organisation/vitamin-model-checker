@@ -137,9 +137,9 @@ class TestCTLFixpointConvergence:
             f"fixpoint computation {final_result}"
         )
 
-        assert (
-            final_result == expected_final
-        ), f"{operator} expected final states {expected_final}, got {final_result}"
+        assert final_result == expected_final, (
+            f"{operator} expected final states {expected_final}, got {final_result}"
+        )
 
     def test_fixpoint_convergence_finite_steps(self, cgs_simple_parser):
         """Test that all fixpoints converge in finite steps.

@@ -108,7 +108,7 @@ disables every edge is enough to make `next_in` fail.
 ## Example
 
 The attack graph of Sec. 5 of the paper
-([cotl_attack_graph_3demons_6states.txt](../../model_checker/tests/fixtures/ObstructionModel/COTL/cotl_attack_graph_3demons_6states.txt)):
+([cotl_attack_graph_3demons_6states.txt](https://github.com/VITAMIN-organisation/vitamin-model-checker/blob/main/model_checker/tests/fixtures/ObstructionModel/COTL/cotl_attack_graph_3demons_6states.txt)):
 an attacker walks from `s0` to the target `s2_3`, where `q` holds, and demon `i`
 is security team `ST_i`. The paper gives no costs, so every block costs 1 and
 the budget is 1.
@@ -139,7 +139,7 @@ The parser takes the number of demons as `n_agent`. Paths below are relative to
 
 ## Tests
 
-[test_correctness.py](../../model_checker/tests/integration/algorithms/cotl/test_correctness.py)
+[test_correctness.py](https://github.com/VITAMIN-organisation/vitamin-model-checker/blob/main/model_checker/tests/integration/algorithms/cotl/test_correctness.py)
 covers the attack graph above, stopping paths, `X` against `WX`, demons outside
 the legion, the budget, the empty legion, and invalid model files (the error
 names the line).

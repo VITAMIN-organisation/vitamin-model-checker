@@ -54,6 +54,6 @@ class TestCapATLScalability:
         result = model_checking("<{1}>F p", model_path)
         elapsed = time.time() - start_time
         assert "error" not in result, f"{case_id}: {result}"
-        assert (
-            elapsed < max_time
-        ), f"{case_id} took {elapsed:.2f}s, expected < {max_time}s"
+        assert elapsed < max_time, (
+            f"{case_id} took {elapsed:.2f}s, expected < {max_time}s"
+        )

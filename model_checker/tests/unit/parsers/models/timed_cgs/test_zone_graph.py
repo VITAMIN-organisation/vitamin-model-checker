@@ -160,9 +160,9 @@ Invariants
 
     assert len(zone_graph.states) > 0
     for state, successors in zone_graph.graph.items():
-        assert (
-            len(successors) > 0
-        ), f"State {state.location} {state.zone} is a premature leaf!"
+        assert len(successors) > 0, (
+            f"State {state.location} {state.zone} is a premature leaf!"
+        )
 
 
 @pytest.mark.unit

@@ -107,9 +107,9 @@ class TestScalabilityAnalysis:
             times.append((num_states, elapsed_time))
         ratio_200_100 = times[1][1] / times[0][1] if times[0][1] > 0 else float("inf")
         ratio_500_200 = times[2][1] / times[1][1] if times[1][1] > 0 else float("inf")
-        assert (
-            ratio_200_100 < 15.0
-        ), f"Scaling ratio {ratio_200_100:.2f}x suggests poor complexity"
-        assert (
-            ratio_500_200 < 20.0
-        ), f"Scaling ratio {ratio_500_200:.2f}x suggests poor complexity"
+        assert ratio_200_100 < 15.0, (
+            f"Scaling ratio {ratio_200_100:.2f}x suggests poor complexity"
+        )
+        assert ratio_500_200 < 20.0, (
+            f"Scaling ratio {ratio_500_200:.2f}x suggests poor complexity"
+        )

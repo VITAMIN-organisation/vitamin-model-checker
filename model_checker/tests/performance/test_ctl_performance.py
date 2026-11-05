@@ -148,8 +148,7 @@ class TestCTLPerformanceLargeModels:
             parser, _core_ctl_checking, formula, max_time
         )
         assert states == _expected_states(expected, num_states), (
-            f"{formula} expected {_expected_states(expected, num_states)}, "
-            f"got {states}"
+            f"{formula} expected {_expected_states(expected, num_states)}, got {states}"
         )
         if fixpoint_op is not None:
             _, iterations = compute_fixpoint_iterations(

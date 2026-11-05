@@ -65,9 +65,9 @@ class TestNatATLStrategyEnumeration:
         elapsed = time.time() - start_time
         assert "error" not in result, f"{case_id}: {result}"
         assert result.get("Satisfiability") is True
-        assert (
-            elapsed < max_time
-        ), f"{case_id} took {elapsed:.2f}s, expected < {max_time}s"
+        assert elapsed < max_time, (
+            f"{case_id} took {elapsed:.2f}s, expected < {max_time}s"
+        )
 
 
 @pytest.mark.performance
@@ -119,6 +119,6 @@ class TestNatATLMatrixPruneBench:
         )
         elapsed = time.perf_counter() - start
         assert pruned is graph
-        assert (
-            elapsed < 2.0
-        ), f"modify_matrix took {elapsed:.3f}s on {num_states} states"
+        assert elapsed < 2.0, (
+            f"modify_matrix took {elapsed:.3f}s on {num_states} states"
+        )

@@ -27,8 +27,9 @@ def handle_globally(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: DemonicOp) 
     operand_states = node.operand.satisfying_states
     node.satisfying_states = greatest_fixpoint(
         all_states,
-        lambda states: operand_states
-        & triangle_down(tcgs, zone_graph, bound, states, constraint),
+        lambda states: (
+            operand_states & triangle_down(tcgs, zone_graph, bound, states, constraint)
+        ),
     )
 
 
@@ -49,8 +50,10 @@ def handle_eventually(
     operand_states = node.operand.satisfying_states
     node.satisfying_states = least_fixpoint(
         operand_states,
-        lambda states: operand_states
-        | (all_states & triangle_down(tcgs, zone_graph, bound, states, constraint)),
+        lambda states: (
+            operand_states
+            | (all_states & triangle_down(tcgs, zone_graph, bound, states, constraint))
+        ),
     )
 
 
@@ -63,8 +66,10 @@ def handle_until(
     states2 = node.right.satisfying_states
     node.satisfying_states = least_fixpoint(
         states2,
-        lambda states: states2
-        | (states1 & triangle_down(tcgs, zone_graph, bound, states, constraint)),
+        lambda states: (
+            states2
+            | (states1 & triangle_down(tcgs, zone_graph, bound, states, constraint))
+        ),
     )
 
 
@@ -78,8 +83,10 @@ def handle_release(
     states2 = node.right.satisfying_states
     node.satisfying_states = greatest_fixpoint(
         all_states,
-        lambda states: states2
-        & (states1 | triangle_down(tcgs, zone_graph, bound, states, constraint)),
+        lambda states: (
+            states2
+            & (states1 | triangle_down(tcgs, zone_graph, bound, states, constraint))
+        ),
     )
 
 
@@ -92,6 +99,8 @@ def handle_weak(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: DemonicBinary) 
     states_weak = states1 | states2
     node.satisfying_states = greatest_fixpoint(
         all_states,
-        lambda states: states_weak
-        & (states2 | triangle_down(tcgs, zone_graph, bound, states, constraint)),
+        lambda states: (
+            states_weak
+            & (states2 | triangle_down(tcgs, zone_graph, bound, states, constraint))
+        ),
     )
