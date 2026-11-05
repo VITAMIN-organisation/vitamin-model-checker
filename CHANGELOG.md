@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-05
+
 ### Added
 
 - `ATL_STAR.synthesize_strategy(formula, filename, state=None)`, a separate
@@ -14,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   "transitions": [...]} | None, ...}`), kept out of
   `model_checking` so that one stays focused on plain model checking. Only
   supports a formula whose outermost operator is a single coalition with
-  no further coalition nested inside its path formula — broader formula
+  no further coalition nested inside its path formula. Broader formula
   shapes are rejected with a clear "semantic" error, deferred to a later
   iteration. See `docs/ATL_STAR/algorithm.md`.
 - `ObstructionModel`, the model type for COTL: a graph whose edges demons
@@ -41,7 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   out of its last state is disabled.
 - OATL and COTL no longer share parser or pre-image code.
 - `spottl` (Spot's Python bindings, Linux only) is now a regular
-  dependency instead of living under the `atl_star` extra — `pip install
+  dependency instead of living under the `atl_star` extra. `pip install
   vitamin-model-checker` alone is enough for ATL* to work, no
   `[atl_star]` extra needed.
 
@@ -73,15 +75,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - ATL* model checking (`model_checker/algorithms/explicit/ATL_STAR/`), an
   automata-theoretic checker (reduction to 2-player parity games) rather
-  than the coalition pre-image fixpoint every other logic here uses —
+  than the coalition pre-image fixpoint every other logic here uses. It is
   needed because ATL* allows a coalition operator to appear anywhere
   inside a path formula, not only at the formula's own root. Runs over
   plain `CGS`, no new game-structure type. Requires
-  [Spot](https://spot.lre.epita.fr/) — `pip install spottl` on Linux, or
-  conda-forge elsewhere; the rest of VITAMIN works without it, see
+  [Spot](https://spot.lre.epita.fr/) (`pip install spottl` on Linux, or
+  conda-forge elsewhere); the rest of VITAMIN works without it, see
   `docs/ATL_STAR/algorithm.md`.
-- `model_checker/automata/`, a vendored, logic-agnostic ω-automata and
-  parity-game-solving library (wraps Spot) backing ATL*'s reduction —
+- `model_checker/automata/`, a vendored, logic-agnostic omega-automata and
+  parity-game-solving library (wraps Spot) backing ATL*'s reduction. It is
   available to any future logic that needs the same machinery.
 - Restricted executable NatSL one-goal checker with ordered bounded strategy
   quantification and shared `space`/`time` semantics.

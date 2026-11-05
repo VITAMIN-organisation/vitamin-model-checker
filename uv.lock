@@ -1188,7 +1188,7 @@ wheels = [
 
 [[package]]
 name = "vitamin-model-checker"
-version = "1.6.5"
+version = "1.7.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
