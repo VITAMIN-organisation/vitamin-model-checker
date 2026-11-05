@@ -17,9 +17,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   no further coalition nested inside its path formula — broader formula
   shapes are rejected with a clear "semantic" error, deferred to a later
   iteration. See `docs/ATL_STAR/algorithm.md`.
+- `ObstructionModel`, the model type for COTL: a graph whose edges demons
+  disable at a cost (sections `Number_of_demons`, `Demon_actions`, `Curses`;
+  see `docs/file_formats.md`).
+- COTL weak next `WX`, an empty legion `<><n>`, and budget 0.
+- OATL accepts `R`, `W`, the parenthesised form `<A><n> (phi U psi)`, and
+  budget 0.
 
 ### Changed
 
+- **Breaking:** OATL now follows Catta et al., "Obstruction Alternating-time
+  Temporal Logic", AAMAS 2024. `<A><n>` means the Demon erases joint actions of
+  total cost at most `n` per step so that, whatever `A` does, some remaining
+  path satisfies the formula. Earlier versions checked whether `A` had one
+  move of cost `<= n` into the target. Recompute OATL results. A missing cost
+  that decides the result is now an error instead of 0, and the ATL prefilter
+  is dropped.
+- **Breaking:** COTL now follows Catta et al., "Coalition Obstruction Temporal
+  Logic", IJCAI 2025. `<G><n>` is a legion of demons with budget `n` per step.
+  Earlier versions ran a cost-bounded coalition on a `costCGS`. Recompute COTL
+  results and convert models to `ObstructionModel`; `costCGS` files are now
+  rejected. `R`, `G` and `W` also hold on a path that stops because every edge
+  out of its last state is disabled.
+- OATL and COTL no longer share parser or pre-image code.
 - `spottl` (Spot's Python bindings, Linux only) is now a regular
   dependency instead of living under the `atl_star` extra — `pip install
   vitamin-model-checker` alone is enough for ATL* to work, no
@@ -32,38 +52,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   already declared in the model, silently corrupting the result for that
   edge case. The marker is now checked against the model's declared
   propositions before use.
-- OATL follows the semantics of Catta et al., "Obstruction Alternating-time
-  Temporal Logic", AAMAS 2024 again. `<A><n>` means the Demon can erase joint
-  actions of total cost at most `n` per step so that, whatever coalition `A`
-  does, some remaining path satisfies the formula. Earlier versions checked
-  instead whether `A` itself had one affordable move (cost `<= n`) into the
-  target, which gives different results. OATL results from those versions
-  should be recomputed. Related changes:
-  - OATL no longer shares its pre-image with COTL.
-  - The ATL prefilter is dropped for OATL, because it could wrongly answer False.
-  - Release (`R`) and Weak Until (`W`) are accepted again, also in the
-    paper's parenthesised form `<A><n> (phi U psi)`.
-  - The budget may be 0, as in the paper.
-  - A missing cost that decides the result is now an error instead of 0.
-    Missing costs that cannot change the result are allowed.
-  - The OATL test fixture is Figure 1 of the paper, with the paper's scalar
-    costs restored.
-- COTL follows Catta et al., "Coalition Obstruction Temporal Logic", IJCAI
-  2025. Earlier versions checked a cost-bounded coalition of agents on a
-  `costCGS`, which is not COTL; their results should be recomputed. COTL now
-  runs on a new model type, `ObstructionModel`: a graph of states whose edges
-  demons disable at a cost (sections `Number_of_demons`, `Demon_actions`,
-  `Curses`; see `docs/file_formats.md`). `costCGS` files are rejected for COTL.
-  Related changes:
-  - `<G><n>` is a legion of demons, which may be empty (`<><0>`), with budget
-    `n >= 0` per step.
-  - Weak next is available as `WX`.
-  - Release, `G` and `W` also hold on paths that stop because the legion
-    disabled every edge out of their last state; `X`, `U` and `F` need a next
-    state.
-  - COTL no longer shares any parser or pre-image code with OATL;
-    `shared/oatl_index_preimage.py` is removed.
-  - The COTL test fixture is the attack graph of Sec. 5 of the paper.
+
+### Removed
+
+- `shared/oatl_index_preimage.py`.
 
 ## [1.6.5] - 2026-09-15
 

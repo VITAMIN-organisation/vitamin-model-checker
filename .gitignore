@@ -67,3 +67,5 @@ site/
 
 # Locally generated NatSL experiment runs
 experiments/natsl/results/
+
+docs/papers
