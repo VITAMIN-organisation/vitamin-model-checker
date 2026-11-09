@@ -82,9 +82,14 @@ All logics in VITAMIN share a common set of boolean operators and constants.
 | Operator | Syntax | Keyword | Description |
 | :--- | :--- | :--- | :--- |
 | **Negation** | `!` | `not` | Logical NOT |
-| **Conjunction** | `&&` or `&` | `and` | Logical AND |
-| **Disjunction** | `\|\|` or `\|` | `or` | Logical OR |
-| **Implication** | `->` or `>` | `implies` | Logical implication (p -> q) |
+| **Conjunction** | `&&` | `and` | Logical AND |
+| **Disjunction** | `\|\|` | `or` | Logical OR |
+| **Implication** | `->` | `implies` | Logical implication (p -> q) |
+
+Every logic spells the connectives this way. A single `&` or `|`, and `>` as
+implication, are rejected in all of them (`test_connective_spelling.py`), so a
+formula is never valid in one logic and invalid in another. NatSL goals take no
+connectives.
 
 **Grouping and Nesting:**
 

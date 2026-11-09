@@ -72,13 +72,13 @@ class BaseLogicParser:
         return t
 
     def t_AND(self, t):
-        # Canonical: &&. Aliases: &, word and
-        r"&&|\&|and\b"
+        # Canonical: &&. Alias: word and. A single & is an invalid character.
+        r"&&|and\b"
         return t
 
     def t_OR(self, t):
-        # Canonical: ||. Aliases: single |, word or
-        r"\|\||\||or\b"
+        # Canonical: ||. Alias: word or. A single | is an invalid character.
+        r"\|\||or\b"
         return t
 
     def t_NOT(self, t):
@@ -87,8 +87,8 @@ class BaseLogicParser:
         return t
 
     def t_IMPLIES(self, t):
-        # Canonical: ->. Aliases: >, word implies
-        r"->|>|implies\b"
+        # Canonical: ->. Alias: word implies. A lone > is not implication.
+        r"->|implies\b"
         return t
 
     def t_newline(self, t):

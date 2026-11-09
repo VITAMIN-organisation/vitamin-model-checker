@@ -98,15 +98,15 @@ class TestATLStarOnRealFixture:
     """Reuses ATL's own real fixture unchanged (plain CGS, no ATL*-specific model)."""
 
     def test_grand_coalition_matches_the_known_verdict(self, cgs_simple_parser):
-        """<<1,2>> F (p & q) on atl_2agents_4states_simple.txt: True."""
-        result = _core_atl_star_checking(cgs_simple_parser, "<<1,2>> F (p & q)")
+        """<<1,2>> F (p && q) on atl_2agents_4states_simple.txt: True."""
+        result = _core_atl_star_checking(cgs_simple_parser, "<<1,2>> F (p && q)")
         states = extract_states_from_result(result)
         assert cgs_simple_parser.initial_state in states
 
     def test_first_agent_alone_matches_the_known_verdict(self, cgs_simple_parser):
-        """<<1>> F (p & q) on the same fixture: also True — that fixture's
+        """<<1>> F (p && q) on the same fixture: also True — that fixture's
         rows never actually offer agent 2 a way to steer away from it."""
-        result = _core_atl_star_checking(cgs_simple_parser, "<<1>> F (p & q)")
+        result = _core_atl_star_checking(cgs_simple_parser, "<<1>> F (p && q)")
         states = extract_states_from_result(result)
         assert cgs_simple_parser.initial_state in states
 
@@ -161,7 +161,7 @@ class TestATLStarRealEntryPoint:
     mirroring how ATL's own test_correctness.py calls `model_checking` directly."""
 
     def test_valid_formula_through_the_real_entry_point(self, cgs_simple_parser):
-        result = model_checking("<<1,2>> F (p & q)", cgs_simple_parser.filename)
+        result = model_checking("<<1,2>> F (p && q)", cgs_simple_parser.filename)
         assert "error" not in result
         assert "res" in result and "initial_state" in result
 

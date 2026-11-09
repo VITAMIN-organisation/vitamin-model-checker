@@ -31,24 +31,19 @@ def test_negation():
 
 
 def test_conjunction_left_associative():
-    assert parse("p & q & r") == And(And(Prop("p"), Prop("q")), Prop("r"))
+    assert parse("p && q && r") == And(And(Prop("p"), Prop("q")), Prop("r"))
 
 
 def test_and_binds_tighter_than_or():
-    assert parse("p & q | r") == Not(
+    assert parse("p && q || r") == Not(
         And(Not(And(Prop("p"), Prop("q"))), Not(Prop("r")))
     )
-
-
-def test_double_symbol_and_or_are_synonyms_for_the_single_symbol_forms():
-    assert parse("p && q") == parse("p & q")
-    assert parse("p || q") == parse("p | q")
 
 
 def test_lowercase_single_letter_stays_a_prop():
     # Only uppercase X/F/G/U are reserved, lowercase single-letter names
     # (common for propositions) stay available as identifiers.
-    assert parse("x & g") == And(Prop("x"), Prop("g"))
+    assert parse("x && g") == And(Prop("x"), Prop("g"))
 
 
 def test_next():
@@ -111,10 +106,10 @@ def test_until_after_a_coalition_takes_a_prefixed_left_operand():
 @pytest.mark.parametrize(
     ("text", "shown", "position"),
     [
-        ("p U q & r", "'x U y & z'", 2),
-        ("p & q U r", "'x & y U z'", 6),
+        ("p U q && r", "'x U y && z'", 2),
+        ("p && q U r", "'x && y U z'", 7),
         ("p -> q U r", "'x -> y U z'", 7),
-        ("<<1>> (p U q | r)", "'x U y | z'", 9),
+        ("<<1>> (p U q || r)", "'x U y || z'", 9),
     ],
 )
 def test_until_next_to_a_connective_is_ambiguous(text, shown, position):
@@ -127,10 +122,10 @@ def test_until_next_to_a_connective_is_ambiguous(text, shown, position):
 @pytest.mark.parametrize(
     ("text", "position"),
     [
-        ("<<1>> p & q", 0),
-        ("<<1>> F p & q", 0),
-        ("<<1>> (p U q) & r", 0),
-        ("r | !<<2>> X p -> q", 5),
+        ("<<1>> p && q", 0),
+        ("<<1>> F p && q", 0),
+        ("<<1>> (p U q) && r", 0),
+        ("r || !<<2>> X p -> q", 6),
     ],
 )
 def test_connective_after_a_coalition_is_ambiguous(text, position):
@@ -142,12 +137,12 @@ def test_connective_after_a_coalition_is_ambiguous(text, position):
 @pytest.mark.parametrize(
     "text",
     [
-        "(<<1>> F p) & q",
-        "<<1>> (F p & q)",
-        "<<1>> ((p U q) & r)",
-        "<<1>> (p & (q U r))",
-        "q & <<1>> F p",
-        "<<1>> (F p & G q)",
+        "(<<1>> F p) && q",
+        "<<1>> (F p && q)",
+        "<<1>> ((p U q) && r)",
+        "<<1>> (p && (q U r))",
+        "q && <<1>> F p",
+        "<<1>> (F p && G q)",
     ],
 )
 def test_parenthesized_groupings_parse(text):
@@ -178,7 +173,7 @@ def test_nested_coalition():
 
 
 def test_parentheses_group():
-    assert parse("(p & q) U r") == Until(And(Prop("p"), Prop("q")), Prop("r"))
+    assert parse("(p && q) U r") == Until(And(Prop("p"), Prop("q")), Prop("r"))
 
 
 def test_num_agents_accepts_in_range():
@@ -212,7 +207,7 @@ def test_num_agents_checks_nested_coalitions():
 
 def test_num_agents_checks_inside_and():
     with pytest.raises(ATLStarParseError):
-        parse("<<1>>(p & <<5>>q)", num_agents=2)
+        parse("<<1>>(p && <<5>>q)", num_agents=2)
 
 
 def test_num_agents_checks_inside_until():
@@ -224,8 +219,8 @@ def test_num_agents_checks_inside_until():
     "text",
     [
         "",
-        "p &",
-        "(p & q",
+        "p &&",
+        "(p && q",
         "<<1,1>>p",
         "<<>>p",
         "<<1>>",

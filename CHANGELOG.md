@@ -22,6 +22,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: every logic spells the connectives `&&`, `||`, `!`, `->` or the words
+  `and`, `or`, `not`, `implies`. A single `&` or `|`, and `>` as implication, are
+  rejected everywhere. Before, ATL*, TCTL and TOL took `&` and `|`, Wallet_ATL also
+  took `>`, and the other logics gave a bare "Syntax error". The shared lexer now
+  reports an invalid character. See `test_connective_spelling.py` and
+  `docs/logic_knowledge_base.md`, "Boolean Logic (Shared Syntax)".
 - Breaking: in every logic with a prefix (coalition, path quantifier, bound or
   freeze), a connective after a prefix whose scope no parenthesis closes is a
   syntax error that gives the position and both readings: `<1>F p && q`,

@@ -14,8 +14,8 @@ recursive-descent grammar (`grammar.py`), not PLY, since a coalition can
 scope over an arbitrarily nested path formula, unlike ATL.
 
 ```text
-phi ::= p | !phi | phi & psi | phi | psi | phi -> psi | <<A>> psi
-psi ::= phi | !psi | psi & psi | X psi | psi U psi | F psi | G psi | <<A>> psi
+phi ::= p | !phi | phi && psi | phi || psi | phi -> psi | <<A>> psi
+psi ::= phi | !psi | psi && psi | X psi | psi U psi | F psi | G psi | <<A>> psi
 ```
 
 Coalition form: `<<1,2>>`. Agent ids must be in `1..n`. Unlike ATL, `<<A>>`
@@ -45,18 +45,18 @@ The paper states no precedence rule, so these are syntax errors that ask for
 parentheses:
 
 - A second `U`, as in `<<1>> p U q U r` or `p U q U r`.
-- `U` next to `&`, `|` or `->`, as in `p U q & r` or `p & q U r`. The message is
-  `'x U y & z' is ambiguous: write (x U y) & z or x U (y & z)`, with the
+- `U` next to `&&`, `||` or `->`, as in `p U q && r` or `p && q U r`. The message is
+  `'x U y && z' is ambiguous: write (x U y) && z or x U (y && z)`, with the
   position of the `U`.
-- A connective right after a coalition, as in `<<1>> p & q`, `<<1>> F p & q` or
-  `<<1>> (p U q) & r`. In ATL, `<1> p` is no formula, but in ATL* a coalition can
-  scope over any path formula, so `<<1>> p & q` is `(<<1>> p) & q` or
-  `<<1>> (p & q)`. Write `(<<1>> F p) & q` or `<<1>> (F p & q)`. A coalition at the
-  end, `q & <<1>> F p`, has one reading.
+- A connective right after a coalition, as in `<<1>> p && q`, `<<1>> F p && q` or
+  `<<1>> (p U q) && r`. In ATL, `<1> p` is no formula, but in ATL* a coalition can
+  scope over any path formula, so `<<1>> p && q` is `(<<1>> p) && q` or
+  `<<1>> (p && q)`. Write `(<<1>> F p) && q` or `<<1>> (F p && q)`. A coalition at the
+  end, `q && <<1>> F p`, has one reading.
 
 `!`, `X`, `F` and `G` bind tighter than the connectives, as the paper reads the
 winning condition $\Box\Diamond done \to \psi$ (p. 693):
-`<<1>> (F p & G q)` is `<<1>> ((F p) & (G q))`.
+`<<1>> (F p && G q)` is `<<1>> ((F p) && (G q))`.
 
 ATL writes a coalition with single angle brackets (`<1,2>`). Wallet_ATL also writes
 `<<...>>`, to avoid a clash with NatATL's `<k>` bound notation, and allows a
@@ -155,7 +155,7 @@ matching row in `transitions` to know the next position.
 Only supports a formula whose outermost operator is a single coalition
 with no further coalition nested inside its path formula
 (`verifier.require_simple_coalition`), a top-level boolean combination of
-coalitions (`(<<1>> F p) & (<<2>> G q)`) or a nested one
+coalitions (`(<<1>> F p) && (<<2>> G q)`) or a nested one
 (`<<1>> G <<2>> F p`) comes back as a "semantic" error instead. Both would
 need more than one independent strategy to represent faithfully; broader
 support is deferred to a later iteration.

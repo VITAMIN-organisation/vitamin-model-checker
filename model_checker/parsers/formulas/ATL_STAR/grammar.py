@@ -9,8 +9,8 @@ Grammar (lowest to highest precedence; parentheses always disambiguate):
 
     formula     := implication
     implication := disjunction ('->' implication)?     (sugar, right-assoc)
-    disjunction := conjunction ('|' conjunction)*       (sugar, left-assoc)
-    conjunction := until ('&' until)*                   (left-assoc)
+    disjunction := conjunction ('||' conjunction)*      (sugar, left-assoc)
+    conjunction := until ('&&' until)*                  (left-assoc)
     until       := unary ('U' unary)?                   (parenthesize to chain)
     unary       := '!' unary | 'X' unary | 'F' unary | 'G' unary
                  | '<<' agents '>>' until
@@ -18,17 +18,18 @@ Grammar (lowest to highest precedence; parentheses always disambiguate):
     atom        := PROP | 'true' | 'false' | '(' formula ')'
     agents      := INT (',' INT)*
 
-Each keyword also accepts its word form (`not`/`!`, `and`/`&`/`&&`,
-`or`/`|`/`||`, `implies`/`->`, `next`/`X`, `eventually`/`F`, `globally`/`G`,
-`until`/`U`), case-insensitive. Only uppercase `X`/`F`/`G`/`U` are reserved as
+Each keyword also accepts its word form (`not`/`!`, `and`/`&&`, `or`/`||`,
+`implies`/`->`, `next`/`X`, `eventually`/`F`, `globally`/`G`, `until`/`U`),
+case-insensitive. A single `&` or `|`, and `>` for implication, are rejected, as in
+every other logic. Only uppercase `X`/`F`/`G`/`U` are reserved as
 single-letter operators, so lowercase single-letter propositions stay free.
 
 A coalition binds like a prefix operator over the tightest following
 `unary`, parenthesize the operand for anything beyond a bare
-atom/negation/next (e.g. `<<1>>(F p & G q)`). A `U` right after the operand
+atom/negation/next (e.g. `<<1>>(F p && G q)`). A `U` right after the operand
 belongs to the coalition: `<<1>> p U q` is `<<1>>(p U q)`, as ATL writes it, and
 ATL is a fragment of ATL*. A coalition over only the left operand is written
-`(<<1>> p) U q`. `F`, `G`, `|`, and `->` are sugar, desugared here into the
+`(<<1>> p) U q`. `F`, `G`, `||`, and `->` are sugar, desugared here into the
 seven primitive constructors (`Prop`, `True_`, `Not`, `And`, `Coalition`,
 `Next`, `Until`) so `verifier.py` only has to handle those.
 
@@ -88,8 +89,8 @@ _TOKEN_RE = re.compile(
     | (?P<RPAREN>\))
     | (?P<COMMA>,)
     | (?P<IMPLIES>->)
-    | (?P<AND>&&?)
-    | (?P<OR>\|\|?)
+    | (?P<AND>&&)
+    | (?P<OR>\|\|)
     | (?P<NOT>!)
     | (?P<INT>\d+)
     | (?P<IDENT>[a-zA-Z_][a-zA-Z0-9_]*)

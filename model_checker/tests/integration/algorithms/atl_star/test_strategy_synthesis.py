@@ -90,7 +90,7 @@ class TestSynthesizeStrategyCore:
 
     def test_rejects_a_top_level_boolean_combination(self, temp_file):
         cgs = _two_state_model(temp_file)
-        result = _core_synthesize_strategy(cgs, "(<<1>> X p) & (<<2>> X p)", None)
+        result = _core_synthesize_strategy(cgs, "(<<1>> X p) && (<<2>> X p)", None)
         assert "error" in result
         assert result["error"]["type"] == "semantic"
         assert "single coalition" in result["error"]["message"]
@@ -122,11 +122,11 @@ class TestSynthesizeStrategyRealEntryPoint:
     `test_semantics.py`'s `TestATLStarRealEntryPoint` for `model_checking`."""
 
     def test_valid_formula_through_the_real_entry_point(self, cgs_simple_parser):
-        result = synthesize_strategy("<<1,2>> F (p & q)", cgs_simple_parser.filename)
+        result = synthesize_strategy("<<1,2>> F (p && q)", cgs_simple_parser.filename)
         assert "error" not in result
         assert result["satisfied"] is True
         json.dumps(result["strategy"])
-        assert result["formula"] == "<<1,2>> F (p & q)"
+        assert result["formula"] == "<<1,2>> F (p && q)"
         assert result["model"] == cgs_simple_parser.filename
 
     def test_transitions_support_continued_replay(self, cgs_simple_parser):
@@ -135,7 +135,7 @@ class TestSynthesizeStrategyRealEntryPoint:
         entry to continue replay from -- including s3, which this fixture's
         automaton reaches at two different memory values depending on how
         it got there, a real same-CGS-state-different-memory case."""
-        result = synthesize_strategy("<<1,2>> F (p & q)", cgs_simple_parser.filename)
+        result = synthesize_strategy("<<1,2>> F (p && q)", cgs_simple_parser.filename)
         strategy = result["strategy"]
         positions = {(m["state"], m["memory"]) for m in strategy["moves"]}
         assert strategy["transitions"]
@@ -147,11 +147,11 @@ class TestSynthesizeStrategyRealEntryPoint:
         assert {memory for state, memory in positions if state == "s3"} == {0, 1}
 
     def test_an_explicit_state_is_threaded_through(self, cgs_simple_parser):
-        """<<1,2>> F (p & q) also holds at s0, so only checking `satisfied`
+        """<<1,2>> F (p && q) also holds at s0, so only checking `satisfied`
         wouldn't catch `state` being silently ignored -- the witness's own
         `start` (and the states it reaches) must reflect s2, not s0."""
         result = synthesize_strategy(
-            "<<1,2>> F (p & q)", cgs_simple_parser.filename, state="s2"
+            "<<1,2>> F (p && q)", cgs_simple_parser.filename, state="s2"
         )
         assert "error" not in result
         assert result["satisfied"] is True
@@ -167,7 +167,7 @@ class TestSynthesizeStrategyRealEntryPoint:
         self, cgs_simple_parser
     ):
         result = synthesize_strategy(
-            "(<<1>> F p) & (<<2>> F q)", cgs_simple_parser.filename
+            "(<<1>> F p) && (<<2>> F q)", cgs_simple_parser.filename
         )
         assert "error" in result
         assert result["error"]["type"] == "semantic"
