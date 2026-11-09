@@ -94,3 +94,23 @@ class TestTimedCgsParser:
         ]
         timed_cgs_parser.parse_timed_sections(lines, instance)
         assert instance.invariants_arr[0] == ["x", 2.0]
+
+    @pytest.mark.parametrize("comment", ["# note\n", "// note\n"])
+    def test_comment_lines_are_not_rows_or_clocks(self, comment):
+        instance = type("T", (), {})()
+        instance.states = ["s0"]
+        lines = [
+            "Clocks\n",
+            "x\n",
+            comment,
+            "Clock_constraints\n",
+            comment,
+            "x<=1\n",
+            "Invariants\n",
+            comment,
+            "x<=2\n",
+        ]
+        timed_cgs_parser.parse_timed_sections(lines, instance)
+        assert instance.clocks == ["x"]
+        assert instance.clock_constraint_struct[0][0] == "x<=1"
+        assert instance.invariants_arr[0] == ["x", 2.0]

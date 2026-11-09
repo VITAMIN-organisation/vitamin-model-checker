@@ -66,6 +66,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `X` or `U` (`Fuel`, `Goal`, `Until`) as an operator followed by the rest of the
   name, so `<{1},1>F Fuel` failed with a CTL syntax error. This is the same
   change as the NatATL entry under "Changed".
+- A comment line (`#` or `//`) inside `Clocks`, `Clock_constraints` or `Invariants`
+  of a timedCGS model is skipped, as in every other section. Before, it was read as
+  a row and the model failed with "Malformed clock constraint" or "Malformed
+  invariant", and a comment after the clocks replaced them.
 - The wheel now includes `model_checker/knowledge/knowledge_bundle.json.gz`.
   Earlier releases left it out, so an installed package had no documentation
   bundle. The bundle is rebuilt from the current docs and source.

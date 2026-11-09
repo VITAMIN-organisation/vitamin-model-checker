@@ -223,6 +223,8 @@ Preorder
 - `Clock_constraints` - per-transition clock resets and bounds,
 - `Invariants` - clock invariants per state.
 
+Comment lines (`#` or `//`) are allowed in these sections, as in the others.
+
 TOL and TCTL share this model type. Integrate TOL before TCTL if both land in
 the same branch, so `timed_cgs` is present once.
 

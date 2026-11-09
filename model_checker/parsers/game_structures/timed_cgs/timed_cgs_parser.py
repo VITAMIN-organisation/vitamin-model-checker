@@ -41,7 +41,7 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
 
     for line in lines:
         stripped = line.strip()
-        if not stripped:
+        if not stripped or stripped.startswith(("#", "//")):
             continue
 
         if stripped in TIMED_SECTION_HEADERS:
