@@ -46,7 +46,7 @@ _lr_productions = [
   ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','shared_parser.py',116),
   ('expression -> NOT expression','expression',2,'p_expression_not','shared_parser.py',121),
   ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',126),
-  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',189),
-  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',190),
-  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',194),
+  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',190),
+  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',191),
+  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',195),
 ]

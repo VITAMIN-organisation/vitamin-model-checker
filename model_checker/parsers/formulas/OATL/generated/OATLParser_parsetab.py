@@ -41,7 +41,7 @@ _lr_productions = [
   ('expression -> COALITION_DEMONIC NEXT expression','expression',3,'p_expression_unary','parser.py',125),
   ('expression -> COALITION_DEMONIC EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',126),
   ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',126),
-  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',189),
-  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',190),
-  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',194),
+  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',190),
+  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',191),
+  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',195),
 ]

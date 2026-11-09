@@ -47,7 +47,7 @@ _lr_productions = [
   ('expression2 -> NOT expression2','expression2',2,'p_expression_capformula_not','parser.py',160),
   ('expression2 -> AGENT IS PROP','expression2',3,'p_expression_capformula_is','parser.py',164),
   ('expression2 -> KCAP AGENT expression2','expression2',3,'p_expression_capformula_kcap','parser.py',168),
-  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',189),
-  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',190),
-  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',194),
+  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',190),
+  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',191),
+  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',195),
 ]

@@ -216,7 +216,10 @@ class Wallet_ATLParser(BaseLogicParser):
         if body not in self._grouped:
             # The coalition as written, wallet guards included.
             source = p.lexer.lexdata[p.lexpos(1) :]
-            prefix = re.match(WALLET_COALITION_TOKEN, source).group(0)
+            token = re.match(WALLET_COALITION_TOKEN, source)
+            if token is None:
+                raise ValueError(f"Invalid wallet coalition at: {source!r}")
+            prefix = token.group(0)
             if body["type"] == "unary":
                 prefix += body["operator"]
                 self._prefix_over(p[0], prefix, p.lexpos(1), body["formula"])

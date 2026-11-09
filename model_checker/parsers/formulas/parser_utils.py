@@ -6,7 +6,7 @@ Coalition checks, lexer token checks, and pre-parse validation live here.
 import re
 import unicodedata
 from collections.abc import Sequence
-from typing import NamedTuple
+from typing import Generic, NamedTuple, TypeVar
 
 from model_checker.parsers.syntax_patterns import (
     AGENT_LIST,
@@ -41,7 +41,10 @@ def until_operands(p) -> tuple:
     return tuple(p[2:5] if len(p) == 5 else p[3:6])
 
 
-class NodeMarks:
+_V = TypeVar("_V")
+
+
+class NodeMarks(Generic[_V]):
     """AST nodes marked during one parse, each with an optional value.
 
     It keeps the nodes, not only their ids: the id of a node freed during the parse
@@ -49,16 +52,16 @@ class NodeMarks:
     """
 
     def __init__(self) -> None:
-        self._marks: dict[int, tuple[object, object]] = {}
+        self._marks: dict[int, tuple[object, _V | None]] = {}
 
-    def mark(self, node: object, value: object = None) -> None:
+    def mark(self, node: object, value: _V | None = None) -> None:
         self._marks[id(node)] = (node, value)
 
     def __contains__(self, node: object) -> bool:
         entry = self._marks.get(id(node))
         return entry is not None and entry[0] is node
 
-    def value(self, node: object) -> object:
+    def value(self, node: object) -> _V | None:
         return self._marks[id(node)][1] if node in self else None
 
 

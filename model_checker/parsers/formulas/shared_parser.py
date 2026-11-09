@@ -135,9 +135,9 @@ class BaseLogicParser:
     # prefix, whichever way the grammar's precedence grouped it.
 
     def _reset_marks(self) -> None:
-        self._grouped = NodeMarks()
-        self._connectives = NodeMarks()
-        self._open = NodeMarks()
+        self._grouped: NodeMarks[None] = NodeMarks()
+        self._connectives: NodeMarks[str] = NodeMarks()
+        self._open: NodeMarks[OpenPrefix] = NodeMarks()
 
     def _open_prefix_of(self, node) -> OpenPrefix | None:
         return None if node in self._grouped else self._open.value(node)
@@ -146,8 +146,9 @@ class BaseLogicParser:
         """Record `node`, built by a prefix rule whose last operand `body` is not
         closed by a parenthesis; `operator` is the U, R or W of a prefix Until."""
         open_prefix = OpenPrefix(prefix, position, operator)
-        if body in self._connectives and body not in self._grouped:
-            raise ambiguous_prefix_error(open_prefix, self._connectives.value(body))
+        connective = self._connectives.value(body)
+        if connective is not None and body not in self._grouped:
+            raise ambiguous_prefix_error(open_prefix, connective)
         self._open.mark(node, open_prefix)
 
     def _prefix_unary(self, p, node, prefix: str) -> None:
