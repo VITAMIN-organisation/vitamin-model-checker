@@ -74,6 +74,13 @@ phi ::= {Jk} F phi | {Jk} G phi
 ```
 
 - `{Jk}`: demonic prefix, `k` a positive integer (`{J[1-9]...}`).
+- `{J2} (p U q)` is the form of the paper (Definition 10, PDF page 4); `{J2} p U q`
+  builds the same tree. The same holds for `R` and `W`. See
+  [the knowledge base](../logic_knowledge_base.md#until-after-a-prefix).
+- A prefix (`{Jk}F`, `{Jk}G`, `{Jk}X`, freeze `j.`) followed by an unparenthesized
+  `&&`, `||` or `->` is a syntax error that gives the position and both readings: `{J2}F p && q`
+  asks for `{J2}F (p && q)` or `({J2}F p) && q`. The paper states no precedence
+  rule and writes a compound body in parentheses, as in `⟨3⟩F(j ≤ 3 ∧ a)`.
 - Sugar (paper): `{Jk} F phi := {Jk} (true U phi)`, `{Jk} G phi := {Jk} (false R phi)`,
   `{Jk} (phi W psi) := {Jk} (psi R (phi || psi))`.
 

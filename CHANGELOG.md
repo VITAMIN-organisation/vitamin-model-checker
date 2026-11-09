@@ -6,6 +6,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- A test checks the operator spacing rule for every registered logic
+  (`test_operator_spacing.py`); a logic missing from its table fails it.
+- ICTL accepts the path quantifier over a parenthesized or bracketed Until or
+  Release, `A(p U q)` and `A[p U q]`, the forms the ICTL papers write (EUMAS 2025,
+  AREA 2023). `A p U q` still works. Before, `A(p U q)` and `A[p U q]` failed with
+  a syntax error.
+- OL, TOL, RBATL, RABATL, CapATL and Wallet_ATL accept a parenthesized Until (and
+  Release or Weak Until where the logic has them) after the prefix, such as
+  `<J2> (p U q)` and `<1><5> (p U q)`. Every logic with a prefix before Until now
+  takes both forms and builds one tree for them: CTL, ICTL, TCTL, and the 14
+  logics in `test_until_after_prefix.py`.
+  See `docs/logic_knowledge_base.md`, "Until after a prefix".
+
+### Changed
+
+- Breaking: TCTL and TOL reject a prefix followed by an unparenthesized `&&`, `||`
+  or `->`, such as `AF p && q`, with an error that gives the position and both
+  readings. Before, it was read as `AF (p && q)`. See
+  `docs/logic_knowledge_base.md`, "Prefix before a connective".
+- ATL*: `<<1>> p U q` is `<<1>> (p U q)`, the coalition over the Until, and
+  `<<1>> p U q U r` is a syntax error, as `p U q U r` is. Before, `<<1>> p U q`
+  parsed as `(<<1>> p) U q`, and the checker failed with "a bare Until is not a
+  state formula". See `docs/ATL_STAR/algorithm.md`.
+- Breaking: a temporal operator is a word of its own in every logic, so a name
+  written with no space after an operator is no longer split. See
+  `docs/logic_knowledge_base.md`, "Operators and names".
+  - LTL: `Xp`, `FGp`, `AXp`, `AGAFp` and similar, in upper or lower case, are
+    names. Write `X p`, `F G p`, `AX p`, `AG AF p`. `ltl_to_ctl` no longer splits
+    them.
+  - NatSL: the goal needs a space after its operator (`F goal`). `Fgoal`, and a
+    goal with no operator such as `Goal`, are rejected with an error. The
+    normalised formula in the result now reads `...:(x,1)F goal`.
+  - NatATL, NatATL_Recall and NatATLF: `<{1},1>Fa` and `<{1},1>fa` are rejected.
+    Write `<{1},1>F a`.
+
+### Fixed
+
+- NatATL, NatATL_Recall and NatATLF read a proposition that starts with `F`, `G`,
+  `X` or `U` (`Fuel`, `Goal`, `Until`) as an operator followed by the rest of the
+  name, so `<{1},1>F Fuel` failed with a CTL syntax error. This is the same
+  change as the NatATL entry under "Changed".
+- The wheel now includes `model_checker/knowledge/knowledge_bundle.json.gz`.
+  Earlier releases left it out, so an installed package had no documentation
+  bundle. The bundle is rebuilt from the current docs and source.
+
 ## [1.7.0] - 2026-11-05
 
 ### Added

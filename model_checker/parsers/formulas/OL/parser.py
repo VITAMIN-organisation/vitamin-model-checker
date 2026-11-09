@@ -99,10 +99,17 @@ class OLParser(BaseLogicParser):
     def p_expression_ternary(self, p):
         """expression : DEMONIC expression UNTIL expression
         | DEMONIC expression WEAK expression
-        | DEMONIC expression RELEASE expression"""
+        | DEMONIC expression RELEASE expression
+        | DEMONIC LPAREN expression UNTIL expression RPAREN
+        | DEMONIC LPAREN expression WEAK expression RPAREN
+        | DEMONIC LPAREN expression RELEASE expression RPAREN"""
         demonic_str = p[1]
         self._validate_demonic(demonic_str)
-        p[0] = (p[1] + p[3], p[2], p[4])
+        # <Jk> phi U psi and <Jk> (phi U psi) build the same tree.
+        if len(p) == 5:
+            p[0] = (p[1] + p[3], p[2], p[4])
+        else:
+            p[0] = (p[1] + p[4], p[3], p[5])
 
     def p_expression_unary(self, p):
         """expression : DEMONIC GLOBALLY expression

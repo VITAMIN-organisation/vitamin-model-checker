@@ -71,6 +71,13 @@ Add a parser package under:
 model_checker/parsers/formulas/<LogicName>/
 ```
 
+The parser must read a temporal operator as a word of its own: `F p` is an operator
+applied to `p`, and `Fp` is one name (see
+[operators and names](logic_knowledge_base.md#operators-and-names)). Add the logic to
+`_OPERATOR_FORMS` in `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py`
+with the text that precedes the operator and the operator itself (for example
+`("<1>", "F")`); that test fails for a registered logic that is missing from it.
+
 The parser class should follow the shape of existing parser classes and be
 registered through `pyproject.toml` entry points after integration:
 

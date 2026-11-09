@@ -72,6 +72,10 @@ docs = [
 where = ["."]
 include = ["model_checker*"]
 exclude = ["model_checker/tests*"]
+
+[tool.setuptools.package-data]
+"model_checker.knowledge" = ["knowledge_bundle.json.gz"]
+
 # api packages are NOT included as they are a separate application,
 # not part of the installable model_checker library package
 

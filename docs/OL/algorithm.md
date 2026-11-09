@@ -19,6 +19,20 @@ phi ::= ... | <Jk> X phi | <Jk> F phi | <Jk> G phi
 
 Prefix must include `J` (`<J5>`). Bound `k >= 1`.
 
+Written forms of `U`, `R` and `W` after the prefix (`U` shown):
+
+| Form | Accepted | Where it comes from |
+| :--- | :--- | :--- |
+| `<J2> (p U q)` | yes | ECAI23 Definition 1 (PDF page 2) writes `⟨n⟩(φ U φ)` and `⟨n⟩(φ R φ)`. |
+| `<J2> p U q` | yes | The paper's prose writes this form too (`⟨ n ⟩φ U ψ`, PDF page 4). |
+
+`W` is the paper's abbreviation `⟨n⟩(φ W ψ) := ⟨n⟩(ψ R (φ ∨ ψ))` and takes both
+forms. Both forms build the same tree (see
+[the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)). The paper
+states no precedence rule. The parser reads `<J2> p && q U r` as
+`<J2> ((p && q) U r)` and `<J2> p U q && r` as `(<J2> (p U q)) && r`; write the
+parentheses when another grouping is meant.
+
 ## Semantic denotations
 
 | Operator family | Cost meaning |

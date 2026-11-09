@@ -33,6 +33,45 @@ BOOLEAN_AST_OPERATORS = frozenset(
     {"&&", "||", "->", "!", "AND", "OR", "IMPLIES", "NOT"}
 )
 
+_BINARY_CONNECTIVE_SPELLINGS = frozenset(
+    {"&&", "&", "and", "||", "|", "or", "->", "implies"}
+)
+
+
+class GroupedNodes:
+    """The nodes a parser built inside parentheses during one parse.
+
+    It keeps the nodes, not only their ids: the id of a node freed during the parse
+    can be given to a later node, which would then count as parenthesized.
+    """
+
+    def __init__(self) -> None:
+        self._nodes: dict[int, object] = {}
+
+    def add(self, node: object) -> None:
+        self._nodes[id(node)] = node
+
+    def __contains__(self, node: object) -> bool:
+        return self._nodes.get(id(node)) is node
+
+
+def reject_ungrouped_compound_body(
+    prefix: str, body: object, grouped: GroupedNodes, position: int
+) -> None:
+    """Reject a prefix operator over an unparenthesized connective, as in `AF p && q`.
+
+    The TCTL and TOL sources state no precedence rule and always parenthesize a
+    compound body, so `AF p && q` could mean `AF (p && q)` or `(AF p) && q`.
+    `position` is the 0-based offset of the prefix in the formula.
+    """
+    connective = getattr(body, "op", None)
+    if connective in _BINARY_CONNECTIVE_SPELLINGS and body not in grouped:
+        raise ValueError(
+            f"'{prefix} ... {connective} ...' at position {position} is ambiguous: "
+            f"write {prefix} (... {connective} ...) for {prefix} over both sides, "
+            f"or ({prefix} ...) {connective} ... for {prefix} over the left side only"
+        )
+
 
 class CoalitionValueError(Exception):
     """Bad coalition syntax or an agent index outside the allowed range."""

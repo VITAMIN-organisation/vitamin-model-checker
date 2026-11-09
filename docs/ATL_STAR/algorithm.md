@@ -21,6 +21,27 @@ psi ::= phi | !psi | psi & psi | X psi | psi U psi | F psi | G psi | <<A>> psi
 Coalition form: `<<1,2>>`. Agent ids must be in `1..n`. Unlike ATL, `<<A>>`
 may appear anywhere inside a path formula, not just at the root.
 
+Written forms of an Until under a coalition:
+
+| Form | Reading |
+| :--- | :--- |
+| `<<A>> x U y` | The coalition covers the Until: the same tree as `<<A>> (x U y)`. |
+| `<<A>> (x U y)` | The coalition covers the Until. |
+| `(<<A>> x) U y` | The coalition covers only the left operand. It is a path formula, so it is checkable only inside another coalition, as in `<<B>> ((<<A>> x) U y)`. |
+
+The reading of `<<A>> x U y` comes from the paper that defines ATL (Alur,
+Henzinger, Kupferman, JACM 49(5), 2002). Section 3.1 (p. 685) writes the ATL
+formula `<<A>>phi1 U phi2` for the coalition over the Until. Section 3.4 (p. 689)
+defines ATL as the fragment of ATL* in which every temporal operator is
+immediately preceded by a path quantifier, so the ATL formula keeps its meaning in
+ATL*. The same section says ATL* formulas are the state formulas, and
+`(<<A>> x) U y` is only a path formula. The paper states no precedence rule.
+
+Each operand of that `U` is one unary formula, so `<<1>> X p U q` is
+`<<1>> ((X p) U q)`, `<<1>> p U q & r` is `(<<1>> (p U q)) & r`, and
+`X <<1>> p U q` is `X (<<1>> (p U q))`. A second `U`, as in `<<1>> p U q U r`, is
+a syntax error, as `p U q U r` is. Write parentheses for any other grouping.
+
 **Not the same syntax as other `<<...>>` users in this codebase**: ATL uses
 single angle brackets (`<1,2>`); Wallet_ATL also uses `<<...>>` but for a
 different reason (avoiding a clash with NatATL's `<k>` bound notation) and

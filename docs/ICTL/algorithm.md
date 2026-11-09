@@ -128,8 +128,17 @@ phi ::= p | phi /\ phi | phi \/ phi | phi -> phi | not phi
 - Path quantifiers: `E` / `exist`, `A` / `forall`.
 - Temporal: `X` / `next`, `U` / `until`, `R` / `release`.
 
-**Release syntax:** use spaced form `E p R q`. Bracketed forms like `E[p R q]` fail
-because `R` is the release token.
+Written forms of `U` and `R` under a path quantifier (`U` shown; `R` is the same):
+
+| Form | Accepted | Where it comes from |
+| :--- | :--- | :--- |
+| `A(p U q)`, `E(p U q)` | yes | AREA23b Definition 1 (p. 43) writes `A (ϕ U ψ)` in its grammar. EUMAS25b writes `A(φ1 Uφ2)` in its equivalences and examples (pp. 8, 12). |
+| `A[p U q]`, `E[p U q]` | yes | EUMAS25b p. 10 writes `A[⊥R(...)]`. |
+| `A p U q`, `E p U q` | yes | EUMAS25b writes `A⊤Uφ` (p. 3) and `Aφ1 Uφ2` (p. 14, algorithm). Its grammar (p. 5) has a path-formula layer, `Aψ` with `ψ ::= ⃝φ \| φUφ \| φRφ`, and no parentheses. |
+
+All three forms build the same tree. A parenthesized operand is grouped as written:
+`A((p && q) U r)` has `p && q` as its left operand. The papers state no precedence
+rule.
 
 There are no coalition quantifiers. Parser metadata declares
 `model_type: "BirelationalMatrix"`.

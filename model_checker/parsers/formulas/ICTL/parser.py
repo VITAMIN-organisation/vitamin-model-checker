@@ -45,7 +45,9 @@ class ICTLParser(BaseLogicParser):
     def __init__(self):
         """Initialize the ICTL lexer and parser (PLY)."""
         super().__init__()
-        self.tokens.extend(["FORALL", "EXIST", "RELEASE", "PROP"])
+        self.tokens.extend(
+            ["LBRACKET", "RBRACKET", "FORALL", "EXIST", "RELEASE", "PROP"]
+        )
         self.precedence = (
             ("right", "IMPLIES"),
             ("left", "OR"),
@@ -57,6 +59,8 @@ class ICTLParser(BaseLogicParser):
         self.build()
 
     # --- Specific Tokens ---
+    t_LBRACKET = r"\["
+    t_RBRACKET = r"\]"
     t_PROP = PROPOSITION_TOKEN_PATTERN
 
     def t_FORALL(self, t):
@@ -79,8 +83,20 @@ class ICTLParser(BaseLogicParser):
         """expression : FORALL expression UNTIL expression
         | EXIST expression UNTIL expression
         | FORALL expression RELEASE expression
-        | EXIST expression RELEASE expression"""
-        p[0] = (p[1] + p[3], p[2], p[4])
+        | EXIST expression RELEASE expression
+        | FORALL LPAREN expression UNTIL expression RPAREN
+        | EXIST LPAREN expression UNTIL expression RPAREN
+        | FORALL LPAREN expression RELEASE expression RPAREN
+        | EXIST LPAREN expression RELEASE expression RPAREN
+        | FORALL LBRACKET expression UNTIL expression RBRACKET
+        | EXIST LBRACKET expression UNTIL expression RBRACKET
+        | FORALL LBRACKET expression RELEASE expression RBRACKET
+        | EXIST LBRACKET expression RELEASE expression RBRACKET"""
+        # A p U q, A(p U q) and A[p U q] build the same tree.
+        if len(p) == 5:
+            p[0] = (p[1] + p[3], p[2], p[4])
+        else:
+            p[0] = (p[1] + p[4], p[3], p[5])
 
     def p_expression_unary(self, p):
         """expression : FORALL GLOBALLY expression
@@ -98,6 +114,7 @@ class ICTLParser(BaseLogicParser):
             allow_hash_at=False,
             coalition_required=False,
             allow_negative_agents=False,
+            allowed_operators=set("<>(),[]!&|->"),
         )
 
     def _post_validation(self, formula, result):

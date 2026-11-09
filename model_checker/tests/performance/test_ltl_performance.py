@@ -17,7 +17,7 @@ class TestLTLComplexityBounds:
     def test_ltl_complexity_scaling(self, cgs_simple_parser):
         """Test LTL performance scales with complexity bound."""
         start_time = time.time()
-        result = model_checking("Fp", cgs_simple_parser.filename)
+        result = model_checking("F p", cgs_simple_parser.filename)
         elapsed = time.time() - start_time
         assert "error" not in result, f"LTL model checking should not error: {result}"
         assert elapsed < 10.0, (
@@ -57,7 +57,7 @@ class TestLTLFormulaTransformation:
     def test_formula_parsing_performance(self):
         """Verify LTL formula parsing is efficient."""
         parser = FormulaParserFactory.get_parser_instance("LTL")
-        formulas = ["Fp", "Gp", "F(p && q)", "G(p -> Fq)", "F(G(p || q))"]
+        formulas = ["F p", "G p", "F(p && q)", "G(p -> F q)", "F(G(p || q))"]
         start_time = time.time()
         for formula in formulas:
             assert parser.parse(formula) is not None, f"Should parse: {formula}"

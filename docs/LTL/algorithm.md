@@ -21,6 +21,11 @@ phi ::= p | !phi | phi && psi | phi || psi | phi -> psi
 User formulas must not contain `E` / `A` or coalitions. `R` / `W` are not in the
 surface syntax.
 
+An operator is followed by a space, `(` or `!`: `X p`, `F G p`. `Xp` and `FGp` are
+names, and an undeclared name is false, so see
+[operators and names](../logic_knowledge_base.md#operators-and-names) when a formula is
+unexpectedly false.
+
 ## Semantic denotations
 
 1. Enumerate natural strategies (default complexity bound `k=5` for the grand

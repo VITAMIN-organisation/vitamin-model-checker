@@ -7,18 +7,10 @@ _KEYWORD_TO_SYMBOL = (
     (re.compile(r"\bnext\b", re.IGNORECASE), "X"),
 )
 
-# Separate glued temporal operators / single-letter atoms so the CTL lexer
-# sees distinct tokens (Xp, FGp). Do not split inside multi-letter names (Goal).
-# Also split after an existing path quantifier (AXp -> AX p).
-_COMPACT_TEMPORAL = re.compile(
-    r"(?:(?<![A-Za-z0-9_])|(?<=[AE]))([XFG])(?=[XFG]|[a-zA-Z_](?![a-zA-Z0-9_]))"
-)
-
-# Add a universal path quantifier before each bare temporal operator.
+# Add a universal path quantifier before each bare temporal operator. An operator
+# is a word of its own: `Xp` and `Fuel` are names, so operators and atoms must be
+# separated (`X p`, `F Fuel`), as in every other logic.
 _PREFIX_TEMPORAL = re.compile(r"(?<![AE])(?<![a-zA-Z0-9_])([XFG])(?=\s|[(!]|$)")
-
-# Separate glued quantified temporals: AGAFp -> AG AF p (after compact/prefix).
-_ADJACENT_QUANTIFIED = re.compile(r"(A[XFG])(?=A[XFG])")
 
 _UNTIL_PATTERN = re.compile(
     r"(\([^()]*\)|A\([^()]*\)|[a-zA-Z]\w*)\s*U\s*"
@@ -40,17 +32,7 @@ def ltl_to_ctl(ltl_formula: str) -> str:
     prev = None
     while prev != formula:
         prev = formula
-        formula = _COMPACT_TEMPORAL.sub(r"\1 ", formula)
-
-    prev = None
-    while prev != formula:
-        prev = formula
         formula = _PREFIX_TEMPORAL.sub(r"A\1 ", formula)
-
-    prev = None
-    while prev != formula:
-        prev = formula
-        formula = _ADJACENT_QUANTIFIED.sub(r"\1 ", formula)
 
     placeholder = "__U_PLACEHOLDER__"
     while placeholder in formula:

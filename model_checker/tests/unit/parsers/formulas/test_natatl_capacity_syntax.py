@@ -62,9 +62,19 @@ class TestNatATLCapacityConversion:
         assert agents == [1, 2]
         assert k == 5
 
-    def test_glued_temporal_and_prop_normalized_for_ctl(self):
-        """Coalition removal must not leave CTL operators glued to propositions."""
-        assert natatl_to_ctl("<{1},1>Fa") == "A F a"
+    def test_spaced_temporal_and_prop_converted_for_ctl(self):
+        """The CTL string keeps the operator and the proposition apart."""
+        assert natatl_to_ctl("<{1},1>F a") == "A F a"
+
+    def test_name_starting_with_a_temporal_letter_is_kept_whole(self):
+        """`Fuel` and `Until` are names, so the CTL string must not split them."""
+        assert natatl_to_ctl("<{1},1>F Fuel") == "A F Fuel"
+        assert natatl_to_ctl("<{1},1>X Until") == "A X Until"
+
+    def test_operator_glued_to_a_name_is_rejected(self):
+        """`Fa` is one name, not `F a`: operators are separated by a space."""
+        with pytest.raises(ValueError, match="Invalid NatATL formula"):
+            natatl_to_ctl("<{1},1>Fa")
 
     def test_non_canonical_formula_rejected_by_conversion(self):
         """natatl_to_ctl and get_k_value require <{agents}, k> syntax."""

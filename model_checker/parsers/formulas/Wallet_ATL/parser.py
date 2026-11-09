@@ -215,7 +215,8 @@ class Wallet_ATLParser(BaseLogicParser):
         """temporal_body : GLOBALLY expression
         | NEXT expression
         | EVENTUALLY expression
-        | expression UNTIL expression"""
+        | expression UNTIL expression
+        | LPAREN expression UNTIL expression RPAREN"""
         if len(p) == 3:
             p[0] = {
                 "type": "unary",
@@ -223,11 +224,13 @@ class Wallet_ATLParser(BaseLogicParser):
                 "formula": p[2],
             }
         else:
+            # <<A>> phi U psi and <<A>> (phi U psi) build the same tree.
+            left, operator, right = p[1:4] if len(p) == 4 else p[2:5]
             p[0] = {
                 "type": "binary",
-                "operator": p[2],
-                "left": p[1],
-                "right": p[3],
+                "operator": operator,
+                "left": left,
+                "right": right,
             }
 
     def p_expression_prop(self, p):

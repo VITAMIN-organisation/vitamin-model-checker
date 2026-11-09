@@ -6,7 +6,8 @@ Concrete syntax::
 
 Optional whitespace is allowed around ``:``, bindings, goals, and between
 quantifiers. Bounds remain required in ``{k}`` form. Goals are limited to
-F/G/X and their negations. Quantifier order is preserved.
+F/G/X and their negations, and the operator is followed by whitespace: ``Fa`` is
+one name, not ``F a``. Quantifier order is preserved.
 """
 
 from __future__ import annotations
@@ -47,7 +48,7 @@ _QUANTIFIER_RE = re.compile(
 )
 _BINDING_RE = re.compile(r"\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*,\s*(\d+)\s*\)")
 _GOAL_RE = re.compile(
-    r"\s*(!|not\s+)?\s*([FGX])\s*([A-Za-z_][A-Za-z0-9_.]*)\s*$",
+    r"\s*(!|not\s+)?\s*([FGX])\s+([A-Za-z_][A-Za-z0-9_.]*)\s*$",
     re.IGNORECASE,
 )
 
@@ -110,7 +111,8 @@ def parse_formula(text: str) -> NatSLFormula:
     goal_match = _GOAL_RE.match(suffix, position)
     if not goal_match:
         raise NatSLParseError(
-            "Unsupported goal; this prototype accepts F p, G p, X p and their negations"
+            "Unsupported goal; this prototype accepts F p, G p, X p and their "
+            "negations, with a space after the operator"
         )
     negation, operator, proposition = goal_match.groups()
 
@@ -148,7 +150,8 @@ def format_formula(formula: NatSLFormula) -> str:
     )
     bindings = "".join(f"({variable},{agent})" for variable, agent in formula.bindings)
     negation = "!" if formula.goal.negated else ""
-    return f"{prefix}:{bindings}{negation}{formula.goal.operator}{formula.goal.proposition}"
+    goal = f"{formula.goal.operator} {formula.goal.proposition}"
+    return f"{prefix}:{bindings}{negation}{goal}"
 
 
 def goal_to_ctl(goal: TemporalGoal) -> str:

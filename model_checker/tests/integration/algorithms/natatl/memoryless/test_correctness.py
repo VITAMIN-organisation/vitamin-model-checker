@@ -32,7 +32,7 @@ class TestNatATLCorrectness:
 
     def test_natatl_1agent_standard_reachability(self, natatl_standard_model):
         """Test NatATL with standard 1-agent model for reachability."""
-        formula = "<{1},1>Fa"
+        formula = "<{1},1>F a"
         result = model_checking(formula, natatl_standard_model.filename)
         assert "Satisfiability" in result
         assert isinstance(result["Satisfiability"], bool)

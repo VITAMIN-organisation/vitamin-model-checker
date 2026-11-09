@@ -9,10 +9,6 @@ _COALITION_MODAL_RE = re.compile(
     r"^<\{(?P<agents>[\d,]+)\},\s*(?P<k>\d+)>(?P<op>[A-Za-z]+)$",
     re.IGNORECASE,
 )
-_NATATL_TEMPORAL_GLUE = re.compile(
-    r"(<\{[^}]+\},\s*\d+>)([FGXU])([a-zA-Z_])",
-    re.IGNORECASE,
-)
 _CTL_BINARY_OPS = {
     "&&": "&&",
     "AND": "&&",
@@ -25,15 +21,14 @@ _CTL_BINARY_OPS = {
 _CTL_UNARY_NOT = frozenset({"!", "NOT", "not"})
 
 
-def _normalize_natatl_surface(formula: str) -> str:
-    """Insert spaces between coalition temporal letters and propositions when glued."""
-    return _NATATL_TEMPORAL_GLUE.sub(r"\1\2 \3", formula.strip())
-
-
 def parse_natatl_formula(formula: str, n_agent: int) -> Any:
-    """Parse a NatATL formula via the registered NatATL parser."""
+    """Parse a NatATL formula via the registered NatATL parser.
+
+    The formula is parsed as written: an operator glued to a name (``Fp``) is one
+    name, so it is rejected rather than split into ``F p``.
+    """
     parser = FormulaParserFactory.get_parser_instance("NatATL")
-    ast = parser.parse(_normalize_natatl_surface(formula), n_agent=n_agent)
+    ast = parser.parse(formula.strip(), n_agent=n_agent)
     if ast is None:
         detail = parser.errors[0] if parser.errors else "syntactically invalid"
         raise ValueError(f"Invalid NatATL formula: {detail}")
@@ -82,11 +77,6 @@ def get_k_value_from_ast(ast: Any) -> int:
     raise ValueError("NatATL formula must use <{agents}, k> syntax")
 
 
-def _normalize_ctl_spacing(ctl_formula: str) -> str:
-    ctl_formula = re.sub(r"([AE])([FGXU])", r"\1 \2", ctl_formula)
-    return re.sub(r"([FGXU])(?=[a-zA-Z])", r"\1 ", ctl_formula)
-
-
 def _ctl_temporal_letter(op_suffix: str) -> str:
     op = op_suffix.upper()
     if op in {"F", "EVENTUALLY"}:
@@ -125,11 +115,11 @@ def natatl_ast_to_ctl(ast: Any) -> str:
             op_letter = _ctl_temporal_letter(match.group("op"))
             if len(ast) == 2:
                 child = natatl_ast_to_ctl(ast[1])
-                return _normalize_ctl_spacing(f"A {op_letter} {child}")
+                return f"A {op_letter} {child}"
             if len(ast) == 3 and op_letter == "U":
                 left = natatl_ast_to_ctl(ast[1])
                 right = natatl_ast_to_ctl(ast[2])
-                return _normalize_ctl_spacing(f"A ({left} U {right})")
+                return f"A ({left} U {right})"
 
     raise ValueError("Invalid NatATL AST structure for CTL conversion")
 

@@ -91,16 +91,53 @@ All logics in VITAMIN share a common set of boolean operators and constants.
 | syntax | Description | Supported Logics |
 | :--- | :--- | :--- |
 | `(...)` | Standard grouping | **All** logics |
-| `[...]` | Alternate grouping | **CTL ONLY** |
+| `[...]` | Alternate grouping | **CTL and ICTL only** |
 
 > [!NOTE]
 > **Design Rationale:**
-> - **CTL** supports `[...]` to maintain compatibility with standard academic notation (e.g., *Baier/Katoen*) where path formulas are traditionally enclosed in square brackets (e.g., `A[p U q]`).
+> - **CTL and ICTL** support `[...]` around the Until or Release of a path quantifier (e.g., `A[p U q]`). CTL keeps it for compatibility with standard academic notation (e.g., *Baier/Katoen*); ICTL writes it in EUMAS25b p. 10 (`A[⊥R(...)]`).
 > - **Other logics** (like ATL, NatSL, RBATL) use a variety of specialized brackets for coalitions `<...>`, capacities `{...}`, and bounds `{k}`. To maintain syntactic clarity and avoid "bracket fatigue," these parsers strictly use parentheses `(...)` for logical grouping.
 
 
 > [!IMPORTANT]
-> While parentheses `()` can be used in any logic to define precedence, square brackets `[]` are exclusively supported by the CTL parser. Using `[]` in LTL, ATL, or other logics will result in a syntax error.
+> While parentheses `()` can be used in any logic to define precedence, square brackets `[]` are supported only by the CTL and ICTL parsers. Using `[]` in LTL, ATL, or other logics will result in a syntax error.
+
+### Until after a prefix
+
+In every logic with a prefix before Until (a coalition, a cost or demonic bound,
+or a path quantifier), `prefix p U q` and `prefix (p U q)` are the same formula and
+build the same tree: `<1> p U q` and `<1> (p U q)`, `<J5> p U q` and
+`<J5> (p U q)`, `A p U q` and `A(p U q)`. ATL writes the first form
+(`<<A>>ϕ1 U ϕ2`, Alur, Henzinger, Kupferman, JACM 2002, p. 685), and the
+obstruction logics write the second (`⟨n⟩(φ U φ)`). ATL* reads `<<A>> p U q` the
+same way; the reason and the other ATL* forms are in
+[the ATL* reference](ATL_STAR/algorithm.md). Release (`R`) and Weak Until (`W`)
+follow the same rule where a logic has them.
+
+### Prefix before a connective
+
+The papers write a prefix with a compound body in parentheses (`∀◇y.(q ∧ y < x+5)`
+in Alur's thesis, p. 147; `⟨3⟩F(j ≤ 3 ∧ a)` in the TOL paper) and state no
+precedence rule. TCTL and TOL therefore reject a prefix followed by an
+unparenthesized `&&`, `||` or `->` (in any spelling), with an error that gives the
+position and both readings: for `AF p && q` it is "'AF ... && ...' at position 0
+is ambiguous: write AF (... && ...) for AF over both sides, or (AF ...) && ... for
+AF over the left side only". This covers `AF`, `AG`, `EF`, `EG`, the TOL `{Jk}F`,
+`{Jk}G`, `{Jk}X`, and the freeze `j.` (TCTL has no `X`). The other logics read
+`<1>F p && q` as `(<1>F p) && q`, as the papers do with an atomic body
+(`⟨⟨a⟩⟩≤k F win ∧ ¬⟨⟨a⟩⟩≤k−1 F win` in AAMAS 2017).
+
+### Operators and names
+
+Temporal operators (`X`, `F`, `G`, `U`, and in CTL, ICTL and TCTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`) are words of their own. Follow one with a space, `(` or `!`: `F p`, `F (p && q)`, `F !p`.
+
+An operator written with no space before a name, such as `Fp` or `FFuel`, is part of that name, so no logic reads it as an operator applied to the name. A name that only starts with an operator letter, such as `Fuel` or `Goal`, is valid when it stands alone: in `F Fuel` the space makes `F` the operator and `Fuel` the name.
+
+Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py` checks it for each registered logic. The form with no space fails in one of three ways:
+
+- LTL and ATL* read it as one name. ATL* then reports that the name is not a declared proposition. LTL treats an undeclared proposition as false when the library is called directly, so a formula that is unexpectedly false may lack a space after an operator. The Workbench rejects undeclared names before the checker runs.
+- NatSL rejects it: `Fgoal`, and a goal with no operator such as `Goal`, are errors.
+- Every other parser reports a syntax error.
 
 
 **Truth Table:**
@@ -189,6 +226,7 @@ E{2}controller A{1}opponent: (controller, 1)(opponent, 2) F goal
 **Implemented Logic Support:**
 - Ordered prefixes of the form `E* A*`, including purely existential prefixes.
 - Multi-character strategy variables and explicit agent bindings.
+- A goal is an operator, a space and a proposition (`F goal`); see [operators and names](#operators-and-names).
 - Exact action pruning (no idle-action fallback).
 - Direct evaluation of mixed bounded prefixes (no NatATL decomposition).
 

@@ -11,8 +11,8 @@ class TestNatATLFCorrectness:
     """One formula that should produce a known satisfiability result."""
 
     def test_natatlf_known_formula_satisfiable(self, natatl_standard_model):
-        """On the standard 1-agent 4-state model, <1>Fa is satisfiable."""
-        result = model_checking("<{1},1>Fa", natatl_standard_model.filename)
+        """On the standard 1-agent 4-state model, <{1},1>F a is satisfiable."""
+        result = model_checking("<{1},1>F a", natatl_standard_model.filename)
         assert "error" not in result
         assert "Satisfiability" in result
         assert result["Satisfiability"] is True

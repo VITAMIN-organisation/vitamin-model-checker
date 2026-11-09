@@ -30,7 +30,7 @@ class TestNatATLRecallCorrectness:
 
     @pytest.mark.parametrize(
         "formula,expected_satisfiability,check_strategy",
-        [("<{1},1>Fa", True, True)],
+        [("<{1},1>F a", True, True)],
     )
     def test_recall_model_checking(
         self, natatl_standard_model, formula, expected_satisfiability, check_strategy

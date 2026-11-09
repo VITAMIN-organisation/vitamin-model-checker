@@ -129,10 +129,16 @@ class CapATLParser(BaseLogicParser):
 
     def p_expression_ternary(self, p):
         """expression : COALITION expression UNTIL expression
-        | COALITION expression RELEASE expression"""
+        | COALITION expression RELEASE expression
+        | COALITION LPAREN expression UNTIL expression RPAREN
+        | COALITION LPAREN expression RELEASE expression RPAREN"""
         coalition_str = f"<{{{p[1]}}}>"
         validate_coalition(f"<{p[1]}>", self.max_coalition)
-        p[0] = (coalition_str + p[3], p[2], p[4])
+        # <{A}> phi U psi and <{A}> (phi U psi) build the same tree.
+        if len(p) == 5:
+            p[0] = (coalition_str + p[3], p[2], p[4])
+        else:
+            p[0] = (coalition_str + p[4], p[3], p[5])
 
     def p_expression_unary(self, p):
         """expression : COALITION NEXT expression

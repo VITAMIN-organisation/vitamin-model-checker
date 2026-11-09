@@ -13,7 +13,7 @@ Grammar (lowest to highest precedence; parentheses always disambiguate):
     conjunction := until ('&' until)*                   (left-assoc)
     until       := unary ('U' unary)?                   (parenthesize to chain)
     unary       := '!' unary | 'X' unary | 'F' unary | 'G' unary
-                 | '<<' agents '>>' unary
+                 | '<<' agents '>>' until
                  | atom
     atom        := PROP | 'true' | 'false' | '(' formula ')'
     agents      := INT (',' INT)*
@@ -25,10 +25,12 @@ single-letter operators, so lowercase single-letter propositions stay free.
 
 A coalition binds like a prefix operator over the tightest following
 `unary`, parenthesize the operand for anything beyond a bare
-atom/negation/next (e.g. `<<1,2>>(p1 U p2)`, `<<1>>(F p & G q)`). `F`, `G`,
-`|`, and `->` are sugar, desugared here into the six primitive constructors
-(`Prop`, `True_`, `Not`, `And`, `Coalition`, `Next`, `Until`) so
-`verifier.py` only has to handle those.
+atom/negation/next (e.g. `<<1>>(F p & G q)`). A `U` right after the operand
+belongs to the coalition: `<<1>> p U q` is `<<1>>(p U q)`, as ATL writes it, and
+ATL is a fragment of ATL*. A coalition over only the left operand is written
+`(<<1>> p) U q`. `F`, `G`, `|`, and `->` are sugar, desugared here into the
+seven primitive constructors (`Prop`, `True_`, `Not`, `And`, `Coalition`,
+`Next`, `Until`) so `verifier.py` only has to handle those.
 
 A keyword needs a non-identifier boundary to be recognized as itself:
 identifiers are matched greedily, so `Xp` tokenizes as one proposition named
@@ -179,6 +181,12 @@ class _Parser:
         if self._peek().kind == "UNTIL":
             self._advance()
             right = self._unary()
+            token = self._peek()
+            if token.kind == "UNTIL":
+                raise ATLStarParseError(
+                    "U does not chain: write (x U y) U z or x U (y U z)",
+                    token.position,
+                )
             return Until(left, right)
         return left
 
@@ -204,7 +212,10 @@ class _Parser:
         self._expect("COALITION_OPEN")
         agents = self._agents()
         self._expect("COALITION_CLOSE")
-        return Coalition(agents=agents, path_formula=self._unary())
+        # ATL writes <<A>> phi1 U phi2 for the coalition over the Until, and ATL is
+        # the fragment of ATL* whose temporal operators each follow a path
+        # quantifier (Alur, Henzinger, Kupferman, JACM 2002, pp. 685 and 689).
+        return Coalition(agents=agents, path_formula=self._until())
 
     def _agents(self) -> frozenset[int]:
         seen: dict[int, int] = {}  # agent id -> the position of its first occurrence

@@ -14,9 +14,12 @@ Scope: denotations and code path for Wallet_ATL in
 Parser: `parsers/formulas/Wallet_ATL/parser.py`
 
 ```text
-phi ::= <<A>> X phi | <<A>> F phi | <<A>> G phi | <<A>(phi U psi)
+phi ::= <<A>> X phi | <<A>> F phi | <<A>> G phi | <<A>> phi U psi | <<A>> (phi U psi)
       | <<A:wallet(agent, op, value)>> ...
 ```
+
+`<<A>> phi U psi` and `<<A>> (phi U psi)` build the same tree (see
+[the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)).
 
 The `<<...>>` prefix is mandatory before temporal operators. Empty `<<>>` is
 invalid.

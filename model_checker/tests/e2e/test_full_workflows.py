@@ -69,7 +69,7 @@ class TestBasicModelCheckingWorkflow:
             test_data_dir / "costCGS/RABATL/rabatl_3agents_medium_6states_costs.txt"
         )
 
-        natatl_result = natatl_mem_check("<{1},1>Fa", str(natatl_path))
+        natatl_result = natatl_mem_check("<{1},1>F a", str(natatl_path))
         assert natatl_result.get("Satisfiability") is True
 
         cotl_result = cotl_check("<1,3><1> G !q", str(cotl_path))

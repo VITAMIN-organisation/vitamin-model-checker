@@ -82,17 +82,53 @@ def test_coalition_over_negation_and_next():
     assert parse("<<1>>X p") == Coalition(frozenset({1}), Next(Prop("p")))
 
 
-def test_coalition_requires_parens_for_until():
+def test_coalition_over_parenthesized_until():
     assert parse("<<1>>(p U q)") == Coalition(
         frozenset({1}), Until(Prop("p"), Prop("q"))
     )
 
 
-def test_bare_until_after_coalition_only_wraps_first_operand():
-    # <<1>>p U q means (<<1>>p) U q, not <<1>>(p U q), ATL*'s nesting (unlike
-    # ATL) needs explicit parens for the coalition to scope over a compound
-    # path formula.
-    assert parse("<<1>>p U q") == Until(Coalition(frozenset({1}), Prop("p")), Prop("q"))
+def test_coalition_over_the_left_operand_of_until_is_parenthesized():
+    assert parse("(<<1>>p) U q") == Until(
+        Coalition(frozenset({1}), Prop("p")), Prop("q")
+    )
+
+
+def test_coalition_over_the_left_operand_inside_another_coalition():
+    assert parse("<<2>>((<<1>>p) U q)") == Coalition(
+        frozenset({2}),
+        Until(Coalition(frozenset({1}), Prop("p")), Prop("q")),
+    )
+
+
+def test_until_after_a_coalition_takes_a_prefixed_left_operand():
+    # test_until_after_prefix.py checks that <<1>> p U q is <<1>> (p U q).
+    assert parse("<<1>>X p U q") == Coalition(
+        frozenset({1}), Until(Next(Prop("p")), Prop("q"))
+    )
+
+
+def test_until_after_a_coalition_ends_before_a_conjunction():
+    assert parse("<<1>>p U q & r") == And(
+        Coalition(frozenset({1}), Until(Prop("p"), Prop("q"))), Prop("r")
+    )
+
+
+@pytest.mark.parametrize(
+    ("text", "position"), [("p U q U r", 6), ("<<1>> p U q U r", 12)]
+)
+def test_until_does_not_chain(text, position):
+    with pytest.raises(ATLStarParseError, match="U does not chain") as excinfo:
+        parse(text)
+    assert excinfo.value.position == position
+
+
+def test_until_after_a_nested_coalition_belongs_to_the_inner_one():
+    expected = Coalition(
+        frozenset({2}), Coalition(frozenset({1}), Until(Prop("p"), Prop("q")))
+    )
+    assert parse("<<2>>(<<1>>p U q)") == expected
+    assert parse("<<2>><<1>>p U q") == expected
 
 
 def test_nested_coalition():

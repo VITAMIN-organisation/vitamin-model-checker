@@ -14,10 +14,14 @@ Scope: denotations and code path for CapATL in
 Parser: `parsers/formulas/CapATL/parser.py`
 
 ```text
-phi ::= ... | <{A}> X phi | <{A}> F phi | <{A}> G phi | <{A}>(phi U psi)
-           | <{A}> phi R psi
+phi ::= ... | <{A}> X phi | <{A}> F phi | <{A}> G phi | <{A}> phi U psi
+           | <{A}> (phi U psi) | <{A}> phi R psi | <{A}> (phi R psi)
            | Ki(phi) | i is prop   -- grammar forms; see theory vs impl
 ```
+
+`<{A}> phi U psi` and `<{A}> (phi U psi)` build the same tree, and so do the two
+forms of `R` (see
+[the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)).
 
 Formula bound `<{A}, k>` is rejected (no numeric `k` in CapATL). `W` is
 unsupported.
