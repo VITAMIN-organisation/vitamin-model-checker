@@ -110,9 +110,9 @@ def _tokenize(text: str) -> list[_Token]:
     pos = 0
     while pos < len(text):
         match = _TOKEN_RE.match(text, pos)
-        if match is None:
+        kind = match.lastgroup if match else None
+        if match is None or kind is None:
             raise ATLStarParseError(f"Unexpected character {text[pos]!r}", pos)
-        kind = match.lastgroup
         value = match.group()
         if kind != "WS":
             if kind == "IDENT":
