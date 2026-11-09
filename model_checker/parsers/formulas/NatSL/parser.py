@@ -6,8 +6,9 @@ Concrete syntax::
 
 Optional whitespace is allowed around ``:``, bindings, goals, and between
 quantifiers. Bounds remain required in ``{k}`` form. Goals are limited to
-F/G/X and their negations, and the operator is followed by whitespace: ``Fa`` is
-one name, not ``F a``. Quantifier order is preserved.
+F/G/X and their negations. The operator is uppercase and followed by whitespace:
+``Fa`` is one name, not ``F a``, and ``f a`` is not a goal. Quantifier order is
+preserved.
 """
 
 from __future__ import annotations
@@ -47,10 +48,7 @@ _QUANTIFIER_RE = re.compile(
     r"(?=\s*(?:[EA]\s*\{\s*\d+\s*\}\s*[A-Za-z_]|$))"
 )
 _BINDING_RE = re.compile(r"\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*,\s*(\d+)\s*\)")
-_GOAL_RE = re.compile(
-    r"\s*(!|not\s+)?\s*([FGX])\s+([A-Za-z_][A-Za-z0-9_.]*)\s*$",
-    re.IGNORECASE,
-)
+_GOAL_RE = re.compile(r"\s*(!|not\s+)?\s*([FGX])\s+([A-Za-z_][A-Za-z0-9_.]*)\s*$")
 
 
 def _strip_outer_negation(text: str) -> tuple[bool, str]:
@@ -112,7 +110,7 @@ def parse_formula(text: str) -> NatSLFormula:
     if not goal_match:
         raise NatSLParseError(
             "Unsupported goal; this prototype accepts F p, G p, X p and their "
-            "negations, with a space after the operator"
+            "negations, with an uppercase operator and a space after it"
         )
     negation, operator, proposition = goal_match.groups()
 
@@ -139,7 +137,7 @@ def parse_formula(text: str) -> NatSLFormula:
     return NatSLFormula(
         tuple(quantifiers),
         tuple(bindings),
-        TemporalGoal(operator.upper(), proposition, goal_negated),
+        TemporalGoal(operator, proposition, goal_negated),
     )
 
 

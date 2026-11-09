@@ -48,6 +48,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - NatSL: the goal needs a space after its operator (`F goal`). `Fgoal`, and a
     goal with no operator such as `Goal`, are rejected with an error. The
     normalised formula in the result now reads `...:(x,1)F goal`.
+  - NatSL: the goal operators `F`, `G`, `X` are uppercase only, and `not` is
+    lowercase only. `f goal` and `NOT F goal` are rejected; before, the goal
+    ignored case.
   - NatATL, NatATL_Recall and NatATLF: `<{1},1>Fa` and `<{1},1>fa` are rejected.
     Write `<{1},1>F a`.
 

@@ -38,5 +38,23 @@ def test_natsl_spacing_variants_normalize(formula, expected):
 )
 def test_natsl_goal_operator_needs_a_space(formula):
     """`Fgoal` and `Goal` are names, not an operator and a name."""
-    with pytest.raises(NatSLParseError, match="space after the operator"):
+    with pytest.raises(NatSLParseError, match="space after it"):
+        parse_formula(formula)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "formula",
+    [
+        "E{1}x:(x,1)f goal",
+        "E{1}x:(x,1)g goal",
+        "E{1}x:(x,1)x goal",
+        "E{1}x:(x,1)!f goal",
+        "E{1}x:(x,1) not f goal",
+        "E{1}x:(x,1) NOT F goal",
+    ],
+)
+def test_natsl_goal_operator_is_uppercase(formula):
+    """`f goal` is not an operator: operators are uppercase, `not` lowercase."""
+    with pytest.raises(NatSLParseError, match="uppercase operator"):
         parse_formula(formula)

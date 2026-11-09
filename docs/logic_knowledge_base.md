@@ -153,7 +153,7 @@ An operator written with no space before a name, such as `Fp` or `FFuel`, is par
 Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py` checks it for each registered logic. The form with no space fails in one of three ways:
 
 - LTL and ATL* read it as one name. ATL* then reports that the name is not a declared proposition. LTL treats an undeclared proposition as false when the library is called directly, so a formula that is unexpectedly false may lack a space after an operator. The Workbench rejects undeclared names before the checker runs.
-- NatSL rejects it: `Fgoal`, and a goal with no operator such as `Goal`, are errors.
+- NatSL rejects it: `Fgoal`, and a goal with no operator such as `Goal`, are errors. A lowercase operator (`f goal`) is also an error, because operators are uppercase.
 - Every other parser reports a syntax error.
 
 

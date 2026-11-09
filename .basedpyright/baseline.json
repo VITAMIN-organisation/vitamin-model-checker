@@ -1244,16 +1244,6 @@
                 }
             }
         ],
-        "./model_checker/parsers/formulas/ATL_STAR/grammar.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 33,
-                    "endColumn": 37,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/parsers/formulas/TOL/parser.py": [
             {
                 "code": "reportAssignmentType",

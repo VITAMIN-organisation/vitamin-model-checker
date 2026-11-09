@@ -22,7 +22,7 @@ E{2}controller A{1}opponent: (controller, 1)(opponent, 2) F goal
 
 Strategy variables may use multi-character identifiers such as `controller`, `opponent`, and `strategy1`.
 
-Supported temporal goals are `F`, `G`, and `X`, including their negated forms.
+Supported temporal goals are `F`, `G`, and `X`, including their negated forms. The operator is uppercase and followed by a space; `not` is lowercase.
 
 ## Semantics
 
