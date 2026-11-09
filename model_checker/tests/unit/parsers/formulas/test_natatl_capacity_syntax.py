@@ -37,6 +37,11 @@ class TestNatATLParserCapacitySyntax:
 
         assert result is None
 
+    def test_bound_below_one_rejected(self):
+        """k = 0 parsed before but the solver then returned false for every formula."""
+        assert NatATLParser().parse("<{1}, 0>F p", n_agent=2) is None
+        assert NatATLParser().parse("<{1}, 1>F p", n_agent=2) is not None
+
     def test_n_agent_zero_rejects_all_agents(self):
         """n_agent=0 is fail-closed: no agent index is in range [1, 0]."""
         assert NatATLParser().parse("<{1}, 1>F p", n_agent=0) is None

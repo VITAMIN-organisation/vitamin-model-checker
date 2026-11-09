@@ -22,6 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- NatATL, NatATL_Recall and NatATLF reject a bound `k` below 1, such as `<{1}, 0>F p`,
+  with "Invalid bound 0: must be at least 1". Before, `k = 0` parsed and the solver
+  returned false for every formula.
 - Breaking: every logic spells the connectives `&&`, `||`, `!`, `->` or the words
   `and`, `or`, `not`, `implies`. A single `&` or `|`, and `>` as implication, are
   rejected everywhere. Before, ATL*, TCTL and TOL took `&` and `|`, Wallet_ATL also

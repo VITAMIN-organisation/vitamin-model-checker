@@ -83,7 +83,7 @@ class CapCGS(CGS):
         for line in lines:
             line = line.strip()
 
-            if not line or line.startswith("#") or line.startswith("//"):
+            if cgs_parser.is_blank_or_comment(line):
                 continue
 
             if line in capacity_section_headers:

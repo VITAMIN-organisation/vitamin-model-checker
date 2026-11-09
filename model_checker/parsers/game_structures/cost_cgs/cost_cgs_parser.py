@@ -30,7 +30,7 @@ def parse_cost_sections(lines: list[str], instance: Any) -> None:
     for line in lines:
         line = line.strip()
 
-        if not line or line.startswith("#") or line.startswith("//"):
+        if cgs_parser.is_blank_or_comment(line):
             continue
 
         if line == "Transition_With_Costs":

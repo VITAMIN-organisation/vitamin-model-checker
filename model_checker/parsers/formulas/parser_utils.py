@@ -306,6 +306,8 @@ def validate_natatl_coalition(
     coalition_values = capacity_match.group(1)
     k_value = capacity_match.group(2)
 
+    if int(k_value) < 1:
+        raise CoalitionValueError(f"Invalid bound {k_value}: must be at least 1")
     if not coalition_values or coalition_values.strip() == "":
         raise CoalitionValueError("Empty coalition not allowed")
     if coalition_values.endswith(","):

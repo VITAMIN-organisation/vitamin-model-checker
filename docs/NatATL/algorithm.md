@@ -16,7 +16,8 @@ Parser: `parsers/formulas/NatATL/parser.py`
 phi ::= ... | <{A}, k> X phi | <{A}, k> F phi | <{A}, k> G phi | <{A}, k>(phi U psi)
 ```
 
-Braces around agents and a positive integer `k` are required.
+Braces around agents and a positive integer `k` are required. `k = 0` is rejected with
+an error that names the value.
 
 ## Semantic denotations
 

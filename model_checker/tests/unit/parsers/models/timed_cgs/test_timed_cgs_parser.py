@@ -114,3 +114,10 @@ class TestTimedCgsParser:
         assert instance.clocks == ["x"]
         assert instance.clock_constraint_struct[0][0] == "x<=1"
         assert instance.invariants_arr[0] == ["x", 2.0]
+
+    def test_comment_between_rows_keeps_the_row_count(self):
+        instance = type("T", (), {})()
+        instance.states = ["s0", "s1"]
+        lines = ["Clock_constraints\n", "x<=1\n", "# note\n", "x>=2\n"]
+        timed_cgs_parser.parse_timed_sections(lines, instance)
+        assert instance.clock_constraint_struct[1][0] == "x>=2"

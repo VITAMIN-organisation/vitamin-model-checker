@@ -41,7 +41,7 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
 
     for line in lines:
         stripped = line.strip()
-        if not stripped or stripped.startswith(("#", "//")):
+        if cgs_parser.is_blank_or_comment(stripped):
             continue
 
         if stripped in TIMED_SECTION_HEADERS:

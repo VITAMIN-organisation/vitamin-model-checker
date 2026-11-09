@@ -53,7 +53,7 @@ class ObstructionModel(CGS):
         section = None
         for number, raw in enumerate(lines, start=1):
             line = raw.strip()
-            if not line or line.startswith(("#", "//")):
+            if cgs_parser.is_blank_or_comment(line):
                 continue
             if line in _DEMON_SECTIONS:
                 section = line

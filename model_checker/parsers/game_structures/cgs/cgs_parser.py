@@ -44,6 +44,11 @@ EXTENSION_SECTION_HEADERS = frozenset(
 )
 
 
+def is_blank_or_comment(stripped_line):
+    """True for an empty line or a whole-line comment (`#` or `//`)."""
+    return not stripped_line or stripped_line.startswith(("#", "//"))
+
+
 # --- Row Processing Functions ---
 
 
@@ -107,7 +112,7 @@ def filter_lines_for_common_sections(lines, sections_to_skip, exit_skip_on=None)
     for line in lines:
         stripped = line.strip()
 
-        if not stripped or stripped.startswith("#") or stripped.startswith("//"):
+        if is_blank_or_comment(stripped):
             continue
 
         if stripped in sections_to_skip:
@@ -136,7 +141,7 @@ def extract_transition_rows(lines, additional_transition_headers=None):
     for line in lines:
         stripped = line.strip()
 
-        if not stripped or stripped.startswith("#") or stripped.startswith("//"):
+        if is_blank_or_comment(stripped):
             continue
 
         if stripped in transition_headers:
@@ -252,7 +257,7 @@ def _collect_section_data(lines, instance):
 
     for line in lines:
         line = line.strip()
-        if not line or line.startswith("#") or line.startswith("//"):
+        if is_blank_or_comment(line):
             continue
 
         if line in EXTENSION_SECTION_HEADERS:
