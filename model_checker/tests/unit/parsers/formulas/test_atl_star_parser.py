@@ -108,10 +108,50 @@ def test_until_after_a_coalition_takes_a_prefixed_left_operand():
     )
 
 
-def test_until_after_a_coalition_ends_before_a_conjunction():
-    assert parse("<<1>>p U q & r") == And(
-        Coalition(frozenset({1}), Until(Prop("p"), Prop("q"))), Prop("r")
-    )
+@pytest.mark.parametrize(
+    ("text", "shown", "position"),
+    [
+        ("p U q & r", "'x U y & z'", 2),
+        ("p & q U r", "'x & y U z'", 6),
+        ("p -> q U r", "'x -> y U z'", 7),
+        ("<<1>> (p U q | r)", "'x U y | z'", 9),
+    ],
+)
+def test_until_next_to_a_connective_is_ambiguous(text, shown, position):
+    with pytest.raises(ATLStarParseError, match="is ambiguous") as excinfo:
+        parse(text)
+    assert shown in str(excinfo.value)
+    assert excinfo.value.position == position
+
+
+@pytest.mark.parametrize(
+    ("text", "position"),
+    [
+        ("<<1>> p & q", 0),
+        ("<<1>> F p & q", 0),
+        ("<<1>> (p U q) & r", 0),
+        ("r | !<<2>> X p -> q", 5),
+    ],
+)
+def test_connective_after_a_coalition_is_ambiguous(text, position):
+    with pytest.raises(ATLStarParseError, match="is ambiguous") as excinfo:
+        parse(text)
+    assert excinfo.value.position == position
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "(<<1>> F p) & q",
+        "<<1>> (F p & q)",
+        "<<1>> ((p U q) & r)",
+        "<<1>> (p & (q U r))",
+        "q & <<1>> F p",
+        "<<1>> (F p & G q)",
+    ],
+)
+def test_parenthesized_groupings_parse(text):
+    parse(text)
 
 
 @pytest.mark.parametrize(

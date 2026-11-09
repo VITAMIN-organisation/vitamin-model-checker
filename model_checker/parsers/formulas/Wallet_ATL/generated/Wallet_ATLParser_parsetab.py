@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'rightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAND COALITION EVENTUALLY FALSE GLOBALLY IMPLIES LPAREN NEXT NOT OR PROP RPAREN TRUE UNTILexpression : FALSE\n        | TRUEexpression : NOT expressionexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : COALITION temporal_bodytemporal_body : GLOBALLY expression\n        | NEXT expression\n        | EVENTUALLY expression\n        | expression UNTIL expression\n        | LPAREN expression UNTIL expression RPARENexpression : PROPexpression : LPAREN expression RPAREN'
+_lr_signature = 'rightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAND COALITION EVENTUALLY FALSE GLOBALLY IMPLIES LPAREN NEXT NOT OR PROP RPAREN TRUE UNTILexpression : LPAREN expression RPARENexpression : NOT expressionexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : FALSE\n        | TRUEexpression : COALITION temporal_bodytemporal_body : GLOBALLY expression\n        | NEXT expression\n        | EVENTUALLY expression\n        | expression UNTIL expression\n        | LPAREN expression UNTIL expression RPARENexpression : PROP'
     
-_lr_action_items = {'FALSE':([0,4,5,7,8,9,10,13,15,16,17,23,29,],[2,2,2,2,2,2,2,2,2,2,2,2,2,]),'TRUE':([0,4,5,7,8,9,10,13,15,16,17,23,29,],[3,3,3,3,3,3,3,3,3,3,3,3,3,]),'NOT':([0,4,5,7,8,9,10,13,15,16,17,23,29,],[4,4,4,4,4,4,4,4,4,4,4,4,4,]),'COALITION':([0,4,5,7,8,9,10,13,15,16,17,23,29,],[5,5,5,5,5,5,5,5,5,5,5,5,5,]),'PROP':([0,4,5,7,8,9,10,13,15,16,17,23,29,],[6,6,6,6,6,6,6,6,6,6,6,6,6,]),'LPAREN':([0,4,5,7,8,9,10,13,15,16,17,23,29,],[7,7,17,7,7,7,7,7,7,7,7,7,7,]),'$end':([1,2,3,6,11,12,19,20,21,22,24,25,27,28,31,],[0,-1,-2,-13,-3,-7,-4,-5,-6,-8,-9,-10,-14,-11,-12,]),'AND':([1,2,3,6,11,12,14,18,19,20,21,22,24,25,26,27,28,30,31,],[8,-1,-2,-13,-3,-7,8,8,-4,8,8,-8,-9,-10,8,-14,-11,8,-12,]),'OR':([1,2,3,6,11,12,14,18,19,20,21,22,24,25,26,27,28,30,31,],[9,-1,-2,-13,-3,-7,9,9,-4,-5,9,-8,-9,-10,9,-14,-11,9,-12,]),'IMPLIES':([1,2,3,6,11,12,14,18,19,20,21,22,24,25,26,27,28,30,31,],[10,-1,-2,-13,-3,-7,10,10,-4,-5,10,-8,-9,-10,10,-14,-11,10,-12,]),'UNTIL':([2,3,6,11,12,14,19,20,21,22,24,25,26,27,28,31,],[-1,-2,-13,-3,-7,23,-4,-5,-6,-8,-9,-10,29,-14,-11,-12,]),'RPAREN':([2,3,6,11,12,18,19,20,21,22,24,25,26,27,28,30,31,],[-1,-2,-13,-3,-7,27,-4,-5,-6,-8,-9,-10,27,-14,-11,31,-12,]),'GLOBALLY':([5,],[13,]),'NEXT':([5,],[15,]),'EVENTUALLY':([5,],[16,]),}
+_lr_action_items = {'LPAREN':([0,2,3,6,8,9,10,14,16,17,18,24,29,],[2,2,2,18,2,2,2,2,2,2,2,2,2,]),'NOT':([0,2,3,6,8,9,10,14,16,17,18,24,29,],[3,3,3,3,3,3,3,3,3,3,3,3,3,]),'FALSE':([0,2,3,6,8,9,10,14,16,17,18,24,29,],[4,4,4,4,4,4,4,4,4,4,4,4,4,]),'TRUE':([0,2,3,6,8,9,10,14,16,17,18,24,29,],[5,5,5,5,5,5,5,5,5,5,5,5,5,]),'COALITION':([0,2,3,6,8,9,10,14,16,17,18,24,29,],[6,6,6,6,6,6,6,6,6,6,6,6,6,]),'PROP':([0,2,3,6,8,9,10,14,16,17,18,24,29,],[7,7,7,7,7,7,7,7,7,7,7,7,7,]),'$end':([1,4,5,7,12,13,19,20,21,22,23,25,26,28,31,],[0,-6,-7,-14,-2,-8,-3,-4,-5,-1,-9,-10,-11,-12,-13,]),'AND':([1,4,5,7,11,12,13,15,19,20,21,22,23,25,26,27,28,30,31,],[8,-6,-7,-14,8,-2,-8,8,-3,8,8,-1,-9,-10,-11,8,-12,8,-13,]),'OR':([1,4,5,7,11,12,13,15,19,20,21,22,23,25,26,27,28,30,31,],[9,-6,-7,-14,9,-2,-8,9,-3,-4,9,-1,-9,-10,-11,9,-12,9,-13,]),'IMPLIES':([1,4,5,7,11,12,13,15,19,20,21,22,23,25,26,27,28,30,31,],[10,-6,-7,-14,10,-2,-8,10,-3,-4,10,-1,-9,-10,-11,10,-12,10,-13,]),'RPAREN':([4,5,7,11,12,13,19,20,21,22,23,25,26,27,28,30,31,],[-6,-7,-14,22,-2,-8,-3,-4,-5,-1,-9,-10,-11,22,-12,31,-13,]),'UNTIL':([4,5,7,12,13,15,19,20,21,22,23,25,26,27,28,31,],[-6,-7,-14,-2,-8,24,-3,-4,-5,-1,-9,-10,-11,29,-12,-13,]),'GLOBALLY':([6,],[14,]),'NEXT':([6,],[16,]),'EVENTUALLY':([6,],[17,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'expression':([0,4,5,7,8,9,10,13,15,16,17,23,29,],[1,11,14,18,19,20,21,22,24,25,26,28,30,]),'temporal_body':([5,],[12,]),}
+_lr_goto_items = {'expression':([0,2,3,6,8,9,10,14,16,17,18,24,29,],[1,11,12,15,19,20,21,23,25,26,27,28,30,]),'temporal_body':([6,],[13,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,18 +27,18 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',122),
-  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',123),
+  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',126),
   ('expression -> NOT expression','expression',2,'p_expression_not','parser.py',173),
-  ('expression -> expression AND expression','expression',3,'p_expression_binary','parser.py',181),
-  ('expression -> expression OR expression','expression',3,'p_expression_binary','parser.py',182),
-  ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','parser.py',183),
-  ('expression -> COALITION temporal_body','expression',2,'p_expression_ternary','parser.py',192),
-  ('temporal_body -> GLOBALLY expression','temporal_body',2,'p_temporal_body','parser.py',215),
-  ('temporal_body -> NEXT expression','temporal_body',2,'p_temporal_body','parser.py',216),
-  ('temporal_body -> EVENTUALLY expression','temporal_body',2,'p_temporal_body','parser.py',217),
-  ('temporal_body -> expression UNTIL expression','temporal_body',3,'p_temporal_body','parser.py',218),
-  ('temporal_body -> LPAREN expression UNTIL expression RPAREN','temporal_body',5,'p_temporal_body','parser.py',219),
-  ('expression -> PROP','expression',1,'p_expression_prop','parser.py',237),
-  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','parser.py',244),
+  ('expression -> expression AND expression','expression',3,'p_expression_binary','parser.py',182),
+  ('expression -> expression OR expression','expression',3,'p_expression_binary','parser.py',183),
+  ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','parser.py',184),
+  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',189),
+  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',190),
+  ('expression -> COALITION temporal_body','expression',2,'p_expression_ternary','parser.py',194),
+  ('temporal_body -> GLOBALLY expression','temporal_body',2,'p_temporal_body','parser.py',229),
+  ('temporal_body -> NEXT expression','temporal_body',2,'p_temporal_body','parser.py',230),
+  ('temporal_body -> EVENTUALLY expression','temporal_body',2,'p_temporal_body','parser.py',231),
+  ('temporal_body -> expression UNTIL expression','temporal_body',3,'p_temporal_body','parser.py',232),
+  ('temporal_body -> LPAREN expression UNTIL expression RPAREN','temporal_body',5,'p_temporal_body','parser.py',233),
+  ('expression -> PROP','expression',1,'p_expression_prop','parser.py',253),
 ]

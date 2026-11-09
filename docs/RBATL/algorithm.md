@@ -17,8 +17,11 @@ phi ::= ... | <A><b1,b2,...> X phi | <A><b1,...> F phi | ...
 ```
 
 Vector bounds are comma-separated. `R` / `W` rejected at parse time.
+
 `<A><b> phi U psi` and `<A><b> (phi U psi)` build the same tree (see
-[the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)).
+[the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)), and
+`<A><b>F p && q` is a syntax error that asks for parentheses (see
+[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)).
 
 ## Semantic denotations
 

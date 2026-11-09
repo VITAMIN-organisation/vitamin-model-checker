@@ -142,7 +142,7 @@ def synthesize_strategy(
     Only supports a formula whose outermost operator is a single coalition
     with no further coalition nested inside its path formula — broader
     formula shapes (nested coalitions such as `<<1>> G <<2>> F p`, or
-    top-level combinations of coalitions such as `<<1>> F p & <<2>> G q`)
+    top-level combinations of coalitions such as `(<<1>> F p) & (<<2>> G q)`)
     are rejected with a clear error, deferred to a later iteration.
     Strategy synthesis is kept separate from `model_checking` so that entry
     point stays focused on plain ATL* model checking.

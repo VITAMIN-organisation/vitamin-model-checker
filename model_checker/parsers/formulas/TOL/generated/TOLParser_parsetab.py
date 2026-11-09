@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'rightIMPLIESleftORleftANDrightNOTAND CONST DEMONIC DOT EVENTUALLY FALSE GEQ GLOBALLY GREATER IMPLIES LEQ LESS LPAREN NEXT NOT OR PROP RELEASE RPAREN TIME_SEP TRUE UNTIL WEAKexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : DEMONIC expression UNTIL expression\n        | DEMONIC expression WEAK expression\n        | DEMONIC expression RELEASE expression\n        | DEMONIC LPAREN expression UNTIL expression RPAREN\n        | DEMONIC LPAREN expression WEAK expression RPAREN\n        | DEMONIC LPAREN expression RELEASE expression RPARENexpression : DEMONIC GLOBALLY expression\n        | DEMONIC NEXT expression\n        | DEMONIC EVENTUALLY expressionexpression : NOT expressionexpression : LPAREN expression RPARENexpression : FALSE\n        | TRUEexpression : PROP DOT expressionexpression : expression TIME_SEP expressionexpression : PROP LEQ CONST\n        | PROP LESS CONST\n        | PROP GEQ CONST\n        | PROP GREATER CONST\n        expression : PROP'
+_lr_signature = 'rightIMPLIESleftORleftANDrightNOTAND CONST DEMONIC DOT EVENTUALLY FALSE GEQ GLOBALLY GREATER IMPLIES LEQ LESS LPAREN NEXT NOT OR PROP RELEASE RPAREN TIME_SEP TRUE UNTIL WEAKexpression : LPAREN expression RPARENexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : DEMONIC expression UNTIL expression\n        | DEMONIC expression WEAK expression\n        | DEMONIC expression RELEASE expression\n        | DEMONIC LPAREN expression UNTIL expression RPAREN\n        | DEMONIC LPAREN expression WEAK expression RPAREN\n        | DEMONIC LPAREN expression RELEASE expression RPARENexpression : DEMONIC GLOBALLY expression\n        | DEMONIC NEXT expression\n        | DEMONIC EVENTUALLY expressionexpression : NOT expressionexpression : FALSE\n        | TRUEexpression : PROP DOT expressionexpression : expression TIME_SEP expressionexpression : PROP LEQ CONST\n        | PROP LESS CONST\n        | PROP GEQ CONST\n        | PROP GREATER CONST\n        expression : PROP'
     
-_lr_action_items = {'DEMONIC':([0,2,3,4,8,9,10,11,13,14,15,16,19,28,29,30,44,45,46,],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,]),'NOT':([0,2,3,4,8,9,10,11,13,14,15,16,19,28,29,30,44,45,46,],[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,]),'LPAREN':([0,2,3,4,8,9,10,11,13,14,15,16,19,28,29,30,44,45,46,],[3,13,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,]),'FALSE':([0,2,3,4,8,9,10,11,13,14,15,16,19,28,29,30,44,45,46,],[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,]),'TRUE':([0,2,3,4,8,9,10,11,13,14,15,16,19,28,29,30,44,45,46,],[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,]),'PROP':([0,2,3,4,8,9,10,11,13,14,15,16,19,28,29,30,44,45,46,],[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,]),'$end':([1,5,6,7,18,24,25,26,27,32,33,34,35,36,37,38,39,40,41,42,43,50,51,52,],[0,-15,-16,-23,-13,-1,-2,-3,-18,-10,-11,-12,-14,-17,-19,-20,-21,-22,-4,-5,-6,-7,-8,-9,]),'AND':([1,5,6,7,12,17,18,24,25,26,27,31,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[8,-15,-16,-23,8,8,-13,-1,8,8,8,8,8,8,8,-14,8,-19,-20,-21,-22,8,8,8,8,8,8,-7,-8,-9,]),'OR':([1,5,6,7,12,17,18,24,25,26,27,31,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[9,-15,-16,-23,9,9,-13,-1,-2,9,9,9,9,9,9,-14,9,-19,-20,-21,-22,9,9,9,9,9,9,-7,-8,-9,]),'IMPLIES':([1,5,6,7,12,17,18,24,25,26,27,31,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[10,-15,-16,-23,10,10,-13,-1,-2,10,10,10,10,10,10,-14,10,-19,-20,-21,-22,10,10,10,10,10,10,-7,-8,-9,]),'TIME_SEP':([1,5,6,7,12,17,18,24,25,26,27,31,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[11,-15,-16,-23,11,11,-13,-1,-2,-3,11,11,11,11,11,-14,11,-19,-20,-21,-22,11,11,11,11,11,11,-7,-8,-9,]),'GLOBALLY':([2,],[14,]),'NEXT':([2,],[15,]),'EVENTUALLY':([2,],[16,]),'UNTIL':([5,6,7,12,18,24,25,26,27,31,32,33,34,35,36,37,38,39,40,41,42,43,50,51,52,],[-15,-16,-23,28,-13,-1,-2,-3,-18,44,-10,-11,-12,-14,-17,-19,-20,-21,-22,-4,-5,-6,-7,-8,-9,]),'WEAK':([5,6,7,12,18,24,25,26,27,31,32,33,34,35,36,37,38,39,40,41,42,43,50,51,52,],[-15,-16,-23,29,-13,-1,-2,-3,-18,45,-10,-11,-12,-14,-17,-19,-20,-21,-22,-4,-5,-6,-7,-8,-9,]),'RELEASE':([5,6,7,12,18,24,25,26,27,31,32,33,34,35,36,37,38,39,40,41,42,43,50,51,52,],[-15,-16,-23,30,-13,-1,-2,-3,-18,46,-10,-11,-12,-14,-17,-19,-20,-21,-22,-4,-5,-6,-7,-8,-9,]),'RPAREN':([5,6,7,17,18,24,25,26,27,31,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[-15,-16,-23,35,-13,-1,-2,-3,-18,35,-10,-11,-12,-14,-17,-19,-20,-21,-22,-4,-5,-6,50,51,52,-7,-8,-9,]),'DOT':([7,],[19,]),'LEQ':([7,],[20,]),'LESS':([7,],[21,]),'GEQ':([7,],[22,]),'GREATER':([7,],[23,]),'CONST':([20,21,22,23,],[37,38,39,40,]),}
+_lr_action_items = {'LPAREN':([0,2,3,4,8,9,10,11,14,15,16,17,19,29,30,31,44,45,46,],[2,2,14,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,]),'DEMONIC':([0,2,3,4,8,9,10,11,14,15,16,17,19,29,30,31,44,45,46,],[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,]),'NOT':([0,2,3,4,8,9,10,11,14,15,16,17,19,29,30,31,44,45,46,],[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,]),'FALSE':([0,2,3,4,8,9,10,11,14,15,16,17,19,29,30,31,44,45,46,],[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,]),'TRUE':([0,2,3,4,8,9,10,11,14,15,16,17,19,29,30,31,44,45,46,],[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,]),'PROP':([0,2,3,4,8,9,10,11,14,15,16,17,19,29,30,31,44,45,46,],[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,]),'$end':([1,5,6,7,18,24,25,26,27,28,33,34,35,36,37,38,39,40,41,42,43,50,51,52,],[0,-15,-16,-23,-14,-2,-3,-4,-18,-1,-11,-12,-13,-17,-19,-20,-21,-22,-5,-6,-7,-8,-9,-10,]),'AND':([1,5,6,7,12,13,18,24,25,26,27,28,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[8,-15,-16,-23,8,8,-14,-2,8,8,8,-1,8,8,8,8,8,-19,-20,-21,-22,8,8,8,8,8,8,-8,-9,-10,]),'OR':([1,5,6,7,12,13,18,24,25,26,27,28,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[9,-15,-16,-23,9,9,-14,-2,-3,9,9,-1,9,9,9,9,9,-19,-20,-21,-22,9,9,9,9,9,9,-8,-9,-10,]),'IMPLIES':([1,5,6,7,12,13,18,24,25,26,27,28,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[10,-15,-16,-23,10,10,-14,-2,-3,10,10,-1,10,10,10,10,10,-19,-20,-21,-22,10,10,10,10,10,10,-8,-9,-10,]),'TIME_SEP':([1,5,6,7,12,13,18,24,25,26,27,28,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[11,-15,-16,-23,11,11,-14,-2,-3,-4,11,-1,11,11,11,11,11,-19,-20,-21,-22,11,11,11,11,11,11,-8,-9,-10,]),'GLOBALLY':([3,],[15,]),'NEXT':([3,],[16,]),'EVENTUALLY':([3,],[17,]),'RPAREN':([5,6,7,12,18,24,25,26,27,28,32,33,34,35,36,37,38,39,40,41,42,43,47,48,49,50,51,52,],[-15,-16,-23,28,-14,-2,-3,-4,-18,-1,28,-11,-12,-13,-17,-19,-20,-21,-22,-5,-6,-7,50,51,52,-8,-9,-10,]),'UNTIL':([5,6,7,13,18,24,25,26,27,28,32,33,34,35,36,37,38,39,40,41,42,43,50,51,52,],[-15,-16,-23,29,-14,-2,-3,-4,-18,-1,44,-11,-12,-13,-17,-19,-20,-21,-22,-5,-6,-7,-8,-9,-10,]),'WEAK':([5,6,7,13,18,24,25,26,27,28,32,33,34,35,36,37,38,39,40,41,42,43,50,51,52,],[-15,-16,-23,30,-14,-2,-3,-4,-18,-1,45,-11,-12,-13,-17,-19,-20,-21,-22,-5,-6,-7,-8,-9,-10,]),'RELEASE':([5,6,7,13,18,24,25,26,27,28,32,33,34,35,36,37,38,39,40,41,42,43,50,51,52,],[-15,-16,-23,31,-14,-2,-3,-4,-18,-1,46,-11,-12,-13,-17,-19,-20,-21,-22,-5,-6,-7,-8,-9,-10,]),'DOT':([7,],[19,]),'LEQ':([7,],[20,]),'LESS':([7,],[21,]),'GEQ':([7,],[22,]),'GREATER':([7,],[23,]),'CONST':([20,21,22,23,],[37,38,39,40,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'expression':([0,2,3,4,8,9,10,11,13,14,15,16,19,28,29,30,44,45,46,],[1,12,17,18,24,25,26,27,31,32,33,34,36,41,42,43,47,48,49,]),}
+_lr_goto_items = {'expression':([0,2,3,4,8,9,10,11,14,15,16,17,19,29,30,31,44,45,46,],[1,12,13,18,24,25,26,27,32,33,34,35,36,41,42,43,47,48,49,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,27 +27,27 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> expression AND expression','expression',3,'p_expression_binary','parser.py',204),
-  ('expression -> expression OR expression','expression',3,'p_expression_binary','parser.py',205),
-  ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','parser.py',206),
-  ('expression -> DEMONIC expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',210),
-  ('expression -> DEMONIC expression WEAK expression','expression',4,'p_expression_ternary','parser.py',211),
-  ('expression -> DEMONIC expression RELEASE expression','expression',4,'p_expression_ternary','parser.py',212),
-  ('expression -> DEMONIC LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',213),
-  ('expression -> DEMONIC LPAREN expression WEAK expression RPAREN','expression',6,'p_expression_ternary','parser.py',214),
-  ('expression -> DEMONIC LPAREN expression RELEASE expression RPAREN','expression',6,'p_expression_ternary','parser.py',215),
-  ('expression -> DEMONIC GLOBALLY expression','expression',3,'p_expression_unary','parser.py',230),
-  ('expression -> DEMONIC NEXT expression','expression',3,'p_expression_unary','parser.py',231),
-  ('expression -> DEMONIC EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',232),
-  ('expression -> NOT expression','expression',2,'p_expression_not','parser.py',246),
-  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','parser.py',250),
-  ('expression -> FALSE','expression',1,'p_expression_boolean','parser.py',255),
-  ('expression -> TRUE','expression',1,'p_expression_boolean','parser.py',256),
-  ('expression -> PROP DOT expression','expression',3,'p_expression_freeze','parser.py',260),
-  ('expression -> expression TIME_SEP expression','expression',3,'p_expression_clock_constraint_on_expr','parser.py',265),
-  ('expression -> PROP LEQ CONST','expression',3,'p_expression_time_atomic_constraint','parser.py',269),
-  ('expression -> PROP LESS CONST','expression',3,'p_expression_time_atomic_constraint','parser.py',270),
-  ('expression -> PROP GEQ CONST','expression',3,'p_expression_time_atomic_constraint','parser.py',271),
-  ('expression -> PROP GREATER CONST','expression',3,'p_expression_time_atomic_constraint','parser.py',272),
-  ('expression -> PROP','expression',1,'p_expression_prop','parser.py',277),
+  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',126),
+  ('expression -> expression AND expression','expression',3,'p_expression_binary','parser.py',202),
+  ('expression -> expression OR expression','expression',3,'p_expression_binary','parser.py',203),
+  ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','parser.py',204),
+  ('expression -> DEMONIC expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',209),
+  ('expression -> DEMONIC expression WEAK expression','expression',4,'p_expression_ternary','parser.py',210),
+  ('expression -> DEMONIC expression RELEASE expression','expression',4,'p_expression_ternary','parser.py',211),
+  ('expression -> DEMONIC LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',212),
+  ('expression -> DEMONIC LPAREN expression WEAK expression RPAREN','expression',6,'p_expression_ternary','parser.py',213),
+  ('expression -> DEMONIC LPAREN expression RELEASE expression RPAREN','expression',6,'p_expression_ternary','parser.py',214),
+  ('expression -> DEMONIC GLOBALLY expression','expression',3,'p_expression_unary','parser.py',227),
+  ('expression -> DEMONIC NEXT expression','expression',3,'p_expression_unary','parser.py',228),
+  ('expression -> DEMONIC EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',229),
+  ('expression -> NOT expression','expression',2,'p_expression_not','parser.py',241),
+  ('expression -> FALSE','expression',1,'p_expression_boolean','parser.py',246),
+  ('expression -> TRUE','expression',1,'p_expression_boolean','parser.py',247),
+  ('expression -> PROP DOT expression','expression',3,'p_expression_freeze','parser.py',251),
+  ('expression -> expression TIME_SEP expression','expression',3,'p_expression_clock_constraint_on_expr','parser.py',256),
+  ('expression -> PROP LEQ CONST','expression',3,'p_expression_time_atomic_constraint','parser.py',261),
+  ('expression -> PROP LESS CONST','expression',3,'p_expression_time_atomic_constraint','parser.py',262),
+  ('expression -> PROP GEQ CONST','expression',3,'p_expression_time_atomic_constraint','parser.py',263),
+  ('expression -> PROP GREATER CONST','expression',3,'p_expression_time_atomic_constraint','parser.py',264),
+  ('expression -> PROP','expression',1,'p_expression_prop','parser.py',269),
 ]

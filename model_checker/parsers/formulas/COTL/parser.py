@@ -14,6 +14,7 @@ from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     CoalitionValueError,
     run_common_prechecks,
+    until_operands,
     validate_ast,
 )
 from ..shared_parser import BaseLogicParser
@@ -91,6 +92,7 @@ class COTLParser(BaseLogicParser):
         | LEGION GLOBALLY expression"""
         self._check_legion(p[1])
         p[0] = (p[1] + p[2], p[3])
+        self._prefix_unary(p, p[0], p[1] + p[2])
 
     def p_expression_legion_binary(self, p):
         """expression : LEGION expression UNTIL expression
@@ -100,10 +102,9 @@ class COTLParser(BaseLogicParser):
         | LEGION LPAREN expression RELEASE expression RPAREN
         | LEGION LPAREN expression WEAK expression RPAREN"""
         self._check_legion(p[1])
-        if len(p) == 5:
-            p[0] = (p[1] + p[3], p[2], p[4])
-        else:
-            p[0] = (p[1] + p[4], p[3], p[5])
+        left, operator, right = until_operands(p)
+        p[0] = (p[1] + operator, left, right)
+        self._prefix_until(p, p[0], p[1])
 
     def _check_legion(self, token: str) -> None:
         legion, _ = parse_legion_budget(token)

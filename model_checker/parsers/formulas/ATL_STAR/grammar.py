@@ -42,7 +42,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from ..parser_utils import ambiguous_prefix_message
 from .formula import And, Coalition, Formula, Next, Not, Prop, True_, Until
+
+_CONNECTIVES = frozenset({"AND", "OR", "IMPLIES"})
 
 
 class ATLStarParseError(ValueError):
@@ -177,15 +180,30 @@ class _Parser:
         return left
 
     def _until(self) -> Formula:
+        start = self._index
         left = self._unary()
         if self._peek().kind == "UNTIL":
-            self._advance()
+            until = self._advance()
             right = self._unary()
             token = self._peek()
             if token.kind == "UNTIL":
                 raise ATLStarParseError(
                     "U does not chain: write (x U y) U z or x U (y U z)",
                     token.position,
+                )
+            # The paper states no precedence between U and the connectives.
+            before = self._tokens[start - 1] if start else None
+            if before is not None and before.kind in _CONNECTIVES:
+                c = before.value
+                raise ATLStarParseError(
+                    f"'x {c} y U z' is ambiguous: write (x {c} y) U z or x {c} (y U z)",
+                    until.position,
+                )
+            if token.kind in _CONNECTIVES:
+                c = token.value
+                raise ATLStarParseError(
+                    f"'x U y {c} z' is ambiguous: write (x U y) {c} z or x U (y {c} z)",
+                    until.position,
                 )
             return Until(left, right)
         return left
@@ -209,13 +227,21 @@ class _Parser:
         return self._atom()
 
     def _coalition(self) -> Formula:
-        self._expect("COALITION_OPEN")
+        open_token = self._expect("COALITION_OPEN")
         agents = self._agents()
         self._expect("COALITION_CLOSE")
         # ATL writes <<A>> phi1 U phi2 for the coalition over the Until, and ATL is
         # the fragment of ATL* whose temporal operators each follow a path
         # quantifier (Alur, Henzinger, Kupferman, JACM 2002, pp. 685 and 689).
-        return Coalition(agents=agents, path_formula=self._until())
+        coalition = Coalition(agents=agents, path_formula=self._until())
+        token = self._peek()
+        if token.kind in _CONNECTIVES:
+            # <<A>> x & y is (<<A>> x) & y or <<A>> (x & y), and both are ATL*.
+            prefix = f"<<{','.join(str(agent) for agent in sorted(agents))}>>"
+            raise ATLStarParseError(
+                ambiguous_prefix_message(prefix, token.value), open_token.position
+            )
+        return coalition
 
     def _agents(self) -> frozenset[int]:
         seen: dict[int, int] = {}  # agent id -> the position of its first occurrence

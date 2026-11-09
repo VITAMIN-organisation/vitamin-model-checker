@@ -53,13 +53,15 @@ phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
 
 Sugar: `F` / `G` / `U` / `until` / `eventually` / `globally`.
 
-A prefix (`AF`, `AG`, `EF`, `EG`, freeze `j.`) followed by an unparenthesized
-`&&`, `||` or `->` is a syntax error that gives the position and both readings:
-`AF p && q` asks for `AF (p && q)` or `(AF p) && q`. The sources state no precedence rule and write
-a compound body in parentheses: IC93 p. 10 defines `∃◇~c φ` as `∃(true U~c φ)`,
-and Alur's thesis writes `∀□x.[p → ∀◇y.(q ∧ y < x+5)]` (p. 147). An atomic or
-parenthesized body needs nothing more: `AF p`, `AG AF p`, `AG (p -> EF q)`. See
-[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective).
+A connective after a prefix that no parenthesis closes (`AF p && q`,
+`A p U q && r`, freeze `j. p && q`, clock constraint `AF p : x<5 && q`) is a
+syntax error that gives the position and both readings, as in every logic with a
+prefix; `AF p`, `AG AF p` and `AG (p -> EF q)` parse (see
+[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)). The
+TCTL sources state no precedence rule and write a compound body in parentheses:
+IC93 p. 10 defines $\exists\Diamond_{\sim c}\varphi$ as
+$\exists(true\ U_{\sim c}\ \varphi)$, and Alur's thesis (p. 147) writes
+$\forall\Box x.[p \to \forall\Diamond y.(q \land y < x+5)]$.
 
 Standard reductions:
 

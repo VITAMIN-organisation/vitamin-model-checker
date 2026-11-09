@@ -176,6 +176,7 @@ class Wallet_ATLParser(BaseLogicParser):
             "operator": p[1],
             "formula": p[2],
         }
+        self._negation(p[0], p[2])
 
     def p_expression_binary(self, p):
         """expression : expression AND expression
@@ -187,6 +188,7 @@ class Wallet_ATLParser(BaseLogicParser):
             "left": p[1],
             "right": p[3],
         }
+        self._connective(p[0], p[1], p[2], p[3])
 
     def p_expression_ternary(self, p):
         """expression : COALITION temporal_body"""
@@ -210,6 +212,18 @@ class Wallet_ATLParser(BaseLogicParser):
             "constraints": coalition_info["constraints"],
             "formula": p[2],
         }
+        body = p[2]
+        if body not in self._grouped:
+            # The coalition as written, wallet guards included.
+            source = p.lexer.lexdata[p.lexpos(1) :]
+            prefix = re.match(WALLET_COALITION_TOKEN, source).group(0)
+            if body["type"] == "unary":
+                prefix += body["operator"]
+                self._prefix_over(p[0], prefix, p.lexpos(1), body["formula"])
+            else:
+                self._prefix_over(
+                    p[0], prefix, p.lexpos(1), body["right"], body["operator"]
+                )
 
     def p_temporal_body(self, p):
         """temporal_body : GLOBALLY expression
@@ -232,6 +246,8 @@ class Wallet_ATLParser(BaseLogicParser):
                 "left": left,
                 "right": right,
             }
+            if len(p) == 6:
+                self._grouped.mark(p[0])
 
     def p_expression_prop(self, p):
         """expression : PROP"""
@@ -239,10 +255,6 @@ class Wallet_ATLParser(BaseLogicParser):
             "type": "proposition",
             "proposition": p[1],
         }
-
-    def p_expression_group(self, p):
-        """expression : LPAREN expression RPAREN"""
-        p[0] = p[2]
 
     # --- Validation ---
     def _pre_validation(self, formula):

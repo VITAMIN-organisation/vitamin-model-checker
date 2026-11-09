@@ -8,10 +8,9 @@ What it handles:
 import re
 
 from model_checker.parsers.formulas.parser_utils import (
-    GroupedNodes,
     normalize_formula_text,
-    reject_ungrouped_compound_body,
     run_common_prechecks,
+    until_operands,
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
@@ -135,7 +134,6 @@ class TOLParser(BaseLogicParser):
 
     def __init__(self):
         super().__init__()
-        self._grouped = GroupedNodes()
         self.tokens.extend(
             [
                 "WEAK",
@@ -205,6 +203,7 @@ class TOLParser(BaseLogicParser):
         | expression OR expression
         | expression IMPLIES expression"""
         p[0] = Binary(p[2], p[1], p[3])
+        self._connective(p[0], p[1], p[2], p[3])
 
     def p_expression_ternary(self, p):
         """expression : DEMONIC expression UNTIL expression
@@ -220,11 +219,9 @@ class TOLParser(BaseLogicParser):
             raise DemonicValueError(
                 f"Provided cost ({demonic_cost}) is not an int."
             ) from None
-        # {Jk} phi U psi and {Jk} (phi U psi) build the same tree.
-        if len(p) == 5:
-            p[0] = DemonicBinary(p[1], p[3], p[2], p[4])
-        else:
-            p[0] = DemonicBinary(p[1], p[4], p[3], p[5])
+        left, operator, right = until_operands(p)
+        p[0] = DemonicBinary(p[1], operator, left, right)
+        self._prefix_until(p, p[0], p[1])
 
     def p_expression_unary(self, p):
         """expression : DEMONIC GLOBALLY expression
@@ -237,19 +234,13 @@ class TOLParser(BaseLogicParser):
             raise DemonicValueError(
                 f"Provided cost ({demonic_cost}) is not an int."
             ) from None
-        reject_ungrouped_compound_body(
-            f"{p[1]}{p[2]}", p[3], self._grouped, p.lexpos(1)
-        )
         p[0] = DemonicOp(p[1], p[2], p[3])
+        self._prefix_unary(p, p[0], f"{p[1]}{p[2]}")
 
     def p_expression_not(self, p):
         """expression : NOT expression"""
         p[0] = Unary(p[1], p[2])
-
-    def p_expression_group(self, p):
-        """expression : LPAREN expression RPAREN"""
-        self._grouped.add(p[2])
-        p[0] = p[2]
+        self._negation(p[0], p[2])
 
     def p_expression_boolean(self, p):
         """expression : FALSE
@@ -258,12 +249,13 @@ class TOLParser(BaseLogicParser):
 
     def p_expression_freeze(self, p):
         """expression : PROP DOT expression"""
-        reject_ungrouped_compound_body(f"{p[1]}.", p[3], self._grouped, p.lexpos(1))
         p[0] = FreezeExpr(p[1], p[3])
+        self._prefix_over(p[0], f"{p[1]}.", p.lexpos(1), p[3])
 
     def p_expression_clock_constraint_on_expr(self, p):
         """expression : expression TIME_SEP expression"""
         p[0] = ClockExpr(p[1], p[3])
+        self._attachment(p[0], p[3])
 
     def p_expression_time_atomic_constraint(self, p):
         """expression : PROP LEQ CONST
@@ -281,11 +273,7 @@ class TOLParser(BaseLogicParser):
     def parse(self, formula, **kwargs):
         if isinstance(formula, str):
             formula = normalize_formula_text(formula)
-        try:
-            return super().parse(formula, **kwargs)
-        finally:
-            # Each parse starts empty, and the parser keeps no nodes of the last one.
-            self._grouped = GroupedNodes()
+        return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
         return run_common_prechecks(

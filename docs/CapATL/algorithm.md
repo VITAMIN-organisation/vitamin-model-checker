@@ -22,6 +22,8 @@ phi ::= ... | <{A}> X phi | <{A}> F phi | <{A}> G phi | <{A}> phi U psi
 `<{A}> phi U psi` and `<{A}> (phi U psi)` build the same tree, and so do the two
 forms of `R` (see
 [the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)).
+`<{A}>F p && q` is a syntax error that asks for parentheses (see
+[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)).
 
 Formula bound `<{A}, k>` is rejected (no numeric `k` in CapATL). `W` is
 unsupported.

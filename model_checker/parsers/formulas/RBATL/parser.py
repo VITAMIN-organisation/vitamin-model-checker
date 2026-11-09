@@ -22,6 +22,7 @@ from ..parser_utils import (
     BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
+    until_operands,
     validate_ast,
     validate_coalition_bound_token,
     validate_release_weak_rejected,
@@ -76,11 +77,9 @@ class RBATLParser(BaseLogicParser):
         validate_coalition_bound_token(
             p[1], self.max_coalition, bound_limit=self.bound_limit
         )
-        # <A><b> phi U psi and <A><b> (phi U psi) build the same tree.
-        if len(p) == 5:
-            p[0] = (p[1] + p[3], p[2], p[4])
-        else:
-            p[0] = (p[1] + p[4], p[3], p[5])
+        left, operator, right = until_operands(p)
+        p[0] = (p[1] + operator, left, right)
+        self._prefix_until(p, p[0], p[1])
 
     def p_expression_unary(self, p):
         """expression : COALITION_BOUND GLOBALLY expression
@@ -90,6 +89,7 @@ class RBATLParser(BaseLogicParser):
             p[1], self.max_coalition, bound_limit=self.bound_limit
         )
         p[0] = (p[1] + p[2], p[3])
+        self._prefix_unary(p, p[0], p[1] + p[2])
 
     # === Validation ===
 

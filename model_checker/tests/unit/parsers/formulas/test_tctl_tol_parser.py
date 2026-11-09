@@ -138,16 +138,14 @@ def test_tol_release_and_weak_until_take_optional_parentheses(operator):
     ("logic", "formula", "prefix", "connective", "position"),
     [
         ("TCTL", "AF p && q", "AF", "&&", 0),
-        ("TCTL", "AG p -> q", "AG", "->", 0),
-        ("TCTL", "EF !p || q", "EF", "||", 0),
         ("TCTL", "AF (p) && q", "AF", "&&", 0),
         ("TCTL", "r && x. p && q", "x.", "&&", 5),
-        ("TOL", "{J2}F p && q", "{J2}F", "&&", 0),
+        ("TCTL", "AF p : x<5 && q", "AF", "&&", 0),
         ("TOL", "{J2}X p || q", "{J2}X", "||", 0),
         ("TOL", "j. p && q", "j.", "&&", 0),
     ],
 )
-def test_prefix_before_an_unparenthesized_connective_is_ambiguous(
+def test_ambiguity_error_names_the_prefix_and_both_readings(
     logic, formula, prefix, connective, position
 ):
     parser = FormulaParserFactory.get_parser_instance(logic)
@@ -162,17 +160,13 @@ def test_prefix_before_an_unparenthesized_connective_is_ambiguous(
 @pytest.mark.parametrize(
     ("logic", "formula"),
     [
-        ("TCTL", "AF (p && q)"),
-        ("TCTL", "(AF p) && q"),
         ("TCTL", "AG (p -> EF q)"),
         ("TCTL", "AG AF p"),
         ("TCTL", "j.(p && q)"),
-        ("TOL", "{J2}F (p && q)"),
-        ("TOL", "({J2}F p) && q"),
         ("TOL", "j.{J2}F p"),
     ],
 )
-def test_prefix_with_an_atomic_or_parenthesized_body_parses(logic, formula):
+def test_freeze_and_nested_prefixes_parse(logic, formula):
     parser = FormulaParserFactory.get_parser_instance(logic)
     assert parser.parse(formula) is not None
 

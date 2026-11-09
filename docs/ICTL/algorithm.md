@@ -128,17 +128,21 @@ phi ::= p | phi /\ phi | phi \/ phi | phi -> phi | not phi
 - Path quantifiers: `E` / `exist`, `A` / `forall`.
 - Temporal: `X` / `next`, `U` / `until`, `R` / `release`.
 
-Written forms of `U` and `R` under a path quantifier (`U` shown; `R` is the same):
+An Until or Release under a path quantifier takes three forms, all with one tree:
+`A(p U q)`, `A[p U q]` and `A p U q`, and the same with `E` and with `R`
+(`E[p R q]`). A parenthesized operand is grouped as written: `A((p && q) U r)` has
+`p && q` as its left operand.
 
-| Form | Accepted | Where it comes from |
-| :--- | :--- | :--- |
-| `A(p U q)`, `E(p U q)` | yes | AREA23b Definition 1 (p. 43) writes `A (ϕ U ψ)` in its grammar. EUMAS25b writes `A(φ1 Uφ2)` in its equivalences and examples (pp. 8, 12). |
-| `A[p U q]`, `E[p U q]` | yes | EUMAS25b p. 10 writes `A[⊥R(...)]`. |
-| `A p U q`, `E p U q` | yes | EUMAS25b writes `A⊤Uφ` (p. 3) and `Aφ1 Uφ2` (p. 14, algorithm). Its grammar (p. 5) has a path-formula layer, `Aψ` with `ψ ::= ⃝φ \| φUφ \| φRφ`, and no parentheses. |
-
-All three forms build the same tree. A parenthesized operand is grouped as written:
-`A((p && q) U r)` has `p && q` as its left operand. The papers state no precedence
-rule.
+The forms come from the two ICTL papers, AREA23b and EUMAS25b. AREA23b writes
+$A(\varphi\ U\ \psi)$ in its grammar (Definition 1, p. 43). EUMAS25b writes
+$A(\varphi_1\ U\ \varphi_2)$ in its equivalences and examples (pp. 8, 12),
+$A[\bot R(\ldots)]$ once (p. 10) and $A\varphi_1 U \varphi_2$ in its algorithm
+(p. 14); its grammar (p. 5) is $A\psi$ with
+$\psi ::= \bigcirc\varphi \mid \varphi U \varphi \mid \varphi R \varphi$, so U and
+R share one notation and ICTL takes `[...]` around both. Neither paper states a
+precedence rule, so a connective after a prefix that no parenthesis closes, as in
+`AX p && q`, is a syntax error (see
+[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)).
 
 There are no coalition quantifiers. Parser metadata declares
 `model_type: "BirelationalMatrix"`.

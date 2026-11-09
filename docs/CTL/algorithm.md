@@ -16,10 +16,17 @@ Parser: `parsers/formulas/CTL/parser.py`
 ```text
 phi ::= p | !phi | phi && psi | phi || psi | phi -> psi
       | E X phi | A X phi | E F phi | A F phi | E G phi | A G phi
-      | E (phi U psi) | A (phi U psi)
+      | E [phi U psi] | A [phi U psi] | E (phi U psi) | A (phi U psi)
+      | E phi U psi | A phi U psi
 ```
 
-Grouping: `()` and `[]`. Every temporal operator must be prefixed by `E` or `A`.
+Every temporal operator must be prefixed by `E` or `A`. The three Until forms
+above build one tree. Square brackets appear only around an Until, and
+parentheses group everything else, so `[p] && q` is a syntax error (see
+[grouping](../logic_knowledge_base.md#boolean-logic-shared-syntax) for the
+source). A connective after a prefix that no parenthesis closes, as in
+`AF p && q`, is a syntax error too (see
+[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)).
 
 ## Semantic denotations
 

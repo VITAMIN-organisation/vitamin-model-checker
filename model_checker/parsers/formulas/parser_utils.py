@@ -6,6 +6,7 @@ Coalition checks, lexer token checks, and pre-parse validation live here.
 import re
 import unicodedata
 from collections.abc import Sequence
+from typing import NamedTuple
 
 from model_checker.parsers.syntax_patterns import (
     AGENT_LIST,
@@ -33,44 +34,70 @@ BOOLEAN_AST_OPERATORS = frozenset(
     {"&&", "||", "->", "!", "AND", "OR", "IMPLIES", "NOT"}
 )
 
-_BINARY_CONNECTIVE_SPELLINGS = frozenset(
-    {"&&", "&", "and", "||", "|", "or", "->", "implies"}
-)
+
+def until_operands(p) -> tuple:
+    """Return `(left, operator, right)` of the production `prefix x OP y` or
+    `prefix ( x OP y )`, where `p[1]` is the prefix; both forms build one tree."""
+    return tuple(p[2:5] if len(p) == 5 else p[3:6])
 
 
-class GroupedNodes:
-    """The nodes a parser built inside parentheses during one parse.
+class NodeMarks:
+    """AST nodes marked during one parse, each with an optional value.
 
     It keeps the nodes, not only their ids: the id of a node freed during the parse
-    can be given to a later node, which would then count as parenthesized.
+    can be given to a later node, which would then count as marked.
     """
 
     def __init__(self) -> None:
-        self._nodes: dict[int, object] = {}
+        self._marks: dict[int, tuple[object, object]] = {}
 
-    def add(self, node: object) -> None:
-        self._nodes[id(node)] = node
+    def mark(self, node: object, value: object = None) -> None:
+        self._marks[id(node)] = (node, value)
 
     def __contains__(self, node: object) -> bool:
-        return self._nodes.get(id(node)) is node
+        entry = self._marks.get(id(node))
+        return entry is not None and entry[0] is node
+
+    def value(self, node: object) -> object:
+        return self._marks[id(node)][1] if node in self else None
 
 
-def reject_ungrouped_compound_body(
-    prefix: str, body: object, grouped: GroupedNodes, position: int
-) -> None:
-    """Reject a prefix operator over an unparenthesized connective, as in `AF p && q`.
+class OpenPrefix(NamedTuple):
+    """A prefix whose scope is not closed by parentheses, such as `<1>F` in
+    `<1>F p`; `operator` is set for a prefix over an Until, such as `<1> p U q`."""
 
-    The TCTL and TOL sources state no precedence rule and always parenthesize a
-    compound body, so `AF p && q` could mean `AF (p && q)` or `(AF p) && q`.
-    `position` is the 0-based offset of the prefix in the formula.
+    prefix: str
+    position: int
+    operator: str | None = None
+
+
+def ambiguous_prefix_message(
+    prefix: str, connective: str, operator: str | None = None
+) -> str:
+    """The message for a connective right after an unclosed prefix, as in
+    `AF p && q`; `operator` is the U, R or W of a prefix Until.
+
+    No defining paper of a logic with prefixes states a precedence rule, so the
+    formula has two readings and the user writes the parentheses.
     """
-    connective = getattr(body, "op", None)
-    if connective in _BINARY_CONNECTIVE_SPELLINGS and body not in grouped:
-        raise ValueError(
-            f"'{prefix} ... {connective} ...' at position {position} is ambiguous: "
-            f"write {prefix} (... {connective} ...) for {prefix} over both sides, "
-            f"or ({prefix} ...) {connective} ... for {prefix} over the left side only"
-        )
+    if operator is None:
+        shown = f"{prefix} ... {connective} ..."
+        both = f"{prefix} (... {connective} ...)"
+        left = f"({prefix} ...) {connective} ..."
+    else:
+        shown = f"{prefix} ... {operator} ... {connective} ..."
+        both = f"{prefix} (... {operator} (... {connective} ...))"
+        left = f"({prefix} (... {operator} ...)) {connective} ..."
+    return (
+        f"'{shown}' is ambiguous: write {both} for {prefix} over both sides, "
+        f"or {left} for {prefix} over the left side only"
+    )
+
+
+def ambiguous_prefix_error(open_prefix: OpenPrefix, connective: str) -> ValueError:
+    prefix, position, operator = open_prefix
+    message = ambiguous_prefix_message(prefix, connective, operator)
+    return ValueError(f"{message} (position {position})")
 
 
 class CoalitionValueError(Exception):

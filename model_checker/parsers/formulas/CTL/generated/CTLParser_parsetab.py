@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'rightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAND EVENTUALLY EXIST FALSE FORALL GLOBALLY IMPLIES LBRACKET LPAREN NEXT NOT OR PROP RBRACKET RPAREN TRUE UNTILexpression : FORALL expression UNTIL expression\n        | EXIST expression UNTIL expression\n        | FORALL LPAREN expression UNTIL expression RPAREN\n        | EXIST LPAREN expression UNTIL expression RPAREN\n        | FORALL LBRACKET expression UNTIL expression RBRACKET\n        | EXIST LBRACKET expression UNTIL expression RBRACKETexpression : FORALL GLOBALLY expression\n        | FORALL NEXT expression\n        | FORALL EVENTUALLY expression\n        | EXIST GLOBALLY expression\n        | EXIST NEXT expression\n        | EXIST EVENTUALLY expressionexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : LBRACKET expression RBRACKETexpression : NOT expressionexpression : LPAREN expression RPARENexpression : FALSE\n        | TRUEexpression : PROP'
+_lr_signature = 'rightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAND EVENTUALLY EXIST FALSE FORALL GLOBALLY IMPLIES LBRACKET LPAREN NEXT NOT OR PROP RBRACKET RPAREN TRUE UNTILexpression : FORALL expression UNTIL expression\n        | EXIST expression UNTIL expression\n        | FORALL LPAREN expression UNTIL expression RPAREN\n        | EXIST LPAREN expression UNTIL expression RPAREN\n        | FORALL LBRACKET expression UNTIL expression RBRACKET\n        | EXIST LBRACKET expression UNTIL expression RBRACKETexpression : FORALL GLOBALLY expression\n        | FORALL NEXT expression\n        | FORALL EVENTUALLY expression\n        | EXIST GLOBALLY expression\n        | EXIST NEXT expression\n        | EXIST EVENTUALLY expressionexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : NOT expressionexpression : LPAREN expression RPARENexpression : FALSE\n        | TRUEexpression : PROP'
     
-_lr_action_items = {'FORALL':([0,2,3,4,5,6,10,11,12,14,15,16,17,18,20,21,22,23,24,31,37,46,47,49,50,],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,]),'EXIST':([0,2,3,4,5,6,10,11,12,14,15,16,17,18,20,21,22,23,24,31,37,46,47,49,50,],[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,]),'LBRACKET':([0,2,3,4,5,6,10,11,12,14,15,16,17,18,20,21,22,23,24,31,37,46,47,49,50,],[5,15,21,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,]),'NOT':([0,2,3,4,5,6,10,11,12,14,15,16,17,18,20,21,22,23,24,31,37,46,47,49,50,],[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,]),'LPAREN':([0,2,3,4,5,6,10,11,12,14,15,16,17,18,20,21,22,23,24,31,37,46,47,49,50,],[4,14,20,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,]),'FALSE':([0,2,3,4,5,6,10,11,12,14,15,16,17,18,20,21,22,23,24,31,37,46,47,49,50,],[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,]),'TRUE':([0,2,3,4,5,6,10,11,12,14,15,16,17,18,20,21,22,23,24,31,37,46,47,49,50,],[8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,]),'PROP':([0,2,3,4,5,6,10,11,12,14,15,16,17,18,20,21,22,23,24,31,37,46,47,49,50,],[9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,]),'$end':([1,7,8,9,27,28,29,30,34,35,36,40,41,42,43,44,45,48,55,56,57,58,],[0,-19,-20,-21,-17,-13,-14,-15,-7,-8,-9,-10,-11,-12,-18,-16,-1,-2,-3,-5,-4,-6,]),'AND':([1,7,8,9,13,19,25,26,27,28,29,30,32,33,34,35,36,38,39,40,41,42,43,44,45,48,51,52,53,54,55,56,57,58,],[10,-19,-20,-21,10,10,10,10,-17,-13,10,10,10,10,-7,-8,-9,10,10,-10,-11,-12,-18,-16,-1,-2,10,10,10,10,-3,-5,-4,-6,]),'OR':([1,7,8,9,13,19,25,26,27,28,29,30,32,33,34,35,36,38,39,40,41,42,43,44,45,48,51,52,53,54,55,56,57,58,],[11,-19,-20,-21,11,11,11,11,-17,-13,-14,11,11,11,-7,-8,-9,11,11,-10,-11,-12,-18,-16,-1,-2,11,11,11,11,-3,-5,-4,-6,]),'IMPLIES':([1,7,8,9,13,19,25,26,27,28,29,30,32,33,34,35,36,38,39,40,41,42,43,44,45,48,51,52,53,54,55,56,57,58,],[12,-19,-20,-21,12,12,12,12,-17,-13,-14,12,12,12,-7,-8,-9,12,12,-10,-11,-12,-18,-16,-1,-2,12,12,12,12,-3,-5,-4,-6,]),'GLOBALLY':([2,3,],[16,22,]),'NEXT':([2,3,],[17,23,]),'EVENTUALLY':([2,3,],[18,24,]),'UNTIL':([7,8,9,13,19,27,28,29,30,32,33,34,35,36,38,39,40,41,42,43,44,45,48,55,56,57,58,],[-19,-20,-21,31,37,-17,-13,-14,-15,46,47,-7,-8,-9,49,50,-10,-11,-12,-18,-16,-1,-2,-3,-5,-4,-6,]),'RPAREN':([7,8,9,25,27,28,29,30,32,34,35,36,38,40,41,42,43,44,45,48,51,53,55,56,57,58,],[-19,-20,-21,43,-17,-13,-14,-15,43,-7,-8,-9,43,-10,-11,-12,-18,-16,-1,-2,55,57,-3,-5,-4,-6,]),'RBRACKET':([7,8,9,26,27,28,29,30,33,34,35,36,39,40,41,42,43,44,45,48,52,54,55,56,57,58,],[-19,-20,-21,44,-17,-13,-14,-15,44,-7,-8,-9,44,-10,-11,-12,-18,-16,-1,-2,56,58,-3,-5,-4,-6,]),}
+_lr_action_items = {'FORALL':([0,2,3,4,5,9,10,11,13,14,15,16,17,19,20,21,22,23,29,35,43,44,46,47,],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,]),'EXIST':([0,2,3,4,5,9,10,11,13,14,15,16,17,19,20,21,22,23,29,35,43,44,46,47,],[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,]),'NOT':([0,2,3,4,5,9,10,11,13,14,15,16,17,19,20,21,22,23,29,35,43,44,46,47,],[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,]),'LPAREN':([0,2,3,4,5,9,10,11,13,14,15,16,17,19,20,21,22,23,29,35,43,44,46,47,],[4,13,19,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,]),'FALSE':([0,2,3,4,5,9,10,11,13,14,15,16,17,19,20,21,22,23,29,35,43,44,46,47,],[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,]),'TRUE':([0,2,3,4,5,9,10,11,13,14,15,16,17,19,20,21,22,23,29,35,43,44,46,47,],[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,]),'PROP':([0,2,3,4,5,9,10,11,13,14,15,16,17,19,20,21,22,23,29,35,43,44,46,47,],[8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,]),'$end':([1,6,7,8,25,26,27,28,32,33,34,38,39,40,41,42,45,52,53,54,55,],[0,-18,-19,-20,-16,-13,-14,-15,-7,-8,-9,-10,-11,-12,-17,-1,-2,-3,-5,-4,-6,]),'AND':([1,6,7,8,12,18,24,25,26,27,28,30,31,32,33,34,36,37,38,39,40,41,42,45,48,49,50,51,52,53,54,55,],[9,-18,-19,-20,9,9,9,-16,-13,9,9,9,9,-7,-8,-9,9,9,-10,-11,-12,-17,-1,-2,9,9,9,9,-3,-5,-4,-6,]),'OR':([1,6,7,8,12,18,24,25,26,27,28,30,31,32,33,34,36,37,38,39,40,41,42,45,48,49,50,51,52,53,54,55,],[10,-18,-19,-20,10,10,10,-16,-13,-14,10,10,10,-7,-8,-9,10,10,-10,-11,-12,-17,-1,-2,10,10,10,10,-3,-5,-4,-6,]),'IMPLIES':([1,6,7,8,12,18,24,25,26,27,28,30,31,32,33,34,36,37,38,39,40,41,42,45,48,49,50,51,52,53,54,55,],[11,-18,-19,-20,11,11,11,-16,-13,-14,11,11,11,-7,-8,-9,11,11,-10,-11,-12,-17,-1,-2,11,11,11,11,-3,-5,-4,-6,]),'LBRACKET':([2,3,],[14,20,]),'GLOBALLY':([2,3,],[15,21,]),'NEXT':([2,3,],[16,22,]),'EVENTUALLY':([2,3,],[17,23,]),'UNTIL':([6,7,8,12,18,25,26,27,28,30,31,32,33,34,36,37,38,39,40,41,42,45,52,53,54,55,],[-18,-19,-20,29,35,-16,-13,-14,-15,43,44,-7,-8,-9,46,47,-10,-11,-12,-17,-1,-2,-3,-5,-4,-6,]),'RPAREN':([6,7,8,24,25,26,27,28,30,32,33,34,36,38,39,40,41,42,45,48,50,52,53,54,55,],[-18,-19,-20,41,-16,-13,-14,-15,41,-7,-8,-9,41,-10,-11,-12,-17,-1,-2,52,54,-3,-5,-4,-6,]),'RBRACKET':([6,7,8,25,26,27,28,32,33,34,38,39,40,41,42,45,49,51,52,53,54,55,],[-18,-19,-20,-16,-13,-14,-15,-7,-8,-9,-10,-11,-12,-17,-1,-2,53,55,-3,-5,-4,-6,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'expression':([0,2,3,4,5,6,10,11,12,14,15,16,17,18,20,21,22,23,24,31,37,46,47,49,50,],[1,13,19,25,26,27,28,29,30,32,33,34,35,36,38,39,40,41,42,45,48,51,52,53,54,]),}
+_lr_goto_items = {'expression':([0,2,3,4,5,9,10,11,13,14,15,16,17,19,20,21,22,23,29,35,43,44,46,47,],[1,12,18,24,25,26,27,28,30,31,32,33,34,36,37,38,39,40,42,45,48,49,50,51,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,25 +27,24 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> FORALL expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',89),
-  ('expression -> EXIST expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',90),
-  ('expression -> FORALL LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',91),
-  ('expression -> EXIST LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',92),
-  ('expression -> FORALL LBRACKET expression UNTIL expression RBRACKET','expression',6,'p_expression_ternary','parser.py',93),
-  ('expression -> EXIST LBRACKET expression UNTIL expression RBRACKET','expression',6,'p_expression_ternary','parser.py',94),
+  ('expression -> FORALL expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',90),
+  ('expression -> EXIST expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',91),
+  ('expression -> FORALL LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',92),
+  ('expression -> EXIST LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',93),
+  ('expression -> FORALL LBRACKET expression UNTIL expression RBRACKET','expression',6,'p_expression_ternary','parser.py',94),
+  ('expression -> EXIST LBRACKET expression UNTIL expression RBRACKET','expression',6,'p_expression_ternary','parser.py',95),
   ('expression -> FORALL GLOBALLY expression','expression',3,'p_expression_unary','parser.py',101),
   ('expression -> FORALL NEXT expression','expression',3,'p_expression_unary','parser.py',102),
   ('expression -> FORALL EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',103),
   ('expression -> EXIST GLOBALLY expression','expression',3,'p_expression_unary','parser.py',104),
   ('expression -> EXIST NEXT expression','expression',3,'p_expression_unary','parser.py',105),
   ('expression -> EXIST EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',106),
-  ('expression -> expression AND expression','expression',3,'p_expression_binary','shared_parser.py',108),
-  ('expression -> expression OR expression','expression',3,'p_expression_binary','shared_parser.py',109),
-  ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','shared_parser.py',110),
-  ('expression -> LBRACKET expression RBRACKET','expression',3,'p_expression_group_bracket','parser.py',110),
-  ('expression -> NOT expression','expression',2,'p_expression_not','shared_parser.py',114),
-  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',118),
-  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',122),
-  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',123),
-  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',127),
+  ('expression -> expression AND expression','expression',3,'p_expression_binary','shared_parser.py',114),
+  ('expression -> expression OR expression','expression',3,'p_expression_binary','shared_parser.py',115),
+  ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','shared_parser.py',116),
+  ('expression -> NOT expression','expression',2,'p_expression_not','shared_parser.py',121),
+  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',126),
+  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',189),
+  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',190),
+  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',194),
 ]

@@ -19,7 +19,9 @@ phi ::= <<A>> X phi | <<A>> F phi | <<A>> G phi | <<A>> phi U psi | <<A>> (phi U
 ```
 
 `<<A>> phi U psi` and `<<A>> (phi U psi)` build the same tree (see
-[the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)).
+[the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)), and
+`<<A>>F p && q` is a syntax error that asks for parentheses (see
+[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)).
 
 The `<<...>>` prefix is mandatory before temporal operators. Empty `<<>>` is
 invalid.

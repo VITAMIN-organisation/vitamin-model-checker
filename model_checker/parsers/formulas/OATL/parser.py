@@ -26,6 +26,7 @@ from ..parser_utils import (
     BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
+    until_operands,
     validate_ast,
     validate_coalition_bound_token,
 )
@@ -115,11 +116,9 @@ class OATLParser(BaseLogicParser):
         validate_coalition_bound_token(
             p[1], self.max_coalition, bound_pattern=self._bound_pattern
         )
-        # Accepts <A><n> phi U psi and <A><n> (phi U psi).
-        if len(p) == 5:
-            p[0] = (p[1] + p[3], p[2], p[4])
-        else:
-            p[0] = (p[1] + p[4], p[3], p[5])
+        left, operator, right = until_operands(p)
+        p[0] = (p[1] + operator, left, right)
+        self._prefix_until(p, p[0], p[1])
 
     def p_expression_unary(self, p):
         """expression : COALITION_DEMONIC GLOBALLY expression
@@ -129,6 +128,7 @@ class OATLParser(BaseLogicParser):
             p[1], self.max_coalition, bound_pattern=self._bound_pattern
         )
         p[0] = (p[1] + p[2], p[3])
+        self._prefix_unary(p, p[0], p[1] + p[2])
 
     # === Validation ===
     def parse(self, formula, n_agent=0, **kwargs):

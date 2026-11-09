@@ -27,6 +27,7 @@ import re
 from model_checker.parsers.formulas.parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
+    until_operands,
     validate_ast,
     validate_coalition,
 )
@@ -121,12 +122,6 @@ class CapATLParser(BaseLogicParser):
     t_PROP = PROPOSITION_TOKEN_PATTERN
 
     # --- Grammar Rules ---
-    def p_expression_binary(self, p):
-        """expression : expression AND expression
-        | expression OR expression
-        | expression IMPLIES expression"""
-        p[0] = (p[2], p[1], p[3])
-
     def p_expression_ternary(self, p):
         """expression : COALITION expression UNTIL expression
         | COALITION expression RELEASE expression
@@ -134,11 +129,9 @@ class CapATLParser(BaseLogicParser):
         | COALITION LPAREN expression RELEASE expression RPAREN"""
         coalition_str = f"<{{{p[1]}}}>"
         validate_coalition(f"<{p[1]}>", self.max_coalition)
-        # <{A}> phi U psi and <{A}> (phi U psi) build the same tree.
-        if len(p) == 5:
-            p[0] = (coalition_str + p[3], p[2], p[4])
-        else:
-            p[0] = (coalition_str + p[4], p[3], p[5])
+        left, operator, right = until_operands(p)
+        p[0] = (coalition_str + operator, left, right)
+        self._prefix_until(p, p[0], coalition_str)
 
     def p_expression_unary(self, p):
         """expression : COALITION NEXT expression
@@ -147,6 +140,7 @@ class CapATLParser(BaseLogicParser):
         coalition_str = f"<{{{p[1]}}}>"
         validate_coalition(f"<{p[1]}>", self.max_coalition)
         p[0] = (coalition_str + p[2], p[3])
+        self._prefix_unary(p, p[0], coalition_str + p[2])
 
     def p_expression_kcap(self, p):
         """expression : KCAP AGENT expression2"""

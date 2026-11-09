@@ -12,6 +12,7 @@ import re
 from model_checker.parsers.formulas.parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
+    until_operands,
     validate_ast,
     validate_coalition,
 )
@@ -70,11 +71,9 @@ class ATLParser(BaseLogicParser):
         | COALITION LPAREN expression UNTIL expression RPAREN"""
         coalition_str = p[1]
         validate_coalition(coalition_str, self.n_agent)
-        # Handle both forms: <coalition>expr1 U expr2 and <coalition>(expr1 U expr2)
-        if len(p) == 5:
-            p[0] = (p[1] + p[3], p[2], p[4])
-        else:
-            p[0] = (p[1] + p[4], p[3], p[5])
+        left, operator, right = until_operands(p)
+        p[0] = (p[1] + operator, left, right)
+        self._prefix_until(p, p[0], p[1])
 
     def p_expression_unary(self, p):
         """expression : COALITION GLOBALLY expression
@@ -83,6 +82,7 @@ class ATLParser(BaseLogicParser):
         coalition_str = p[1]
         validate_coalition(coalition_str, self.n_agent)
         p[0] = (p[1] + p[2], p[3])
+        self._prefix_unary(p, p[0], p[1] + p[2])
 
     # --- Validation ---
     def parse(self, formula, n_agent=0, **kwargs):

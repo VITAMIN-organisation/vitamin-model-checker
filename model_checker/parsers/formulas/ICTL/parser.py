@@ -9,6 +9,7 @@ What it handles:
 from model_checker.parsers.formulas.parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
+    until_operands,
     validate_ast,
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
@@ -92,11 +93,9 @@ class ICTLParser(BaseLogicParser):
         | EXIST LBRACKET expression UNTIL expression RBRACKET
         | FORALL LBRACKET expression RELEASE expression RBRACKET
         | EXIST LBRACKET expression RELEASE expression RBRACKET"""
-        # A p U q, A(p U q) and A[p U q] build the same tree.
-        if len(p) == 5:
-            p[0] = (p[1] + p[3], p[2], p[4])
-        else:
-            p[0] = (p[1] + p[4], p[3], p[5])
+        left, operator, right = until_operands(p)
+        p[0] = (p[1] + operator, left, right)
+        self._prefix_until(p, p[0], p[1])
 
     def p_expression_unary(self, p):
         """expression : FORALL GLOBALLY expression
@@ -106,6 +105,7 @@ class ICTLParser(BaseLogicParser):
         | EXIST NEXT expression
         | EXIST EVENTUALLY expression"""
         p[0] = (p[1] + p[2], p[3])
+        self._prefix_unary(p, p[0], p[1] + p[2])
 
     # --- Validation ---
     def _pre_validation(self, formula) -> tuple[bool, str | None]:

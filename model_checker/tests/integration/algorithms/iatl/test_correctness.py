@@ -191,11 +191,12 @@ class TestUpwardClosure:
 class TestExcludedMiddleCountermodel:
     """Grand coalition cannot force p or !p next at s0, yet both claims hold in IATL.
 
-    Classical ATL cannot satisfy !<1,2>X p && !<1,2>X !p. IATL can, because s1 has
-    undetermined p under the information preorder (see iatl_figure2_proposition1.txt).
+    Classical ATL cannot satisfy !(<1,2>X p) && !(<1,2>X !p). IATL can, because s1
+    has undetermined p under the information preorder (see
+    iatl_figure2_proposition1.txt).
     """
 
-    _EXCLUDED_MIDDLE_FORMULA = "!<1,2>X p && !<1,2>X !p"
+    _EXCLUDED_MIDDLE_FORMULA = "!(<1,2>X p) && !(<1,2>X !p)"
 
     def test_countermodel_passes_validation(self):
         model = _load_bcgs(str(_FIGURE2_MODEL))

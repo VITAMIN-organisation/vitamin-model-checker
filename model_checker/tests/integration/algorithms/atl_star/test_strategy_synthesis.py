@@ -90,7 +90,7 @@ class TestSynthesizeStrategyCore:
 
     def test_rejects_a_top_level_boolean_combination(self, temp_file):
         cgs = _two_state_model(temp_file)
-        result = _core_synthesize_strategy(cgs, "<<1>> X p & <<2>> X p", None)
+        result = _core_synthesize_strategy(cgs, "(<<1>> X p) & (<<2>> X p)", None)
         assert "error" in result
         assert result["error"]["type"] == "semantic"
         assert "single coalition" in result["error"]["message"]
@@ -167,7 +167,7 @@ class TestSynthesizeStrategyRealEntryPoint:
         self, cgs_simple_parser
     ):
         result = synthesize_strategy(
-            "<<1>> F p & <<2>> F q", cgs_simple_parser.filename
+            "(<<1>> F p) & (<<2>> F q)", cgs_simple_parser.filename
         )
         assert "error" in result
         assert result["error"]["type"] == "semantic"

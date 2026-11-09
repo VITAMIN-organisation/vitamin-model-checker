@@ -91,41 +91,58 @@ All logics in VITAMIN share a common set of boolean operators and constants.
 | syntax | Description | Supported Logics |
 | :--- | :--- | :--- |
 | `(...)` | Standard grouping | **All** logics |
-| `[...]` | Alternate grouping | **CTL and ICTL only** |
+| `[...]` | Around the Until of a path quantifier, `A[p U q]` (CTL, ICTL), or its Release, `E[p R q]` (ICTL) | CTL and ICTL only |
 
-> [!NOTE]
-> **Design Rationale:**
-> - **CTL and ICTL** support `[...]` around the Until or Release of a path quantifier (e.g., `A[p U q]`). CTL keeps it for compatibility with standard academic notation (e.g., *Baier/Katoen*); ICTL writes it in EUMAS25b p. 10 (`A[⊥R(...)]`).
-> - **Other logics** (like ATL, NatSL, RBATL) use a variety of specialized brackets for coalitions `<...>`, capacities `{...}`, and bounds `{k}`. To maintain syntactic clarity and avoid "bracket fatigue," these parsers strictly use parentheses `(...)` for logical grouping.
-
-
-> [!IMPORTANT]
-> While parentheses `()` can be used in any logic to define precedence, square brackets `[]` are supported only by the CTL and ICTL parsers. Using `[]` in LTL, ATL, or other logics will result in a syntax error.
+CTL writes square brackets only around an Until, `A[f1 U f2]`, and groups
+everything else with parentheses (Clarke, Emerson, Sistla, ACM TOPLAS 1986,
+p. 246). ICTL writes them once, around a Release (EUMAS 2025, p. 10), and ICTL
+also takes them around an Until because its grammar treats U and R alike (see
+[the ICTL reference](ICTL/algorithm.md)). `[p] && q` and `AF [p]` are syntax
+errors, and so is `[...]` in every other logic.
 
 ### Until after a prefix
 
-In every logic with a prefix before Until (a coalition, a cost or demonic bound,
-or a path quantifier), `prefix p U q` and `prefix (p U q)` are the same formula and
-build the same tree: `<1> p U q` and `<1> (p U q)`, `<J5> p U q` and
-`<J5> (p U q)`, `A p U q` and `A(p U q)`. ATL writes the first form
-(`<<A>>ϕ1 U ϕ2`, Alur, Henzinger, Kupferman, JACM 2002, p. 685), and the
-obstruction logics write the second (`⟨n⟩(φ U φ)`). ATL* reads `<<A>> p U q` the
-same way; the reason and the other ATL* forms are in
-[the ATL* reference](ATL_STAR/algorithm.md). Release (`R`) and Weak Until (`W`)
-follow the same rule where a logic has them.
+A prefix is the part of a formula that scopes over what follows it: a coalition
+(`<1>`, `<<1>>`), a coalition with a bound (`<1><5>`, the OL and TOL demonic
+bounds `<J5>` and `{J2}`) or a CTL path quantifier (`A`), each with the temporal
+operator after it (`<1>F`, `AF`), and the TCTL/TOL freeze `j.`. In every logic
+with a prefix before Until, `prefix p U q` and `prefix (p U q)` are the same
+formula and build the same tree: `<1> p U q` and `<1> (p U q)`, `<J5> p U q` and
+`<J5> (p U q)`, `A p U q` and `A(p U q)`. ATL writes the first form (Alur,
+Henzinger, Kupferman, JACM 2002, p. 685), and the obstruction logics write the
+second. ATL* reads `<<A>> p U q` the same way; the reason and the other ATL* forms
+are in [the ATL* reference](ATL_STAR/algorithm.md). Release (`R`) and Weak Until
+(`W`) follow the same rule where a logic has them. The 17 logics covered are listed
+in `model_checker/tests/unit/parsers/formulas/test_until_after_prefix.py`.
 
 ### Prefix before a connective
 
-The papers write a prefix with a compound body in parentheses (`∀◇y.(q ∧ y < x+5)`
-in Alur's thesis, p. 147; `⟨3⟩F(j ≤ 3 ∧ a)` in the TOL paper) and state no
-precedence rule. TCTL and TOL therefore reject a prefix followed by an
-unparenthesized `&&`, `||` or `->` (in any spelling), with an error that gives the
-position and both readings: for `AF p && q` it is "'AF ... && ...' at position 0
-is ambiguous: write AF (... && ...) for AF over both sides, or (AF ...) && ... for
-AF over the left side only". This covers `AF`, `AG`, `EF`, `EG`, the TOL `{Jk}F`,
-`{Jk}G`, `{Jk}X`, and the freeze `j.` (TCTL has no `X`). The other logics read
-`<1>F p && q` as `(<1>F p) && q`, as the papers do with an atomic body
-(`⟨⟨a⟩⟩≤k F win ∧ ¬⟨⟨a⟩⟩≤k−1 F win` in AAMAS 2017).
+When no parenthesis closes a prefix, a connective after it has two readings:
+`<1>F p && q` is `(<1>F p) && q` or `<1>F (p && q)`, and `<1> p U q && r` is
+`(<1> (p U q)) && r` or `<1> (p U (q && r))`. No defining paper states which, so in
+every logic with a prefix this is a syntax error that gives the position and both
+readings, for `&&`, `||` and `->` in any spelling (`and`, `&`, `implies`):
+
+```text
+'<1>F ... && ...' is ambiguous: write <1>F (... && ...) for <1>F over both sides,
+or (<1>F ...) && ... for <1>F over the left side only (position 0)
+```
+
+The same holds after a negation (`!<1>F p && q`), after a connective
+(`q && <1>F p && r`) and after a TCTL/TOL clock constraint (`AF p : x<5 && q`).
+These parse, because they have one reading:
+
+- A prefix at the end: `q && <1>F p`.
+- A prefix closed by parentheses: `(<1>F p) && q`, `<1>F (p && q)`,
+  `<1> (p U q) && r`.
+- A connective in the left operand of a prefix Until: `<1> p && q U r` is
+  `<1> ((p && q) U r)`, because `<1> p` alone is no formula of these logics.
+
+ATL* differs, because `<<1>> p` and a bare Until inside a coalition are ATL*
+formulas; its rules and messages are in [the ATL* reference](ATL_STAR/algorithm.md).
+LTL has no prefix: its `F`, `G`, `X` and `U` follow the precedence table of the
+[Spot LTL library](https://spot.lre.epita.fr/tl.pdf) (section 3.1), so
+`F p && q` is `(F p) && q` and `p U q && r` is `(p U q) && r`.
 
 ### Operators and names
 

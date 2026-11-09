@@ -12,6 +12,7 @@ import re
 from model_checker.parsers.formulas.parser_utils import (
     CoalitionValueError,
     run_common_prechecks,
+    until_operands,
     validate_ast,
     validate_coalition,
 )
@@ -97,10 +98,9 @@ class IATLParser(BaseLogicParser):
             _validate_universal_coalition(coalition_str, self.n_agent)
         else:
             validate_coalition(coalition_str, self.n_agent)
-        if len(p) == 5:
-            p[0] = (p[1] + p[3], p[2], p[4])
-        else:
-            p[0] = (p[1] + p[4], p[3], p[5])
+        left, operator, right = until_operands(p)
+        p[0] = (p[1] + operator, left, right)
+        self._prefix_until(p, p[0], p[1])
 
     def p_expression_unary(self, p):
         """expression : COALITION GLOBALLY expression
@@ -115,6 +115,7 @@ class IATLParser(BaseLogicParser):
         else:
             validate_coalition(coalition_str, self.n_agent)
         p[0] = (p[1] + p[2], p[3])
+        self._prefix_unary(p, p[0], p[1] + p[2])
 
     def parse(self, formula, n_agent=None, max_coalition=None, **kwargs):
         if n_agent is not None:

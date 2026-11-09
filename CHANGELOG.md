@@ -17,20 +17,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - OL, TOL, RBATL, RABATL, CapATL and Wallet_ATL accept a parenthesized Until (and
   Release or Weak Until where the logic has them) after the prefix, such as
   `<J2> (p U q)` and `<1><5> (p U q)`. Every logic with a prefix before Until now
-  takes both forms and builds one tree for them: CTL, ICTL, TCTL, and the 14
-  logics in `test_until_after_prefix.py`.
+  takes both forms and builds one tree for them (`test_until_after_prefix.py`).
   See `docs/logic_knowledge_base.md`, "Until after a prefix".
 
 ### Changed
 
-- Breaking: TCTL and TOL reject a prefix followed by an unparenthesized `&&`, `||`
-  or `->`, such as `AF p && q`, with an error that gives the position and both
-  readings. Before, it was read as `AF (p && q)`. See
+- Breaking: in every logic with a prefix (coalition, path quantifier, bound or
+  freeze), a connective after a prefix whose scope no parenthesis closes is a
+  syntax error that gives the position and both readings: `<1>F p && q`,
+  `<1> p U q && r`, `AF p && q`, `!<1>X p && q`. No defining paper states how they
+  group. Before, most logics read `(<1>F p) && q`, while TCTL and TOL read
+  `A (p U (q && r))`. Write `(<1>F p) && q` or `<1>F (p && q)`. See
   `docs/logic_knowledge_base.md`, "Prefix before a connective".
-- ATL*: `<<1>> p U q` is `<<1>> (p U q)`, the coalition over the Until, and
-  `<<1>> p U q U r` is a syntax error, as `p U q U r` is. Before, `<<1>> p U q`
-  parsed as `(<<1>> p) U q`, and the checker failed with "a bare Until is not a
-  state formula". See `docs/ATL_STAR/algorithm.md`.
+- Breaking: CTL takes square brackets only around an Until, `A[p U q]`, as the
+  defining paper writes it (Clarke, Emerson, Sistla 1986, p. 246). Before,
+  `[p] && q` and `AF [p]` parsed as parentheses.
+- Breaking: ATL*: `<<1>> p U q` is `<<1>> (p U q)`, the coalition over the Until.
+  A chained `U` (`p U q U r`) and `U` next to `&`, `|` or `->` (`p U q & r`,
+  `p & q U r`) are syntax errors that ask for parentheses, and so is any
+  connective after a coalition (`<<1>> p & q`). Before, `<<1>> p U q` parsed as
+  `(<<1>> p) U q`, which failed with "a bare Until is not a state formula", and
+  the other forms followed the LTL precedence of Spot. See
+  `docs/ATL_STAR/algorithm.md`.
 - Breaking: a temporal operator is a word of its own in every logic, so a name
   written with no space after an operator is no longer split. See
   `docs/logic_knowledge_base.md`, "Operators and names".

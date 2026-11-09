@@ -18,6 +18,7 @@ Behavior:
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
+    until_operands,
     validate_ast,
     validate_ctl_path_quantifiers,
 )
@@ -92,10 +93,9 @@ class CTLParser(BaseLogicParser):
         | EXIST LPAREN expression UNTIL expression RPAREN
         | FORALL LBRACKET expression UNTIL expression RBRACKET
         | EXIST LBRACKET expression UNTIL expression RBRACKET"""
-        if len(p) == 5:
-            p[0] = (p[1] + p[3], p[2], p[4])
-        else:
-            p[0] = (p[1] + p[4], p[3], p[5])
+        left, operator, right = until_operands(p)
+        p[0] = (p[1] + operator, left, right)
+        self._prefix_until(p, p[0], p[1])
 
     def p_expression_unary(self, p):
         """expression : FORALL GLOBALLY expression
@@ -105,10 +105,7 @@ class CTLParser(BaseLogicParser):
         | EXIST NEXT expression
         | EXIST EVENTUALLY expression"""
         p[0] = (p[1] + p[2], p[3])
-
-    def p_expression_group_bracket(self, p):
-        """expression : LBRACKET expression RBRACKET"""
-        p[0] = p[2]
+        self._prefix_unary(p, p[0], p[1] + p[2])
 
     # --- Validation ---
 

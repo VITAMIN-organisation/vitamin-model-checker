@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'rightIMPLIESleftORleftANDrightNOTAND CONST DOT EVENTUALLY EXIST FALSE FORALL GEQ GLOBALLY GREATER IMPLIES LEQ LESS LPAREN NEXT NOT OR PROP RPAREN TIME_SEP TRUE UNTILexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : FORALL expression UNTIL expression\n        | EXIST expression UNTIL expression\n        | FORALL LPAREN expression UNTIL expression RPAREN\n        | EXIST LPAREN expression UNTIL expression RPARENexpression : FORALL GLOBALLY expression\n        | FORALL EVENTUALLY expression\n        | EXIST GLOBALLY expression\n        | EXIST EVENTUALLY expressionexpression : NOT expressionexpression : FALSE\n        | TRUEexpression : LPAREN expression RPARENexpression : PROP DOT expressionexpression : expression TIME_SEP expressionexpression : PROPexpression : PROP LEQ CONST\n        | PROP LESS CONST\n        | PROP GEQ CONST\n        | PROP GREATER CONST\n        '
+_lr_signature = 'rightIMPLIESleftORleftANDrightNOTAND CONST DOT EVENTUALLY EXIST FALSE FORALL GEQ GLOBALLY GREATER IMPLIES LEQ LESS LPAREN NEXT NOT OR PROP RPAREN TIME_SEP TRUE UNTILexpression : LPAREN expression RPARENexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : FORALL expression UNTIL expression\n        | EXIST expression UNTIL expression\n        | FORALL LPAREN expression UNTIL expression RPAREN\n        | EXIST LPAREN expression UNTIL expression RPARENexpression : FORALL GLOBALLY expression\n        | FORALL EVENTUALLY expression\n        | EXIST GLOBALLY expression\n        | EXIST EVENTUALLY expressionexpression : NOT expressionexpression : FALSE\n        | TRUEexpression : PROP DOT expressionexpression : expression TIME_SEP expressionexpression : PROPexpression : PROP LEQ CONST\n        | PROP LESS CONST\n        | PROP GEQ CONST\n        | PROP GREATER CONST\n        '
     
-_lr_action_items = {'FORALL':([0,2,3,4,5,9,10,11,12,14,15,16,18,19,20,23,32,36,47,49,],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,]),'EXIST':([0,2,3,4,5,9,10,11,12,14,15,16,18,19,20,23,32,36,47,49,],[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,]),'NOT':([0,2,3,4,5,9,10,11,12,14,15,16,18,19,20,23,32,36,47,49,],[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,]),'FALSE':([0,2,3,4,5,9,10,11,12,14,15,16,18,19,20,23,32,36,47,49,],[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,]),'TRUE':([0,2,3,4,5,9,10,11,12,14,15,16,18,19,20,23,32,36,47,49,],[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,]),'LPAREN':([0,2,3,4,5,9,10,11,12,14,15,16,18,19,20,23,32,36,47,49,],[4,14,18,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,]),'PROP':([0,2,3,4,5,9,10,11,12,14,15,16,18,19,20,23,32,36,47,49,],[8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,]),'$end':([1,6,7,8,22,28,29,30,31,34,35,38,39,40,41,42,43,44,45,46,48,52,53,],[0,-13,-14,-18,-12,-1,-2,-3,-17,-8,-9,-10,-11,-15,-16,-19,-20,-21,-22,-4,-5,-6,-7,]),'AND':([1,6,7,8,13,17,21,22,28,29,30,31,33,34,35,37,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[9,-13,-14,-18,9,9,9,-12,-1,9,9,9,9,9,9,9,9,9,-15,9,-19,-20,-21,-22,9,9,9,9,-6,-7,]),'OR':([1,6,7,8,13,17,21,22,28,29,30,31,33,34,35,37,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[10,-13,-14,-18,10,10,10,-12,-1,-2,10,10,10,10,10,10,10,10,-15,10,-19,-20,-21,-22,10,10,10,10,-6,-7,]),'IMPLIES':([1,6,7,8,13,17,21,22,28,29,30,31,33,34,35,37,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[11,-13,-14,-18,11,11,11,-12,-1,-2,11,11,11,11,11,11,11,11,-15,11,-19,-20,-21,-22,11,11,11,11,-6,-7,]),'TIME_SEP':([1,6,7,8,13,17,21,22,28,29,30,31,33,34,35,37,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[12,-13,-14,-18,12,12,12,-12,-1,-2,-3,12,12,12,12,12,12,12,-15,12,-19,-20,-21,-22,12,12,12,12,-6,-7,]),'GLOBALLY':([2,3,],[15,19,]),'EVENTUALLY':([2,3,],[16,20,]),'UNTIL':([6,7,8,13,17,22,28,29,30,31,33,34,35,37,38,39,40,41,42,43,44,45,46,48,52,53,],[-13,-14,-18,32,36,-12,-1,-2,-3,-17,47,-8,-9,49,-10,-11,-15,-16,-19,-20,-21,-22,-4,-5,-6,-7,]),'RPAREN':([6,7,8,21,22,28,29,30,31,33,34,35,37,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[-13,-14,-18,40,-12,-1,-2,-3,-17,40,-8,-9,40,-10,-11,-15,-16,-19,-20,-21,-22,-4,-5,52,53,-6,-7,]),'DOT':([8,],[23,]),'LEQ':([8,],[24,]),'LESS':([8,],[25,]),'GEQ':([8,],[26,]),'GREATER':([8,],[27,]),'CONST':([24,25,26,27,],[42,43,44,45,]),}
+_lr_action_items = {'LPAREN':([0,2,3,4,5,9,10,11,12,15,16,17,19,20,21,23,33,37,47,49,],[2,2,15,19,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,]),'FORALL':([0,2,3,4,5,9,10,11,12,15,16,17,19,20,21,23,33,37,47,49,],[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,]),'EXIST':([0,2,3,4,5,9,10,11,12,15,16,17,19,20,21,23,33,37,47,49,],[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,]),'NOT':([0,2,3,4,5,9,10,11,12,15,16,17,19,20,21,23,33,37,47,49,],[5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,]),'FALSE':([0,2,3,4,5,9,10,11,12,15,16,17,19,20,21,23,33,37,47,49,],[6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,]),'TRUE':([0,2,3,4,5,9,10,11,12,15,16,17,19,20,21,23,33,37,47,49,],[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,]),'PROP':([0,2,3,4,5,9,10,11,12,15,16,17,19,20,21,23,33,37,47,49,],[8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,]),'$end':([1,6,7,8,22,28,29,30,31,32,35,36,39,40,41,42,43,44,45,46,48,52,53,],[0,-14,-15,-18,-13,-2,-3,-4,-17,-1,-9,-10,-11,-12,-16,-19,-20,-21,-22,-5,-6,-7,-8,]),'AND':([1,6,7,8,13,14,18,22,28,29,30,31,32,34,35,36,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[9,-14,-15,-18,9,9,9,-13,-2,9,9,9,-1,9,9,9,9,9,9,9,-19,-20,-21,-22,9,9,9,9,-7,-8,]),'OR':([1,6,7,8,13,14,18,22,28,29,30,31,32,34,35,36,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[10,-14,-15,-18,10,10,10,-13,-2,-3,10,10,-1,10,10,10,10,10,10,10,-19,-20,-21,-22,10,10,10,10,-7,-8,]),'IMPLIES':([1,6,7,8,13,14,18,22,28,29,30,31,32,34,35,36,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[11,-14,-15,-18,11,11,11,-13,-2,-3,11,11,-1,11,11,11,11,11,11,11,-19,-20,-21,-22,11,11,11,11,-7,-8,]),'TIME_SEP':([1,6,7,8,13,14,18,22,28,29,30,31,32,34,35,36,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[12,-14,-15,-18,12,12,12,-13,-2,-3,-4,12,-1,12,12,12,12,12,12,12,-19,-20,-21,-22,12,12,12,12,-7,-8,]),'GLOBALLY':([3,4,],[16,20,]),'EVENTUALLY':([3,4,],[17,21,]),'RPAREN':([6,7,8,13,22,28,29,30,31,32,34,35,36,38,39,40,41,42,43,44,45,46,48,50,51,52,53,],[-14,-15,-18,32,-13,-2,-3,-4,-17,-1,32,-9,-10,32,-11,-12,-16,-19,-20,-21,-22,-5,-6,52,53,-7,-8,]),'UNTIL':([6,7,8,14,18,22,28,29,30,31,32,34,35,36,38,39,40,41,42,43,44,45,46,48,52,53,],[-14,-15,-18,33,37,-13,-2,-3,-4,-17,-1,47,-9,-10,49,-11,-12,-16,-19,-20,-21,-22,-5,-6,-7,-8,]),'DOT':([8,],[23,]),'LEQ':([8,],[24,]),'LESS':([8,],[25,]),'GEQ':([8,],[26,]),'GREATER':([8,],[27,]),'CONST':([24,25,26,27,],[42,43,44,45,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'expression':([0,2,3,4,5,9,10,11,12,14,15,16,18,19,20,23,32,36,47,49,],[1,13,17,21,22,28,29,30,31,33,34,35,37,38,39,41,46,48,50,51,]),}
+_lr_goto_items = {'expression':([0,2,3,4,5,9,10,11,12,15,16,17,19,20,21,23,33,37,47,49,],[1,13,14,18,22,28,29,30,31,34,35,36,38,39,40,41,46,48,50,51,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,26 +27,26 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> expression AND expression','expression',3,'p_expression_binary','parser.py',188),
-  ('expression -> expression OR expression','expression',3,'p_expression_binary','parser.py',189),
-  ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','parser.py',190),
-  ('expression -> FORALL expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',194),
-  ('expression -> EXIST expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',195),
-  ('expression -> FORALL LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',196),
-  ('expression -> EXIST LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',197),
-  ('expression -> FORALL GLOBALLY expression','expression',3,'p_expression_unary','parser.py',204),
-  ('expression -> FORALL EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',205),
-  ('expression -> EXIST GLOBALLY expression','expression',3,'p_expression_unary','parser.py',206),
-  ('expression -> EXIST EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',207),
-  ('expression -> NOT expression','expression',2,'p_expression_not','parser.py',212),
-  ('expression -> FALSE','expression',1,'p_expression_boolean','parser.py',216),
-  ('expression -> TRUE','expression',1,'p_expression_boolean','parser.py',217),
-  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','parser.py',221),
-  ('expression -> PROP DOT expression','expression',3,'p_expression_freeze','parser.py',226),
-  ('expression -> expression TIME_SEP expression','expression',3,'p_expression_clock_constraint_on_expr','parser.py',231),
-  ('expression -> PROP','expression',1,'p_expression_prop','parser.py',235),
-  ('expression -> PROP LEQ CONST','expression',3,'p_expression_time','parser.py',239),
-  ('expression -> PROP LESS CONST','expression',3,'p_expression_time','parser.py',240),
-  ('expression -> PROP GEQ CONST','expression',3,'p_expression_time','parser.py',241),
-  ('expression -> PROP GREATER CONST','expression',3,'p_expression_time','parser.py',242),
+  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',126),
+  ('expression -> expression AND expression','expression',3,'p_expression_binary','parser.py',186),
+  ('expression -> expression OR expression','expression',3,'p_expression_binary','parser.py',187),
+  ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','parser.py',188),
+  ('expression -> FORALL expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',193),
+  ('expression -> EXIST expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',194),
+  ('expression -> FORALL LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',195),
+  ('expression -> EXIST LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',196),
+  ('expression -> FORALL GLOBALLY expression','expression',3,'p_expression_unary','parser.py',202),
+  ('expression -> FORALL EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',203),
+  ('expression -> EXIST GLOBALLY expression','expression',3,'p_expression_unary','parser.py',204),
+  ('expression -> EXIST EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',205),
+  ('expression -> NOT expression','expression',2,'p_expression_not','parser.py',210),
+  ('expression -> FALSE','expression',1,'p_expression_boolean','parser.py',215),
+  ('expression -> TRUE','expression',1,'p_expression_boolean','parser.py',216),
+  ('expression -> PROP DOT expression','expression',3,'p_expression_freeze','parser.py',220),
+  ('expression -> expression TIME_SEP expression','expression',3,'p_expression_clock_constraint_on_expr','parser.py',225),
+  ('expression -> PROP','expression',1,'p_expression_prop','parser.py',230),
+  ('expression -> PROP LEQ CONST','expression',3,'p_expression_time','parser.py',234),
+  ('expression -> PROP LESS CONST','expression',3,'p_expression_time','parser.py',235),
+  ('expression -> PROP GEQ CONST','expression',3,'p_expression_time','parser.py',236),
+  ('expression -> PROP GREATER CONST','expression',3,'p_expression_time','parser.py',237),
 ]

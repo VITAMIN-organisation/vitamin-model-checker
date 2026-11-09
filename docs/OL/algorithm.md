@@ -23,15 +23,18 @@ Written forms of `U`, `R` and `W` after the prefix (`U` shown):
 
 | Form | Accepted | Where it comes from |
 | :--- | :--- | :--- |
-| `<J2> (p U q)` | yes | ECAI23 Definition 1 (PDF page 2) writes `⟨n⟩(φ U φ)` and `⟨n⟩(φ R φ)`. |
-| `<J2> p U q` | yes | The paper's prose writes this form too (`⟨ n ⟩φ U ψ`, PDF page 4). |
+| `<J2> (p U q)` | yes | ECAI 2023, Definition 1 (PDF page 2): $\langle n\rangle(\varphi\ U\ \varphi)$ and $\langle n\rangle(\varphi\ R\ \varphi)$. |
+| `<J2> p U q` | yes | The paper's prose writes this form too, $\langle n\rangle\varphi\ U\ \psi$ (PDF page 4). |
 
-`W` is the paper's abbreviation `⟨n⟩(φ W ψ) := ⟨n⟩(ψ R (φ ∨ ψ))` and takes both
-forms. Both forms build the same tree (see
-[the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)). The paper
-states no precedence rule. The parser reads `<J2> p && q U r` as
-`<J2> ((p && q) U r)` and `<J2> p U q && r` as `(<J2> (p U q)) && r`; write the
-parentheses when another grouping is meant.
+`W` is the paper's abbreviation
+$\langle n\rangle(\varphi\ W\ \psi) := \langle n\rangle(\psi\ R\ (\varphi \lor \psi))$
+and takes both forms. Both forms build the same tree (see
+[the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)).
+`<J2> p && q U r` is `<J2> ((p && q) U r)`, its only reading, because `<J2> p`
+alone is no formula. The paper states no
+precedence rule, so `<J2> p U q && r` and `<J2>F p && q` are syntax errors that
+ask for parentheses (see
+[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)).
 
 ## Semantic denotations
 

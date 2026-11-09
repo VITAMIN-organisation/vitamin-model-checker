@@ -6,10 +6,9 @@ What it handles:
 """
 
 from model_checker.parsers.formulas.parser_utils import (
-    GroupedNodes,
     normalize_formula_text,
-    reject_ungrouped_compound_body,
     run_common_prechecks,
+    until_operands,
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
@@ -116,7 +115,6 @@ class TCTLParser(BaseLogicParser):
 
     def __init__(self):
         super().__init__()
-        self._grouped = GroupedNodes()
         self.tokens.extend(
             [
                 "FORALL",
@@ -189,47 +187,44 @@ class TCTLParser(BaseLogicParser):
         | expression OR expression
         | expression IMPLIES expression"""
         p[0] = Binary(p[2], p[1], p[3])
+        self._connective(p[0], p[1], p[2], p[3])
 
     def p_expression_ternary(self, p):
         """expression : FORALL expression UNTIL expression
         | EXIST expression UNTIL expression
         | FORALL LPAREN expression UNTIL expression RPAREN
         | EXIST LPAREN expression UNTIL expression RPAREN"""
-        if len(p) == 5:
-            p[0] = QuantifiedPath(p[1], Binary(p[3], p[2], p[4]))
-        else:
-            p[0] = QuantifiedPath(p[1], Binary(p[4], p[3], p[5]))
+        left, operator, right = until_operands(p)
+        p[0] = QuantifiedPath(p[1], Binary(operator, left, right))
+        self._prefix_until(p, p[0], p[1])
 
     def p_expression_unary(self, p):
         """expression : FORALL GLOBALLY expression
         | FORALL EVENTUALLY expression
         | EXIST GLOBALLY expression
         | EXIST EVENTUALLY expression"""
-        reject_ungrouped_compound_body(p[1] + p[2], p[3], self._grouped, p.lexpos(1))
         p[0] = QuantifiedPath(p[1] + p[2], p[3])
+        self._prefix_unary(p, p[0], p[1] + p[2])
 
     def p_expression_not(self, p):
         """expression : NOT expression"""
         p[0] = Unary(p[1], p[2])
+        self._negation(p[0], p[2])
 
     def p_expression_boolean(self, p):
         """expression : FALSE
         | TRUE"""
         p[0] = BooleanConst(str(p[1]).lower() in {"true", "@"})
 
-    def p_expression_group(self, p):
-        """expression : LPAREN expression RPAREN"""
-        self._grouped.add(p[2])
-        p[0] = p[2]
-
     def p_expression_freeze(self, p):
         """expression : PROP DOT expression"""
-        reject_ungrouped_compound_body(f"{p[1]}.", p[3], self._grouped, p.lexpos(1))
         p[0] = FreezeExpr(p[1], p[3])
+        self._prefix_over(p[0], f"{p[1]}.", p.lexpos(1), p[3])
 
     def p_expression_clock_constraint_on_expr(self, p):
         """expression : expression TIME_SEP expression"""
         p[0] = ClockExpr(p[1], p[3])
+        self._attachment(p[0], p[3])
 
     def p_expression_prop(self, p):
         """expression : PROP"""
@@ -247,11 +242,7 @@ class TCTLParser(BaseLogicParser):
     def parse(self, formula, **kwargs):
         if isinstance(formula, str):
             formula = normalize_formula_text(formula)
-        try:
-            return super().parse(formula, **kwargs)
-        finally:
-            # Each parse starts empty, and the parser keeps no nodes of the last one.
-            self._grouped = GroupedNodes()
+        return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
         return run_common_prechecks(

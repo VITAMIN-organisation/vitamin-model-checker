@@ -34,20 +34,34 @@ Henzinger, Kupferman, JACM 49(5), 2002). Section 3.1 (p. 685) writes the ATL
 formula `<<A>>phi1 U phi2` for the coalition over the Until. Section 3.4 (p. 689)
 defines ATL as the fragment of ATL* in which every temporal operator is
 immediately preceded by a path quantifier, so the ATL formula keeps its meaning in
-ATL*. The same section says ATL* formulas are the state formulas, and
-`(<<A>> x) U y` is only a path formula. The paper states no precedence rule.
+ATL*. The same section says ATL* formulas are the state formulas (a state formula
+holds at a state; a path formula, such as a bare Until, holds on a path), and
+`(<<A>> x) U y` is only a path formula.
 
 Each operand of that `U` is one unary formula, so `<<1>> X p U q` is
-`<<1>> ((X p) U q)`, `<<1>> p U q & r` is `(<<1>> (p U q)) & r`, and
-`X <<1>> p U q` is `X (<<1>> (p U q))`. A second `U`, as in `<<1>> p U q U r`, is
-a syntax error, as `p U q U r` is. Write parentheses for any other grouping.
+`<<1>> ((X p) U q)` and `X <<1>> p U q` is `X (<<1>> (p U q))`.
 
-**Not the same syntax as other `<<...>>` users in this codebase**: ATL uses
-single angle brackets (`<1,2>`); Wallet_ATL also uses `<<...>>` but for a
-different reason (avoiding a clash with NatATL's `<k>` bound notation) and
-allows an optional `:wallet(agent, op, value)` guard inside. ATL*'s `<<A>>`
-scopes over an arbitrarily nested path formula, a distinct operator with
-distinct semantics, not a shared surface.
+The paper states no precedence rule, so these are syntax errors that ask for
+parentheses:
+
+- A second `U`, as in `<<1>> p U q U r` or `p U q U r`.
+- `U` next to `&`, `|` or `->`, as in `p U q & r` or `p & q U r`. The message is
+  `'x U y & z' is ambiguous: write (x U y) & z or x U (y & z)`, with the
+  position of the `U`.
+- A connective right after a coalition, as in `<<1>> p & q`, `<<1>> F p & q` or
+  `<<1>> (p U q) & r`. In ATL, `<1> p` is no formula, but in ATL* a coalition can
+  scope over any path formula, so `<<1>> p & q` is `(<<1>> p) & q` or
+  `<<1>> (p & q)`. Write `(<<1>> F p) & q` or `<<1>> (F p & q)`. A coalition at the
+  end, `q & <<1>> F p`, has one reading.
+
+`!`, `X`, `F` and `G` bind tighter than the connectives, as the paper reads the
+winning condition $\Box\Diamond done \to \psi$ (p. 693):
+`<<1>> (F p & G q)` is `<<1>> ((F p) & (G q))`.
+
+ATL writes a coalition with single angle brackets (`<1,2>`). Wallet_ATL also writes
+`<<...>>`, to avoid a clash with NatATL's `<k>` bound notation, and allows a
+`:wallet(agent, op, value)` guard inside. ATL*'s `<<A>>` scopes over a nested path
+formula: the same brackets, a different operator.
 
 ## Semantic approach
 
@@ -141,7 +155,7 @@ matching row in `transitions` to know the next position.
 Only supports a formula whose outermost operator is a single coalition
 with no further coalition nested inside its path formula
 (`verifier.require_simple_coalition`), a top-level boolean combination of
-coalitions (`<<1>> F p & <<2>> G q`) or a nested one
+coalitions (`(<<1>> F p) & (<<2>> G q)`) or a nested one
 (`<<1>> G <<2>> F p`) comes back as a "semantic" error instead. Both would
 need more than one independent strategy to represent faithfully; broader
 support is deferred to a later iteration.

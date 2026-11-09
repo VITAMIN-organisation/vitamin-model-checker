@@ -15,7 +15,12 @@ import ply.lex as lex
 import ply.yacc as yacc
 
 from .common_tokens import COMMON_TOKEN_NAMES
-from .parser_utils import run_common_prechecks
+from .parser_utils import (
+    NodeMarks,
+    OpenPrefix,
+    ambiguous_prefix_error,
+    run_common_prechecks,
+)
 
 
 class BaseLogicParser:
@@ -32,6 +37,7 @@ class BaseLogicParser:
         self.lexer = None
         self.parser = None
         self.errors = []
+        self._reset_marks()
 
     t_LPAREN = r"\("
     t_RPAREN = r"\)"
@@ -109,14 +115,75 @@ class BaseLogicParser:
         | expression OR expression
         | expression IMPLIES expression"""
         p[0] = (p[2], p[1], p[3])
+        self._connective(p[0], p[1], p[2], p[3])
 
     def p_expression_not(self, p):
         """expression : NOT expression"""
         p[0] = (p[1], p[2])
+        self._negation(p[0], p[2])
 
     def p_expression_group(self, p):
         """expression : LPAREN expression RPAREN"""
         p[0] = p[2]
+        self._grouped.mark(p[0])
+
+    # --- Prefix scope ---
+    # A prefix (coalition, path quantifier, bound or freeze, with its temporal
+    # operator) whose scope no parenthesis closes is "open": `<1>F p && q` reads as
+    # `(<1>F p) && q` or `<1>F (p && q)`. The rules below record which nodes are
+    # parenthesized, connectives or open, and reject a connective next to an open
+    # prefix, whichever way the grammar's precedence grouped it.
+
+    def _reset_marks(self) -> None:
+        self._grouped = NodeMarks()
+        self._connectives = NodeMarks()
+        self._open = NodeMarks()
+
+    def _open_prefix_of(self, node) -> OpenPrefix | None:
+        return None if node in self._grouped else self._open.value(node)
+
+    def _prefix_over(self, node, prefix: str, position: int, body, operator=None):
+        """Record `node`, built by a prefix rule whose last operand `body` is not
+        closed by a parenthesis; `operator` is the U, R or W of a prefix Until."""
+        open_prefix = OpenPrefix(prefix, position, operator)
+        if body in self._connectives and body not in self._grouped:
+            raise ambiguous_prefix_error(open_prefix, self._connectives.value(body))
+        self._open.mark(node, open_prefix)
+
+    def _prefix_unary(self, p, node, prefix: str) -> None:
+        """Record `node` of the rule `prefix OP body`, such as `<1>F p`."""
+        self._prefix_over(node, prefix, p.lexpos(1), p[3])
+
+    def _prefix_until(self, p, node, prefix: str) -> None:
+        """Record `node` of a rule read by `until_operands`; `prefix (x U y)` is
+        closed, `prefix x U y` is open."""
+        if len(p) == 5:
+            self._prefix_over(node, prefix, p.lexpos(1), p[4], p[3])
+
+    def _connective(self, node, left, connective: str, right) -> None:
+        open_left = self._open_prefix_of(left)
+        if open_left is not None:
+            raise ambiguous_prefix_error(open_left, connective)
+        self._connectives.mark(node, connective)
+        open_right = self._open_prefix_of(right)
+        if open_right is not None:
+            self._open.mark(node, open_right)
+
+    def _attachment(self, node, attached) -> None:
+        """Record `node` of a rule `x SEP y` that attaches `y` to `x` and is no
+        connective itself, such as the TCTL/TOL clock constraint `p : x<5`. A
+        connective at the top of `y` still sits next to any prefix over `node`:
+        `AF p : x<5 && q` reads as `(AF p : x<5) && q` or `AF (p : x<5 && q)`."""
+        if attached in self._connectives and attached not in self._grouped:
+            self._connectives.mark(node, self._connectives.value(attached))
+        open_attached = self._open_prefix_of(attached)
+        if open_attached is not None:
+            self._open.mark(node, open_attached)
+
+    def _negation(self, node, operand) -> None:
+        open_operand = self._open_prefix_of(operand)
+        if open_operand is not None:
+            self._open.mark(node, open_operand)
 
     def p_expression_boolean(self, p):
         """expression : FALSE
@@ -225,6 +292,9 @@ class BaseLogicParser:
             if not self.errors:
                 self.errors.append(str(e))
             return None
+        finally:
+            # The next parse starts empty, and no nodes of this one stay alive.
+            self._reset_marks()
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
         """Hook for pre-parsing validation."""
