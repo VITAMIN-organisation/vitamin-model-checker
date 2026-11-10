@@ -83,7 +83,7 @@ typecheck:
 
 test:
 	@echo "Running unit and integration tests..."
-	@cd $(PROJECT_ROOT) && $(PYTHON) -m pytest -m "not slow" model_checker/tests/
+	@cd $(PROJECT_ROOT) && $(PYTHON) -m pytest model_checker/tests/
 	@echo "Done."
 
 # Release: the logic is in scripts/release.sh. Anything that uploads or tags asks for the version.

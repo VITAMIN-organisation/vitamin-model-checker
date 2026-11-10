@@ -43,7 +43,7 @@ model_checker/
 │   ├── formulas/               # per-logic formula parsers
 │   └── game_structures/        # CGS, costCGS, capCGS, WalletCGS, timedCGS parsers
 ├── shared/                     # trace/result helpers
-├── tests/                      # unit, integration, e2e, performance tests
+├── tests/                      # unit, integration, performance tests
 └── utils/                      # error handling and shared utilities
 ```
 
@@ -180,7 +180,6 @@ Tests live under `model_checker/tests/`:
 
 - `unit/` for small parser/helper/algorithm pieces,
 - `integration/` for real model files and public API behavior,
-- `e2e/` for full user-like workflows,
 - `performance/` for time-bound regression checks.
 
 The `vitamin-benchmark-model-checker` package provides pyperf benchmarks against

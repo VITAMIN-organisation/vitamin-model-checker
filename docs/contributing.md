@@ -20,7 +20,6 @@ useful when you need docs and dev dependencies at the same time.
 ```bash
 pytest model_checker/tests/unit/
 pytest model_checker/tests/integration/
-pytest model_checker/tests/e2e/
 pytest model_checker/tests/
 
 make test

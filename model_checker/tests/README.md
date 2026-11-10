@@ -1,105 +1,44 @@
 # Model checker tests
 
-This suite checks that the VITAMIN model checker parses inputs correctly, runs
-algorithms as intended, and stays usable through the public API. The layout
-follows a simple testing pyramid: small fast checks at the bottom, full
-workflows at the top.
+This folder holds the tests of the model checker: unit tests of parsers and algorithm helpers, integration tests that run each logic on model files, and time-bound performance checks. The commands and the rules for a test that earns its place are below. See also [contributing](../../docs/contributing.md).
 
-## What we are trying to guarantee
-
-1. **Inputs are handled safely** - model files and formulas are parsed and
-   validated; malformed or inconsistent inputs fail in a controlled way.
-2. **Logics mean what they should** - on small, known models, satisfying state
-   sets match expected semantics (not just "the code runs").
-3. **The library behaves like a product** - the same entry points callers use
-   in applications work across logics, including errors and edge cases.
-4. **Regressions are caught early** - performance tests flag large slowdowns;
-   unit tests pin down fragile internals before they break integration tests.
-
-New logics and features should extend this guarantees, not bypass them.
-
-## Layers (main idea)
-
-Tests are grouped by **scope**, not by implementation detail. Deeper folders
-mirror logics and components; the names on disk are the map.
+## Layout
 
 ```text
-unit/           Isolated pieces: parsers, validators, algorithm helpers
-integration/    Real models + model checking, wired as in production
-e2e/            End-to-end paths a user or host application would take
-performance/    Time-bounded checks for scalability regressions
-fixtures/       Static model files and invalid/edge-case inputs
-helpers/        Test-only utilities (loading fixtures, asserting on results)
+unit/           One parser, validator or algorithm helper at a time
+integration/    One logic on a model file, through its model_checking entry point
+performance/    Large generated models with a time limit and an exact answer
+fixtures/       Model files, by structure (CGS, costCGS, capCGS, WalletCGS,
+                timedCGS, ObstructionModel) and logic; tests/invalid/ holds broken files
+helpers/        Fixture loading, synthetic model builders, result parsing
 ```
 
-**Unit** tests answer: "Does this function or class do the right thing in
-isolation?" They should be fast and narrow. Prefer them for parser grammar,
-matrix validation, fixpoint steps, conversion utilities, and shared data
-structures.
+Synthetic models come from `helpers/synthetic_models.py`; use them when the size or shape of the model matters more than its file format.
 
-**Integration** tests answer: "Given a real model and formula, does this logic
-produce the right answer or the right error?" They are the main correctness
-backbone per logic. Typical themes:
+## Running
 
-- **Semantics** - expected state sets on small models with known answers.
-- **Correctness / API** - invalid formulas, bad coalitions, missing atoms,
-  and other error paths through the public checker.
-- **Logic-specific depth** - extra scenarios where a logic needs more than
-  smoke coverage (fixpoints, pre-images, traces, recall strategies, etc.).
-
-**E2E** tests answer: "Can someone load a model, run checking, and use the
-result without touching internals?" Keep this layer thin; it guards the
-overall workflow.
-
-**Performance** tests answer: "Did we accidentally make common cases much
-slower?" They use timeouts and coarse bounds, not micro-benchmarks. For
-detailed pyperf benchmarking, see the separate
-`vitamin-benchmark-model-checker` project.
-
-## How tests get their models
-
-Two complementary approaches:
-
-- **Fixtures** - checked-in `.txt` models under `fixtures/`. Use these when
-  the shape of the file matters (real game structures, cost/cap extensions,
-  invalid files for error handling).
-- **Synthetic models** - built in memory via
-  `model_checker.tests.helpers.synthetic_models` (and `model_helpers` that
-  re-export common builders). Use these when size or repetition matters
-  (chains, cycles, scalability sweeps).
-
-Pick the smallest model that still exercises the behavior under test.
-
-## Markers and running tests
-
-Markers in `conftest.py` describe **intent** (unit, integration, semantic,
-parser, performance, e2e, etc.). Combine them when filtering, for example
-only integration tests or everything except performance.
-
-From the repository root:
+From the repository root, after `source .venv/bin/activate`:
 
 ```bash
-pytest model_checker/tests/
-pytest model_checker/tests/unit/
-pytest model_checker/tests/integration/
-pytest model_checker/tests/ -m performance
-pytest model_checker/tests/ -m "integration and not performance"
+python -m pytest model_checker/tests/unit model_checker/tests/integration -q
+python -m pytest model_checker/tests/performance -q
+make test
 ```
 
-Run the narrowest set that covers your change before opening a PR.
+CI runs unit and integration only. `make test` runs all three folders.
 
-## Adding or changing tests
+## What a test must do
 
-- Match the **layer** to the question you are asking (unit vs integration).
-- Put logic-specific tests under that logic's folder; reuse shared helpers
-  instead of copying model-loading or result-parsing code.
-- Prefer one clear assertion per scenario; name tests after the behavior, not
-  the function under test.
-- If you add a new logic, aim for at least parser smoke coverage, integration
-  correctness on a small fixture, and semantics on a model with known answers.
+A test stays only if a plausible bug in the source would make it fail:
 
-## VMI and integrated logics
+- It asserts the exact result: the full set of satisfying states, the parse tree, or the error type and message. A key being present, a type, `len > 0` or `is not None` is not enough.
+- Each expected state set comes with a one-line reason derived from the model (`# s2 loops on itself and q is false there`), not copied from the checker's output.
+- It does not re-implement the code under test and compare the two.
+- A behaviour is tested once. A rule shared by all logics, such as connective spelling, lives in one parametrized test over the logics.
+- The docstring is one line: the behaviour checked and why it matters.
 
-When a logic bundle is integrated into this repository, run the relevant tests
-here after VMI's post-integration checks pass. VMI verifies install and import;
-this suite verifies that the core package still behaves correctly over time.
+A wrong behaviour that is not fixed yet is not pinned by a test; it is reported as a bug.
+
+## Markers
+
+Markers are registered in `pyproject.toml` and checked with `--strict-markers`. The ones used for selection are `performance` (set for the whole folder) and `atl_star`.

@@ -75,6 +75,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   is no unique next state" (Alur, Courcoubetis, Dill, Information and Computation
   1993, p. 10). Before, the error was "Syntax error near token 'X'". Names such as
   `Xray` still parse.
+- Tests: the `e2e/` folder is removed; its three tests repeated integration tests.
+  Markers that no test used are removed from `pyproject.toml` (`slow`, `e2e` and
+  others), so `make test` no longer filters with `-m "not slow"`. The test
+  `README.md` states what a test must assert to be kept.
 
 ### Fixed
 

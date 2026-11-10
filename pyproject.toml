@@ -156,7 +156,7 @@ ICTL = "model_checker.parsers.formulas.ICTL:METADATA"
 IATL = "model_checker.parsers.formulas.IATL:METADATA"
 
 [tool.pytest.ini_options]
-testpaths = ["model_checker/tests/unit", "model_checker/tests/integration", "model_checker/tests/e2e", "model_checker/tests/performance"]
+testpaths = ["model_checker/tests/unit", "model_checker/tests/integration", "model_checker/tests/performance"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
@@ -166,29 +166,19 @@ filterwarnings = [
     "ignore:.*pkg_resources.*declare_namespace.*:DeprecationWarning",
 ]
 markers = [
-    "asyncio: Async tests (pytest-asyncio)",
     "unit: Unit tests for individual functions/methods",
     "integration: Integration tests for multiple components working together",
     "all_models: Comprehensive integration tests that run across all model files (slow, many test cases)",
     "semantic: Semantic verification tests that check correctness against formal definitions",
     "parser: Tests for parsing functionality",
-    "validation: Tests for validation logic",
     "model_checking: Tests for model checking algorithms",
     "edge_case: Tests for edge cases and error conditions",
     "robustness: Tests for robustness and error handling",
     "fixpoint: Tests for fixpoint convergence and iteration behavior",
     "performance: Performance tests for large state spaces and scalability",
-    "slow: Tests that take a long time to run (can be skipped with -m \"not slow\")",
-    "e2e: End-to-end workflow tests",
     "workflow: Workflow integration tests",
     "atl: ATL algorithm tests",
-    "ctl: CTL algorithm tests",
-    "ltl: LTL algorithm tests",
-    "natatl: NatATL algorithm tests",
-    "oatl: OATL algorithm tests",
-    "capatl: CapATL algorithm tests",
     "atl_star: ATL* algorithm tests",
-    "shared: Shared utility tests",
     "complex: Complex formula tests"
 ]
 

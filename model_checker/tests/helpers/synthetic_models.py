@@ -249,36 +249,6 @@ def generate_sparse_graph_model(
     )
 
 
-def generate_natatl_linear_chain_model(num_states, num_agents=2, prop_names=None):
-    """Linear chain with NatATL-style idle/forward actions."""
-    if prop_names is None:
-        prop_names = ["p"]
-
-    states = [f"s{i}" for i in range(num_states)]
-    unknown_transitions = [" ".join(["0"] * num_states)] * num_states
-    idle_action = "I" * num_agents if num_agents > 1 else "I"
-    forward_action = "C" * num_agents if num_agents > 1 else "C"
-
-    def cell_at(i, j):
-        if j == i:
-            return idle_action
-        if j == i + 1:
-            return forward_action
-        return "0"
-
-    transitions = _build_transition_rows(num_states, cell_at)
-    labelling = _labelling_p_first_last(num_states, prop_names)
-    return build_cgs_model_content(
-        transitions=[row.split() for row in transitions],
-        state_names=states,
-        initial_state="s0",
-        prop_names=prop_names,
-        labelling=labelling,
-        num_agents=num_agents,
-        unknown_transitions=[row.split() for row in unknown_transitions],
-    )
-
-
 def generate_capcgs_linear_chain_model(num_states, num_agents=2, prop_names=None):
     """Linear capCGS chain with capacity metadata."""
     if prop_names is None:
@@ -355,48 +325,6 @@ def generate_cost_cgs_linear_chain_content(num_states, num_agents=2, prop_names=
     )
 
 
-def generate_lollipop_model(
-    num_states,
-    num_agents=2,
-    prop_name="p",
-    loop_size=None,
-):
-    """Chain into a small terminal cycle. Atom p labels every loop state."""
-    if num_states < 3:
-        raise ValueError("lollipop model requires at least 3 states")
-    if loop_size is None:
-        loop_size = max(2, min(3, max(2, num_states // 4)))
-    loop_size = max(2, min(loop_size, num_states - 1))
-    loop_start = num_states - loop_size
-
-    states = [f"s{i}" for i in range(num_states)]
-    forward_action = forward_joint(num_agents)
-    unknown_transitions = [" ".join(["0"] * num_states)] * num_states
-
-    def cell_at(i, j):
-        if loop_start == 0:
-            next_index = (i + 1) % num_states
-            return forward_action if j == next_index else "0"
-        if i < loop_start - 1:
-            return forward_action if j == i + 1 else "0"
-        if i == loop_start - 1:
-            return forward_action if j == loop_start else "0"
-        next_index = i + 1 if i < num_states - 1 else loop_start
-        return forward_action if j == next_index else "0"
-
-    transitions = _build_transition_rows(num_states, cell_at)
-    labelling = ["1" if i >= loop_start else "0" for i in range(num_states)]
-    return build_cgs_model_content(
-        transitions=[row.split() for row in transitions],
-        state_names=states,
-        initial_state="s0",
-        prop_names=[prop_name],
-        labelling=labelling,
-        num_agents=num_agents,
-        unknown_transitions=[row.split() for row in unknown_transitions],
-    )
-
-
 __all__ = [
     "compact_joint",
     "forward_joint",
@@ -405,8 +333,6 @@ __all__ = [
     "generate_cycle_model",
     "generate_fully_connected_model",
     "generate_sparse_graph_model",
-    "generate_lollipop_model",
-    "generate_natatl_linear_chain_model",
     "generate_capcgs_linear_chain_model",
     "generate_cost_cgs_linear_chain_content",
 ]

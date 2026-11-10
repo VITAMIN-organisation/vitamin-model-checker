@@ -1,4 +1,4 @@
-"""Model loading, assertions, and content builders for tests in a single module."""
+"""Load fixture models, load models from text, and read the state set out of a result."""
 
 import ast
 from pathlib import Path
@@ -35,20 +35,11 @@ def assert_parse_structure(result, expected_structure=None, description=""):
 
 
 def load_test_model(test_data_dir, model_path: str):
-    """Load a model by path string (e.g. 'CGS/ATL/file.txt' or 'invalid/missing_name_state.txt'); pytest.fail on error.
+    """Load fixtures/<model_path> with the parser the factory picks; fail the test if it does not load.
 
-    Paths under 'invalid/' or 'edge_cases/' are resolved under test_data_dir/tests/.
-    The returned parser has .filename set; use parser.filename when calling
-    APIs that expect a path string (e.g. model_checking(formula, path)).
+    The parser's .filename is set, for entry points that take a path.
     """
-    path_parts = model_path.split("/")
-    if len(path_parts) >= 2 and path_parts[0] in ("CGS", "costCGS", "capCGS"):
-        file_path = test_data_dir / Path(*path_parts)
-    elif path_parts and path_parts[0] in ("invalid", "edge_cases"):
-        file_path = test_data_dir / "tests" / Path(*path_parts)
-    else:
-        file_path = test_data_dir / Path(*path_parts)
-    path_str = str(file_path)
+    path_str = str(test_data_dir / Path(*model_path.split("/")))
     try:
         parser = create_model_parser(path_str)
         parser.read_file(path_str)
