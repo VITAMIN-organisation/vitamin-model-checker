@@ -1,227 +1,135 @@
-"""NatATL Recall: tree building."""
+"""NatATL with recall unfolds the model into a tree of histories, prunes it by a strategy, and folds it back.
 
+`height` counts levels of nodes (height 2 is the root and its children);
+`max_depth` is the deepest edge level written back into the matrix.
+"""
+
+import pytest
+
+from model_checker.algorithms.explicit.NatATL.Recall.boolean_pruning import (
+    boolean_pruning,
+    prune_tree_nodes,
+)
 from model_checker.algorithms.explicit.NatATL.Recall.tree_building import (
     build_tree_from_CGS,
     tree_to_initial_CGS,
 )
 from model_checker.algorithms.explicit.NatATL.Recall.tree_structure import Node
-from model_checker.tests.helpers.model_helpers import (
-    build_cgs_model_content,
-    load_cgs_from_content,
+from model_checker.tests.helpers.model_helpers import load_cgs_from_content
+from model_checker.tests.helpers.synthetic_models import build_cgs_model_content
+
+# s0 -a-> s1 -b-> s2, s2 idles
+_CHAIN = [["0", "a", "0"], ["0", "0", "b"], ["0", "0", "I"]]
+
+
+def _model(temp_file, transitions):
+    names = [f"s{i}" for i in range(len(transitions))]
+    content = build_cgs_model_content(
+        transitions=transitions,
+        state_names=names,
+        initial_state="s0",
+        labelling=[["1"]] + [["0"]] * (len(names) - 1),
+        num_agents=1,
+        prop_names=["p"],
+    )
+    return load_cgs_from_content(temp_file, content)
+
+
+def _shape(node):
+    """(state, actions, [children]) all the way down."""
+    return (node.state, node.actions, [_shape(child) for child in node.children])
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("transitions", "height", "shape"),
+    [
+        (_CHAIN, 1, ("s0", [], [])),
+        (_CHAIN, 2, ("s0", ["a"], [("s1", [], [])])),
+        (_CHAIN, 3, ("s0", ["a"], [("s1", ["b"], [("s2", [], [])])])),
+        (
+            [["I", "a"], ["0", "I"]],
+            2,
+            ("s0", ["I", "a"], [("s0", [], []), ("s1", [], [])]),
+        ),
+    ],
+    ids=["root_only", "one_level", "two_levels", "self_loop_is_a_child"],
 )
+def test_tree_unfolds_each_move_to_the_given_height(
+    temp_file, transitions, height, shape
+):
+    """Each move becomes a child labelled by its action, a self-loop included."""
+    cgs = _model(temp_file, transitions)
+    assert _shape(build_tree_from_CGS(cgs, cgs.states, height=height)) == shape
 
 
-class TestBuildTreeFromCGS:
-    """Test build_tree_from_CGS function."""
-
-    def test_build_single_level_tree(self, temp_file):
-        """Verify tree building for single level (height=2)."""
-        content = build_cgs_model_content(
-            transitions=[["0", "a"], ["0", "I"]],
-            state_names=["s0", "s1"],
-            initial_state="s0",
-            labelling=[["1"], ["0"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.states
-
-        tree = build_tree_from_CGS(cgs, states, height=2)
-
-        assert tree.state == "s0"
-        assert len(tree.children) >= 1
-        assert any(child.state == "s1" for child in tree.children)
-
-    def test_build_two_level_tree(self, temp_file):
-        """Verify tree building for two levels (height=3)."""
-        content = build_cgs_model_content(
-            transitions=[["0", "a", "0"], ["0", "0", "b"], ["0", "0", "I"]],
-            state_names=["s0", "s1", "s2"],
-            initial_state="s0",
-            labelling=[["1"], ["0"], ["0"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.states
-
-        tree = build_tree_from_CGS(cgs, states, height=3)
-
-        assert tree.state == "s0"
-        assert len(tree.children) >= 1
-        s1_child = next((c for c in tree.children if c.state == "s1"), None)
-        assert s1_child is not None
-        assert len(s1_child.children) >= 1
-
-    def test_build_branching_tree(self, temp_file):
-        """Verify tree building with branching transitions."""
-        content = build_cgs_model_content(
-            transitions=[["0", "a", "b"], ["0", "I", "0"], ["0", "0", "I"]],
-            state_names=["s0", "s1", "s2"],
-            initial_state="s0",
-            labelling=[["1"], ["0"], ["0"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.states
-
-        tree = build_tree_from_CGS(cgs, states, height=2)
-
-        assert tree.state == "s0"
-        assert len(tree.children) >= 1
-        child_states = {child.state for child in tree.children}
-        assert "s1" in child_states or "s2" in child_states
-
-    def test_build_tree_respects_height_limit(self, temp_file):
-        """Verify tree stops building at specified height."""
-        content = build_cgs_model_content(
-            transitions=[["0", "a", "0"], ["0", "0", "b"], ["0", "0", "I"]],
-            state_names=["s0", "s1", "s2"],
-            initial_state="s0",
-            labelling=[["1"], ["0"], ["0"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.states
-
-        tree = build_tree_from_CGS(cgs, states, height=2)
-
-        assert tree.state == "s0"
-        assert len(tree.children) >= 1
-        for child in tree.children:
-            assert len(child.children) == 0
-
-    def test_build_tree_with_self_loop(self, temp_file):
-        """Verify tree building with self-loop transitions."""
-        content = build_cgs_model_content(
-            transitions=[["I", "a"], ["0", "I"]],
-            state_names=["s0", "s1"],
-            initial_state="s0",
-            labelling=[["1"], ["0"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.states
-
-        tree = build_tree_from_CGS(cgs, states, height=2)
-
-        assert tree.state == "s0"
-        assert len(tree.children) >= 1
-
-    def test_build_tree_tracks_predecessors(self, temp_file):
-        """Verify tree nodes track predecessor states correctly."""
-        content = build_cgs_model_content(
-            transitions=[["0", "a", "0"], ["0", "0", "b"], ["0", "0", "I"]],
-            state_names=["s0", "s1", "s2"],
-            initial_state="s0",
-            labelling=[["1"], ["0"], ["0"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
-        states = cgs.states
-
-        tree = build_tree_from_CGS(cgs, states, height=2)
-
-        for child in tree.children:
-            assert "s0" in child.predecessors
+@pytest.mark.unit
+def test_nodes_remember_the_history_above_them(temp_file):
+    """The leaf of s0 -> s1 -> s2 has predecessors s0 then s1."""
+    cgs = _model(temp_file, _CHAIN)
+    leaf = build_tree_from_CGS(cgs, cgs.states, height=3).children[0].children[0]
+    assert leaf.predecessors == ["s0", "s1"]
 
 
-class TestTreeToInitialCGS:
-    """Test tree_to_initial_CGS function."""
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("max_depth", "matrix"),
+    [
+        (0, [["0", "['a']", "0"], ["0", "0", "0"], ["0", "0", "0"]]),
+        (1, [["0", "['a']", "0"], ["0", "0", "['b']"], ["0", "0", "0"]]),
+    ],
+)
+def test_folding_back_writes_edges_down_to_max_depth(temp_file, max_depth, matrix):
+    """Depth 0 writes only s0 -> s1; depth 1 adds s1 -> s2."""
+    cgs = _model(temp_file, _CHAIN)
+    root, child, grandchild = (
+        Node("s0", cgs),
+        Node("s1", cgs, action="a"),
+        Node("s2", cgs, action="b"),
+    )
+    root.add_child(child, action=["a"])
+    child.add_child(grandchild, action=["b"])
+    assert tree_to_initial_CGS(root, ["s0", "s1", "s2"], max_depth=max_depth) == matrix
 
-    def test_convert_simple_tree_to_matrix(self, temp_file):
-        """Verify tree to matrix conversion for simple tree."""
-        content = build_cgs_model_content(
-            transitions=[["0", "a"], ["0", "I"]],
-            state_names=["s0", "s1"],
-            initial_state="s0",
-            labelling=[["1"], ["0"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
 
-        root = Node("s0", cgs)
-        child = Node("s1", cgs, action="a")
-        root.add_child(child, action=["a"])
+@pytest.mark.unit
+def test_folding_a_lone_root_gives_an_empty_matrix(temp_file):
+    """A root with no children has no edge to write."""
+    cgs = _model(temp_file, [["I"]])
+    assert tree_to_initial_CGS(Node("s0", cgs), ["s0"], max_depth=1) == [["0"]]
 
-        states = ["s0", "s1"]
-        matrix = tree_to_initial_CGS(root, states, max_depth=2)
 
-        assert len(matrix) == 2
-        assert len(matrix[0]) == 2
-        assert matrix[0][1] == "['a']"
-        assert matrix[0][0] == "0"
+@pytest.mark.unit
+def test_pruning_keeps_only_the_strategy_action_in_matching_states(temp_file):
+    """At s0 the strategy plays a, so the b branch goes and the a branch stays."""
+    cgs = _model(temp_file, [["0", "a", "b"], ["0", "I", "0"], ["0", "0", "I"]])
+    root = Node("s0", cgs)
+    root.add_child(Node("s1", cgs, action="a"), action=["a"])
+    root.add_child(Node("s2", cgs, action="b"), action=["b"])
+    assert prune_tree_nodes(root, {"s0"}, "a", strategy_index=1) == 1
+    assert [
+        (child.state, actions)
+        for child, actions in zip(root.children, root.actions, strict=True)
+    ] == [("s1", ["a"])]
 
-    def test_convert_branching_tree_to_matrix(self, temp_file):
-        """Verify tree to matrix conversion for branching tree."""
-        content = build_cgs_model_content(
-            transitions=[["0", "a", "b"], ["0", "I", "0"], ["0", "0", "I"]],
-            state_names=["s0", "s1", "s2"],
-            initial_state="s0",
-            labelling=[["1"], ["0"], ["0"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
 
-        root = Node("s0", cgs)
-        child1 = Node("s1", cgs, action="a")
-        child2 = Node("s2", cgs, action="b")
-        root.add_child(child1, action=["a"])
-        root.add_child(child2, action=["b"])
+@pytest.mark.unit
+def test_pruning_leaves_states_outside_the_condition(temp_file):
+    """s0 is not in the state set, so nothing is pruned and the result is 0."""
+    cgs = _model(temp_file, [["0", "a", "b"], ["0", "I", "0"], ["0", "0", "I"]])
+    root = Node("s0", cgs)
+    root.add_child(Node("s1", cgs, action="a"), action=["a"])
+    root.add_child(Node("s2", cgs, action="b"), action=["b"])
+    assert prune_tree_nodes(root, {"s1"}, "a", strategy_index=1) == 0
+    assert [child.state for child in root.children] == ["s1", "s2"]
 
-        states = ["s0", "s1", "s2"]
-        matrix = tree_to_initial_CGS(root, states, max_depth=2)
 
-        assert len(matrix) == 3
-        assert matrix[0][1] == "['a']"
-        assert matrix[0][2] == "['b']"
-
-    def test_convert_respects_max_depth(self, temp_file):
-        """Verify conversion respects max_depth parameter."""
-        content = build_cgs_model_content(
-            transitions=[["0", "a", "0"], ["0", "0", "b"], ["0", "0", "I"]],
-            state_names=["s0", "s1", "s2"],
-            initial_state="s0",
-            labelling=[["1"], ["0"], ["0"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
-
-        root = Node("s0", cgs)
-        child = Node("s1", cgs, action="a")
-        grandchild = Node("s2", cgs, action="b")
-        root.add_child(child, action=["a"])
-        child.add_child(grandchild, action=["b"])
-
-        states = ["s0", "s1", "s2"]
-        matrix = tree_to_initial_CGS(root, states, max_depth=1)
-
-        assert len(matrix) == 3
-        assert matrix[0][1] == "['a']"
-
-    def test_convert_empty_tree(self, temp_file):
-        """Verify conversion handles tree with no children."""
-        content = build_cgs_model_content(
-            transitions=[["I"]],
-            state_names=["s0"],
-            initial_state="s0",
-            labelling=[["1"]],
-            num_agents=1,
-            prop_names=["p"],
-        )
-        cgs = load_cgs_from_content(temp_file, content)
-
-        root = Node("s0", cgs)
-        states = ["s0"]
-        matrix = tree_to_initial_CGS(root, states, max_depth=1)
-
-        assert len(matrix) == 1
-        assert matrix[0][0] == "0"
+@pytest.mark.unit
+def test_boolean_pruning_uses_the_states_where_the_condition_holds(temp_file):
+    """p holds at s0, so the strategy's guard `p` applies there and removes the b child."""
+    cgs = _model(temp_file, [["0", "a"], ["0", "I"]])
+    root = Node("s0", cgs)
+    root.add_child(Node("s1", cgs, action="a"), action=["a"])
+    root.add_child(Node("s1", cgs, action="b"), action=["b"])
+    assert boolean_pruning(cgs, root, "p", "a", 1, cgs.filename) == 1
+    assert root.actions == [["a"]]

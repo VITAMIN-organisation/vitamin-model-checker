@@ -1,4 +1,11 @@
-"""NatATL Recall: strategy generation."""
+"""NatATL with recall: the strategies of complexity exactly k, one guarded rule list per agent.
+
+A rule's complexity is the number of words in its condition, plus one for `!`; so
+`p` costs 1, `!p` 2 and `p && q` 3. A strategy's rules use distinct actions. The
+solver asks for k = 1, 2, ... in turn, so "at most k" is the union of those calls.
+"""
+
+import pytest
 
 from model_checker.algorithms.explicit.NatATL.Recall.strategy_generation import (
     generate_guarded_action_pairs,
@@ -7,181 +14,86 @@ from model_checker.algorithms.explicit.NatATL.Recall.strategy_generation import 
 )
 
 
-class TestGenerateStrategies:
-    """Test generate_strategies function."""
-
-    def test_generate_single_agent_strategy(self):
-        """Verify strategy generation for single agent."""
-        cartesian_products = {"actions_agent1": [("p", "a"), ("q", "b")]}
-        agents = [1]
-        found_solution = False
-
-        strategies = list(
-            generate_strategies(cartesian_products, 1, agents, found_solution)
-        )
-
-        assert len(strategies) > 0
-        assert all(isinstance(s, list) for s in strategies)
-
-    def test_generate_multi_agent_strategies(self):
-        """Verify strategy generation for multiple agents."""
-        cartesian_products = {
-            "actions_agent1": [("p", "a"), ("q", "b")],
-            "actions_agent2": [("p", "c"), ("q", "d")],
-        }
-        agents = [1, 2]
-        found_solution = False
-
-        strategies = list(
-            generate_strategies(cartesian_products, 1, agents, found_solution)
-        )
-
-        assert len(strategies) > 0
-        for strategy in strategies:
-            assert len(strategy) == 2
-
-    def test_generate_respects_complexity_bound(self):
-        """Verify strategy generation respects complexity bound."""
-        cartesian_products = {"actions_agent1": [("p", "a"), ("q", "b"), ("r", "c")]}
-        agents = [1]
-        found_solution = False
-
-        strategies_k1 = list(
-            generate_strategies(cartesian_products, 1, agents, found_solution)
-        )
-        strategies_k2 = list(
-            generate_strategies(cartesian_products, 2, agents, found_solution)
-        )
-
-        assert len(strategies_k2) >= len(strategies_k1)
-
-    def test_generate_stops_when_solution_found(self):
-        """Verify generation stops when solution is found."""
-        cartesian_products = {"actions_agent1": [("p", "a"), ("q", "b")]}
-        agents = [1]
-        found_solution = True
-
-        result = generate_strategies(cartesian_products, 1, agents, found_solution)
-
-        assert result is None
-
-    def test_generate_filters_duplicate_actions(self):
-        """Verify strategies have unique actions per complexity level."""
-        cartesian_products = {"actions_agent1": [("p", "a"), ("q", "a"), ("r", "b")]}
-        agents = [1]
-        found_solution = False
-
-        strategies = list(
-            generate_strategies(cartesian_products, 2, agents, found_solution)
-        )
-
-        for strategy in strategies:
-            if strategy:
-                pairs = strategy[0].get("condition_action_pairs", [])
-                if len(pairs) > 1:
-                    actions = [action for _, action in pairs]
-                    assert len(actions) == len(set(actions))
+def _rules(cartesian_products, k, agents=(1,)):
+    """Each yielded profile as a list of rule lists, one per agent."""
+    profiles = generate_strategies(cartesian_products, k, list(agents), False)
+    return [
+        [agent["condition_action_pairs"] for agent in profile] for profile in profiles
+    ]
 
 
-class TestIsDuplicate:
-    """Test is_duplicate function."""
-
-    def test_detects_exact_duplicate(self):
-        """Verify duplicate detection for identical strategies."""
-        existing = [{"condition_action_pairs": [("p", "a"), ("q", "b")]}]
-        new_strategy = {"condition_action_pairs": [("p", "a"), ("q", "b")]}
-
-        assert is_duplicate(existing, new_strategy) is True
-
-    def test_no_duplicate_for_different_strategy(self):
-        """Verify no duplicate for different strategies."""
-        existing = [{"condition_action_pairs": [("p", "a"), ("q", "b")]}]
-        new_strategy = {"condition_action_pairs": [("p", "c"), ("q", "d")]}
-
-        assert is_duplicate(existing, new_strategy) is False
-
-    def test_no_duplicate_for_empty_list(self):
-        """Verify no duplicate when existing list is empty."""
-        existing = []
-        new_strategy = {"condition_action_pairs": [("p", "a")]}
-
-        assert is_duplicate(existing, new_strategy) is False
-
-    def test_detects_duplicate_among_multiple(self):
-        """Verify duplicate detection in list with multiple strategies."""
-        existing = [
-            {"condition_action_pairs": [("p", "a")]},
-            {"condition_action_pairs": [("q", "b")]},
-            {"condition_action_pairs": [("r", "c")]},
-        ]
-        new_strategy = {"condition_action_pairs": [("q", "b")]}
-
-        assert is_duplicate(existing, new_strategy) is True
-
-    def test_order_matters_in_duplicate_detection(self):
-        """Verify duplicate detection considers pair order."""
-        existing = [{"condition_action_pairs": [("p", "a"), ("q", "b")]}]
-        new_strategy = {"condition_action_pairs": [("q", "b"), ("p", "a")]}
-
-        assert is_duplicate(existing, new_strategy) is False
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("k", "rules"),
+    [
+        (1, [[[("p", "a")]], [[("q", "b")]]]),
+        (2, [[[("p", "a"), ("q", "b")]]]),
+        (3, []),
+    ],
+)
+def test_strategies_have_exactly_the_requested_complexity(k, rules):
+    """With rules p->a and q->b: one rule each at k=1, both at k=2, none at k=3."""
+    assert _rules({"actions_agent1": [("p", "a"), ("q", "b")]}, k) == rules
 
 
-class TestGenerateGuardedActionPairs:
-    """Test generate_guarded_action_pairs function."""
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("condition", "k", "rules"),
+    [
+        ("!p", 1, [[[("q", "b")]]]),
+        ("!p", 2, [[[("!p", "a")]]]),
+        ("p && q", 2, []),
+        ("p && q", 3, [[[("p && q", "a")]]]),
+    ],
+)
+def test_negation_and_conjunction_add_to_the_complexity(condition, k, rules):
+    """`!p` costs 2 and `p && q` costs 3, so they first appear at those bounds."""
+    assert _rules({"actions_agent1": [(condition, "a"), ("q", "b")]}, k) == rules
 
-    def test_generate_single_agent_pairs(self):
-        """Verify cartesian product for single agent."""
-        regex_list = ["p", "q"]
-        agent_actions = [["a", "b"]]
 
-        result = generate_guarded_action_pairs(regex_list, agent_actions)
+@pytest.mark.unit
+def test_two_rules_with_the_same_action_are_not_one_strategy():
+    """p->a with q->a repeats the action, so only pairs with b are kept at k=2."""
+    rules = _rules({"actions_agent1": [("p", "a"), ("q", "a"), ("r", "b")]}, 2)
+    assert rules == [[[("p", "a"), ("r", "b")]], [[("q", "a"), ("r", "b")]]]
 
-        assert "actions_agent1" in result
-        assert len(result["actions_agent1"]) == 4
-        assert ("p", "a") in result["actions_agent1"]
-        assert ("p", "b") in result["actions_agent1"]
-        assert ("q", "a") in result["actions_agent1"]
-        assert ("q", "b") in result["actions_agent1"]
 
-    def test_generate_multi_agent_pairs(self):
-        """Verify cartesian product for multiple agents."""
-        regex_list = ["p", "q"]
-        agent_actions = [["a", "b"], ["c", "d"]]
+@pytest.mark.unit
+def test_profiles_combine_one_strategy_per_agent():
+    """Two agents with one rule each give one joint profile."""
+    rules = _rules(
+        {"actions_agent1": [("p", "a")], "actions_agent2": [("q", "c")]},
+        1,
+        agents=(1, 2),
+    )
+    assert rules == [[[("p", "a")], [("q", "c")]]]
 
-        result = generate_guarded_action_pairs(regex_list, agent_actions)
 
-        assert "actions_agent1" in result
-        assert "actions_agent2" in result
-        assert len(result["actions_agent1"]) == 4
-        assert len(result["actions_agent2"]) == 4
+@pytest.mark.unit
+def test_nothing_is_generated_once_a_solution_is_found():
+    """The solver passes found_solution=True to stop the search."""
+    assert generate_strategies({"actions_agent1": [("p", "a")]}, 1, [1], True) is None
 
-    def test_generate_empty_regex_list(self):
-        """Verify behavior with empty regex list."""
-        regex_list = []
-        agent_actions = [["a", "b"]]
 
-        result = generate_guarded_action_pairs(regex_list, agent_actions)
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("new_pairs", "duplicate"),
+    [
+        ([("p", "a"), ("q", "b")], True),
+        ([("q", "b"), ("p", "a")], False),
+        ([("p", "c")], False),
+    ],
+)
+def test_duplicate_means_the_same_rules_in_the_same_order(new_pairs, duplicate):
+    """Rule order matters: the first matching rule decides the action."""
+    existing = [{"condition_action_pairs": [("p", "a"), ("q", "b")]}]
+    assert is_duplicate(existing, {"condition_action_pairs": new_pairs}) is duplicate
 
-        assert "actions_agent1" in result
-        assert len(result["actions_agent1"]) == 0
 
-    def test_generate_empty_action_list(self):
-        """Verify behavior with empty action list."""
-        regex_list = ["p", "q"]
-        agent_actions = [[]]
-
-        result = generate_guarded_action_pairs(regex_list, agent_actions)
-
-        assert "actions_agent1" in result
-        assert len(result["actions_agent1"]) == 0
-
-    def test_generate_preserves_agent_order(self):
-        """Verify agent numbering is sequential."""
-        regex_list = ["p"]
-        agent_actions = [["a"], ["b"], ["c"]]
-
-        result = generate_guarded_action_pairs(regex_list, agent_actions)
-
-        assert "actions_agent1" in result
-        assert "actions_agent2" in result
-        assert "actions_agent3" in result
+@pytest.mark.unit
+def test_guarded_pairs_are_every_condition_with_every_action_of_each_agent():
+    """Agent 1 has a and b, agent 2 has c; conditions p and q."""
+    assert generate_guarded_action_pairs(["p", "q"], [["a", "b"], ["c"]]) == {
+        "actions_agent1": [("p", "a"), ("p", "b"), ("q", "a"), ("q", "b")],
+        "actions_agent2": [("p", "c"), ("q", "c")],
+    }

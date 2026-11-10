@@ -91,6 +91,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `set` on random inputs. Seven files that repeated each other or checked only types
   are merged or removed, and the bit vector and NatATL idle tests move next to the
   code they test.
+- Tests: the algorithm unit tests compare with results worked out by hand. They
+  cover an opponent who can escape, a joint action with two outcomes, the bit
+  vector path at 300 states, cost bounds that remove a move in RBATL and RABATL, the
+  trace length limit, and every ICTL and IATL frame check. Tests that recomputed the
+  code's own formula, checked only types, or tested CTL release handlers that no
+  formula reaches are removed.
 
 ### Fixed
 

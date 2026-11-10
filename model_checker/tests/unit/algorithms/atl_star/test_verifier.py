@@ -1,3 +1,10 @@
+"""ATL* verifier on the toy CGS of toy_cgs.py.
+
+Agent 1 requests, agent 2 grants. From s0 only req|grant reaches s1, where
+`granted` holds; every other joint action stays at s0, and s1 always returns to
+s0. So only the two agents together can force `granted` from s0.
+"""
+
 from __future__ import annotations
 
 import pytest
@@ -5,7 +12,12 @@ import pytest
 spot = pytest.importorskip("spot")
 
 from model_checker.algorithms.explicit.ATL_STAR.cgs_adapter import adapt
-from model_checker.algorithms.explicit.ATL_STAR.verifier import holds, sat, witness
+from model_checker.algorithms.explicit.ATL_STAR.verifier import (
+    check,
+    holds,
+    sat,
+    witness,
+)
 from model_checker.parsers.formulas.ATL_STAR.formula import (
     And,
     Coalition,
@@ -15,6 +27,7 @@ from model_checker.parsers.formulas.ATL_STAR.formula import (
     True_,
     Until,
 )
+from model_checker.parsers.formulas.ATL_STAR.grammar import ATLStarParseError
 from model_checker.tests.unit.algorithms.atl_star.toy_cgs import (
     CollidingMarkerToyCGS,
     ToyCGS,
@@ -22,251 +35,145 @@ from model_checker.tests.unit.algorithms.atl_star.toy_cgs import (
 
 pytestmark = pytest.mark.atl_star
 
+_BOTH, _REQ, _GRANT = frozenset({1, 2}), frozenset({1}), frozenset({2})
+_F_GRANTED = Until(True_(), Prop("granted"))
+
 
 @pytest.fixture
 def model():
     return adapt(ToyCGS())
 
 
-def test_prop(model):
-    assert sat(Prop("granted"), model) == {"s1"}
-
-
-def test_true(model):
-    assert sat(True_(), model) == {"s0", "s1"}
-
-
-def test_not(model):
-    assert sat(Not(Prop("granted")), model) == {"s0"}
-
-
-def test_and(model):
-    assert sat(And(True_(), Prop("granted")), model) == {"s1"}
-
-
-def test_bare_temporal_operator_at_top_level_raises(model):
-    with pytest.raises(ValueError):
-        sat(Next(Prop("granted")), model)
-
-
-def test_unknown_proposition_at_top_level_raises(model):
-    with pytest.raises(ValueError, match="missing"):
-        sat(Prop("missing"), model)
-
-
-def test_unknown_proposition_nested_in_a_coalitions_path_formula_raises(model):
-    with pytest.raises(ValueError, match="missing"):
-        sat(Coalition(frozenset({1}), Prop("missing")), model)
+@pytest.mark.parametrize(
+    ("formula", "states"),
+    [
+        (Coalition(_BOTH, _F_GRANTED), {"s0", "s1"}),
+        (Coalition(_REQ, _F_GRANTED), {"s1"}),
+        (Coalition(_GRANT, _F_GRANTED), {"s1"}),
+        (Coalition(_BOTH, Next(Prop("granted"))), {"s0"}),
+    ],
+    ids=["both_force_F", "requester_alone", "granter_alone", "both_force_X"],
+)
+def test_who_can_force_what(model, formula, states):
+    """Alone, either agent is blocked by the other; F granted holds at s1 without any move."""
+    assert sat(formula, model) == states
 
 
 @pytest.mark.parametrize("name", ["granted", "Granted", "Fuel", "Xray"])
 def test_proposition_starting_with_an_operator_letter_reaches_spot_whole(name):
-    """Unquoted, Spot reads `Granted` as `G(ranted)` and the verdict is wrong."""
+    """Unquoted, Spot would read `Granted` as `G ranted` and give a wrong verdict."""
     cgs = ToyCGS()
     cgs.atomic_propositions = [name]
-    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop(name)))
+    formula = Coalition(_BOTH, Until(True_(), Prop(name)))
     assert sat(formula, adapt(cgs)) == {"s0", "s1"}
 
 
-def test_grand_coalition_can_force_eventually_granted(model):
-    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
-    assert sat(formula, model) == {"s0", "s1"}
+def test_fresh_marker_never_collides_with_a_model_proposition():
+    """The model already has a proposition named like the first marker; the answer must stay {s1}."""
+    inner = Coalition(_GRANT, _F_GRANTED)
+    formula = Coalition(_REQ, And(inner, Not(Prop("__atl_star_elim_0"))))
+    assert sat(formula, adapt(CollidingMarkerToyCGS())) == {"s1"}
 
 
-def test_requester_alone_cannot_force_granted_from_s0(model):
-    # F(granted) is trivially true at s1 itself (no strategy needed, it
-    # already holds), but agent 1 alone can't force *reaching* s1 from s0
-    # since agent 2 can always deny.
-    formula = Coalition(frozenset({1}), Until(True_(), Prop("granted")))
-    assert sat(formula, model) == {"s1"}
+@pytest.mark.parametrize(
+    "formula",
+    [
+        Next(Prop("granted")),
+        Prop("missing"),
+        Coalition(_REQ, Prop("missing")),
+        Coalition(frozenset({5}), Prop("granted")),
+        Coalition(frozenset({1, 5}), Prop("granted")),
+    ],
+    ids=[
+        "bare_next",
+        "unknown_name",
+        "unknown_name_inside",
+        "agent_5",
+        "agent_5_among_valid",
+    ],
+)
+def test_formula_the_model_cannot_answer_is_refused(model, formula):
+    """A path formula without a coalition, an undeclared name, or an agent the model lacks."""
+    with pytest.raises(ValueError):
+        sat(formula, model)
 
 
-def test_granter_alone_cannot_force_granted_from_s0(model):
-    formula = Coalition(frozenset({2}), Until(True_(), Prop("granted")))
-    assert sat(formula, model) == {"s1"}
-
-
-def test_grand_coalition_next_granted_only_from_s0(model):
-    formula = Coalition(frozenset({1, 2}), Next(Prop("granted")))
-    assert sat(formula, model) == {"s0"}
-
-
-def test_and_inside_path_formula(model):
-    formula = Coalition(frozenset({1, 2}), And(True_(), Prop("granted")))
-    assert sat(formula, model) == {"s1"}
-
-
-def test_not_inside_path_formula(model):
-    formula = Coalition(frozenset({1, 2}), Not(Prop("granted")))
-    assert sat(formula, model) == {"s0"}
-
-
-def test_nested_coalition_matches_equivalent_flat_formula(model):
-    nested = Coalition(
-        frozenset({1, 2}), Until(True_(), Coalition(frozenset({1}), Prop("granted")))
-    )
-    flat = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
-    assert sat(nested, model) == sat(flat, model)
-
-
-def test_holds_defaults_to_model_initial_state(model):
+def test_holds_checks_the_initial_state_unless_told_otherwise(model):
+    """`granted` is false at s0 (the initial state) and true at s1."""
     assert holds(Prop("granted"), model) is False
-    assert holds(Not(Prop("granted")), model) is True
-
-
-def test_holds_at_explicit_state(model):
     assert holds(Prop("granted"), model, state="s1") is True
-
-
-def test_holds_rejects_an_unknown_state(model):
     with pytest.raises(ValueError, match="s99"):
         holds(Prop("granted"), model, state="s99")
 
 
-def test_sat_coalition_rejects_agent_ids_outside_the_model(model):
-    formula = Coalition(frozenset({5}), Prop("granted"))
-    with pytest.raises(ValueError, match="5"):
-        sat(formula, model)
+def test_check_parses_the_text_with_the_models_agent_count():
+    """check() is the text entry point; agent 3 is caught by the parser, not misread."""
+    assert check(ToyCGS(), "<<1,2>> F granted") is True
+    assert check(ToyCGS(), "<<1>> F granted") is False
+    assert check(ToyCGS(), "granted", state="s1") is True
+    with pytest.raises(ATLStarParseError):
+        check(ToyCGS(), "<<3>> F granted")
 
 
-def test_sat_coalition_rejects_a_mix_of_valid_and_invalid_agent_ids(model):
-    formula = Coalition(frozenset({1, 5}), Prop("granted"))
-    with pytest.raises(ValueError, match="5"):
-        sat(formula, model)
-
-
-def test_fresh_marker_never_collides_with_a_real_model_proposition():
-    # The model declares "__atl_star_elim_0" itself (always false) -- the
-    # exact name _eliminate would generate first for this formula's one
-    # nested Coalition. Agent 2 alone can only force F(granted) trivially at
-    # s1 (see test_granter_alone_cannot_force_granted_from_s0), so the
-    # marker's truth set is {"s1"}. Without the collision check, that marks
-    # "__atl_star_elim_0" true at s1 too, flipping Not(Prop(...)) there from
-    # true to false and making the whole conjunction unsatisfiable -- an
-    # empty result instead of the correct {"s1"}.
-    colliding_model = adapt(CollidingMarkerToyCGS())
-    inner = Coalition(frozenset({2}), Until(True_(), Prop("granted")))
-    formula = Coalition(frozenset({1}), And(inner, Not(Prop("__atl_star_elim_0"))))
-    assert sat(formula, colliding_model) == {"s1"}
-
-
-def test_witness_gives_the_grand_coalitions_only_forcing_move_at_s0(model):
-    # req|grant is s0's only transition to s1 (granted), every other joint
-    # action self-loops on s0 forever, so it's the *only* winning move here.
-    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
-    result = witness(formula, model)
-    assert result is not None
-    action = result.strategy.move(result.start)
-    assert dict(action) == {1: "req", 2: "grant"}
-
-
-def test_witness_strategy_projects_onto_each_agent(model):
-    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
-    result = witness(formula, model)
+def test_witness_gives_the_only_forcing_move(model):
+    """req|grant is the one joint action from s0 to s1."""
+    result = witness(Coalition(_BOTH, _F_GRANTED), model)
+    assert dict(result.strategy.move(result.start)) == {1: "req", 2: "grant"}
     assert result.strategy.project(1).move(result.start) == "req"
-    assert result.strategy.project(2).move(result.start) == "grant"
 
 
-def test_witness_is_none_when_the_coalition_cannot_force_the_formula(model):
-    # Agent 1 alone can't force Next(granted) from s0, agent 2 can always deny.
-    formula = Coalition(frozenset({1}), Next(Prop("granted")))
-    assert witness(formula, model) is None
+def test_witness_is_none_when_the_coalition_cannot_force(model):
+    """Agent 1 alone cannot force X granted from s0."""
+    assert witness(Coalition(_REQ, Next(Prop("granted"))), model) is None
 
 
-def test_witness_at_a_state_where_the_formula_already_holds(model):
-    # No move needed: granted already holds at s1 itself.
-    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
-    result = witness(formula, model, state="s1")
-    assert result is not None
+def test_witness_exists_where_the_goal_already_holds(model):
+    """At s1 F granted holds with no move needed."""
+    assert witness(Coalition(_BOTH, _F_GRANTED), model, state="s1") is not None
 
 
-def test_witness_rejects_agent_ids_outside_the_model(model):
-    formula = Coalition(frozenset({5}), Prop("granted"))
-    with pytest.raises(ValueError, match="5"):
-        witness(formula, model)
+@pytest.mark.parametrize(
+    ("formula", "state", "name"),
+    [
+        (Coalition(frozenset({5}), Prop("granted")), None, "5"),
+        (Coalition(_BOTH, _F_GRANTED), "s99", "s99"),
+    ],
+)
+def test_witness_refuses_an_unknown_agent_or_state(model, formula, state, name):
+    """The message names the agent or state."""
+    with pytest.raises(ValueError, match=name):
+        witness(formula, model, state=state) if state else witness(formula, model)
 
 
-def test_witness_rejects_an_unknown_state(model):
-    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
-    with pytest.raises(ValueError, match="s99"):
-        witness(formula, model, state="s99")
-
-
-def test_witness_has_no_nested_entries_without_a_nested_coalition(model):
-    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
+def test_nested_coalition_keeps_its_own_witness(model):
+    """In <<1,2>> X <<1,2>> F granted, the inner coalition's req|grant strategy survives at s0 and s1."""
+    formula = Coalition(_BOTH, Next(Coalition(_BOTH, _F_GRANTED)))
     result = witness(formula, model)
-    assert result.nested == {}
-    assert result.nested_witnesses_at("s0") == []
-
-
-def test_witness_exposes_a_nested_coalitions_own_witness(model):
-    # The grand coalition can force F(granted) from *every* toy-CGS state, so
-    # <<1,2>> X <<1,2>> F granted is trivially true for the outer step (any
-    # move keeps the fresh proposition true at the next state), what this
-    # actually tests is that the inner coalition's own req|grant strategy
-    # survives elimination instead of being discarded.
-    formula = Coalition(
-        frozenset({1, 2}),
-        Next(Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))),
-    )
-    result = witness(formula, model)
-    assert result is not None
-
     for state in ("s0", "s1"):
-        nested_here = result.nested_witnesses_at(state)
-        assert len(nested_here) == 1
-        inner = nested_here[0]
+        [inner] = result.nested_witnesses_at(state)
         assert dict(inner.strategy.move(inner.start)) == {1: "req", 2: "grant"}
-        assert inner.nested == {}  # no further nesting inside F granted itself
+        assert inner.nested == {}
 
 
-def test_advance_follows_the_grand_coalitions_forcing_move_to_s1(model):
-    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
-    result = witness(formula, model)
-    move = result.strategy.move(
-        result.start
-    )  # the full joint action: grand coalition == everyone
-    advanced = result.advance(move)
-    assert advanced is not None
-    assert advanced.start[0] == "s1"
+def test_advance_follows_the_forcing_move(model):
+    """Playing req|grant from s0 lands in s1; an action the model lacks returns None."""
+    result = witness(Coalition(_BOTH, _F_GRANTED), model)
+    assert result.advance(result.strategy.move(result.start)).start[0] == "s1"
+    assert result.advance(frozenset({(1, "bogus"), (2, "grant")})) is None
 
 
-def test_advance_returns_none_for_an_unrecognized_action(model):
-    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
-    result = witness(formula, model)
-    bogus = frozenset({(1, "bogus"), (2, "grant")})
-    assert result.advance(bogus) is None
-
-
-def test_advance_hits_the_rejecting_sink_off_the_winning_path(model):
-    # Next(granted) only cares about the *second* letter of the trace, so
-    # Automaton.from_ltl("X(granted)") only has a real edge once it's
-    # checking a state where "granted" holds, deviating from the winning
-    # req|grant move (self-looping on s0 instead) reaches a product state
-    # with no real automaton edge left at all, only complete()'s sink.
-    formula = Coalition(frozenset({1, 2}), Next(Prop("granted")))
-    result = witness(formula, model)
-    assert result is not None
-
-    off_path = result.advance(frozenset({(1, "idle"), (2, "deny")}))
-    assert off_path is not None
+def test_advance_off_the_winning_path_reaches_a_dead_end(model):
+    """For X granted, staying at s0 once is allowed, a second time leaves only the rejecting sink."""
+    result = witness(Coalition(_BOTH, Next(Prop("granted"))), model)
+    idle = frozenset({(1, "idle"), (2, "deny")})
+    off_path = result.advance(idle)
     assert off_path.start[0] == "s0"
-
-    dead_end = off_path.advance(frozenset({(1, "idle"), (2, "deny")}))
-    assert dead_end is None
+    assert off_path.advance(idle) is None
 
 
-def test_advance_switches_into_a_nested_witness_when_one_becomes_available(model):
-    formula = Coalition(
-        frozenset({1, 2}),
-        Next(Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))),
-    )
+def test_advance_switches_to_the_nested_witness(model):
+    """After the outer X step the inner F granted already holds, so the inner strategy takes over."""
+    formula = Coalition(_BOTH, Next(Coalition(_BOTH, _F_GRANTED)))
     result = witness(formula, model)
-    move = result.strategy.move(result.start)
-    advanced = result.advance(move)
-    assert advanced is not None
-    # The fresh proposition already held at whichever state the outer move
-    # led to (the grand coalition can force F granted from every toy
-    # state), so advance() should switch into that inner witness instead of
-    # continuing the (now-satisfied, don't-care) outer one.
+    advanced = result.advance(result.strategy.move(result.start))
     assert dict(advanced.strategy.move(advanced.start)) == {1: "req", 2: "grant"}

@@ -11,6 +11,7 @@ from model_checker.parsers.formulas.NatSL.parser import (
     NatSLParseError,
     NatSLParser,
     format_formula,
+    goal_to_ctl,
     parse_formula,
 )
 
@@ -46,6 +47,23 @@ def test_prefix_bindings_and_goal_are_read_in_order():
 def test_spacing_outside_the_goal_is_free(formula, normal_form):
     """Spaces between tokens do not matter; `not` and `!` are one negation."""
     assert format_formula(parse_formula(formula)) == normal_form
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("goal", "ctl"),
+    [
+        ("F goal", "AF goal"),
+        ("!F goal", "AG !goal"),
+        ("G goal", "AG goal"),
+        ("!G goal", "AF !goal"),
+        ("X goal", "AX goal"),
+        ("!X goal", "AX !goal"),
+    ],
+)
+def test_goal_becomes_a_universal_ctl_formula(goal, ctl):
+    """Once all strategies are fixed every path counts, so `!F goal` is `AG !goal`."""
+    assert goal_to_ctl(parse_formula(f"E{{1}}x: (x, 1) {goal}").goal) == ctl
 
 
 @pytest.mark.unit

@@ -1,30 +1,16 @@
-"""Hand-built, minimal objects matching `CGSProtocol`'s shape, no file
-parsing, for isolated `cgs_adapter.py` unit tests (edge cases like a
-malformed profile, a bad initial state, or a wildcard cell, in complete
-isolation). Tests against a real VITAMIN fixture load the real `CGS`
-class directly instead (see `test_cgs_adapter.py`).
+"""Hand-built CGS objects for the ATL* tests, so each edge case needs no model file.
 
-Two agents (1: requester, 2: granter), states `s0`/`s1`. From `s0`,
-`req|grant` moves to `s1` (where `granted` holds); every other joint action
-self-loops on `s0`. From `s1`, every joint action resets to `s0`. Cell
-values are transition-matrix entries: `0` for "no edge", otherwise one or
-more `,`-separated `|`-joined-per-agent profiles, mirroring the real CGS
-encoding `cgs_adapter.adapt()` reads.
+ToyCGS: agents 1 (requester) and 2 (granter), states s0 and s1. From s0 only
+req|grant reaches s1, where `granted` holds; every other joint action stays at s0.
+From s1 every joint action returns to s0. A cell is 0 (no edge) or `,`-separated
+profiles with `|` between the agents' actions, as in a CGS file.
 """
 
 from __future__ import annotations
 
 
 def _get_edges(graph: list[list], states: list[str]) -> list[tuple[str, str]]:
-    """Mirrors VITAMIN's own `cgs_utils.get_edges`: one `(source, target)`
-    pair per nonzero cell, using the real column for an ordinary cell but
-    collapsing to `(source, source)` for a wildcard regardless of column.
-
-    A wildcard (`"*"`, a `str`) is never `== 0` (an `int`), so `element !=
-    0` alone is equivalent to VITAMIN's own `element == "*" or element !=
-    0` without the redundant second comparison on every cell; `source` is
-    looked up once per row instead of once per matched cell.
-    """
+    """One (source, target) per nonzero cell; a `*` cell is a self-loop, as in cgs_utils.get_edges."""
     edges: list[tuple[str, str]] = []
     for i, row in enumerate(graph):
         source = states[i]
@@ -63,10 +49,7 @@ class ToyCGS:
 
 
 class AllWildcardToyCGS:
-    """Every cell is a wildcard, no concrete action anywhere in the model —
-    the shape of VITAMIN's own timedCGS/tctl_tol_minimal.txt fixture, where
-    known_actions would otherwise stay empty and the state gets zero
-    self-loops instead of "absorbing under any action"."""
+    """One state whose only cell is `*`: no concrete action exists anywhere in the model."""
 
     def __init__(self) -> None:
         self.states = ["s0"]
@@ -94,9 +77,7 @@ class AllWildcardToyCGS:
 
 
 class MalformedToyCGS(ToyCGS):
-    """Same shape, but `s0`'s self-loop cell has a single-character profile,
-    too short for 2 agents under either format (compact-per-character or
-    `|`-separated), used to test `adapt()`'s token-count validation."""
+    """s0's self-loop cell is `r`, one token for two agents."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -104,7 +85,7 @@ class MalformedToyCGS(ToyCGS):
 
 
 class BadInitialStateToyCGS(ToyCGS):
-    """Same shape, but `initial_state` names a state that doesn't exist."""
+    """The initial state s99 is not a state of the model."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -112,11 +93,7 @@ class BadInitialStateToyCGS(ToyCGS):
 
 
 class WildcardToyCGS(ToyCGS):
-    """Same shape, but `s0`'s self-loop cell is the real CGS wildcard `"*"`
-    instead of the explicit profiles `ToyCGS` writes out, behaviorally
-    equivalent to `ToyCGS` once `adapt()` expands the wildcard, since the
-    real transition out of `s0` (`req|grant` -> `s1`) stays on its own cell
-    and every other joint action known in the model self-loops either way."""
+    """s0's self-loop cell is `*`, which must expand to the same self-loops ToyCGS lists."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -129,11 +106,7 @@ class WildcardToyCGS(ToyCGS):
 
 
 class CollidingMarkerToyCGS(ToyCGS):
-    """Same shape as `ToyCGS`, but the model also declares a real proposition
-    named `__atl_star_elim_0` (false at every state) — the exact name
-    `_eliminate`'s fresh-proposition counter would generate first for any
-    formula with exactly one `Coalition` to eliminate. Used to confirm the
-    generated marker can never collide with a real model proposition."""
+    """Also declares `__atl_star_elim_0` (always false), the first name the verifier generates for a nested coalition."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -142,11 +115,7 @@ class CollidingMarkerToyCGS(ToyCGS):
 
 
 class CompactActionCGS:
-    """Same 2-state/2-agent shape as `ToyCGS`, but using the real, compact
-    one-character-per-agent action encoding (`"AC"` = agent 1 does `A`,
-    agent 2 does `C`) instead of `|`-separated tokens, exactly the format
-    VITAMIN's own `atl_2agents_4states_simple.txt` fixture uses, confirmed
-    against `cgs_actions.parse_joint_action_cell`."""
+    """ToyCGS's shape with compact cells (`AC` = agent 1 plays A, agent 2 plays C); only AC reaches s1."""
 
     def __init__(self) -> None:
         self.states = ["s0", "s1"]
