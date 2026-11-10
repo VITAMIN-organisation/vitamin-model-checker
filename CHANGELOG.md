@@ -8,109 +8,102 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- A test checks the operator spacing rule for every registered logic
-  (`test_operator_spacing.py`); a logic missing from its tables fails it. It covers
-  the one-operand operators and the binary ones (`U`, and `R`, `W` where a logic has
-  them): `p U q` is accepted, `pUq` is one name, `pU q` and `p Uq` are rejected, and
-  a lowercase operator (`f p`, `p u q`) is rejected.
-- A test pins that NatSL rejects a connective in a goal, such as
-  `E{1}x:(x,1) F p && q`, with "Unsupported goal", for `&&`, `||`, `->` and the
-  words (`test_natsl_spacing.py`). The behaviour is unchanged; NatSL never accepted
-  one. See `docs/NatSL/algorithm.md`.
-- ICTL accepts the path quantifier over a parenthesized or bracketed Until or
-  Release, `A(p U q)` and `A[p U q]`, the forms the ICTL papers write (EUMAS 2025,
-  AREA 2023). `A p U q` still works. Before, `A(p U q)` and `A[p U q]` failed with
-  a syntax error.
-- OL, TOL, RBATL, RABATL, CapATL and Wallet_ATL accept a parenthesized Until (and
-  Release or Weak Until where the logic has them) after the prefix, such as
-  `<J2> (p U q)` and `<1><5> (p U q)`. Every logic with a prefix before Until now
-  takes both forms and builds one tree for them (`test_until_after_prefix.py`).
-  See `docs/logic_knowledge_base.md`, "Until after a prefix".
+- ICTL accepts `A(p U q)` and `A[p U q]`, and the same around Release (`A(p R q)`),
+  as the ICTL papers write them (EUMAS 2025, AREA 2023). `A p U q` still works.
+  Before, `A(p U q)` and `A[p U q]` were syntax errors.
+- OL, TOL, RBATL, RABATL, CapATL and Wallet_ATL accept a parenthesized Until after
+  the prefix (the coalition, bound or similar part before the temporal operator),
+  such as `<J2> (p U q)` and `<1><5> (p U q)`, and the same for Release (`R`) or
+  Weak Until (`W`) where the logic has them. Every logic with a prefix now takes
+  `prefix p U q` and `prefix (p U q)` and builds one tree for both. See "Until after
+  a prefix" in `docs/logic_knowledge_base.md`.
+- Tests for operator spacing, the Until forms and connective spelling in every
+  logic (`test_operator_spacing.py`, `test_until_after_prefix.py`,
+  `test_connective_spelling.py`), and one that pins NatSL's "Unsupported goal"
+  error for a connective in a goal such as `E{1}x:(x,1) F p && q`, as before
+  (`test_natsl_spacing.py`).
 
 ### Changed
 
-- TCTL rejects the next operator (`X p`, `AX p`, `EX p`, `A next p`) with a message
-  such as "TCTL has no next operator ('AX' at position 1): time is dense, so there
-  is no unique next state", following Alur, Courcoubetis and Dill (Information and Computation 1993,
-  p. 10). Before, the error was "Syntax error near token 'X'". Names such as `Xray`
-  still parse (`test_tctl_tol_parser.py`).
-- NatATL, NatATL_Recall and NatATLF reject a bound `k` below 1, such as `<{1}, 0>F p`,
-  with "Invalid bound 0: must be at least 1". Before, `k = 0` parsed and the solver
-  returned false for every formula.
 - Breaking: every logic spells the connectives `&&`, `||`, `!`, `->` or the words
   `and`, `or`, `not`, `implies`. A single `&` or `|`, and `>` as implication, are
-  rejected everywhere. Before, ATL*, TCTL and TOL took `&` and `|`, Wallet_ATL also
-  took `>`, and the other logics gave a bare "Syntax error". The shared lexer now
-  reports an invalid character. See `test_connective_spelling.py` and
-  `docs/logic_knowledge_base.md`, "Boolean Logic (Shared Syntax)".
+  rejected with an "Invalid character" error. Before, ATL*, TCTL and TOL took `&`
+  and `|`, Wallet_ATL also took `>`, and the other logics gave a bare "Syntax
+  error". See "Boolean Logic (Shared Syntax)" in `docs/logic_knowledge_base.md`.
 - Breaking: in every logic with a prefix (coalition, path quantifier, bound or
-  freeze), a connective after a prefix whose scope no parenthesis closes is a
-  syntax error that gives the position and both readings: `<1>F p && q`,
-  `<1> p U q && r`, `AF p && q`, `!<1>X p && q`. No defining paper states how they
-  group. Before, most logics read `(<1>F p) && q`, while TCTL and TOL read
-  `A (p U (q && r))`. Write `(<1>F p) && q` or `<1>F (p && q)`. See
-  `docs/logic_knowledge_base.md`, "Prefix before a connective".
-- Breaking: CTL takes square brackets only around an Until, `A[p U q]`, as the
-  defining paper writes it (Clarke, Emerson, Sistla 1986, p. 246). Before,
-  `[p] && q` and `AF [p]` parsed as parentheses.
-- Breaking: ATL*: `<<1>> p U q` is `<<1>> (p U q)`, the coalition over the Until.
-  A chained `U` (`p U q U r`) and `U` next to `&`, `|` or `->` (`p U q & r`,
-  `p & q U r`) are syntax errors that ask for parentheses, and so is any
-  connective after a coalition (`<<1>> p & q`). Before, `<<1>> p U q` parsed as
-  `(<<1>> p) U q`, which failed with "a bare Until is not a state formula", and
-  the other forms followed the LTL precedence of Spot. See
-  `docs/ATL_STAR/algorithm.md`.
-- Breaking: a temporal operator is a word of its own in every logic, so a name
-  written with no space after an operator is no longer split. See
-  `docs/logic_knowledge_base.md`, "Operators and names".
-  - LTL: `Xp`, `FGp`, `AXp`, `AGAFp` and similar, in upper or lower case, are
-    names. Write `X p`, `F G p`, `AX p`, `AG AF p`. `ltl_to_ctl` no longer splits
-    them. `pUq` is a name too, so `ltl_to_ctl` leaves it alone; before, it
-    rewrote it to `A(p U q)`. Write `p U q`.
+  freeze), a connective after a prefix that no parenthesis closes is a syntax error
+  that gives the position and both readings: `<1>F p && q`, `<1> p U q && r`,
+  `AF p && q`, `!<1>X p && q`. Write `(<1>F p) && q` or `<1>F (p && q)`. No defining
+  paper states how they group. Before, most logics read `(<1>F p) && q`, while TCTL
+  and TOL read `A (p U (q && r))`. See "Prefix before a connective" in
+  `docs/logic_knowledge_base.md`.
+- Breaking: a temporal operator is a word of its own in every logic, so `Xp` is one
+  name and no longer `X p`. The one-letter operators are uppercase only (`f p` and
+  `p u q` are rejected; word forms such as `until` and `eventually` still work), and
+  a binary operator needs a space on both sides: `pUq` is one name, and `pU q` and
+  `p Uq` are errors. See "Operators and names" in `docs/logic_knowledge_base.md`.
+  - LTL: `Xp`, `FGp`, `AXp`, `AGAFp` and similar, in either case, are names, and
+    `ltl_to_ctl` no longer splits them. Write `X p`, `F G p`, `AX p`, `AG AF p`.
+    `pUq` is a name too, so `ltl_to_ctl` leaves it alone; before, it rewrote it to
+    `A(p U q)`. Write `p U q`.
   - LTL: a name that is not among the model's declared propositions is an error
     that names it ("Proposition(s) 'Goal' not among the model's declared
-    propositions [...]"). Before, only all-lowercase names were checked, so a
-    capitalised, numbered or glued name such as `Goal`, `p1` or `pUq` was
-    silently false.
-  - NatSL: the goal needs a space after its operator (`F goal`). `Fgoal`, and a
-    goal with no operator such as `Goal`, are rejected with an error. The
-    normalised formula in the result now reads `...:(x,1)F goal`.
-  - NatSL: the goal operators `F`, `G`, `X` are uppercase only, and `not` is
-    lowercase only. `f goal` and `NOT F goal` are rejected; before, the goal
-    ignored case.
+    propositions [...]"). Before, only all-lowercase names were checked, so `Goal`,
+    `p1` and `pUq` were silently false.
+  - NatSL: the goal needs a space after its operator (`F goal`), so `Fgoal` and a
+    goal with no operator such as `Goal` are rejected. The operators `F`, `G`, `X`
+    are uppercase and `not` is lowercase: `f goal` and `NOT F goal` are rejected,
+    where the goal ignored case before. The normalised formula in the result now
+    reads `...:(x,1)F goal`.
   - NatATL, NatATL_Recall and NatATLF: `<{1},1>Fa` and `<{1},1>fa` are rejected.
     Write `<{1},1>F a`.
+- Breaking: CTL takes square brackets only around an Until, `A[p U q]`, as the
+  defining paper writes it (Clarke, Emerson, Sistla 1986, p. 246). Before, `[p] && q`
+  and `AF [p]` parsed with the brackets as parentheses.
+- Breaking: ATL* reads `<<1>> p U q` as `<<1>> (p U q)`, the coalition over the
+  Until, as the ATL paper does (JACM 2002, p. 689). A chained `U` (`p U q U r`), a
+  `U` next to `&&`, `||` or `->` (`<<1>> (p U q && r)`, `<<1>> (p && q U r)`) and
+  any connective after a coalition (`<<1>> p && q`) are syntax errors that ask for
+  parentheses. Before, `<<1>> p U q` parsed as `(<<1>> p) U q` and failed with "a
+  bare Until is not a state formula", and the other forms followed the LTL
+  precedence of the Spot library. See `docs/ATL_STAR/algorithm.md`.
+- Breaking: NatATL, NatATL_Recall and NatATLF reject a bound `k` below 1, such as
+  `<{1}, 0>F p`, with "Invalid bound 0: must be at least 1". Before, `k = 0` parsed
+  and the solver returned false for every formula.
+- TCTL rejects the next operator (`X p`, `AX p`, `EX p`, `A next p`) with a message
+  such as "TCTL has no next operator ('AX' at position 1): time is dense, so there
+  is no unique next state" (Alur, Courcoubetis, Dill, Information and Computation
+  1993, p. 10). Before, the error was "Syntax error near token 'X'". Names such as
+  `Xray` still parse.
 
 ### Fixed
 
-- CapATL: the knowledge operator K^a_cap of AAMAS 2024 (p. 125-126) parses,
-  typed `K1(1 is c)` or `kcap1(1 is c)`, alone or inside a formula such as
+- CapATL: the knowledge operator K^a_cap of AAMAS 2024 (p. 125-126) parses, typed
+  `K1(1 is c)` or `kcap1(1 is c)`, alone or inside a formula such as
   `<{1}> F (g && K2(3 is c || 3 is cop))`. Inside the parentheses only
-  `agent is capacity`, `!`, `&&`, `||`, `->`, `true` and `false` are allowed. A
-  `K1` without parentheses, a `K` inside another, a proposition inside it and an
-  agent out of range are errors that name the part. Before, no K formula parsed:
-  `K1` was read as a proposition name, and `K 1 (1 is c)` returned no result and
-  no error (`test_capatl_knowledge_operator.py`). See `docs/CapATL/algorithm.md`.
-- CapATL: model checking a formula that contains K returns a `validation` error,
-  "The knowledge operator K1(...) is parsed but not evaluated by the CapATL
-  solver yet". The solver has no K semantics and would skip the operator.
+  `agent is capacity`, `!`, `&&`, `||`, `->`, `true` and `false` are allowed. A `K1`
+  without parentheses, a `K` inside another, a proposition inside it and an agent
+  out of range are errors that name the part. Before, no K formula parsed: `K1` was
+  read as a proposition name, and `K 1 (1 is c)` returned no result and no error.
+  The solver has no K semantics yet, so model checking a formula with K returns a
+  `validation` error, "The knowledge operator K1(...) is parsed but not evaluated
+  by the CapATL solver yet". See `docs/CapATL/algorithm.md`.
 - LTL: `ltl_to_ctl` is built from the parsed formula instead of regex rewriting.
   Before, `p U !q` was left unrewritten, and `p U q U r` became the left-grouped
-  `A(A(p U q) U r)` although the parser groups it to the right. Now it is
-  `A(p U A(q U r))`. Nested and parenthesised operands such as
-  `((a && b)) U c` are handled. A formula the parser rejects raises a
-  `ValueError` that names it, instead of being passed on unchanged.
-- NatATL, NatATL_Recall and NatATLF read a proposition that starts with `F`, `G`,
-  `X` or `U` (`Fuel`, `Goal`, `Until`) as an operator followed by the rest of the
-  name, so `<{1},1>F Fuel` failed with a CTL syntax error. This is the same
-  change as the NatATL entry under "Changed".
+  `A(A(p U q) U r)` although the parser groups it to the right; now it is
+  `A(p U A(q U r))`. Nested and parenthesised operands such as `((a && b)) U c`
+  work. A formula the parser rejects raises a `ValueError` that names it, instead
+  of being passed on unchanged.
+- NatATL, NatATL_Recall and NatATLF: a name that starts with `F`, `G`, `X` or `U`
+  (`Fuel`, `Goal`, `Until`) is a name, so `<{1},1>F Fuel` parses. Before, it was read
+  as an operator followed by the rest of the name and failed with a CTL syntax error.
 - A comment line (`#` or `//`) inside `Clocks`, `Clock_constraints` or `Invariants`
-  of a timedCGS model is skipped, as in every other section. Before, it was read as
-  a row and the model failed with "Malformed clock constraint" or "Malformed
-  invariant", and a comment after the clocks replaced them.
-- The wheel now includes `model_checker/knowledge/knowledge_bundle.json.gz`.
-  Earlier releases left it out, so an installed package had no documentation
-  bundle. The bundle is rebuilt from the current docs and source.
+  of a `timedCGS` model file is skipped, as in every other section. Before, it was
+  read as a row and the model failed with "Malformed clock constraint" or
+  "Malformed invariant", and a comment after the clocks replaced them.
+- The PyPI package includes `model_checker/knowledge/knowledge_bundle.json.gz`,
+  rebuilt from the current docs and source. Earlier releases left it out, so an
+  installed package had no documentation bundle.
 
 ## [1.7.0] - 2026-11-05
 
