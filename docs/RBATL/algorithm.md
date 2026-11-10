@@ -31,7 +31,7 @@ On each coalition-controlled transition, resource `i` must satisfy
 Shares the bounded ATL solver pattern (`shared/bounded_atl_solver.py`) with
 RABATL; cost derivation differs.
 
-Implementation techniques (transition cache, bit-vector, AST memo, ATL prefilter): [algorithm_design.md](../algorithm_design.md).
+Implementation techniques (transition cache, bit-vector, AST memo): [algorithm_design.md](../algorithm_design.md).
 
 ## Theory vs implementation
 

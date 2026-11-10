@@ -1,7 +1,7 @@
 """Model checking execution pipeline: validation, model loading, and dispatch."""
 
 from collections.abc import Callable
-from typing import Any, Protocol
+from typing import Any
 
 from model_checker.models.model_factory import create_model_parser_for_logic
 from model_checker.utils.error_handler import (
@@ -64,26 +64,14 @@ def execute_model_checking_with_parser(
         )
 
 
-class PrefilterFunc(Protocol):
-    def __call__(
-        self,
-        formula: str,
-        filename: str,
-        *,
-        full_checking: Callable[[str, str], dict[str, Any]],
-    ) -> dict[str, Any]: ...
-
-
 def create_model_checking_entry(
     logic_type: str,
     core_checking_func: Callable[[Any, str], dict[str, Any]],
     pre_validation_func: Callable[[Any], dict[str, Any] | None] | None = None,
-    *,
-    prefilter_func: PrefilterFunc | None = None,
 ) -> Callable[[str, str], dict[str, Any]]:
     """Return a (formula, filename) entry point for a logic-specific checker."""
 
-    def full_checking(formula: str, filename: str) -> dict[str, Any]:
+    def entry_point(formula: str, filename: str) -> dict[str, Any]:
         return execute_model_checking_with_parser(
             formula,
             filename,
@@ -91,11 +79,5 @@ def create_model_checking_entry(
             core_checking_func=core_checking_func,
             pre_validation_func=pre_validation_func,
         )
-
-    if prefilter_func is None:
-        return full_checking
-
-    def entry_point(formula: str, filename: str) -> dict[str, Any]:
-        return prefilter_func(formula, filename, full_checking=full_checking)
 
     return entry_point

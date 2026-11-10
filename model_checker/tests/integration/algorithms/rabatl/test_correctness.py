@@ -53,3 +53,19 @@ class TestRABATLSemantics:
         assert states == {"s0", "s1", "s2", "s3", "s4"}
         init_str = result.get("initial_state", "")
         assert ": True" in init_str
+
+
+@pytest.mark.integration
+@pytest.mark.model_checking
+@pytest.mark.semantic
+class TestRABATLResultSet:
+    """`res` is the exact bounded state set, also when the initial state is False."""
+
+    def test_split_cost_of_the_coalition_decides_each_loop(self, rabatl_model):
+        """r holds at s1, s3, s4; agent 1's cost on their loops is 0, 1 and 2 (`*** s1$0,1,0`,
+        `s3$1,0,1`, `s4$2,1,0`). With bound 1 the loops at s1 and s3 are affordable, s4's is not.
+        """
+        result = model_checking("<1><1>G r", rabatl_model.filename)
+        assert "error" not in result
+        assert extract_states_from_result(result) == {"s1", "s3"}
+        assert ": False" in result["initial_state"]

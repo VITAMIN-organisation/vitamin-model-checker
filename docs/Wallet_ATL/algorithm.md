@@ -32,7 +32,7 @@ ATL-style coalition modalities with wallet guards applied as a static filter on
 state names that currently satisfy the guard from the `Wallets` section. Guards
 do not yet recompute balances along deposit/spend transitions.
 
-Implementation techniques (transition cache, early-stop, ATL prefilter): [algorithm_design.md](../algorithm_design.md).
+Implementation techniques (transition cache, early-stop): [algorithm_design.md](../algorithm_design.md).
 
 ## Theory vs implementation
 

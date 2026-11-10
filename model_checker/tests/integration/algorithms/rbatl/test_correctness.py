@@ -70,3 +70,26 @@ class TestRBATLSemantics:
         false_result = _core_rbatl_checking(rbatl_model, "<1><2>F false")
         assert "error" not in false_result, false_result
         assert extract_states_from_result(false_result) == set()
+
+
+@pytest.mark.integration
+@pytest.mark.model_checking
+@pytest.mark.semantic
+class TestRBATLResultSet:
+    """`res` is the exact bounded state set, also when the initial state is False."""
+
+    def test_bound_below_every_loop_cost_gives_empty_set(self, rbatl_model):
+        """r holds at s1, s3, s4, whose only move is a loop of cost 2 (`*** s1$2:2`, `s3$2:2`, `s4$2:2`).
+
+        With bound 1 no loop is affordable, so no state keeps G r and the set is empty.
+        Plain ATL `<1>G r` would list s1, s3 and s4.
+        """
+        result = model_checking("<1><1>G r", rbatl_model.filename)
+        assert "error" not in result
+        assert extract_states_from_result(result) == set()
+        assert ": False" in result["initial_state"]
+
+    def test_invalid_bound_is_reported_when_atl_is_false(self, rbatl_model):
+        """Bound 0 is outside 1..1000000; it is an error whatever plain ATL says."""
+        result = model_checking("<1><0>G r", rbatl_model.filename)
+        assert "Invalid bound value 0" in result["error"]["message"]

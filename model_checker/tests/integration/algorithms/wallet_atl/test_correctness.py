@@ -96,3 +96,30 @@ class TestWalletATLSemantics:
         )
         assert "error" not in blocked, blocked
         assert extract_states_from_result(blocked) == set()
+
+
+@pytest.mark.integration
+@pytest.mark.model_checking
+@pytest.mark.semantic
+class TestWalletATLResultSet:
+    """`res` is the exact state set, also when the initial state is False."""
+
+    def test_guard_no_state_satisfies_gives_empty_set(self, wallet_atl_model):
+        """Wallets are s0: 5 and s1: 5, so no state meets wallet >= 10 and the set is empty.
+
+        Plain ATL `<1>G q` holds at s1 (q holds there and s1 loops), so an ATL
+        result would wrongly list s1.
+        """
+        result = _core_walletatl_checking(
+            wallet_atl_model, "<< 1 : wallet(1, >= 10) >> G q"
+        )
+        assert "error" not in result
+        assert extract_states_from_result(result) == set()
+        assert ": False" in result["initial_state"]
+
+    def test_guard_every_state_satisfies_keeps_the_atl_set(self, wallet_atl_model):
+        """With wallet >= 0 every state passes the guard, so the set is the ATL one: s1."""
+        result = _core_walletatl_checking(
+            wallet_atl_model, "<< 1 : wallet(1, >= 0) >> G q"
+        )
+        assert extract_states_from_result(result) == {"s1"}

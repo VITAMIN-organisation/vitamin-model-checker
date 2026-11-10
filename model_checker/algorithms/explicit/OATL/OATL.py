@@ -41,6 +41,4 @@ def _core_oatl_checking(cgs, formula):
     return format_model_checking_result(root.value, initial_state, is_satisfied)
 
 
-# No ATL prefilter: agents outside the coalition help the Demon, so
-# <A><n> phi can hold where ATL <A> phi fails.
 model_checking = create_model_checking_entry("OATL", _core_oatl_checking)

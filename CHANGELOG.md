@@ -112,6 +112,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- RBATL, RABATL and Wallet_ATL: when the initial state was False, the result was the
+  state set of plain ATL, which is too large (RBATL `<1><1>G r` on the 6-state fixture
+  listed s1, s3 and s4 instead of none), and an invalid bound such as `<1><0>G r` was
+  accepted. The ATL prefilter is removed, so the full check always runs.
 - CapATL: a proposition name with a letter and a digit (`p1`) was read as a capacity
   reference and rejected as unknown. Every leaf is now a proposition name, as in the other
   logics. Capacities are written `a is c` inside `K`, as the docs say.

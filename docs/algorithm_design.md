@@ -11,7 +11,6 @@ structures, caches, cleanup, and search strategies.
 | Bit-vector target sets | `ATL`, `RBATL`, `RABATL` | `shared/bit_vector.py` |
 | Early-stop in pre-image | `ATL`, `Wallet_ATL` | `ATL/preimage.py` `early_stop` |
 | AST solve memo cache | `RBATL`, `RABATL` (bounded ATL solver) | `shared/bounded_atl_solver.py`, `shared/solver_core.py` |
-| ATL prefilter | `RBATL`, `RABATL`, `Wallet_ATL` | `engine/atl_prefilter.py`; Wallet inlines the same idea in `Wallet_ATL.py` |
 | CapATL lru + state index cache | `CapATL` | `CapATL/utils.py`, `CapATL/CapATL.py` |
 | P-upset precompute | `ICTL`, `IATL` | `ICTL/util/graph.py` `get_preorder` |
 | Zone graph | `TCTL`, `TOL` | `timed_cgs/zone_graph.py` |
@@ -93,30 +92,6 @@ once; recomputing the same denotation wastes work.
 `cache` argument.
 
 **Advantage:** Subtree results reused within one solve.
-
-## ATL Prefilter
-
-**What:** Before the full bounded / wallet-aware check, run a plain ATL check
-on a rewritten formula that ignores extra constraints (cost bounds or wallet
-guards).
-
-**Why:** If the unconstrained ATL property already fails, the stricter property
-cannot hold. Fail fast without cost caches, bounded fixpoints, or wallet
-filtering.
-
-**How:**
-
-- `RBATL`, `RABATL`: `engine/atl_prefilter.py` via
-  `prefilter_func=run_atl_prefilter` and `resource_bounded_atl_to_atl`.
-- `Wallet_ATL`: same early-fail idea inside `_core_walletatl_checking`, not
-  `run_atl_prefilter`. Rewrite with `wallet_atl_to_atl`, then
-  `_core_atl_checking`; if the initial state is already False, return that
-  result and skip `solve_tree`.
-
-OATL must not use it: in OATL the agents outside the coalition side with the
-Demon, so `<A><n> phi` can hold where ATL `<A> phi` fails.
-
-**Advantage:** Cheap rejection for unsatisfiable strategic goals.
 
 ## CapATL Caches And Cleanup
 

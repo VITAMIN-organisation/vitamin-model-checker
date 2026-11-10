@@ -28,7 +28,7 @@ formula when split sums disagree with flat costs.
 Not a separate recursive-modality engine: shares `bounded_atl_solver` with
 RBATL.
 
-Implementation techniques (shared with RBATL: transition cache, bit-vector, AST memo, ATL prefilter): [algorithm_design.md](../algorithm_design.md).
+Implementation techniques (shared with RBATL: transition cache, bit-vector, AST memo): [algorithm_design.md](../algorithm_design.md).
 
 ## Theory vs implementation
 
