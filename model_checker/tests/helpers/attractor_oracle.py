@@ -1,16 +1,12 @@
-"""Hand-written reachability solver, test oracle only.
-
-Used to cross-validate `solver.py` (which delegates to Spot) against an
-independent, dependency-free implementation. Not part of the public API.
-"""
+"""Hand-written reachability solver, used by tests to cross-check the Spot-backed games/solver.py."""
 
 from __future__ import annotations
 
 from collections.abc import Hashable
 
-from ..transition_system import TransitionSystem
-from .game import Game, GameSolution
-from .strategy import Strategy
+from model_checker.automata.games.game import Game, GameSolution
+from model_checker.automata.games.strategy import Strategy
+from model_checker.automata.transition_system import TransitionSystem
 
 
 def attractor(
@@ -19,8 +15,7 @@ def attractor(
     player: int,
     target: set[Hashable],
 ) -> tuple[set[Hashable], Strategy]:
-    """Test oracle: the states from which `player` can force the game into `target`,
-    with a winning strategy."""
+    """The states from which `player` can force the game into `target`, with a winning strategy."""
     attracted = set(target)
     choices: dict[Hashable, Hashable] = {}
     owned = player_states.get(player, set())
@@ -56,7 +51,7 @@ def attractor(
 
 
 def solve_reachability(game: Game, player: int, target: set[Hashable]) -> GameSolution:
-    """Test oracle: solve a reachability game for `player` toward `target`."""
+    """Solve a reachability game for `player` toward `target`."""
     win_region, strategy = attractor(game.arena, game.player_states, player, target)
     opponent = 1 - player
     return GameSolution(

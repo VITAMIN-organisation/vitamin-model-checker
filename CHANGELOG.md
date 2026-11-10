@@ -97,6 +97,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   trace length limit, and every ICTL and IATL frame check. Tests that recomputed the
   code's own formula, checked only types, or tested CTL release handlers that no
   formula reaches are removed.
+- Tests: the automata tests check that the sink added by `complete()` loses under
+  Büchi, co-Büchi and all four parity orientations, and the solver cross-check
+  compares both solvers with hand-computed winning regions. The test-only
+  attractor oracle moves from `model_checker/automata/games/_attractor_oracle.py` to
+  `model_checker/tests/helpers/attractor_oracle.py`, so it no longer ships in the
+  package. Tests of enum members, dataclass defaults and import wiring are removed.
 
 ### Fixed
 
