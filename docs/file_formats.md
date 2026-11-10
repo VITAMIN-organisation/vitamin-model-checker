@@ -309,7 +309,7 @@ The first formula is treated as the primary formula by tools that need one.
 | RBATL | `<1><10,5> F p` | costCGS |
 | RABATL | `<1><2,2> F p` | costCGS |
 | COTL | `<1,3><1> G !q` or `<><0> X p` | ObstructionModel |
-| CapATL | `<{1}> F (K1 p)` | capCGS |
+| CapATL | `<{1}> F g` | capCGS |
 | Wallet_ATL | `<<1>>X auction_active` | WalletCGS |
 | ICTL | `EX e` or `AG (p -> EF q)` | BirelationalMatrix |
 | IATL | `<1>G a` or `[1,2]F goal` | BCGS |

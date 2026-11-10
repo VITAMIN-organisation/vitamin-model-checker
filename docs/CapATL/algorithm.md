@@ -16,8 +16,31 @@ Parser: `parsers/formulas/CapATL/parser.py`
 ```text
 phi ::= ... | <{A}> X phi | <{A}> F phi | <{A}> G phi | <{A}> phi U psi
            | <{A}> (phi U psi) | <{A}> phi R psi | <{A}> (phi R psi)
-           | Ki(phi) | i is prop   -- grammar forms; see theory vs impl
+           | Ka(cap)                         -- a = agent number
+cap ::= a is c | !cap | cap && cap | cap || cap | cap -> cap
+      | true | false | (cap)             -- c = capacity name
 ```
+
+`Ka(cap)` is the knowledge operator K^a_cap(phi) of AAMAS 2024 (grammar p. 125,
+meaning p. 126): "agent a knows that the capacity assignment verifies phi". A
+capacity assignment gives each agent one of its capacities (the model's
+`Capacities_assignment` rows list which ones it may take). `cap`, the paper's
+capacity assignment formula, is written with `a is c` for the paper's `a -> c`:
+`a` is an agent number and `c` a capacity name from the model's `Capacities`
+section. For example, `K2(!(3 is c) && 1 is cop)` says that agent 2 knows that
+agent 3 does not have capacity `c` and agent 1 has `cop`.
+
+- Forms: `K1(...)`, with `kcap1(...)` as the word alias, like `until` for `U`.
+  It may stand alone (`K1(1 is c)`) or inside any formula
+  (`<{1}> F (g && K1(1 is c))`). `a is c` is valid only inside it.
+- Errors: the parentheses are part of the paper's rule, and the paper's `cap` has
+  only `a -> c`, negation and conjunction (p. 126 adds disjunction, implication,
+  true and false as sugar). So `K1 1 is c`, `K1(K2(1 is c))` and `K1(p)` are
+  errors with a message that names the part, and so is an agent out of range.
+- Names: `K1` followed by a letter, digit or `_` (`K1x`, `K12x`) is a
+  proposition name.
+- Precedence: the paper states none inside `cap`; the parser uses the one of the
+  other connectives (`!`, then `&&`, then `||`, then `->`).
 
 `<{A}> phi U psi` and `<{A}> (phi U psi)` build the same tree, and so do the two
 forms of `R` (see
@@ -31,9 +54,11 @@ unsupported.
 ## Semantic denotations
 
 Coalition modalities over capacity-restricted transitions. Release uses a
-greatest fixpoint in the CapATL solver. Knowledge forms `Ki` and agent-scoped
-`i is p` appear in the grammar but are not fully wired through the bottom-up
-solver yet; prefer temporal goals over model atoms until that path is complete.
+greatest fixpoint in the CapATL solver. The solver has no semantics for the
+knowledge operator: model checking a formula that contains `Ka(...)` anywhere
+returns an error of type `validation` with the message "The knowledge operator
+K1(...) is parsed but not evaluated by the CapATL solver yet", instead of a
+result.
 
 Implementation techniques (lru caches + clear, state index cache): [algorithm_design.md](../algorithm_design.md).
 
@@ -42,7 +67,7 @@ Implementation techniques (lru caches + clear, state index cache): [algorithm_de
 | Aspect | Theory | Implementation |
 |---|---|---|
 | Coalition | `<{A}>` | Braces required; no formula `k` |
-| `Ki` / `i is p` | Knowledge / agent props | Parsed; not fully evaluated yet |
+| `Ka(cap)` | Knowledge over capacity assignments | Parsed; model checking returns an error |
 | Capacities | Model constraints | `capCGS` sections + Pre over capacity knowledge |
 
 ## Model-checking pipeline

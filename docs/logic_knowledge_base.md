@@ -442,8 +442,10 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 **Standard Syntax:**
 - **Coalition modality**: `<{A}> phi` (paper-style agent set; capacities constrain
   available actions via the `capCGS` model, not a formula numeric bound).
-- **Knowledge (Capability)**: `Ki p` (Agent `i` has the capability/knowledge of `p`).
-- **Agent Property**: `i is prop` (Agent `i` currently possesses property `prop`).
+- **Knowledge**: K^a_cap(phi) (AAMAS 2024, grammar p. 125, meaning p. 126):
+  "agent a knows that the capacity assignment verifies phi", where phi is a
+  capacity assignment formula built from `a -> c` (agent `a` has capacity `c`),
+  negation and conjunction.
 
 ### Current Implementation
 
@@ -451,9 +453,10 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 
 **Supported Syntax:**
 1.  **Coalition**: `<{agent1,agent2,...}>` (curly braces required; no `, k`).
-2.  **Capability**: `K1(p)`, `K2(K3 p)`.
-3.  **Agent Properties**: `1 is active`, `2 is critical`.
-4.  **Temporal Operators**: `X`, `F`, `G`, `U`, and binary `R` (Release).
+2.  **Knowledge**: `K1(2 is c)`, `K2(!(3 is c) && 1 is cop)`, alias `kcap1(...)`,
+    where `a is c` is the paper's `a -> c`. Accepted forms, errors and precedence
+    are in [the CapATL reference](CapATL/algorithm.md#formula-language).
+3.  **Temporal Operators**: `X`, `F`, `G`, `U`, and binary `R` (Release).
 
 **Validation Rules:**
 > [!NOTE]
@@ -476,15 +479,8 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 | :--- | :--- | :--- |
 | **Coalition** | ⟨A⟩ / `<{A}>` | `<{A}>` (braces required; no formula `k`) |
 | **Capacities** | Model / knowledge | `capCGS` sections + Pre over capacity knowledge |
-| **Capability** | Ki p | Parsed as `Ki (...)`; **not evaluated** by the CapATL solver yet |
-| **Agent Prop** | i is p | Surface syntax documented; agent-scoped `i is p` is not fully wired in the solver |
+| **Knowledge** | K^a_cap(phi) | Parsed as `Ka(...)`; model checking returns a validation error that names the operator |
 | **Temporal** | X, U, R (F/G sugar) | `X, F, G, U, R` (`W` unsupported) |
-
-> [!NOTE]
-> **`Ki` / `i is p`:** These forms appear in the CapATL grammar and docs, but the
-> bottom-up solver has no dedicated knowledge handler yet. Prefer temporal goals
-> over atomic propositions that exist in the model labelling until knowledge
-> operators are wired through.
 
 
 ---
@@ -896,7 +892,7 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 | **OATL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><5>` (Demon budget per step) | costCGS |
 | **OL** | Linear | `<Jk>X`, `F`, `G`, `U`, `R`, `W` | `<J5>` (Demonic) | costCGS |
 | **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U` | `<1><10,5>` (Vectors) | costCGS |
-| **CapATL** | Branching | `<{A}>X`, `F`, `G`, `U`, `R`, `Ki`, `i is p` | `<{1,2}>` | capCGS |
+| **CapATL** | Branching | `<{A}>X`, `F`, `G`, `U`, `R`, `Ka(a is c)` | `<{1,2}>` | capCGS |
 | **COTL** | Branching | `<G><n>X`, `WX`, `F`, `G`, `U`, `R`, `W` | `<1,3><1>`, `<><0>` (legion of demons, budget per step) | ObstructionModel |
 | **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
 | **ICTL** | Branching | `EX`, `AX`, `EF`, `AF`, `EG`, `AG`, `EU`, `AU`, `ER`, `AR` | `E`, `A`; `->` / `not` intuitionistic | BirelationalMatrix |

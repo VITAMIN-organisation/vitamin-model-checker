@@ -18,7 +18,20 @@ from model_checker.algorithms.explicit.shared.result_formatters import (
 )
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.parsers.formulas.CapATL.parser import KCAP_OPERATOR_PATTERN
 from model_checker.utils.error_handler import create_error_response
+
+
+def _knowledge_operator(node) -> str | None:
+    """The first knowledge operator (`K1`) in the parse tree, or None."""
+    if isinstance(node, str):
+        return node if KCAP_OPERATOR_PATTERN.match(node) else None
+    if isinstance(node, tuple):
+        for child in node:
+            found = _knowledge_operator(child)
+            if found:
+                return found
+    return None
 
 
 def _validate_capatl_model(cgs):
@@ -41,6 +54,16 @@ def _core_capatl_checking(cgs, formula):
     if res_parsing is None:
         error_msg = parser.errors[0] if parser.errors else "Syntax error in formula"
         return create_error_response("syntax", error_msg)
+
+    # The solver has no K semantics yet; without this check build_tree reports the
+    # agent of `a is c` as a missing atom, or solve_tree skips K and fails later.
+    knowledge_op = _knowledge_operator(res_parsing)
+    if knowledge_op:
+        return create_error_response(
+            "validation",
+            f"The knowledge operator {knowledge_op}(...) is parsed but not "
+            "evaluated by the CapATL solver yet",
+        )
 
     build_state_cache(cgs)
 

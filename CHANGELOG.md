@@ -74,6 +74,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- CapATL: the knowledge operator K^a_cap of AAMAS 2024 (p. 125-126) parses,
+  typed `K1(1 is c)` or `kcap1(1 is c)`, alone or inside a formula such as
+  `<{1}> F (g && K2(3 is c || 3 is cop))`. Inside the parentheses only
+  `agent is capacity`, `!`, `&&`, `||`, `->`, `true` and `false` are allowed. A
+  `K1` without parentheses, a `K` inside another, a proposition inside it and an
+  agent out of range are errors that name the part. Before, no K formula parsed:
+  `K1` was read as a proposition name, and `K 1 (1 is c)` returned no result and
+  no error (`test_capatl_knowledge_operator.py`). See `docs/CapATL/algorithm.md`.
+- CapATL: model checking a formula that contains K returns a `validation` error,
+  "The knowledge operator K1(...) is parsed but not evaluated by the CapATL
+  solver yet". The solver has no K semantics and would skip the operator.
 - LTL: `ltl_to_ctl` is built from the parsed formula instead of regex rewriting.
   Before, `p U !q` was left unrewritten, and `p U q U r` became the left-grouped
   `A(A(p U q) U r)` although the parser groups it to the right. Now it is

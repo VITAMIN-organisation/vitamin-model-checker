@@ -4,11 +4,16 @@ What it handles:
 - CapATL formulas with coalition-prefixed temporal operators (U, R, X, F, G)
   and boolean connectives.
 - Coalition syntax `<{1,2}>` (paper-style agent set; no numeric formula bound).
-- Capability atoms of the form `K1 p`, `K2 (K3 p)`, and agent propositions `1is p`.
+- Knowledge operator `K1(1 is c1 && !(2 is c2))` (alias `kcap1(...)`): agent 1
+  knows that the capacity assignment satisfies the capacity formula inside, which
+  holds only `agent is capacity`, `!`, `&&`, `||`, `->`, `true` and `false`
+  (AAMAS 2024 p. 125-126). It may stand alone or inside any formula.
 - Symbolic boolean operator `&&` and textual `and`, `not`;
   release/until/next/eventually/globally operators `R`, `U`, `X`, `F`, `G`.
 
 What it rejects:
+- `K1` without parentheses, `K` inside a capacity formula, and propositions
+  inside a capacity formula: the paper's grammar has none of these.
 - Weak Until (W): CapATL path formulas use X, U and R (G/F are supported sugar).
 - Formula bound `<{A}, k>` (numeric k is not CapATL; capacities live in the model).
 - Uppercase textual boolean keywords; uppercase is limited to modal letters U/R/X/F/G/K.
@@ -54,6 +59,7 @@ _CAPATL_VALID_OPERATORS = frozenset(
         "EVENTUALLY",
         "GLOBALLY",
         "!",
+        "IS",
     }
 )
 
@@ -63,7 +69,13 @@ _COALITION_OPERATOR_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-_KCAP_PATTERN = re.compile(r"^K\d+$", re.IGNORECASE)
+# K^a_cap of the paper, typed as `K1` or `kcap1`; `K1x` stays a proposition name.
+_KCAP_TOKEN = r"(?:K|kcap)(\d+)(?![a-zA-Z0-9_])"
+# Group 2 is empty when the operator has no parenthesis after it.
+_KCAP_IN_FORMULA = re.compile(rf"(?<![a-zA-Z0-9_]){_KCAP_TOKEN}(\s*\()?")
+# AST value of the knowledge operator after the lexer normalizes `kcap1` to `K1`.
+KCAP_OPERATOR_PATTERN = re.compile(r"^K\d+$")
+_AGENT_PATTERN = re.compile(r"^\d+$")
 # Reject NatATL-looking `<{agents}, k>`; CapATL coalitions have no formula bound.
 _FORMULA_BOUND_PATTERN = re.compile(rf"<{{{AGENT_LIST}}},\s*-?\d+>")
 
@@ -106,9 +118,12 @@ class CapATLParser(BaseLogicParser):
         return t
 
     def t_KCAP(self, t):
-        r"K(?![a-zA-Z0-9_])|kcap\b"
-        t.value = "K"
+        agent = re.sub(r"\D", "", t.value)
+        # int() so that K01 and K1 are one operator.
+        t.value = f"K{int(agent)}"
         return t
+
+    t_KCAP.__doc__ = _KCAP_TOKEN
 
     def t_COALITION(self, t):
         match = re.match(CAPATL_COALITION_TOKEN, t.value)
@@ -143,30 +158,56 @@ class CapATLParser(BaseLogicParser):
         self._prefix_unary(p, p[0], coalition_str + p[2])
 
     def p_expression_kcap(self, p):
-        """expression : KCAP AGENT expression2"""
-        p[0] = (p[1] + p[2], p[3])
-
-    def p_expression_capformula_group(self, p):
-        """expression2 : LPAREN expression2 RPAREN"""
-        p[0] = p[2]
-
-    def p_expression_capformula_binary(self, p):
-        """expression2 : expression2 AND expression2
-        | expression2 OR expression2
-        | expression2 IMPLIES expression2"""
-        p[0] = (p[2], p[1], p[3])
-
-    def p_expression_capformula_not(self, p):
-        """expression2 : NOT expression2"""
-        p[0] = (p[1], p[2])
-
-    def p_expression_capformula_is(self, p):
-        """expression2 : AGENT IS PROP"""
+        """expression : KCAP LPAREN capformula RPAREN"""
+        self._check_agent(p[1][1:], p[1])
         p[0] = (p[1], p[3])
 
-    def p_expression_capformula_kcap(self, p):
-        """expression2 : KCAP AGENT expression2"""
-        p[0] = (p[1] + p[2], p[3])
+    def p_capformula_group(self, p):
+        """capformula : LPAREN capformula RPAREN"""
+        p[0] = p[2]
+
+    def p_capformula_binary(self, p):
+        """capformula : capformula AND capformula
+        | capformula OR capformula
+        | capformula IMPLIES capformula"""
+        p[0] = (p[2], p[1], p[3])
+
+    def p_capformula_not(self, p):
+        """capformula : NOT capformula"""
+        p[0] = (p[1], p[2])
+
+    def p_capformula_constant(self, p):
+        """capformula : TRUE
+        | FALSE"""
+        p[0] = p[1]
+
+    def p_capformula_is(self, p):
+        """capformula : AGENT IS PROP"""
+        self._check_agent(p[1], f"{p[1]} is {p[3]}")
+        p[0] = ("is", p[1], p[3])
+
+    def p_capformula_kcap(self, p):
+        """capformula : KCAP LPAREN capformula RPAREN"""
+        self._log_error(
+            f"{p[1]}(...) inside a capacity formula: CapATL has no nested "
+            "knowledge operator"
+        )
+        p[0] = (p[1], p[3])
+
+    def p_capformula_prop(self, p):
+        """capformula : PROP"""
+        self._log_error(
+            f"'{p[1]}' inside K(...): a capacity formula holds only "
+            "'agent is capacity', !, &&, ||, ->, true and false"
+        )
+        p[0] = p[1]
+
+    def _check_agent(self, agent: str, where: str) -> None:
+        if not 1 <= int(agent) <= self.max_coalition:
+            self._log_error(
+                f"Agent {agent} in '{where}' must be between 1 and "
+                f"{self.max_coalition}"
+            )
 
     # --- Validation ---
     def parse(self, formula, n_agent=0, **kwargs):
@@ -191,13 +232,22 @@ class CapATLParser(BaseLogicParser):
                 "(capacities are defined in the capCGS model)",
             )
 
+        kcaps = list(_KCAP_IN_FORMULA.finditer(formula))
+        for kcap in kcaps:
+            if kcap.group(2) is None:
+                op = kcap.group(0)
+                return (
+                    False,
+                    f"'{op}' needs parentheses around its capacity formula, "
+                    f"as in {op}(1 is c)",
+                )
+
         has_coalition = re.search(r"<\{[\d,]+\}>", formula)
-        has_knowledge_op = re.search(r"K\d+\s*\(", formula, re.IGNORECASE)
-        if not (has_coalition or has_knowledge_op):
+        if not (has_coalition or kcaps):
             return (
                 False,
                 "CapATL requires either coalition modalities <{coalition}> "
-                "or knowledge operators K(agent)",
+                "or knowledge operators K1(...)",
             )
 
         return True, None
@@ -211,5 +261,5 @@ class CapATLParser(BaseLogicParser):
             result,
             _CAPATL_VALID_OPERATORS,
             coalition_pattern=_COALITION_OPERATOR_PATTERN,
-            extra_atom_patterns=(_KCAP_PATTERN,),
+            extra_atom_patterns=(KCAP_OPERATOR_PATTERN, _AGENT_PATTERN),
         )

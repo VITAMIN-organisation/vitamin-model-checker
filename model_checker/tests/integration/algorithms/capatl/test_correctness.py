@@ -38,6 +38,12 @@ class TestCapATLErrorHandling:
         result = _core_capatl_checking(capatl_model, "<{1,2},5>F p")
         assert "error" in result
 
+    def test_capatl_knowledge_operator_is_not_evaluated_yet(self, capatl_model):
+        """The solver has no K semantics; it says so instead of skipping K."""
+        result = _core_capatl_checking(capatl_model, "<{1}>F K2(3 is c)")
+        assert result["error"]["type"] == "validation"
+        assert "K2(...) is parsed but not evaluated" in result["error"]["message"]
+
     def test_capatl_empty_coalition_rejected(self, capatl_model):
         """Empty coalition modality is invalid."""
         result = _core_capatl_checking(capatl_model, "<>F p")
