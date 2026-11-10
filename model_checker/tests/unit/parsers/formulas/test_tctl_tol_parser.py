@@ -181,3 +181,21 @@ def test_tol_boolean_constants_and_hash_at(formula, value):
     ast = parser.parse(formula)
     assert isinstance(ast, TolBooleanConst)
     assert ast.value is value
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("formula", "named"),
+    [
+        ("AX p", "'AX' at position 1"),
+        ("EX p", "'EX' at position 1"),
+        ("X p", "'X' at position 1"),
+        ("AG (p -> AX q)", "'AX' at position 10"),
+        ("A next p", "'A next' at position 1"),
+    ],
+)
+def test_tctl_has_no_next_operator(formula, named):
+    parser = FormulaParserFactory.get_parser_instance("TCTL")
+    assert parser.parse(formula) is None
+    [error] = parser.errors
+    assert error.startswith(f"TCTL has no next operator ({named})"), error

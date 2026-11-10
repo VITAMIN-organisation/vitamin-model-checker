@@ -20,7 +20,17 @@ representation of the regional transition system (RTS).
 | `rsat` labelling | Bottom-up evaluation into `satisfying_regions` per subformula |
 
 Path quantifiers are `E` and `A`. Temporal operators are `F`, `G`, and `U`. There is
-no `X` operator (timed systems do not have an untimed next step).
+no `X` operator, as in the three TCTL sources in `docs/papers/`. Alur, Courcoubetis
+and Dill (`IC93.pdf`, Information and Computation 1993, p. 10) write "TCTL has no
+next-time operator [...] because if time is dense then, by definition, there is no
+unique next time". The Alur thesis grammar (`Alur-thesis.pdf`, Definition 5.1,
+p. 144) has none, and Anderson and Thiagarajan
+(`TCTL-Anderson-Thiagarajan-ch6.pdf`, p. 87) write "there is no EX or AX".
+
+`X p`, `AX p`, `EX p` and `A next p` are rejected with a message that quotes the
+operator, such as "TCTL has no next operator ('AX' at position 1): time is dense,
+so there is no unique next state". Names such as `Xray` and `nextstate` are
+propositions.
 
 API results project regions to **location names** where at least one region
 satisfies the formula. Initial-state satisfaction holds when any region at the

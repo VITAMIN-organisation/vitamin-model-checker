@@ -153,7 +153,7 @@ without offering two readings; see [the NatSL reference](NatSL/algorithm.md#supp
 
 ### Operators and names
 
-Temporal operators (`X`, `F`, `G`, `U`, and in CTL, ICTL and TCTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`) are words of their own. Follow one with a space, `(` or `!`: `F p`, `F (p && q)`, `F !p`.
+Temporal operators (`X`, `F`, `G`, `U`, and in CTL and ICTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`; TCTL has no `X`, see [the TCTL reference](TCTL/algorithm.md)) are words of their own. Follow one with a space, `(` or `!`: `F p`, `F (p && q)`, `F !p`.
 
 An operator written with no space before a name, such as `Fp` or `FFuel`, is part of that name, so no logic reads it as an operator applied to the name. A name that only starts with an operator letter, such as `Fuel` or `Goal`, is valid when it stands alone: in `F Fuel` the space makes `F` the operator and `Fuel` the name. A binary operator follows the same rule: `pUq` is one name, and `p U q` is the Until.
 

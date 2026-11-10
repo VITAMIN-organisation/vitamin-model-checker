@@ -35,6 +35,12 @@ require_dist() {
     || die "dist/ was not built from HEAD $(git rev-parse --short HEAD): run make release-check"
 }
 
+# Reads the upload token for $1 (a variable name) from the git-ignored .env, so it is not typed each time.
+load_token() {
+  if [ -f .env ]; then set -a; . ./.env; set +a; fi
+  if [ -n "${!1:-}" ]; then export UV_PUBLISH_TOKEN="${!1}"; fi
+}
+
 confirm() {
   echo
   echo "$1"
@@ -61,6 +67,7 @@ cmd_check() {
 # Arguments go to uv publish; for publish-test the second one is the upload URL.
 cmd_publish() {
   local target=${2:-PyPI}
+  if [ $# -gt 0 ]; then load_token TEST_PYPI_API_TOKEN; else load_token PYPI_API_TOKEN; fi
   require_clean_tree
   require_changelog
   require_dist

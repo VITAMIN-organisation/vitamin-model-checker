@@ -29,6 +29,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- TCTL rejects the next operator (`X p`, `AX p`, `EX p`, `A next p`) with a message
+  such as "TCTL has no next operator ('AX' at position 1): time is dense, so there
+  is no unique next state", following Alur, Courcoubetis and Dill (Information and Computation 1993,
+  p. 10). Before, the error was "Syntax error near token 'X'". Names such as `Xray`
+  still parse (`test_tctl_tol_parser.py`).
 - NatATL, NatATL_Recall and NatATLF reject a bound `k` below 1, such as `<{1}, 0>F p`,
   with "Invalid bound 0: must be at least 1". Before, `k = 0` parsed and the solver
   returned false for every formula.

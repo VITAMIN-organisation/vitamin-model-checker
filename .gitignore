@@ -45,6 +45,9 @@ benchmark_summaries/
 .vscode/
 .idea/
 
+# Local secrets (PyPI tokens for scripts/release.sh)
+.env
+
 # Virtual environments
 .venv/
 venv/
