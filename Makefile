@@ -1,9 +1,11 @@
 # Intended to be run from model_checker/ or project root.
 
-.PHONY: help install build clean format lint typecheck test test-models
+.PHONY: help install build clean format lint typecheck test test-models release-check publish-test publish tag push-tag release
 
 # Configuration
 PYTHON := python3
+# Command that uploads to PyPI; set UV="echo uv" to see the command without uploading.
+UV ?= uv
 # Directory containing this Makefile (model_checker)
 MKFILE_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 # Project root (local directory)
@@ -18,6 +20,14 @@ help:
 	@echo "  --- Build & Cleanup ---"
 	@echo "  make build         Build distribution package"
 	@echo "  make clean         Remove Python cache and egg-info"
+	@echo ""
+	@echo "  --- Release (version from pyproject.toml) ---"
+	@echo "  make release-check Lint, typecheck, fast tests, build, twine check; uploads and tags nothing"
+	@echo "  make publish-test  Upload dist/ to TestPyPI (asks you to type the version)"
+	@echo "  make publish       Upload dist/ to PyPI (asks you to type the version)"
+	@echo "  make tag           Create the local tag v<version>"
+	@echo "  make push-tag      Push the tag to origin"
+	@echo "  make release       release-check, publish, tag, push-tag in order"
 	@echo ""
 	@echo "  --- Quality ---"
 	@echo "  make format        Format code with black"
@@ -75,3 +85,27 @@ test:
 	@echo "Running unit and integration tests..."
 	@cd $(PROJECT_ROOT) && $(PYTHON) -m pytest -m "not slow" model_checker/tests/
 	@echo "Done."
+
+# Release: the logic is in scripts/release.sh. Anything that uploads or tags asks for the version.
+RELEASE := UV="$(UV)" PYTHON="$(PYTHON)" bash "$(PROJECT_ROOT)/scripts/release.sh"
+
+release-check:
+	@$(RELEASE) check
+
+publish-test:
+	@$(RELEASE) publish-test
+
+publish:
+	@$(RELEASE) publish
+
+tag:
+	@$(RELEASE) tag
+
+push-tag:
+	@$(RELEASE) push-tag
+
+release:
+	@$(MAKE) release-check
+	@$(MAKE) publish
+	@$(MAKE) tag
+	@$(MAKE) push-tag

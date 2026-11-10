@@ -69,3 +69,8 @@ site/
 experiments/natsl/results/
 
 docs/papers
+
+# Agent instructions and plans, local only
+.claude/
+CLAUDE.md
+CLAUDE.local.md
