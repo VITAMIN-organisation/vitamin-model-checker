@@ -342,10 +342,10 @@ only when the result depends on those missing costs.
 
 ### Theoretical Background
 
-OL is the linear-time cost-bounded logic paired with OATL on `costCGS` models. Formulas use a demonic cost prefix `<Jk>` before temporal operators.
+OL (Obstruction Logic, ECAI 2023) is a game against a Demon on `costCGS` models: `<Jk> phi` holds when the Demon, with a budget of `k` at each step, can disable edges so that every remaining path satisfies `phi`. It is OATL with the coalition of all agents. The [OL algorithm reference](OL/algorithm.md) gives the rules and the sources.
 
 **Standard Syntax:**
-- **Cost prefix**: `<Jk> phi` where `k` is a positive integer bound.
+- **Cost prefix**: `<Jk> phi` where `k` is a natural number, 0 included.
 
 ### Current Implementation
 
@@ -359,7 +359,7 @@ OL is the linear-time cost-bounded logic paired with OATL on `costCGS` models. F
 **Validation Rules:**
 - **Mandatory `J`**: OL prefixes must use `<Jk>`, not bare `<k>`.
 - **Bound requirement**: Every temporal operator must be prefixed with `<Jk>`.
-- **Positive bound**: `k >= 1`; `<J0>` is rejected.
+- **Bound**: `k >= 0` with no leading zero; `<J0>` is valid and `<J01>` is rejected.
 
 **Formula Examples:**
 ```text
@@ -374,11 +374,7 @@ OL is the linear-time cost-bounded logic paired with OATL on `costCGS` models. F
 | :--- | :--- | :--- |
 | **Cost prefix** | `<Jk>` | `<Jk>` (requires `J`) |
 | **Temporal ops** | X, F, G, U | X, F, G, U, R, W |
-| **Cost semantics (F/G/U/R/W)** | Path budget | **Accumulated** path cost `<= k` |
-| **Cost semantics (X)** | Step budget | **Per-step** transition cost `<= k` |
-
-> [!NOTE]
-> **Cost bound semantics:** For `F`, `G`, `U`, `R`, and `W`, bound `k` limits the **sum of transition costs along the considered path**. For `X`, `k` limits only the **next** transition. This differs from OATL, where the budget limits what the Demon erases at each step.
+| **Cost semantics** | Demon budget `k` at each step | Same, through the OATL operators with the coalition of all agents |
 
 ---
 
@@ -801,8 +797,8 @@ j.(j<=7 U goal)
 **Temporal operators:** `F`, `G`, `U`, `R`, `W` (paper); `X` (VITAMIN extension).
 
 **Cost semantics:** `k` is a **per-position** demonic deactivation budget (paper
-obstruction game), not cumulative path cost. This differs from OL (`<Jk>` uses
-accumulated cost for `F`/`G`/`U`/`R`/`W`).
+obstruction game), not cumulative path cost. OL (`<Jk>`) reads its budget the
+same way.
 
 **Freeze:** `j.phi` resets formula clock `j` to `0` at the current state.
 

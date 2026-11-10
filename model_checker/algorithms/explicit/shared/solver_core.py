@@ -14,9 +14,6 @@ def solve_formula_tree(
     binary_key_fn: Callable[[Any, Any], str | None],
     boolean_keys: set[str],
     extra_args: tuple = (),
-    ternary_map: dict[str, Any] | None = None,
-    ternary_key_fn: Callable[[Any, Any], str | None] | None = None,
-    ternary_handler: Callable | None = None,
     cache: dict | None = None,
 ) -> None:
     """Evaluate the formula tree bottom-up, storing satisfying states at each node."""
@@ -41,9 +38,6 @@ def solve_formula_tree(
             binary_key_fn,
             boolean_keys,
             extra_args,
-            ternary_map,
-            ternary_key_fn,
-            ternary_handler,
             cache,
         )
     if node.right is not None:
@@ -57,9 +51,6 @@ def solve_formula_tree(
             binary_key_fn,
             boolean_keys,
             extra_args,
-            ternary_map,
-            ternary_key_fn,
-            ternary_handler,
             cache,
         )
 
@@ -72,14 +63,6 @@ def solve_formula_tree(
             else:
                 unary_map[key](cgs, node, *extra_args)
     elif node.left is not None and node.right is not None:
-        if ternary_key_fn and ternary_map and ternary_handler:
-            key = ternary_key_fn(parser_instance, val)
-            if key and key in ternary_map:
-                ternary_handler(cgs, node, ternary_map[key])
-                if cache is not None:
-                    cache[node_key] = node.value
-                return
-
         key = binary_key_fn(parser_instance, val)
         if key and key in binary_map:
             if key in boolean_keys:

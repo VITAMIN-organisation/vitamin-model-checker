@@ -118,8 +118,8 @@ Implementation (`preimage.py`):
   location names: discrete or timed `Pred(Z)`, then filter by `triangle`.
 
 **Cost budget:** `k` is a **per-position** demonic budget (fresh at each step of the
-obstruction game), not cumulative path cost. This matches the paper and differs
-from OL in VITAMIN, which uses accumulated shortest-path cost for `F`/`G`/`U`/`R`/`W`.
+obstruction game), not cumulative path cost. This matches the paper, and OL in
+VITAMIN reads its budget the same way.
 
 Delay transitions (`d` in `Sigma_delta`) have cost `0` in the matrix; timed
 pre-images use the zone graph.

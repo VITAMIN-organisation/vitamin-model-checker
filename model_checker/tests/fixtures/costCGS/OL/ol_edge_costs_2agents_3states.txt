@@ -1,0 +1,27 @@
+# MODEL: Two agents, 3 states (s0-s2), edges with costs and no actions.
+
+# PURPOSE: The Kripke model of OL (ECAI 2023, Definition 2): each edge has one
+# cost. Transition_With_Costs gives one cost per agent, summed into the edge cost.
+
+# LOGIC: OL
+
+# DESCRIPTION: s0 goes to s1 (cost 1:1, so 2) and to goal s2 (cost 1:0, so 1).
+# Keeping every path from s0 in goal means disabling the edge to s1, which costs 2.
+
+Transition_With_Costs
+0 1:1 1:0
+0 1:0 0
+0 0 1:0
+
+Name_State
+s0 s1 s2
+Initial_State
+s0
+Atomic_propositions
+goal
+Labelling
+0
+0
+1
+Number_of_agents
+2

@@ -70,6 +70,15 @@ class TestOATLErrorHandling:
         assert "B at s0" in result["error"]["message"]
         assert "['s0']" in result["error"]["message"]
 
+    def test_edge_only_model_refuses_a_partial_coalition(self, test_data_dir):
+        """Transition_With_Costs has no actions, so agent 1's choices alone are undefined."""
+        model_file = (
+            test_data_dir / "costCGS" / "OL" / "ol_edge_costs_2agents_3states.txt"
+        )
+        error = model_checking("<1><2>X goal", str(model_file))["error"]
+        assert error["type"] == "model"
+        assert "Coalition <1> needs the agents' actions" in error["message"]
+
     def test_missing_cost_that_cannot_change_the_result_is_ignored(self, temp_file):
         """B (no cost) misses p at first, but s2 then reaches p, so nothing is erased."""
         content = _one_agent_model(

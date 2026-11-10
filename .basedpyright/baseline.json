@@ -780,16 +780,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/OL/solver.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 40,
-                    "endColumn": 44,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/algorithms/explicit/SolutionConcepts/Solution_Concepts.py": [
             {
                 "code": "reportArgumentType",

@@ -1,0 +1,37 @@
+# MODEL: One agent, 4 states (s0-s3), where the Demon's budget decides OL formulas.
+
+# PURPOSE: OL semantics of ECAI 2023: each step the Demon disables edges whose
+# costs sum to at most the bound, never all edges of a state.
+
+# LOGIC: OL
+
+# DESCRIPTION: s0 has three edges: to s1 (bad, cost 2), to s2 (goal, cost 1) and
+# to s3 (bad, cost 1). Keeping every path out of bad from s0 means disabling the
+# edges to s1 and s3, which costs 3. s1, s2 and s3 only loop.
+
+Transition
+0 A B C
+0 D 0 0
+0 0 E 0
+0 0 0 H
+
+Name_State
+s0 s1 s2 s3
+Initial_State
+s0
+Costs_for_actions
+A s0$2
+B s0$1
+C s0$1
+D s1$1
+E s2$1
+H s3$1
+Atomic_propositions
+goal bad
+Labelling
+0 0
+0 1
+1 0
+0 1
+Number_of_agents
+1

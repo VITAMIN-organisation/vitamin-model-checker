@@ -61,11 +61,10 @@ model_checker/algorithms/explicit/<Logic>/
 | Classical branching | `CTL`, `ATL`, `ATLF` | `CGS` | Pre-image + fixpoints |
 | Automata-theoretic | `ATL_STAR` | `CGS` | LTL to deterministic parity automaton, producted with the CGS, solved as a 2-player game (not pre-image/fixpoints) |
 | Strategy-bounded | `NatATL`, `NatATLF`, `NatSL` | `CGS` | Strategy search / pruning |
-| Cost / resource / wallet | `OATL`, `RBATL`, `RABATL`, `CapATL`, `Wallet_ATL` | `costCGS` / `capCGS` / `WalletCGS` | Bound-aware coalition operators |
+| Cost / resource / wallet | `OATL`, `OL`, `RBATL`, `RABATL`, `CapATL`, `Wallet_ATL` | `costCGS` / `capCGS` / `WalletCGS` | Bound-aware coalition operators ([OL](OL/algorithm.md) is OATL with the coalition of all agents) |
 | Demon obstruction | `COTL` | `ObstructionModel` | Legion one-step operators + fixpoints |
 | Intuitionistic | `ICTL`, `IATL` | `BirelationalMatrix` / `BCGS` | Upward closure + dual Pre |
 | Timed | `TCTL`, `TOL` | `timedCGS` | Zone graph + regional / obstruction solve |
-| Linear cost | `OL` | `costCGS` | Demonic cost prefix on paths |
 
 ## Reading Path
 

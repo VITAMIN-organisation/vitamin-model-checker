@@ -1,87 +1,29 @@
-"""Bottom-up evaluation of OL formula trees."""
+"""Bottom-up evaluation of OL formula trees.
 
-from model_checker.algorithms.explicit.OL.operators import (
-    TERNARY_EVALUATORS,
-    handle_demonic_eventually,
-    handle_demonic_globally,
-    handle_demonic_next,
-    handle_demonic_ternary,
-)
-from model_checker.algorithms.explicit.shared.boolean_operators import (
-    handle_and,
-    handle_implies,
-    handle_not,
-    handle_or,
-)
-from model_checker.algorithms.explicit.shared.solver_core import solve_formula_tree
-from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+OL `<Jn> theta` is OATL `[[Ag]]^n theta` with the coalition of all agents (AAMAS
+2024, section 6), so the OATL operators do the work: at each step the Demon
+erases joint actions costing at most n in total, never all of them, and every
+remaining path must satisfy theta (ECAI 2023, Definitions 3-4). `W` is ECAI
+2023's abbreviation `<n>(phi W psi) := <n>(psi R (phi or psi))`.
+"""
 
-_UNARY = {
-    "NOT": handle_not,
-    "DEMONIC_GLOBALLY": handle_demonic_globally,
-    "DEMONIC_NEXT": handle_demonic_next,
-    "DEMONIC_EVENTUALLY": handle_demonic_eventually,
-}
-_BINARY = {
-    "OR": handle_or,
-    "AND": handle_and,
-    "IMPLIES": handle_implies,
-}
+from model_checker.algorithms.explicit.OATL.solver import solve_demonic_tree
+from model_checker.parsers.syntax_patterns import OL_DEMONIC_BOUND_PREFIX_RE
 
 
-def _ol_unary_key(parser_instance, val):
-    if parser_instance.verify("NOT", val):
-        return "NOT"
-    if parser_instance.verify("DEMONIC", val):
-        if parser_instance.verify("GLOBALLY", val):
-            return "DEMONIC_GLOBALLY"
-        if parser_instance.verify("NEXT", val):
-            return "DEMONIC_NEXT"
-        if parser_instance.verify("EVENTUALLY", val):
-            return "DEMONIC_EVENTUALLY"
-    return None
+def _all_agents_prefix_reader(cgs):
+    """Read `<Jn>` as the coalition of every agent with Demon budget n."""
+    all_agents = ",".join(str(i) for i in range(1, cgs.get_number_of_agents() + 1))
+
+    def read_prefix(token: str) -> tuple[str, int]:
+        match = OL_DEMONIC_BOUND_PREFIX_RE.match(token)
+        if match is None:
+            raise ValueError(f"OL operator '{token}' has no <Jn> prefix")
+        return all_agents, int(match.group(1))
+
+    return read_prefix
 
 
-def _ol_ternary_key(parser_instance, val):
-    if not parser_instance.verify("DEMONIC", val):
-        return None
-    if parser_instance.verify("UNTIL", val):
-        return "DEMONIC_UNTIL"
-    if parser_instance.verify("RELEASE", val):
-        return "DEMONIC_RELEASE"
-    if parser_instance.verify("WEAK", val):
-        return "DEMONIC_WEAK"
-    return None
-
-
-def _ol_binary_key(parser_instance, val):
-    if parser_instance.verify("OR", val):
-        return "OR"
-    if parser_instance.verify("AND", val):
-        return "AND"
-    if parser_instance.verify("IMPLIES", val):
-        return "IMPLIES"
-    return None
-
-
-def solve_tree(cgs, node, cache: dict = None):
-    """Recursively solve the OL formula tree."""
-    if cache is None:
-        cache = {}
-
-    parser = FormulaParserFactory.get_parser_instance("OL")
-    solve_formula_tree(
-        cgs,
-        node,
-        parser,
-        _UNARY,
-        _BINARY,
-        _ol_unary_key,
-        _ol_binary_key,
-        {"NOT", "AND", "OR", "IMPLIES"},
-        extra_args=(),
-        ternary_map=TERNARY_EVALUATORS,
-        ternary_key_fn=_ol_ternary_key,
-        ternary_handler=handle_demonic_ternary,
-        cache=cache,
-    )
+def solve_tree(cgs, root) -> None:
+    """Replace each node value with the set of states satisfying its subformula."""
+    solve_demonic_tree(cgs, root, "OL", "DEMONIC", _all_agents_prefix_reader(cgs))

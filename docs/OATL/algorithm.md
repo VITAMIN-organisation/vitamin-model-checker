@@ -28,6 +28,13 @@ check then fails, naming the formula, the states and the actions, only when the
 result of a modal subformula at some state, not only the initial one, depends
 on those costs. To decide this, each fixpoint is run with missing costs at +inf
 and at 0, and the two results must agree. A missing cost is never silently 0.
+The error has type `model`. A state's only joint action needs no cost, since the
+Demon may never erase all actions of a state.
+
+A model written with `Transition_With_Costs` gives each edge a cost and no
+joint actions. Only the coalition of all agents can be read on it (that is what
+[OL](../OL/algorithm.md) uses); any other coalition is a `model` error, because
+the agents' separate choices are not in the model.
 
 ## Formula language
 

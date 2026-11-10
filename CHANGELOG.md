@@ -112,6 +112,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- OL follows its paper (ECAI 2023, Definitions 3-4). In `<Jk> phi` a Demon, at
+  each step, disables edges of the current state whose costs sum to at most `k`,
+  never all of them, and every remaining path must satisfy `phi`. Before, `k`
+  limited the total cost of the cheapest path, a reading the paper does not
+  define, and the `W` operator swapped the two arguments of the `R` operator. For
+  example, on `ol_testvitamin_2agents_8states.txt` the formula `<J26> F goal` was
+  False although the only path from state 0 reaches goal. OL runs the OATL
+  operators with the coalition of all agents, as AAMAS 2024 (section 6) relates
+  the two logics. `<J0>` is valid, since the paper takes the bound in N0, and
+  `<J01>` is refused with a message that names it. `Transition_With_Costs` models
+  give each cell as one edge with its cost (see `docs/OL/algorithm.md`,
+  `model_checker/tests/integration/algorithms/ol/test_correctness.py`).
+- OL results in the VITAMIN Workbench change with the fix above; the Workbench is
+  updated in its own repository.
+- OATL: a missing action cost that decides a result is an error of type `model`,
+  not `system`. A coalition other than all agents on a `Transition_With_Costs`
+  model is a `model` error, because such a model has no joint actions.
 - TCTL and TOL: a name the model does not declare is a semantic error that names
   it. Before, it was read as a proposition false everywhere, so `AG !zz` held. LTL's
   Nash and sure-win functions (`model_checking_sure_win`, `model_checking_exists_nash`

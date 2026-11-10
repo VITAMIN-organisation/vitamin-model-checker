@@ -4,7 +4,10 @@ import math
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from model_checker.algorithms.explicit.shared.cost_utils import cost_to_scalar
+from model_checker.algorithms.explicit.shared.cost_utils import (
+    cost_to_scalar,
+    edge_cell_cost,
+)
 from model_checker.parsers.game_structures.cgs.cgs_actions import (
     AGENT_ACTION_SEPARATOR,
     get_agents_from_coalition,
@@ -41,14 +44,30 @@ def _erase_cost(cgs, action: str, state_name: str) -> float | None:
     return cost_to_scalar(costs)
 
 
-def _joint_transitions(cgs) -> list[tuple[JointTransition, ...]]:
-    """Expand every transition cell once, with its cost when the model gives one."""
+def _joint_transitions(
+    cgs, edges_only: bool, agents: int
+) -> list[tuple[JointTransition, ...]]:
+    """Expand every transition cell once, with its cost when the model gives one.
+
+    A `Transition_With_Costs` cell is an edge with its cost and no actions, as in
+    the Kripke models of OL (ECAI 2023, Definition 2). It becomes one joint
+    action that all agents choose together.
+    """
     per_state = []
     for source, row in enumerate(cgs.graph):
         state_name = cgs.get_state_name_by_index(source)
         transitions = []
         for target, cell in enumerate(row):
             if cell in (0, "0"):
+                continue
+            if edges_only:
+                transitions.append(
+                    JointTransition(
+                        tokens=(f"edge{target}",) * agents,
+                        target=target,
+                        cost=edge_cell_cost(cell),
+                    )
+                )
                 continue
             for action in cgs.build_action_list(cell):
                 transitions.append(
@@ -86,11 +105,15 @@ class DemonicPreimage:
     """OATL pre-image for one model check; transitions and A-actions are built once."""
 
     def __init__(self, cgs):
-        self._transitions = _joint_transitions(cgs)
+        self._edges_only = getattr(cgs, "usesCostsInsteadOfActions", False)
+        self._agents = cgs.get_number_of_agents()
+        self._transitions = _joint_transitions(cgs, self._edges_only, self._agents)
         self._moves_by_coalition: dict[str, list[tuple[CoalitionMove, ...]]] = {}
+        # The Demon never erases a state's only joint action, so its cost is unused.
         self.uncosted = [
             f"{AGENT_ACTION_SEPARATOR.join(t.tokens)} at {cgs.get_state_name_by_index(s)}"
             for s, transitions in enumerate(self._transitions)
+            if len(transitions) > 1
             for t in transitions
             if t.cost is None
         ]
@@ -100,6 +123,12 @@ class DemonicPreimage:
             positions = tuple(
                 sorted(int(agent) - 1 for agent in get_agents_from_coalition(coalition))
             )
+            if self._edges_only and len(positions) != self._agents:
+                raise ValueError(
+                    f"[MODEL] Coalition <{coalition}> needs the agents' actions, but "
+                    "a Transition_With_Costs model gives only edge costs; use "
+                    "Transition with Costs_for_actions"
+                )
             self._moves_by_coalition[coalition] = [
                 _coalition_moves(transitions, positions)
                 for transitions in self._transitions

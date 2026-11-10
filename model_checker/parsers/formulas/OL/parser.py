@@ -1,14 +1,12 @@
 """OL parser (PLY): demonic cost prefix `<J2>` before U, R, W, G, X and F.
 
-The prefix is required and its cost is at least 1, so `F p` and `<J0>F p` are rejected.
+The prefix is required, so `F p` is rejected. Its budget is any natural number,
+0 included, as in ECAI 2023 ("n is any number in N0").
 """
 
 import re
 
-from model_checker.parsers.syntax_patterns import (
-    OL_DEMONIC_BOUND_FULL_RE,
-    OL_DEMONIC_TOKEN,
-)
+from model_checker.parsers.syntax_patterns import OL_DEMONIC_TOKEN
 
 from ..parser_utils import (
     BOOLEAN_AST_OPERATORS,
@@ -19,6 +17,7 @@ from ..parser_utils import (
 )
 from ..shared_parser import BaseLogicParser
 
+_LEADING_ZERO_BOUND_RE = re.compile(r"<J(0\d+)>")
 _OL_MODAL_OPS = r"F|G|X|U|R|W|UNTIL|RELEASE|WEAK|NEXT|EVENTUALLY|GLOBALLY"
 _OL_DEMONIC_OPERATOR_PATTERN = re.compile(
     rf"^{OL_DEMONIC_TOKEN}({_OL_MODAL_OPS})$",
@@ -43,10 +42,6 @@ _OL_VALID_OPERATORS = (
     )
     | BOOLEAN_AST_OPERATORS
 )
-
-
-class DemonicValueError(Exception):
-    pass
 
 
 class OLParser(BaseLogicParser):
@@ -91,8 +86,6 @@ class OLParser(BaseLogicParser):
         | DEMONIC LPAREN expression UNTIL expression RPAREN
         | DEMONIC LPAREN expression WEAK expression RPAREN
         | DEMONIC LPAREN expression RELEASE expression RPAREN"""
-        demonic_str = p[1]
-        self._validate_demonic(demonic_str)
         left, operator, right = until_operands(p)
         p[0] = (p[1] + operator, left, right)
         self._prefix_until(p, p[0], p[1])
@@ -101,25 +94,19 @@ class OLParser(BaseLogicParser):
         """expression : DEMONIC GLOBALLY expression
         | DEMONIC NEXT expression
         | DEMONIC EVENTUALLY expression"""
-        demonic_str = p[1]
-        self._validate_demonic(demonic_str)
         p[0] = (p[1] + p[2], p[3])
         self._prefix_unary(p, p[0], p[1] + p[2])
-
-    def _validate_demonic(self, demonic_str):
-        """Validate cost in a demonic token like <J5>."""
-        match = OL_DEMONIC_BOUND_FULL_RE.match(demonic_str)
-        if not match:
-            raise DemonicValueError(f"Invalid demonic token: {demonic_str}")
-        cost = int(match.group(1))
-        if cost < 1:
-            raise DemonicValueError(
-                f"Demonic cost must be a positive integer, got <J{cost}>"
-            )
 
     # === Validation ===
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
+        leading_zero = _LEADING_ZERO_BOUND_RE.search(formula)
+        if leading_zero:
+            return (
+                False,
+                f"Bound '{leading_zero.group(0)}' has a leading zero; write "
+                f"<J{int(leading_zero.group(1))}>",
+            )
         return run_common_prechecks(
             formula,
             allow_hash_at=True,

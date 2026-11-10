@@ -19,7 +19,6 @@ EMPTY_COALITION_RE = re.compile(r"<\s*>")
 # Comparison operators (clocks, wallets); longest-first so ``>=`` is not ``>``.
 COMPARISON_OPERATORS = (">=", "<=", "==", ">", "<")
 COMPARISON_OPS_ALT = "|".join(COMPARISON_OPERATORS)
-POSITIVE_INT = r"[1-9]\d*"
 NON_NEGATIVE_INT = r"(?:0|[1-9]\d*)"
 
 # ICTL: lowercase atoms or mixed-case with lowercase from the second character
@@ -72,10 +71,9 @@ COALITION_BOUND_INNER_RE = re.compile(rf"<({AGENT_LIST})><({AGENT_LIST})>")
 TRAILING_COALITION_COMMA_RE = re.compile(r"<\d+,>")
 NEGATIVE_AGENT_IN_COALITION_RE = re.compile(r"<-\d+>")
 
-# OL demonic cost prefix: <Jk> (e.g. <J5>); k must be a positive integer (no <J0>).
-OL_DEMONIC_TOKEN = rf"<J{POSITIVE_INT}>"
-OL_DEMONIC_BOUND_FULL_RE = re.compile(rf"^<J({POSITIVE_INT})>$")
-OL_DEMONIC_BOUND_PREFIX_RE = re.compile(rf"^<J({POSITIVE_INT})>")
+# OL demonic cost prefix: <Jk> (e.g. <J5>); ECAI 2023 takes k in N0, so <J0> is valid.
+OL_DEMONIC_TOKEN = rf"<J{NON_NEGATIVE_INT}>"
+OL_DEMONIC_BOUND_PREFIX_RE = re.compile(rf"^<J({NON_NEGATIVE_INT})>")
 
 # Wallet_ATL: <<1,2:wallet(1, >= 5)>>.
 _WALLET_ATOM = rf"wallet\(\s*\d+\s*,\s*(?:{COMPARISON_OPS_ALT})\s*\d+\s*\)"
