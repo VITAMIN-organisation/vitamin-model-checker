@@ -1,136 +1,88 @@
-"""TCTL and TOL parsers: clock ops, booleans, freeze, and quantifier aliases."""
+"""TCTL and TOL: clock constraints, freeze, constants, and the errors only they have.
+
+Both lex `x>5` as a clock constraint, so `>` must never be mistaken for the
+rejected implication alias. TCTL has no next operator (IC 1993, p. 10).
+"""
 
 import pytest
 
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.parsers.formulas.TCTL import (
-    AtomicProp,
-    Binary,
-    BooleanConst,
-    FreezeExpr,
-    QuantifiedPath,
-    SimpleTimeExpr,
-)
-from model_checker.parsers.formulas.TOL import (
-    BooleanConst as TolBooleanConst,
-)
-from model_checker.parsers.formulas.TOL import (
-    FreezeExpr as TolFreezeExpr,
-)
-from model_checker.parsers.formulas.TOL import (
-    SimpleTimeExpr as TolSimpleTimeExpr,
-)
+from model_checker.parsers.formulas import TCTL, TOL
 
 
-@pytest.mark.unit
-def test_tctl_parser_freeze_expression():
-    parser = FormulaParserFactory.get_parser_instance("TCTL")
-    ast = parser.parse("j.p")
-    assert isinstance(ast, FreezeExpr)
-    assert ast.clock == "j"
-
-
-@pytest.mark.unit
-def test_tctl_parser_parenthesized_until_matches_flat():
-    parser = FormulaParserFactory.get_parser_instance("TCTL")
-    flat = parser.parse("E p U q")
-    grouped = parser.parse("E (p U q)")
-    assert isinstance(flat, QuantifiedPath)
-    assert isinstance(grouped, QuantifiedPath)
-    assert flat.quantifier == grouped.quantifier == "E"
-    assert isinstance(flat.formula, Binary)
-    assert repr(flat.formula) == repr(grouped.formula)
-
-
-@pytest.mark.unit
-def test_tctl_parser_mixed_case_atom_is_not_a_quantifier():
-    parser = FormulaParserFactory.get_parser_instance("TCTL")
-    ast = parser.parse("Goal")
-    assert isinstance(ast, AtomicProp)
-    assert ast.name == "Goal"
+def _parse(logic: str, formula: str):
+    return FormulaParserFactory.get_parser_instance(logic).parse(formula)
 
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    ("formula", "expected"),
+    ("logic", "module", "formula"),
+    [("TCTL", TCTL, "j.p"), ("TOL", TOL, "j.Goal")],
+)
+def test_freeze_binds_the_clock_name(logic, module, formula):
+    """`j.p` freezes clock j over p."""
+    tree = _parse(logic, formula)
+    assert isinstance(tree, module.FreezeExpr)
+    assert tree.clock == "j"
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(("logic", "module"), [("TCTL", TCTL), ("TOL", TOL)])
+@pytest.mark.parametrize("constraint", ["x>5", "x>=5", "x<5", "x<=5"])
+def test_clock_comparison_is_one_time_atom(logic, module, constraint):
+    """`x>5` is a constraint on clock x, not `x` and something after `>`."""
+    tree = _parse(logic, constraint)
+    assert isinstance(tree, module.SimpleTimeExpr)
+    assert tree.constraints == constraint
+
+
+@pytest.mark.unit
+def test_implication_is_not_a_clock_comparison():
+    """`p -> q` is an implication of two propositions."""
+    tree = _parse("TCTL", "p -> q")
+    assert isinstance(tree, TCTL.Binary)
+    assert tree.op == "->"
+    assert (tree.left.name, tree.right.name) == ("p", "q")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("logic", "module", "formula", "value"),
     [
-        ("x>5", "x>5"),
-        ("x>=5", "x>=5"),
-        ("x<5", "x<5"),
-        ("x<=5", "x<=5"),
+        ("TCTL", TCTL, "true", True),
+        ("TCTL", TCTL, "false", False),
+        ("TOL", TOL, "true", True),
+        ("TOL", TOL, "false", False),
+        ("TOL", TOL, "@", True),
+        ("TOL", TOL, "#", False),
     ],
 )
-def test_tctl_clock_comparison_is_time_atom_not_implies(formula, expected):
-    parser = FormulaParserFactory.get_parser_instance("TCTL")
-    ast = parser.parse(formula)
-    assert isinstance(ast, SimpleTimeExpr)
-    assert ast.constraints == expected
+def test_constants_are_not_propositions(logic, module, formula, value):
+    """`true` and TOL's `@` are the constant, not an atom a model could label."""
+    tree = _parse(logic, formula)
+    assert isinstance(tree, module.BooleanConst)
+    assert tree.value is value
 
 
 @pytest.mark.unit
-def test_tctl_implication_is_not_a_clock_greater_than():
-    parser = FormulaParserFactory.get_parser_instance("TCTL")
-    ast = parser.parse("p -> q")
-    assert isinstance(ast, Binary)
-    assert ast.op in {"->", "implies"}
-    assert isinstance(ast.left, AtomicProp)
-    assert isinstance(ast.right, AtomicProp)
-
-
-@pytest.mark.unit
+@pytest.mark.parametrize("logic", ["CTL", "ICTL", "TCTL"])
 @pytest.mark.parametrize(
-    ("formula", "value"),
-    [("true", True), ("false", False)],
+    ("wordy", "compact"), [("forall G p", "AG p"), ("exist F p", "EF p")]
 )
-def test_tctl_boolean_constants_are_not_propositions(formula, value):
-    parser = FormulaParserFactory.get_parser_instance("TCTL")
-    ast = parser.parse(formula)
-    assert isinstance(ast, BooleanConst)
-    assert ast.value is value
-
-
-@pytest.mark.unit
-@pytest.mark.parametrize(
-    ("wordy", "compact"),
-    [
-        ("forall G p", "AG p"),
-        ("exist F p", "EF p"),
-    ],
-)
-def test_tctl_parser_forall_exist_keywords(wordy, compact):
-    parser = FormulaParserFactory.get_parser_instance("TCTL")
-    wordy_ast = parser.parse(wordy)
-    compact_ast = parser.parse(compact)
-    assert isinstance(wordy_ast, QuantifiedPath)
-    assert isinstance(compact_ast, QuantifiedPath)
-    assert repr(wordy_ast) == repr(compact_ast)
-
-
-@pytest.mark.unit
-def test_tol_parser_freeze_expression():
-    parser = FormulaParserFactory.get_parser_instance("TOL")
-    ast = parser.parse("j.Goal")
-    assert isinstance(ast, TolFreezeExpr)
-    assert ast.clock == "j"
-
-
-@pytest.mark.unit
-def test_tol_clock_greater_than_is_time_atom():
-    parser = FormulaParserFactory.get_parser_instance("TOL")
-    ast = parser.parse("x>5")
-    assert isinstance(ast, TolSimpleTimeExpr)
-    assert ast.constraints == "x>5"
+def test_forall_and_exist_are_the_path_quantifiers(logic, wordy, compact):
+    """`forall G p` is `AG p`."""
+    tree = _parse(logic, wordy)
+    assert tree is not None
+    assert repr(tree) == repr(_parse(logic, compact))
 
 
 @pytest.mark.unit
 @pytest.mark.parametrize("operator", ["R", "W"])
 def test_tol_release_and_weak_until_take_optional_parentheses(operator):
-    # Until is covered for every prefix logic in test_until_after_prefix.py.
-    parser = FormulaParserFactory.get_parser_instance("TOL")
-    flat = parser.parse(f"{{J2}} p {operator} q")
-    grouped = parser.parse(f"{{J2}} (p {operator} q)")
+    """`{J2} p R q` and `{J2} (p R q)` are one formula (Until is in test_until_after_prefix)."""
+    flat = _parse("TOL", f"{{J2}} p {operator} q")
     assert flat is not None
-    assert repr(flat) == repr(grouped)
+    assert repr(flat) == repr(_parse("TOL", f"{{J2}} (p {operator} q)"))
 
 
 @pytest.mark.unit
@@ -148,39 +100,13 @@ def test_tol_release_and_weak_until_take_optional_parentheses(operator):
 def test_ambiguity_error_names_the_prefix_and_both_readings(
     logic, formula, prefix, connective, position
 ):
+    """Freeze `x.` is a prefix too; the message shows where and both groupings."""
     parser = FormulaParserFactory.get_parser_instance(logic)
     assert parser.parse(formula) is None
     [error] = parser.errors
     assert f"position {position}" in error
     assert f"{prefix} (... {connective} ...)" in error
     assert f"({prefix} ...) {connective} ..." in error
-
-
-@pytest.mark.unit
-@pytest.mark.parametrize(
-    ("logic", "formula"),
-    [
-        ("TCTL", "AG (p -> EF q)"),
-        ("TCTL", "AG AF p"),
-        ("TCTL", "j.(p && q)"),
-        ("TOL", "j.{J2}F p"),
-    ],
-)
-def test_freeze_and_nested_prefixes_parse(logic, formula):
-    parser = FormulaParserFactory.get_parser_instance(logic)
-    assert parser.parse(formula) is not None
-
-
-@pytest.mark.unit
-@pytest.mark.parametrize(
-    ("formula", "value"),
-    [("true", True), ("false", False), ("@", True), ("#", False)],
-)
-def test_tol_boolean_constants_and_hash_at(formula, value):
-    parser = FormulaParserFactory.get_parser_instance("TOL")
-    ast = parser.parse(formula)
-    assert isinstance(ast, TolBooleanConst)
-    assert ast.value is value
 
 
 @pytest.mark.unit
@@ -195,6 +121,7 @@ def test_tol_boolean_constants_and_hash_at(formula, value):
     ],
 )
 def test_tctl_has_no_next_operator(formula, named):
+    """Time is dense, so there is no next state; the error names the operator."""
     parser = FormulaParserFactory.get_parser_instance("TCTL")
     assert parser.parse(formula) is None
     [error] = parser.errors

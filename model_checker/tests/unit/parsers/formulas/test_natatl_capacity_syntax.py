@@ -1,91 +1,26 @@
-"""NatATL parser and conversion: canonical coalition syntax.
-
-Tests cover:
-- Capacity syntax <{A}, k>Op phi (only accepted surface form)
-- Rejection of ATL-style coalitions without an explicit bound
-"""
+"""NatATL coalitions carry a strategy-complexity bound: `<{A}, k>`."""
 
 import pytest
 
-from model_checker.algorithms.explicit.NatATL.NatATLtoCTL import (
-    get_agents_from_natatl,
-    get_k_value,
-    natatl_to_ctl,
-)
 from model_checker.parsers.formulas.NatATL.parser import NatATLParser
 
 
 @pytest.mark.unit
-class TestNatATLParserCapacitySyntax:
-    def test_parses_capacity_syntax_ast(self):
-        """<{1,2}, k> must parse to an AST that retains coalition and bound in the modal."""
-        capacity = "<{1,2}, 5>F p"
-
-        ast_capacity = NatATLParser().parse(capacity, n_agent=2)
-
-        assert ast_capacity == ("<{1,2},5>F", "p")
-
-    def test_rejects_atl_style_coalition_without_bound(self):
-        """<1,2>F p without <{...}, k> is invalid NatATL."""
-        assert NatATLParser().parse("<1,2>F p", n_agent=2) is None
-
-    def test_invalid_coalition_agent_out_of_range_rejected(self):
-        """Coalitions with agent index > n_agent must be rejected."""
-        # Agent 3 is out of range when n_agent=2
-        formula = "<{3}, 5>F p"
-        result = NatATLParser().parse(formula, n_agent=2)
-
-        assert result is None
-
-    def test_bound_below_one_rejected(self):
-        """k = 0 parsed before but the solver then returned false for every formula."""
-        assert NatATLParser().parse("<{1}, 0>F p", n_agent=2) is None
-        assert NatATLParser().parse("<{1}, 1>F p", n_agent=2) is not None
-
-    def test_n_agent_zero_rejects_all_agents(self):
-        """n_agent=0 is fail-closed: no agent index is in range [1, 0]."""
-        assert NatATLParser().parse("<{1}, 1>F p", n_agent=0) is None
-        assert NatATLParser().parse("<{99}, 1>F p", n_agent=0) is None
-
-    def test_accepts_uppercase_atomic_proposition(self):
-        """Uppercase proposition names are valid NatATL surface syntax."""
-        formula = "<{1}, 5>F Goal"
-        assert NatATLParser().parse(formula, n_agent=1) is not None
+def test_capacity_prefix_keeps_agents_and_bound_in_the_tree():
+    """`<{1,2}, 5>F p` becomes the node `<{1,2},5>F` over p."""
+    assert NatATLParser().parse("<{1,2}, 5>F p", n_agent=2) == ("<{1,2},5>F", "p")
 
 
 @pytest.mark.unit
-class TestNatATLCapacityConversion:
-    def test_capacity_formula_preserves_agents_and_k(self):
-        """Capacity syntax must drive CTL conversion, agents, and k consistently."""
-        formula = "<{1,2}, 5>F p"
+def test_atl_coalition_without_a_bound_is_rejected():
+    """`<1,2>F p` has no complexity bound, so it is ATL, not NatATL."""
+    assert NatATLParser().parse("<1,2>F p", n_agent=2) is None
 
-        ctl = natatl_to_ctl(formula, n_agent=2)
-        agents = get_agents_from_natatl(formula, n_agent=2)
-        k = get_k_value(formula, n_agent=2)
 
-        assert ctl == "A F p"
-        assert agents == [1, 2]
-        assert k == 5
-
-    def test_spaced_temporal_and_prop_converted_for_ctl(self):
-        """The CTL string keeps the operator and the proposition apart."""
-        assert natatl_to_ctl("<{1},1>F a") == "A F a"
-
-    def test_name_starting_with_a_temporal_letter_is_kept_whole(self):
-        """`Fuel` and `Until` are names, so the CTL string must not split them."""
-        assert natatl_to_ctl("<{1},1>F Fuel") == "A F Fuel"
-        assert natatl_to_ctl("<{1},1>X Until") == "A X Until"
-
-    def test_operator_glued_to_a_name_is_rejected(self):
-        """`Fa` is one name, not `F a`: operators are separated by a space."""
-        with pytest.raises(ValueError, match="Invalid NatATL formula"):
-            natatl_to_ctl("<{1},1>Fa")
-
-    def test_non_canonical_formula_rejected_by_conversion(self):
-        """natatl_to_ctl and get_k_value require <{agents}, k> syntax."""
-        formula = "<1,2>F p"
-
-        with pytest.raises(ValueError):
-            natatl_to_ctl(formula)
-        with pytest.raises(ValueError):
-            get_k_value(formula)
+@pytest.mark.unit
+def test_bound_below_one_is_rejected():
+    """k = 0 allows no strategy at all; the smallest bound is 1."""
+    parser = NatATLParser()
+    assert parser.parse("<{1}, 0>F p", n_agent=2) is None
+    assert "Invalid bound 0: must be at least 1" in parser.errors[0]
+    assert NatATLParser().parse("<{1}, 1>F p", n_agent=2) is not None

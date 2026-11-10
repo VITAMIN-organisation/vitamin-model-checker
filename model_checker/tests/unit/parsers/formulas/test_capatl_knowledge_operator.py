@@ -40,6 +40,7 @@ def _parse(formula):
     ],
 )
 def test_paper_forms_parse(formula, tree):
+    """`K1(...)` and `kcap1(...)` build one K node; `K01` reads agent 1."""
     result, errors = _parse(formula)
     assert result == tree, errors
 
@@ -55,6 +56,7 @@ def test_paper_forms_parse(formula, tree):
     ],
 )
 def test_forms_outside_the_paper_are_rejected_with_a_message(formula, message):
+    """No parentheses, a nested K, a proposition inside K, or an agent out of range."""
     result, errors = _parse(formula)
     assert result is None
     assert any(message in error for error in errors), errors
@@ -62,5 +64,6 @@ def test_forms_outside_the_paper_are_rejected_with_a_message(formula, message):
 
 @pytest.mark.parametrize("name", ["K1x", "K12x", "Knowledge"])
 def test_k_followed_by_letters_is_a_proposition(name):
+    """`K1x` and `Knowledge` are names: K needs digits then a parenthesis."""
     result, errors = _parse(f"<{{1}}> F {name}")
     assert result == ("<{1}>F", name), errors

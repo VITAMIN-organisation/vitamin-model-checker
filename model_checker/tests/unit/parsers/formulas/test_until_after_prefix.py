@@ -52,6 +52,7 @@ def _tree(logic: str, formula: str) -> str:
 def test_until_after_the_prefix_is_written_with_or_without_parentheses(
     logic, flat, grouped
 ):
+    """`prefix p U q` and `prefix (p U q)` build one tree."""
     prefix = PREFIX[logic]
     flat_tree = _tree(logic, flat.format(c=prefix))
     assert flat_tree != "None"
@@ -61,6 +62,7 @@ def test_until_after_the_prefix_is_written_with_or_without_parentheses(
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", PREFIX)
 def test_grouped_until_is_one_conjunct(logic):
+    """`prefix (p U q) && r` closes the prefix at the parenthesis."""
     prefix = PREFIX[logic]
     grouped = _tree(logic, f"({prefix} (p U q)) && r")
     assert grouped != "None"
@@ -75,6 +77,7 @@ def test_grouped_until_is_one_conjunct(logic):
 @pytest.mark.parametrize("logic", PREFIX)
 @pytest.mark.parametrize("formula", ["{c} (p U)", "{c} (p U q", "{c} p U q)"])
 def test_unclosed_until_is_rejected(logic, formula):
+    """A missing operand or parenthesis around the Until is a syntax error."""
     assert _tree(logic, formula.format(c=PREFIX[logic])) == "None"
 
 
@@ -98,12 +101,14 @@ def _errors(logic: str, formula: str) -> list[str]:
     ],
 )
 def test_connective_after_an_open_prefix_is_ambiguous(logic, formula):
+    """No paper says how `prefix F p && q` groups, so it asks for parentheses."""
     [error] = _errors(logic, formula.format(c=PREFIX[logic]))
     assert "is ambiguous" in error
 
 
 @pytest.mark.unit
 def test_ambiguity_error_shows_the_prefix_as_written():
+    """The message quotes the user's prefix, wallet guard included."""
     [error] = _errors("Wallet_ATL", "<<1: wallet(1, >= 5)>>F p && q")
     assert "(<<1: wallet(1, >= 5)>>F ...) && ..." in error
 
@@ -122,14 +127,14 @@ def test_ambiguity_error_shows_the_prefix_as_written():
     ],
 )
 def test_parenthesized_prefix_parses(logic, formula):
+    """Each parenthesized reading of an ambiguous formula is accepted."""
     assert _tree(logic, formula.format(c=PREFIX[logic])) != "None"
 
 
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", sorted(set(PREFIX) - {"ATL_STAR"}))
 def test_left_operand_of_a_prefix_until_has_one_reading(logic):
-    # `prefix p` alone is no formula of these logics, so `prefix p && q U r` can
-    # only be `prefix ((p && q) U r)`.
+    """`prefix p` alone is no formula here, so `prefix p && q U r` is `prefix ((p && q) U r)`."""
     prefix = PREFIX[logic]
     flat = _tree(logic, f"{prefix} p && q U r")
     assert flat != "None"

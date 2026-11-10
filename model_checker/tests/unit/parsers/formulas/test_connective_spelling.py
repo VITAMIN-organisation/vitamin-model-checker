@@ -1,35 +1,34 @@
-"""Every logic spells the connectives one way: `&&`, `||`, `!`, `->` or the words.
+"""Connectives are `&&`, `||`, `!`, `->` or the words `and`, `or`, `not`, `implies` in every logic.
 
-`&`, `|` and `>` are not connectives in any logic: a formula that uses one is
-rejected, so the same text is never valid in one logic and invalid in another.
-NatSL goals take no connectives, so NatSL is not in the table.
+`&`, `|` and `>` are rejected everywhere, so one text is never valid in one logic
+and invalid in another (CLAUDE.md, "Syntax rules").
 """
+
+import re
 
 import pytest
 
-from .test_operator_spacing import _OPERATOR_FORMS, _parse
+from model_checker.tests.helpers.formula_cases import CONNECTIVE_LOGICS, parse, unary
 
-_LOGICS = sorted(set(_OPERATOR_FORMS) - {"NatSL"})
-
-
-def _formula(logic: str, left_to_right: str) -> str:
-    prefix, op = _OPERATOR_FORMS[logic]
-    return f"{prefix}{op} (p {left_to_right} q)"
+_WORDS = [("(p and q)", "and", "&&"), ("(p or q)", "or", "||")]
+_WORDS += [("(p implies q)", "implies", "->"), ("(not p)", "not", "!")]
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("logic", _LOGICS)
-@pytest.mark.parametrize("connective", ["&&", "||", "->", "and", "or", "implies"])
-def test_canonical_and_word_connectives_are_accepted(logic, connective):
-    text = _formula(logic, connective)
-
-    assert _parse(logic, text) is not None, f"{logic} rejected '{text}'"
+@pytest.mark.parametrize("logic", CONNECTIVE_LOGICS)
+@pytest.mark.parametrize(("operand", "word", "symbol"), _WORDS)
+def test_word_connective_builds_the_symbol_tree(logic, operand, word, symbol):
+    """`p and q` has the tree of `p && q`; most parsers keep the word as the node label."""
+    spelled = parse(logic, unary(logic, operand))
+    assert spelled is not None, f"{logic} rejected '{word}'"
+    expected = parse(logic, unary(logic, operand.replace(f"{word} ", symbol + " ")))
+    assert re.sub(rf"\b{word}\b", symbol, repr(spelled)) == repr(expected)
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("logic", _LOGICS)
+@pytest.mark.parametrize("logic", CONNECTIVE_LOGICS)
 @pytest.mark.parametrize("symbol", ["&", "|", ">"])
 def test_symbol_aliases_are_rejected(logic, symbol):
-    text = _formula(logic, symbol)
-
-    assert _parse(logic, text) is None, f"{logic} accepted '{text}'"
+    """`p & q`, `p | q` and `p > q` are errors, not connectives."""
+    text = unary(logic, f"(p {symbol} q)")
+    assert parse(logic, text) is None, f"{logic} accepted '{text}'"

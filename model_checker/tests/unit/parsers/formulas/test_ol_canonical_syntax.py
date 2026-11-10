@@ -1,4 +1,4 @@
-"""OL parser: canonical <Jk> demonic cost prefixes only."""
+"""OL prefixes are `<Jk>`: the demon with budget k, k at least 1."""
 
 import pytest
 
@@ -6,12 +6,12 @@ from model_checker.parsers.formulas.OL.parser import OLParser
 
 
 @pytest.mark.unit
-def test_ol_parser_accepts_canonical_cost_prefix():
+def test_space_after_the_prefix_is_optional():
+    """`<J2> F safe` and `<J2>F safe` build one tree."""
     parser = OLParser()
     spaced = parser.parse("<J2> F safe", n_agent=1)
-    glued = parser.parse("<J2>F safe", n_agent=1)
-    assert spaced is not None
-    assert glued == spaced
+    assert spaced == ("<J2>F", "safe")
+    assert parser.parse("<J2>F safe", n_agent=1) == spaced
 
 
 @pytest.mark.unit
@@ -22,10 +22,8 @@ def test_ol_parser_accepts_canonical_cost_prefix():
         ("<J2> p W q", "<J2> (p W q)", ("<J2>W", "p", "q")),
     ],
 )
-def test_ol_parser_release_and_weak_until_take_optional_parentheses(
-    flat, grouped, tree
-):
-    # Until is covered for every prefix logic in test_until_after_prefix.py.
+def test_release_and_weak_until_take_optional_parentheses(flat, grouped, tree):
+    """Like Until (test_until_after_prefix.py), R and W read the same with parentheses."""
     parser = OLParser()
     assert parser.parse(flat, n_agent=1) == tree
     assert parser.parse(grouped, n_agent=1) == tree
@@ -33,6 +31,6 @@ def test_ol_parser_release_and_weak_until_take_optional_parentheses(
 
 @pytest.mark.unit
 @pytest.mark.parametrize("formula", ["<2> F safe", "F safe", "<J0> F safe"])
-def test_ol_parser_rejects_non_canonical_cost_prefix(formula):
-    parser = OLParser()
-    assert parser.parse(formula, n_agent=1) is None
+def test_prefix_other_than_jk_with_k_at_least_one_is_rejected(formula):
+    """A coalition `<2>`, no prefix, or the budget 0 is not OL."""
+    assert OLParser().parse(formula, n_agent=1) is None

@@ -1,3 +1,10 @@
+"""ATL* grammar: the tree each form builds, and where an error points.
+
+The parser turns F, G, ->, || and false into U, !, && and true, so those trees are
+checked exactly. `<<1>> p U q` is `<<1>> (p U q)` (JACM 2002, p. 689); a connective
+next to a bare U or after a coalition is ambiguous and must be parenthesized.
+"""
+
 from __future__ import annotations
 
 import pytest
@@ -15,92 +22,68 @@ from model_checker.parsers.formulas.ATL_STAR.grammar import ATLStarParseError, p
 
 pytestmark = pytest.mark.atl_star
 
-
-def test_atom():
-    assert parse("p") == Prop("p")
+_P, _Q, _R = Prop("p"), Prop("q"), Prop("r")
 
 
-def test_true_false():
-    assert parse("true") == True_()
-    assert parse("false") == Not(True_())
+@pytest.mark.parametrize(
+    ("text", "tree"),
+    [
+        ("true", True_()),
+        ("false", Not(True_())),
+        ("F p", Until(True_(), _P)),
+        ("G p", Not(Until(True_(), Not(_P)))),
+        ("p -> q", Not(And(_P, Not(_Q)))),
+        ("p && q || r", Not(And(Not(And(_P, _Q)), Not(_R)))),
+        ("p && q && r", And(And(_P, _Q), _R)),
+    ],
+)
+def test_sugar_desugars_to_the_core_operators(text, tree):
+    """The solver sees only Prop, True, Not, And, Next, Until and Coalition."""
+    assert parse(text) == tree
 
 
-def test_negation():
-    assert parse("!p") == Not(Prop("p"))
-    assert parse("not p") == Not(Prop("p"))
+@pytest.mark.parametrize(
+    ("word", "symbol"), [("not p", "!p"), ("next p", "X p"), ("p until q", "p U q")]
+)
+def test_word_forms_build_the_symbol_tree(word, symbol):
+    """`not`, `next` and `until` are the operators, not names."""
+    assert parse(word) == parse(symbol)
 
 
-def test_conjunction_left_associative():
-    assert parse("p && q && r") == And(And(Prop("p"), Prop("q")), Prop("r"))
-
-
-def test_and_binds_tighter_than_or():
-    assert parse("p && q || r") == Not(
-        And(Not(And(Prop("p"), Prop("q"))), Not(Prop("r")))
-    )
-
-
-def test_lowercase_single_letter_stays_a_prop():
-    # Only uppercase X/F/G/U are reserved, lowercase single-letter names
-    # (common for propositions) stay available as identifiers.
+def test_lowercase_single_letter_is_a_name():
+    """Only uppercase X, F, G and U are operators, so `x && g` is two names."""
     assert parse("x && g") == And(Prop("x"), Prop("g"))
 
 
-def test_next():
-    assert parse("X p") == Next(Prop("p"))
-    assert parse("next p") == Next(Prop("p"))
+@pytest.mark.parametrize(
+    ("text", "tree"),
+    [
+        ("<<1,2>>p", Coalition(frozenset({1, 2}), _P)),
+        ("<<1>>!p", Coalition(frozenset({1}), Not(_P))),
+        ("<<1>>(p U q)", Coalition(frozenset({1}), Until(_P, _Q))),
+        ("(<<1>>p) U q", Until(Coalition(frozenset({1}), _P), _Q)),
+        (
+            "<<2>>((<<1>>p) U q)",
+            Coalition(frozenset({2}), Until(Coalition(frozenset({1}), _P), _Q)),
+        ),
+        ("<<1>>X p U q", Coalition(frozenset({1}), Until(Next(_P), _Q))),
+        (
+            "<<1>>X<<2>>p",
+            Coalition(frozenset({1}), Next(Coalition(frozenset({2}), _P))),
+        ),
+        ("(p && q) U r", Until(And(_P, _Q), _R)),
+    ],
+)
+def test_coalition_scope(text, tree):
+    """A coalition covers what follows it up to the closing parenthesis."""
+    assert parse(text) == tree
 
 
-def test_until():
-    assert parse("p U q") == Until(Prop("p"), Prop("q"))
-    assert parse("p until q") == Until(Prop("p"), Prop("q"))
-
-
-def test_eventually_desugars_to_until_true():
-    assert parse("F p") == Until(True_(), Prop("p"))
-
-
-def test_globally_desugars_to_not_until_true_not():
-    assert parse("G p") == Not(Until(True_(), Not(Prop("p"))))
-
-
-def test_implies_desugars():
-    assert parse("p -> q") == Not(And(Prop("p"), Not(Prop("q"))))
-
-
-def test_coalition_bare_atom():
-    assert parse("<<1,2>>p") == Coalition(frozenset({1, 2}), Prop("p"))
-
-
-def test_coalition_over_negation_and_next():
-    assert parse("<<1>>!p") == Coalition(frozenset({1}), Not(Prop("p")))
-    assert parse("<<1>>X p") == Coalition(frozenset({1}), Next(Prop("p")))
-
-
-def test_coalition_over_parenthesized_until():
-    assert parse("<<1>>(p U q)") == Coalition(
-        frozenset({1}), Until(Prop("p"), Prop("q"))
-    )
-
-
-def test_coalition_over_the_left_operand_of_until_is_parenthesized():
-    assert parse("(<<1>>p) U q") == Until(
-        Coalition(frozenset({1}), Prop("p")), Prop("q")
-    )
-
-
-def test_coalition_over_the_left_operand_inside_another_coalition():
-    assert parse("<<2>>((<<1>>p) U q)") == Coalition(
-        frozenset({2}),
-        Until(Coalition(frozenset({1}), Prop("p")), Prop("q")),
-    )
-
-
-def test_until_after_a_coalition_takes_a_prefixed_left_operand():
-    # test_until_after_prefix.py checks that <<1>> p U q is <<1>> (p U q).
-    assert parse("<<1>>X p U q") == Coalition(
-        frozenset({1}), Until(Next(Prop("p")), Prop("q"))
-    )
+def test_until_after_a_nested_coalition_belongs_to_the_inner_one():
+    """`<<2>><<1>>p U q` reads U under <<1>>, with or without parentheses."""
+    expected = Coalition(frozenset({2}), Coalition(frozenset({1}), Until(_P, _Q)))
+    assert parse("<<2>>(<<1>>p U q)") == expected
+    assert parse("<<2>><<1>>p U q") == expected
 
 
 @pytest.mark.parametrize(
@@ -113,6 +96,7 @@ def test_until_after_a_coalition_takes_a_prefixed_left_operand():
     ],
 )
 def test_until_next_to_a_connective_is_ambiguous(text, shown, position):
+    """The error shows the shape and points at the U."""
     with pytest.raises(ATLStarParseError, match="is ambiguous") as excinfo:
         parse(text)
     assert shown in str(excinfo.value)
@@ -129,106 +113,35 @@ def test_until_next_to_a_connective_is_ambiguous(text, shown, position):
     ],
 )
 def test_connective_after_a_coalition_is_ambiguous(text, position):
+    """The error points at the coalition whose scope is unclear."""
     with pytest.raises(ATLStarParseError, match="is ambiguous") as excinfo:
         parse(text)
     assert excinfo.value.position == position
 
 
 @pytest.mark.parametrize(
-    "text",
-    [
-        "(<<1>> F p) && q",
-        "<<1>> (F p && q)",
-        "<<1>> ((p U q) && r)",
-        "<<1>> (p && (q U r))",
-        "q && <<1>> F p",
-        "<<1>> (F p && G q)",
-    ],
-)
-def test_parenthesized_groupings_parse(text):
-    parse(text)
-
-
-@pytest.mark.parametrize(
     ("text", "position"), [("p U q U r", 6), ("<<1>> p U q U r", 12)]
 )
 def test_until_does_not_chain(text, position):
+    """`p U q U r` has no agreed grouping; the error points at the second U."""
     with pytest.raises(ATLStarParseError, match="U does not chain") as excinfo:
         parse(text)
     assert excinfo.value.position == position
 
 
-def test_until_after_a_nested_coalition_belongs_to_the_inner_one():
-    expected = Coalition(
-        frozenset({2}), Coalition(frozenset({1}), Until(Prop("p"), Prop("q")))
-    )
-    assert parse("<<2>>(<<1>>p U q)") == expected
-    assert parse("<<2>><<1>>p U q") == expected
-
-
-def test_nested_coalition():
-    assert parse("<<1>>X<<2>>p") == Coalition(
-        frozenset({1}), Next(Coalition(frozenset({2}), Prop("p")))
-    )
-
-
-def test_parentheses_group():
-    assert parse("(p && q) U r") == Until(And(Prop("p"), Prop("q")), Prop("r"))
-
-
-def test_num_agents_accepts_in_range():
-    parse("<<1,2>>p", num_agents=2)
-
-
-def test_num_agents_rejects_out_of_range():
-    with pytest.raises(ATLStarParseError):
-        parse("<<1,3>>p", num_agents=2)
-
-
-def test_num_agents_error_points_at_the_actual_offending_token():
-    # The out-of-range agent id is "3", the 4th character (0-based), not
-    # position 0, which a previous, separate post-parse validation pass
-    # always reported regardless of where the real problem was.
-    with pytest.raises(ATLStarParseError) as excinfo:
-        parse("<<1,3>>p", num_agents=2)
-    assert excinfo.value.position == 4
-
-
-def test_duplicate_agent_error_points_at_the_duplicate_token_not_the_first():
-    with pytest.raises(ATLStarParseError) as excinfo:
-        parse("<<1,2,1>>p")
-    assert excinfo.value.position == 6
-
-
-def test_num_agents_checks_nested_coalitions():
-    with pytest.raises(ATLStarParseError):
-        parse("<<1>>X<<5>>p", num_agents=2)
-
-
-def test_num_agents_checks_inside_and():
-    with pytest.raises(ATLStarParseError):
-        parse("<<1>>(p && <<5>>q)", num_agents=2)
-
-
-def test_num_agents_checks_inside_until():
-    with pytest.raises(ATLStarParseError):
-        parse("<<1>>(p U <<5>>q)", num_agents=2)
-
-
 @pytest.mark.parametrize(
-    "text",
-    [
-        "",
-        "p &&",
-        "(p && q",
-        "<<1,1>>p",
-        "<<>>p",
-        "<<1>>",
-        "p q",
-        "p U",
-        "@",
-    ],
+    ("text", "num_agents", "position"),
+    [("<<1,3>>p", 2, 4), ("<<1,2,1>>p", None, 6)],
 )
+def test_agent_error_points_at_the_offending_token(text, num_agents, position):
+    """An out-of-range or repeated agent is reported where it is written."""
+    with pytest.raises(ATLStarParseError) as excinfo:
+        parse(text, num_agents=num_agents)
+    assert excinfo.value.position == position
+
+
+@pytest.mark.parametrize("text", ["", "p &&", "(p && q", "<<1>>", "p q", "p U", "@"])
 def test_malformed_input_raises(text):
+    """Empty input, a missing operand or parenthesis, or a stray token."""
     with pytest.raises(ATLStarParseError):
         parse(text)

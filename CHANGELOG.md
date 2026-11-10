@@ -79,6 +79,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Markers that no test used are removed from `pyproject.toml` (`slow`, `e2e` and
   others), so `make test` no longer filters with `-m "not slow"`. The test
   `README.md` states what a test must assert to be kept.
+- Tests: the formula parser tests check each shared rule once, over every logic:
+  reserved words and proposition names, coalition checks, connective precedence,
+  word operators such as `eventually` and `until`, and an operator with no operand
+  (`test_proposition_names.py`, `test_coalition_validation.py`,
+  `test_precedence.py`). Eleven files that repeated these checks for a few logics
+  are merged into these or removed.
 
 ### Fixed
 

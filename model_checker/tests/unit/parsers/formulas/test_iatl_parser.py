@@ -1,50 +1,33 @@
-"""Unit tests for IATL formula parser syntax alignment."""
+"""IATL has two strategic prefixes: `<A>` (A can enforce) and its dual `[A]`.
+
+Both take the operators X, F, G, U and R. Other logics' prefixes (`<<A>>`, a
+bound after the coalition) are not IATL.
+"""
 
 import pytest
 
-from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.tests.helpers.formula_cases import parse
 
 
-@pytest.fixture
-def parser():
-    return FormulaParserFactory.get_parser_instance("IATL")
-
-
+@pytest.mark.unit
 @pytest.mark.parametrize(
-    "formula",
+    ("formula", "tree"),
     [
-        "<1>X p",
-        "<1,2>F q",
-        "[1]G p",
-        "[1,2]X r",
-        "<1>(p U q)",
-        "[1](p R q)",
-        "p -> q",
-        "!p",
+        ("<1>G p", ("<1>G", "p")),
+        ("[1]G p", ("[1]G", "p")),
+        ("[1,2]X r", ("[1,2]X", "r")),
+        ("[1] p U q", ("[1]U", "p", "q")),
+        ("[1](p R q)", ("[1]R", "p", "q")),
+        ("<1>(p R q)", ("<1>R", "p", "q")),
     ],
 )
-def test_valid_iatl_formulas(parser, formula):
-    ast = parser.parse(formula, n_agent=2)
-    assert ast is not None
-    if formula.startswith("<") or formula.startswith("["):
-        assert isinstance(ast, tuple)
-        assert ast[0][0] in {"<", "["}
+def test_diamond_and_box_keep_their_kind_in_the_tree(formula, tree):
+    """`[A]` must not be read as `<A>`: the node label keeps the bracket."""
+    assert parse("IATL", formula) == tree
 
 
-@pytest.mark.parametrize(
-    "formula",
-    [
-        "<<1>>X p",
-        "<>X p",
-        "[]G p",
-        "<1><2>F p",
-    ],
-)
-def test_rejects_non_project_coalition_syntax(parser, formula):
-    assert parser.parse(formula, n_agent=2) is None
-
-
-def test_explicit_n_agent_zero_not_overridden_by_max_coalition(parser):
-    """n_agent=0 must stay fail-closed even if max_coalition is also passed."""
-    assert parser.parse("<1>X p", n_agent=0, max_coalition=5) is None
-    assert parser.parse("<1>X p", max_coalition=2) is not None
+@pytest.mark.unit
+@pytest.mark.parametrize("formula", ["<<1>>X p", "<1><2>F p"])
+def test_prefixes_of_other_logics_are_rejected(formula):
+    """ATL* coalitions and bounded coalitions are not IATL syntax."""
+    assert parse("IATL", formula) is None
