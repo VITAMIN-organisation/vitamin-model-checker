@@ -198,10 +198,13 @@ class Wallet_ATLParser(BaseLogicParser):
                 )
         for constraint in coalition_info["constraints"]:
             agent = constraint["agent"]
-            if agent < 1 or agent > max_coalition:
+            # AAMAS26b's syntax ranges guards over all agents but Def. 4.5 only
+            # over the coalition; rejecting the rest avoids picking one reading.
+            if agent not in coalition_info["agents"]:
+                coalition = ",".join(str(a) for a in coalition_info["agents"])
                 raise ValueError(
-                    f"Invalid wallet constraint agent {agent}: "
-                    f"must be between 1 and {max_coalition}"
+                    f"Wallet guard on agent {agent}, which is not in the coalition "
+                    f"<<{coalition}>>: guards apply to coalition agents only"
                 )
         p[0] = {
             "type": "coalition_wallet",

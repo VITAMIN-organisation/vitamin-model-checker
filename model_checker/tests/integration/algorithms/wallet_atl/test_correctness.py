@@ -253,3 +253,28 @@ class TestWalletATLGuards:
             "Number_of_agents\n2\nWallets\ns0: 10:0\ns1: 5:0\ns2: 10:0\n"
         )
         assert _states(temp_file, content, "<<1:wallet(1, >= 10)>>G p") == set()
+
+    def test_one_guard_per_coalition_agent_is_accepted(self, temp_file):
+        """Both agents hold enough at s0 and s1 (10 >= 10, 0 >= 0), and s0 moves to
+        s1, so the pair can force goal next from both states."""
+        content = _two_agent_model("0 I|0", "10:0", "10:0")
+        formula = "<<1,2:wallet(1, >= 10) && wallet(2, >= 0)>>X goal"
+        assert _states(temp_file, content, formula) == {"s0", "s1"}
+
+    @pytest.mark.parametrize(
+        ("guards", "expected"),
+        [
+            # 4 >= 100 fails at both states, whatever the second guard says
+            ("wallet(1, >= 100) && wallet(1, >= 3)", set()),
+            ("wallet(1, >= 3) && wallet(1, >= 100)", set()),
+            # 3 <= 4 <= 5 at both states, and both can move to s1
+            ("wallet(1, >= 3) && wallet(1, <= 5)", {"s0", "s1"}),
+            # 4 <= 3 fails at both states
+            ("wallet(1, >= 3) && wallet(1, <= 3)", set()),
+        ],
+    )
+    def test_every_guard_on_one_agent_must_hold(self, temp_file, guards, expected):
+        """Agent 1 holds 4 at s0 and s1. C is a conjunction, so two guards on the
+        same agent must both hold (a range when they are >= and <=)."""
+        content = _two_agent_model("0 I|0", "4:0", "4:0")
+        assert _states(temp_file, content, f"<<1:{guards}>>X goal") == expected

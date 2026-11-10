@@ -21,12 +21,8 @@ from .preimage import (
 def _guarded_pre(cgs, node, transition_cache):
     """The step S -> wPre(Pre(A, S)) for the node's `<<A:C>>` prefix. The guard
     depends only on the state, so its states are computed once."""
-    coalition, coalition_agents, constraints = extract_coalition_and_constraints(
-        node.value
-    )
-    guard_states = apply_wallet_constraints(
-        cgs, coalition_agents, constraints, cgs.all_states_set
-    )
+    coalition, constraints = extract_coalition_and_constraints(node.value)
+    guard_states = apply_wallet_constraints(cgs, constraints, cgs.all_states_set)
 
     def step(states, early_stop=None):
         return (

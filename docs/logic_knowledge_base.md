@@ -552,11 +552,11 @@ Example: on the case-study attack graph of the paper
 
 ATL with wallet-aware coalitions over `WalletCGS` models.
 
-**Coalition syntax:** `<<agents[:wallet constraints]>>` followed by a temporal formula. The `<<>>` prefix is **mandatory** before `X`, `F`, `G`, or `U`; bare temporal operators without a coalition are rejected.
+**Coalition syntax:** `<<agents[:wallet constraints]>>` followed by a temporal formula. The `<<>>` prefix is **mandatory** before `X`, `F`, `G`, or `U`; bare temporal operators without a coalition are rejected. Each wallet guard names a coalition agent, and every guard must hold; see [Wallet_ATL formula language](Wallet_ATL/algorithm.md#formula-language).
 
 > [!NOTE]
 > **Why `<<>>` instead of `<>`?** Plain ATL uses `<1>` for coalitions only. Wallet_ATL
-> embeds optional balance guards (`:wallet(agent, op, value)`) inside the same prefix,
+> embeds optional balance guards (`:wallet(agent, op value)`) inside the same prefix,
 > so the grammar uses a dedicated `<< ... >>` token. That avoids clashing with other
 > bracket conventions in VITAMIN: OATL/RBATL `<1><5>` (coalition then cost bound),
 > NatATL `<{1}, k>`, CapATL `<{1}>`, and OL `<Jk>`. OATL's two bracket groups are separate tokens;

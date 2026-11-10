@@ -76,54 +76,35 @@ def _parse_constraints(raw_constraints: str | None) -> list[WalletConstraint]:
 
 def extract_coalition_and_constraints(
     operator_token: str,
-) -> tuple[str, list[int], list[WalletConstraint]]:
-    """Extract coalition string, coalition agents and wallet constraints from `<<...>>Op`."""
+) -> tuple[str, list[WalletConstraint]]:
+    """Extract the coalition string and the wallet constraints from `<<...>>Op`."""
     match = WALLET_COALITION_PREFIX_RE.match(str(operator_token))
     if not match:
         raise ValueError(f"Invalid Wallet_ATL coalition token '{operator_token}'")
 
-    coalition_agents = [
-        int(agent.strip())
-        for agent in match.group("agents").split(",")
-        if agent.strip()
-    ]
-    coalition = ",".join(str(agent) for agent in coalition_agents)
-    constraints = _parse_constraints(match.group("constraints"))
-    return coalition, coalition_agents, constraints
+    coalition = ",".join(
+        str(int(agent)) for agent in match.group("agents").split(",") if agent.strip()
+    )
+    return coalition, _parse_constraints(match.group("constraints"))
 
 
 def apply_wallet_constraints(
     cgs,
-    coalition_agents: Sequence[int],
     constraints: Sequence[WalletConstraint],
     states: Iterable[Any],
 ) -> set[str]:
-    """Filter states that satisfy all coalition wallet constraints."""
-    normalized_states = {str(s) for s in states}
-    if not normalized_states or not constraints:
-        return normalized_states
-
-    constraint_map = dict(constraints)
-    filtered_states: set[str] = set()
-
-    for state in normalized_states:
-        satisfies_all = True
-        for agent in coalition_agents:
-            condition = constraint_map.get(agent)
-            if condition is None:
-                continue
-            try:
-                if not cgs.check_wallet_constraint(state, agent, condition):
-                    satisfies_all = False
-                    break
-            except (AttributeError, IndexError, ValueError):
-                satisfies_all = False
-                break
-
-        if satisfies_all:
-            filtered_states.add(state)
-
-    return filtered_states
+    """The states where every wallet guard holds (wPre, AAMAS26b Algorithm 2)."""
+    names = {str(state) for state in states}
+    if not constraints:
+        return names
+    return {
+        state
+        for state in names
+        if all(
+            cgs.check_wallet_constraint(state, agent, condition)
+            for agent, condition in constraints
+        )
+    }
 
 
 __all__ = [

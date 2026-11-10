@@ -19,5 +19,5 @@ Coalitions use double angle brackets. Optional wallet guards come after `:`.
 
 Temporal operators: `X`, `F`, `G`, `U`. Every temporal formula must begin with a `<<>>` coalition prefix.
 
-Wallet guards use `wallet(agent, operator, value)` where operator is
+Wallet guards use `wallet(agent, operator value)`, as in `wallet(1, >= 50)`, where operator is
 `>=`, `<=`, `>`, `<`, or `==`.

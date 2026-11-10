@@ -62,3 +62,12 @@ def test_guard_with_another_operator_is_rejected(op):
 def test_temporal_operator_needs_a_coalition(formula):
     """Wallet_ATL has no path quantifier: a bare `F p` is not a state formula."""
     assert _parse(formula) is None
+
+
+@pytest.mark.unit
+def test_guard_outside_the_coalition_is_refused():
+    """Agent 2 is not in <<1>>: an error that names it, where the guard used to be
+    silently dropped."""
+    parser = FormulaParserFactory.get_parser_instance("Wallet_ATL")
+    assert parser.parse("<<1:wallet(2, >= 100)>>X goal", max_coalition=2) is None
+    assert any("agent 2" in error for error in parser.errors), parser.errors

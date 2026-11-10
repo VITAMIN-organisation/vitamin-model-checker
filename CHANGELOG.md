@@ -112,6 +112,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Wallet_ATL ignored some guards silently: a guard on an agent outside the
+  coalition (`<<1:wallet(2, >= 100)>>X goal` ignored it), and all but the last
+  guard on the same agent (`wallet(1, >= 100) && wallet(1, >= 5)` checked only
+  `>= 5`). A guard outside the coalition is now a syntax error that names the
+  agent, and every guard of a formula must hold, so
+  `wallet(1, >= 3) && wallet(1, <= 5)` is a range. An exception raised while
+  checking a guard now reaches the user instead of being read as "guard fails".
 - Wallet_ATL X, F and U also required the guard at the state the move leads to,
   so `<<1:wallet(1, >= 10)>>X goal` and `F goal` were false at a state holding 10
   whose successor (where goal holds) holds 5. They now follow the Wallet ATL

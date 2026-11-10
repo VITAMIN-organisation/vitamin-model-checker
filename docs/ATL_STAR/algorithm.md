@@ -60,7 +60,7 @@ winning condition $\Box\Diamond done \to \psi$ (p. 693):
 
 ATL writes a coalition with single angle brackets (`<1,2>`). Wallet_ATL also writes
 `<<...>>`, to avoid a clash with NatATL's `<k>` bound notation, and allows a
-`:wallet(agent, op, value)` guard inside. ATL*'s `<<A>>` scopes over a nested path
+`:wallet(agent, op value)` guard inside. ATL*'s `<<A>>` scopes over a nested path
 formula: the same brackets, a different operator.
 
 ## Semantic approach

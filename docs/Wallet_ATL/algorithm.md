@@ -15,7 +15,8 @@ Parser: `parsers/formulas/Wallet_ATL/parser.py`
 
 ```text
 phi ::= <<A>> X phi | <<A>> F phi | <<A>> G phi | <<A>> phi U psi | <<A>> (phi U psi)
-      | <<A:wallet(agent, op, value)>> ...
+      | <<A:guard && guard && ...>> ...
+guard ::= wallet(agent, op value)
 ```
 
 `<<A>> phi U psi` and `<<A>> (phi U psi)` build the same tree (see
@@ -25,6 +26,25 @@ phi ::= <<A>> X phi | <<A>> F phi | <<A>> G phi | <<A>> phi U psi | <<A>> (phi U
 
 The `<<...>>` prefix is mandatory before temporal operators. Empty `<<>>` is
 invalid.
+
+A guard is written `wallet(agent, op value)`, with `op` one of `>=`, `<=`, `==`,
+`>`, `<`, and guards are joined with `&&`, as in
+`<<1,2:wallet(1, >= 10) && wallet(2, >= 0)>>`. Every guard of a formula must
+hold, and a coalition agent with no guard is unconstrained.
+
+Two rules go beyond the Wallet ATL paper (AAMAS 2026, cited under
+[Semantic denotations](#semantic-denotations)):
+
+- Each guard names an agent of the coalition. The paper's grammar lets a guard
+  name any agent, but its Def. 4.5 and Algorithm 1 write the guards over the
+  coalition agents only. The checker accepts the narrower form, so a guard on
+  another agent (`<<1:wallet(2, >= 5)>>`) is a syntax error that names the
+  agent.
+- An agent may have several guards, as in the range
+  `wallet(1, >= 3) && wallet(1, <= 5)`. The paper gives each agent one bound;
+  the meaning of several guards follows from its truth definition of one guard
+  (`wallet(a, op v)` holds at a state when the balance of `a` there meets
+  `op v`) and from `&&`.
 
 ## Semantic denotations
 
@@ -52,7 +72,7 @@ for at that state, model checking stops with an error naming the state: a game
 structure gives each agent at least one move per state (JACM 2002 Def. 2.1).
 
 Balances come from the `Wallets` section, one row per state, and are not
-recomputed along transitions. A wallet guard (`wallet(agent, op, value)`, see
+recomputed along transitions. A wallet guard (`wallet(agent, op value)`, see
 [Formula language](#formula-language)) is checked at the state where a coalition
 move starts; [Operators](#operators) says where each operator checks it.
 
@@ -64,10 +84,7 @@ above, `wPre(S)` keeps the states of `S` where every guard in `C` holds (all of
 `S` when `C` is empty; the paper's Algorithm 2), and `[[phi]]` is the set of
 states where the operand `phi` holds; `psi` is the goal of U and F. A fixpoint
 is computed by repeating one step until the set stops changing, and `rho` is the
-set built so far. Two cases are not handled yet: with two guards on the same
-agent only the last one is checked, and a guard on an agent outside `A` is
-ignored; both are planned to become errors. Table 1 lists how each operator is
-computed:
+set built so far. Table 1 lists how each operator is computed:
 
 **Table 1: Wallet_ATL operators and the lines of the paper's Algorithm 1 they follow.**
 
@@ -120,6 +137,7 @@ Implementation techniques (transition cache, early-stop): [algorithm_design.md](
 | Coalition syntax | Wallet-aware | Dedicated `<<...>>` (avoids clash with `<A><k>`) |
 | Wallet dynamics | Balances change along transitions (Def. 4.4) | Balances read from `Wallets`; moves checked against them; not updated along transitions |
 | Temporal ops | X, U, G | X, U, G, and F as `true U` (see [Operators](#operators)) |
+| Wallet predicate as a formula | `wallet(a, op v)` is a state formula of the paper's grammar, for any agent | Not supported: `wallet(...)` is accepted only as a guard inside `<<A:...>>`, and is a syntax error elsewhere |
 
 ## Model-checking pipeline
 
