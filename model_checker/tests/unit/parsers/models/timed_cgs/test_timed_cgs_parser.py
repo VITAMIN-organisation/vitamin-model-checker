@@ -33,7 +33,7 @@ def test_fixture_loads_clocks_guards_and_invariants():
     assert list(model.states) == ["s0", "s1"]
     assert model.clocks_dict == {"x": 0}
     assert model.clock_constraint_struct[0][0] == "x<=1"
-    assert model.invariants_arr[0] == ["x", 2.0]
+    assert model.invariants_arr[0] == [("x", "<=", 2.0)]
 
 
 @pytest.mark.unit
@@ -73,7 +73,7 @@ def test_malformed_constraint_is_refused_with_its_place(section, cell, message):
 def test_core_section_header_ends_the_invariants():
     """A row after `Number_of_agents` is not an invariant of the next state."""
     parsed = _sections("Invariants", "x<=2", "Number_of_agents", "x<=9", states=("s0",))
-    assert parsed.invariants_arr == [["x", 2.0]]
+    assert parsed.invariants_arr == [[("x", "<=", 2.0)]]
 
 
 @pytest.mark.unit
@@ -87,7 +87,7 @@ def test_comments_are_neither_rows_nor_clocks(comment):
     )  # fmt: skip
     assert parsed.clocks == ["x"]
     assert [row[0] for row in parsed.clock_constraint_struct] == ["x<=1", "x>=2"]
-    assert parsed.invariants_arr[0] == ["x", 2.0]
+    assert parsed.invariants_arr[0] == [("x", "<=", 2.0)]
 
 
 @pytest.mark.unit

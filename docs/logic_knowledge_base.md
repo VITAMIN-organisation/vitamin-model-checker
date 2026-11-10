@@ -965,7 +965,7 @@ Used for Wallet_ATL.
 Used for TOL and TCTL. Includes all costCGS sections plus:
 - **Section**: `Clocks` - clock variable names.
 - **Section**: `Clock_constraints` - bounds and resets on transitions.
-- **Section**: `Invariants` - clock invariants per state.
+- **Section**: `Invariants` - clock invariants per state, with `<=` or `<` (a strict `x<3` excludes `x=3`; see [file_formats.md](file_formats.md)).
 
 ### ObstructionModel (COTL)
 Used for COTL. Loader:

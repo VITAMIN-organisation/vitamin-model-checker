@@ -223,6 +223,13 @@ Preorder
 - `Clock_constraints` - per-transition clock resets and bounds,
 - `Invariants` - clock invariants per state.
 
+An invariant is `<clock><op><integer>` with `<op>` either `<=` or `<`, and several
+can share a cell, separated by commas (`x<=5,y<3`). Time can pass in a state only while
+its invariant holds. Under `x<3` the clock never reaches 3, while under `x<=3` it
+reaches 3 exactly and cannot go past it. This follows the delay rule of AAMAS 2025
+(weighted timed automata): a delay `d` is allowed iff `v + d` satisfies the invariant.
+Use `>=` guards in `Clock_constraints`, not in `Invariants`.
+
 Comment lines (`#` or `//`) are allowed in these sections, as in the others.
 
 TOL and TCTL share this model type. Integrate TOL before TCTL if both land in

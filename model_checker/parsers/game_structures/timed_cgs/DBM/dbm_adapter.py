@@ -22,13 +22,13 @@ def apply_bounds(dbm: DBM, bounds) -> None:
 
 
 def apply_location_invariants(dbm: DBM, tcgs: TimedCGS, location: int) -> None:
-    for k in range(0, len(tcgs.invariants_arr[location]), 2):
-        clock, bound = tcgs.invariants_arr[location][k : k + 2]
-        dbm.add_constraint(
-            first_clock_idx=tcgs.clocks_dict[clock] + 1,
-            second_clock_idx=0,
-            constant=bound,
-        )
+    apply_bounds(
+        dbm,
+        [
+            (tcgs.clocks_dict[clock] + 1, op, bound)
+            for clock, op, bound in tcgs.invariants_arr[location]
+        ],
+    )
 
 
 def zone_satisfies_guards(
@@ -216,7 +216,7 @@ def get_max_clock_constraints(tcgs: TimedCGS) -> list[int]:
     clocks_dict = tcgs.clocks_dict
 
     for invariants in tcgs.invariants_arr:
-        for clock, bound in zip(invariants[::2], invariants[1::2], strict=True):
+        for clock, _op, bound in invariants:
             if clock in clocks_dict:
                 idx = clocks_dict[clock]
                 max_constants[idx] = max(max_constants[idx], int(bound))

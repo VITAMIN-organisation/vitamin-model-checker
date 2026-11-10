@@ -112,6 +112,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- timedCGS: a strict invariant such as `x<3` was applied as `x<=3` because the parser
+  dropped the operator. Time now stops before the bound.
 - OL follows its paper (ECAI 2023, Definitions 3-4). In `<Jk> phi` a Demon, at
   each step, disables edges of the current state whose costs sum to at most `k`,
   never all of them, and every remaining path must satisfy `phi`. Before, `k`

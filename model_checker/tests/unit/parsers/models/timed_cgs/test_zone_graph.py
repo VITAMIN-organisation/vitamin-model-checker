@@ -110,3 +110,74 @@ def test_unbounded_clock_has_no_dead_ends(tmp_path):
     graph = ZoneGraph(tcgs)
     assert graph.graph
     assert all(successors for successors in graph.graph.values())
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("invariant", "bounds", "reachable"),
+    [
+        # x<3: time stops before 3, so x==3 and x>=3 are out, x>2 (e.g. 2.5) is in.
+        ("x<3", [(1, "==", 3)], False),
+        ("x<3", [(1, ">=", 3)], False),
+        ("x<3", [(1, ">", 2)], True),
+        # x<=3: x reaches 3 exactly.
+        ("x<=3", [(1, "==", 3)], True),
+        ("x<=3", [(1, ">", 3)], False),
+    ],
+)
+def test_strict_invariant_excludes_its_bound(tmp_path, invariant, bounds, reachable):
+    tcgs = _load(
+        tmp_path,
+        "Transition\n*\nName_State\ns0\nInitial_State\ns0\nAtomic_propositions\np\n"
+        "Labelling\n1\nNumber_of_agents\n1\nClocks\nx\nClock_constraints\n0\n"
+        f"Invariants\n{invariant}\n",
+    )
+    assert ZoneGraph(tcgs).has_path_from("s0", bounds) is reachable
+
+
+_TWO_STATES = (
+    "Transition\n* 1\n0 *\nName_State\ns0 s1\nInitial_State\ns0\n"
+    "Atomic_propositions\np\nLabelling\n1\n0\nNumber_of_agents\n1\n"
+)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("invariant", "states"),
+    [
+        # s0 has no invariant, so x==3 holds there. Entering s1 needs x < 3, so
+        # under x<3 the clock is 3 at s1 never, and under x<=3 it is 3 at s1 once.
+        ("x<3", {"s0"}),
+        ("x<=3", {"s0", "s1"}),
+    ],
+)
+def test_strict_invariant_of_a_target_blocks_the_edge_at_its_bound(
+    tmp_path, invariant, states
+):
+    tcgs = _load(
+        tmp_path,
+        _TWO_STATES
+        + f"Clocks\nx\nClock_constraints\n0 0\n0 0\nInvariants\n0\n{invariant}\n",
+    )
+    assert states_with_time_constraints(tcgs, ZoneGraph(tcgs), "x==3") == states
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("invariants", "reachable"),
+    [
+        # Both clocks start at 0 and run together, so y<3 stops x before 3 even
+        # though x<=5 alone would allow it.
+        ("x<=5,y<3", False),
+        # y<=3 allows y=3, and then x=3 as well.
+        ("x<=5,y<=3", True),
+    ],
+)
+def test_two_invariants_in_one_cell_both_apply(tmp_path, invariants, reachable):
+    tcgs = _load(
+        tmp_path,
+        "Transition\n*\nName_State\ns0\nInitial_State\ns0\nAtomic_propositions\np\n"
+        "Labelling\n1\nNumber_of_agents\n1\nClocks\nx y\nClock_constraints\n0\n"
+        f"Invariants\n{invariants}\n",
+    )
+    assert ZoneGraph(tcgs).has_path_from("s0", [(1, "==", 3)]) is reachable

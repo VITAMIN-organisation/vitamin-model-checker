@@ -119,3 +119,30 @@ def test_forward_step_applies_guard_then_reset(minimal_tcgs):
     )
     assert successor is not None
     assert _bounds(successor) == (0, 0)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("invariant", "has_predecessor"),
+    [
+        # Reaching s1 with x>=3 needs x=3 to satisfy s1's invariant: x<3 rules it out.
+        ("x<3", False),
+        ("x<=3", True),
+    ],
+)
+def test_strict_target_invariant_limits_the_predecessor_zone(
+    tmp_path, invariant, has_predecessor
+):
+    path = tmp_path / "strict.txt"
+    path.write_text(
+        "Transition\n* 1\n0 *\nName_State\ns0 s1\nInitial_State\ns0\n"
+        "Atomic_propositions\np\nLabelling\n1\n0\nNumber_of_agents\n1\n"
+        f"Clocks\nx\nClock_constraints\n0 0\n0 0\nInvariants\n0\n{invariant}\n"
+    )
+    tcgs = TimedCGS()
+    tcgs.read_file(path)
+    if has_predecessor:
+        assert DBMAdapter.compute_predecessors(tcgs, "s0", "s1", "x>=3")
+    else:
+        with pytest.raises(ValueError, match="not consistent"):
+            DBMAdapter.compute_predecessors(tcgs, "s0", "s1", "x>=3")

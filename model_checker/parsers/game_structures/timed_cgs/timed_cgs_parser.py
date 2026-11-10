@@ -111,7 +111,6 @@ def _parse_invariants_row(instance: Any, line: str, location: int) -> None:
                     "Invariants must use '<' or '<=' (e.g. x<=5). "
                     "Use '>=' guards in Clock_constraints, not in Invariants."
                 )
-            instance.invariants_arr[location] += [
-                matched.group(1),
-                float(matched.group(3)),
-            ]
+            instance.invariants_arr[location].append(
+                (matched.group(1), matched.group(2), float(matched.group(3)))
+            )
