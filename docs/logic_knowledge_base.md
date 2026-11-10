@@ -856,7 +856,11 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
   `model_checker/parsers/formulas/parser_utils.py` (CGS models and Family-B
   formula AST post-validation via `validate_ast()`)
 
-**Reserved keywords (case-insensitive):** `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`
+**Reserved keywords (case-insensitive):** `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`, `true`, `false`
+
+`true` and `false` are the boolean constants, so a model that declares a proposition with
+either name (`true`, `True`, `FALSE`, ...) is rejected when it is read. The constants
+themselves are written in lowercase in a formula.
 
 **Lexer-specific proposition patterns (modal compound disambiguation):**
 - **IATL, TCTL, TOL**: `ICTL_PROPOSITION_TOKEN` /

@@ -10,6 +10,7 @@ from typing import Generic, NamedTuple, TypeVar
 
 from model_checker.parsers.syntax_patterns import (
     AGENT_LIST,
+    BOOLEAN_CONSTANTS,
     COALITION_ATL_TOKEN,
     EMPTY_COALITION_RE,
     FORMULA_RESERVED_WORDS,
@@ -417,6 +418,8 @@ def validate_ast(
     """Walk the parse tree and ensure every leaf is a known operator, coalition, or proposition."""
 
     def _is_valid_atom(node_str):
+        if node_str in BOOLEAN_CONSTANTS:
+            return True
         if node_str in valid_operators or node_str.upper() in valid_operators:
             return True
         if coalition_pattern and coalition_pattern.match(node_str):

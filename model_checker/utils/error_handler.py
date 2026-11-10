@@ -3,6 +3,8 @@
 import functools
 from typing import Any
 
+from model_checker.parsers.syntax_patterns import BOOLEAN_CONSTANTS
+
 
 def create_error_response(
     error_type: str,
@@ -43,9 +45,6 @@ def raise_if_undeclared(names, declared) -> None:
         )
 
 
-_CONSTANTS = frozenset({"true", "false"})
-
-
 def unresolved_leaves_error(leaves, declared) -> dict[str, Any]:
     """The semantic error result when a solver could not resolve every leaf of the formula.
 
@@ -53,11 +52,11 @@ def unresolved_leaves_error(leaves, declared) -> dict[str, Any]:
     not evaluate; failing that, every leaf it could not resolve.
     """
     leaves = {str(leaf) for leaf in leaves}
-    undeclared = _undeclared(leaves - _CONSTANTS, declared)
+    undeclared = _undeclared(leaves - BOOLEAN_CONSTANTS, declared)
     if undeclared:
         message = undeclared_propositions_message(undeclared, declared)
-    elif leaves & _CONSTANTS:
-        listed = ", ".join(repr(c) for c in sorted(leaves & _CONSTANTS))
+    elif leaves & BOOLEAN_CONSTANTS:
+        listed = ", ".join(repr(c) for c in sorted(leaves & BOOLEAN_CONSTANTS))
         message = f"This logic does not evaluate the constant(s) {listed}"
     else:
         listed = ", ".join(repr(leaf) for leaf in sorted(leaves))

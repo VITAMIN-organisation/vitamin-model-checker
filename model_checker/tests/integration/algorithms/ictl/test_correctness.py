@@ -262,3 +262,21 @@ class TestValidation:
         )
 
         check_conditions_hold(_dict_to_cgs(_figure5_countermodel_data()))
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("formula", "expected"),
+    [
+        # R is the chain s0 -> s1 -> ... -> s5 with a loop at every state, so each
+        # state starts a path; true holds on all six states, false on none.
+        ("EF true", {"s0", "s1", "s2", "s3", "s4", "s5"}),
+        ("AF true", {"s0", "s1", "s2", "s3", "s4", "s5"}),
+        ("EF false", set()),
+        ("AF false", set()),
+    ],
+)
+def test_true_and_false_are_all_states_and_none(formula, expected):
+    result = model_checking(formula, str(_EXPERIMENT_MODEL))
+    assert "error" not in result, result
+    assert parse_state_set_literal(result["res"].removeprefix("Result: ")) == expected

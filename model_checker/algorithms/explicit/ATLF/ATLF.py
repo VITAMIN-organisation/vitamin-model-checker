@@ -1,6 +1,10 @@
+from model_checker.algorithms.explicit.ATLF.real_value_utils import set_value_tuple_list
 from model_checker.algorithms.explicit.ATLF.solver import solve_tree
 from model_checker.algorithms.explicit.shared import build_resolved_formula_tree
-from model_checker.algorithms.explicit.shared.atom_utils import formula_leaves
+from model_checker.algorithms.explicit.shared.atom_utils import (
+    boolean_constant,
+    formula_leaves,
+)
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
@@ -62,7 +66,10 @@ def _core_atlf_checking(cgs, formula):
 
 
 def _resolve_atom(cgs, atom):
-    """Map an atomic proposition to its per-state real values."""
+    """Map an atomic proposition to its per-state real values; `true` is 1 and `false` is 0 everywhere."""
+    constant = boolean_constant(atom)
+    if constant is not None:
+        return str(set_value_tuple_list(cgs, 1.0 if constant else 0.0))
     couples = get_tuple_list_prop(cgs, atom)
     if couples is None:
         return None

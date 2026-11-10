@@ -37,6 +37,12 @@ _CASES = [
     ("<2>(p U q)", {"s1", "s3"}),
     # nested coalitions: <2>X q holds at s1, which agent 1 reaches
     ("<1>F (<2>X q)", _ALL),
+    # true holds everywhere and every state has a successor (s3 loops), false nowhere
+    ("<1>F true", _ALL),
+    ("<1>G true", _ALL),
+    ("<1>X true", _ALL),
+    ("<1>F false", set()),
+    ("<1>G false", set()),
 ]
 
 

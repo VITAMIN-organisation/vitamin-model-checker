@@ -30,22 +30,29 @@ ICTL_PROPOSITION_TOKEN = (
 # TCTL / TOL: same lexer constraint as ICTL (single-letter E/A/F/G/U/X/R/W stay operators).
 TCTL_TOL_PROPOSITION_TOKEN = ICTL_PROPOSITION_TOKEN
 
-# Reserved words that must not be used as atomic proposition names (case-insensitive).
-FORMULA_RESERVED_WORDS = frozenset(
-    {
-        "and",
-        "or",
-        "not",
-        "implies",
-        "until",
-        "release",
-        "globally",
-        "next",
-        "eventually",
-        "always",
-        "forall",
-        "exist",
-    }
+# The boolean constants, written in lowercase in formulas and AST leaves.
+BOOLEAN_CONSTANTS = frozenset({"true", "false"})
+
+# Reserved words that must not be used as atomic proposition names (case-insensitive,
+# so `True` and `FALSE` are refused as well: no parser reads them as names).
+FORMULA_RESERVED_WORDS = (
+    frozenset(
+        {
+            "and",
+            "or",
+            "not",
+            "implies",
+            "until",
+            "release",
+            "globally",
+            "next",
+            "eventually",
+            "always",
+            "forall",
+            "exist",
+        }
+    )
+    | BOOLEAN_CONSTANTS
 )
 
 # NatSL quantifier tokens; uppercase E/A cannot be temporal atoms (lexer ambiguity).

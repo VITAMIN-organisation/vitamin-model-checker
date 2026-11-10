@@ -26,6 +26,11 @@ class TestLTLErrorHandling:
         assert "error" in result
         assert result["error"]["type"] == "semantic"
 
+    def test_ltl_uppercase_constant_is_a_syntax_error(self, ctl_small_model):
+        """`TRUE` is a reserved word, not an undeclared name."""
+        result = model_checking("F TRUE", ctl_small_model.filename)
+        assert result["error"]["type"] == "syntax"
+
     @pytest.mark.parametrize(
         "formula,name",
         [
@@ -34,7 +39,6 @@ class TestLTLErrorHandling:
             ("p U my_prop", "my_prop"),
             ("F pUq", "pUq"),
             ("F Fp", "Fp"),
-            ("F TRUE", "TRUE"),
         ],
     )
     def test_ltl_undeclared_name_is_an_error_naming_it(

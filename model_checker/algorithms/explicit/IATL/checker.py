@@ -13,6 +13,7 @@ from model_checker.algorithms.explicit.IATL.preimage import (
 from model_checker.algorithms.explicit.ICTL.util.graph import (
     get_preorder,
 )
+from model_checker.algorithms.explicit.shared.atom_utils import boolean_constant
 from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.utils.formula_tree import FormulaTreeNode, build_formula_tree
@@ -79,6 +80,9 @@ class IATLModelChecker:
         """Build a formula tree with atoms resolved to state sets."""
 
         def resolve_atom(atom) -> str | None:
+            constant = boolean_constant(atom)
+            if constant is not None:
+                return str(self.states_set if constant else set())
             prop_idx = proposition_index(self.model.atomic_propositions, str(atom))
             if prop_idx is None:
                 return None

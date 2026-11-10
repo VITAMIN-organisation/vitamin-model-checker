@@ -81,6 +81,22 @@ def test_agent_labels_replace_the_numbers():
         ),
         (_lines(props="1goal"), "Atomic proposition '1goal' is invalid"),
         (
+            _lines(props="true"),
+            "Atomic proposition 'true' clashes with reserved keyword",
+        ),
+        (
+            _lines(props="false"),
+            "Atomic proposition 'false' clashes with reserved keyword",
+        ),
+        (
+            _lines(props="True"),
+            "Atomic proposition 'True' clashes with reserved keyword",
+        ),
+        (
+            _lines(props="FALSE"),
+            "Atomic proposition 'FALSE' clashes with reserved keyword",
+        ),
+        (
             _lines(agents="two"),
             "Invalid value for Number_of_agents.*Expected a valid integer",
         ),

@@ -5,6 +5,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
+from model_checker.parsers.syntax_patterns import BOOLEAN_CONSTANTS
 from model_checker.utils.error_handler import raise_if_undeclared
 from model_checker.utils.formula_tree import build_formula_tree
 
@@ -53,6 +54,15 @@ def resolve_atom_with_constants(
     return resolve_atom(cgs, s)
 
 
+def boolean_constant(leaf: Any) -> bool | None:
+    """True for the leaf `true`, False for `false`, None for any other leaf (lowercase only).
+
+    For logics whose leaf resolver has no parser; `resolve_atom_with_constants` is the
+    parser-based counterpart."""
+    leaf = str(leaf)
+    return leaf == "true" if leaf in BOOLEAN_CONSTANTS else None
+
+
 def formula_leaves(node: Any) -> set[str]:
     """Every leaf of a tuple formula tree (node[0] is the operator), constants included."""
     if isinstance(node, str):
@@ -61,8 +71,8 @@ def formula_leaves(node: Any) -> set[str]:
 
 
 def formula_propositions(node: Any) -> set[str]:
-    """The leaves without the constants `true` and `false` (lowercase only, so `TRUE` is a name)."""
-    return formula_leaves(node) - {"true", "false"}
+    """The leaves without the lowercase constants `true` and `false`."""
+    return formula_leaves(node) - BOOLEAN_CONSTANTS
 
 
 def ensure_ctl_readable_propositions(cgs: AtomicModel) -> None:

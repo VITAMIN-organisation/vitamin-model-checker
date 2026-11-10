@@ -30,7 +30,12 @@ _DOCUMENTED_RESERVED = {
     "always",
     "forall",
     "exist",
+    "true",
+    "false",
 }
+
+# Reserved as names, but in a formula they are valid constants.
+_CONSTANTS = {"true", "false"}
 
 # Parsers that still read these reserved words as names (a known bug, not the rule).
 _STILL_ACCEPTED = {
@@ -43,13 +48,13 @@ _STILL_ACCEPTED = {
 _RESERVED_CASES = sorted(
     (logic, word)
     for logic in OPERATOR_FORMS
-    for word in _DOCUMENTED_RESERVED - _STILL_ACCEPTED.get(logic, set())
+    for word in _DOCUMENTED_RESERVED - _CONSTANTS - _STILL_ACCEPTED.get(logic, set())
 )
 
 
 @pytest.mark.unit
 def test_reserved_words_match_the_docs():
-    """The parser's list and the documented list are the same twelve words."""
+    """The parser's list and the documented list are the same fourteen words."""
     assert FORMULA_RESERVED_WORDS == _DOCUMENTED_RESERVED
 
 
@@ -72,6 +77,30 @@ def test_name_starting_with_an_operator_letter_is_a_proposition(logic, name):
     prefix, op = OPERATOR_FORMS[logic]
     result = parse(logic, f"{prefix}{op} {name}")
     assert result is not None and holds_word(result, name), result
+
+
+# Wallet_ATL still rejects `true` and `false` in a formula (not yet decided).
+@pytest.mark.unit
+@pytest.mark.parametrize("logic", sorted(set(OPERATOR_FORMS) - {"Wallet_ATL"}))
+@pytest.mark.parametrize("constant", sorted(_CONSTANTS))
+def test_reserved_constant_is_accepted_as_a_constant_in_a_formula(logic, constant):
+    """`F true` parses: `true` and `false` are reserved as names but are valid constants."""
+    prefix, op = OPERATOR_FORMS[logic]
+    assert parse(logic, f"{prefix}{op} {constant}") is not None
+
+
+@pytest.mark.unit
+# Wallet_ATL rejects the constants altogether; NatSL, TCTL and TOL do not refuse reserved
+# words as names in a formula (see _STILL_ACCEPTED). The solver then reports the name as
+# undeclared, since a model cannot declare it.
+@pytest.mark.parametrize(
+    "logic", sorted(set(OPERATOR_FORMS) - {"Wallet_ATL", "NatSL", "TCTL", "TOL"})
+)
+def test_constant_in_another_letter_case_is_never_a_proposition(logic):
+    """`True` is refused as a name; ATL_STAR's lexer reads it as the constant instead."""
+    prefix, op = OPERATOR_FORMS[logic]
+    result = parse(logic, f"{prefix}{op} True")
+    assert result is None or not holds_word(result, "True"), result
 
 
 @pytest.mark.unit

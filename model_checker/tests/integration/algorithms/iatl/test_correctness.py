@@ -228,3 +228,21 @@ class TestValidation:
         model = _load_bcgs(str(_FIXTURE))
         assert len(model.states) == 2
         assert model.get_number_of_agents() == 2
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("formula", "expected"),
+    [
+        # s0 and s1 both loop and the preorder is the identity, so true holds on
+        # both states and false on none.
+        ("<1>F true", {"s0", "s1"}),
+        ("<1>G true", {"s0", "s1"}),
+        ("<1>F false", set()),
+        ("<1>G false", set()),
+    ],
+)
+def test_true_and_false_are_all_states_and_none(formula, expected):
+    result = model_checking(formula, str(_FIXTURE))
+    assert "error" not in result, result
+    assert parse_state_set_literal(result["res"].removeprefix("Result: ")) == expected

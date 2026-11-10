@@ -112,6 +112,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- ICTL, IATL and ATLF: `true` and `false` were rejected with "does not evaluate the
+  constant". They now mean all states and no state (in ATLF the value 1 and 0 everywhere).
+- `true` and `false` are reserved words, so a model that declares a proposition with
+  either name (in any letter case) is rejected. Before, `<1>F true` silently used the
+  constant and ignored the model's own proposition.
 - RBATL, RABATL and Wallet_ATL: when the initial state was False, the result was the
   state set of plain ATL, which is too large (RBATL `<1><1>G r` on the 6-state fixture
   listed s1, s3 and s4 instead of none), and an invalid bound such as `<1><0>G r` was
