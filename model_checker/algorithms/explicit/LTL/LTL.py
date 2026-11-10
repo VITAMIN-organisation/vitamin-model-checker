@@ -8,7 +8,6 @@ the model is pruned under each candidate strategy before verification.
 """
 
 import logging
-import re
 from typing import Any
 
 from model_checker.algorithms.explicit.LTL.pruning import pruning
@@ -27,23 +26,6 @@ from model_checker.parsers.game_structures.cgs import CGSProtocol
 from model_checker.utils.error_handler import create_error_response
 
 logger = logging.getLogger(__name__)
-
-LTL_KEYWORDS = {
-    "x",
-    "f",
-    "g",
-    "u",
-    "and",
-    "or",
-    "not",
-    "next",
-    "eventually",
-    "globally",
-    "until",
-    "implies",
-    "true",
-    "false",
-}
 
 
 def _validate_ltl_input(formula: str, filename: str | None) -> dict[str, Any] | None:
@@ -72,17 +54,24 @@ def _load_ltl_model(filename: str) -> Any:
     return cgs
 
 
+def _formula_propositions(node: Any) -> set[str]:
+    """Names in a parsed LTL formula; the parser's leaves are names and `true`/`false`."""
+    if isinstance(node, str):
+        return {node} - {"true", "false"}
+    return set().union(*(_formula_propositions(child) for child in node[1:]))
+
+
 def _validate_formula_propositions(
-    formula: str, atomic_propositions: list[str]
+    ast: Any, atomic_propositions: list[str]
 ) -> dict[str, Any] | None:
     """Return an error dict if the formula uses undeclared propositions; otherwise None."""
-    formula_props = set(re.findall(r"\b([a-z]+)\b", formula)) - LTL_KEYWORDS
-    invalid = formula_props - set(atomic_propositions)
+    invalid = _formula_propositions(ast) - set(atomic_propositions)
     if invalid:
+        names = ", ".join(repr(name) for name in sorted(invalid))
         return create_error_response(
             "validation",
-            f"Atomic proposition(s) {', '.join(sorted(invalid))} "
-            f"do not exist in the model",
+            f"Proposition(s) {names} not among the model's declared "
+            f"propositions {sorted(atomic_propositions)}",
         )
     return None
 
@@ -351,13 +340,13 @@ def model_checking(formula: str, filename: str) -> dict[str, Any]:
         return err
 
     try:
-        _, parse_err = _parse_ltl_formula(formula)
+        ast, parse_err = _parse_ltl_formula(formula)
         if parse_err is not None:
             return parse_err
 
         cgs = _load_ltl_model(filename)
         atomic_propositions = cgs.atomic_propositions
-        prop_err = _validate_formula_propositions(formula, atomic_propositions)
+        prop_err = _validate_formula_propositions(ast, atomic_propositions)
         if prop_err is not None:
             return prop_err
 

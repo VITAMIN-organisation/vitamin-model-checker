@@ -26,6 +26,27 @@ class TestLTLErrorHandling:
         assert "error" in result
         assert result["error"]["type"] == "validation"
 
+    @pytest.mark.parametrize(
+        "formula,name",
+        [
+            ("F Goal", "Goal"),
+            ("G p1", "p1"),
+            ("p U my_prop", "my_prop"),
+            ("F pUq", "pUq"),
+            ("F Fp", "Fp"),
+            ("F TRUE", "TRUE"),
+        ],
+    )
+    def test_ltl_undeclared_name_is_an_error_naming_it(
+        self, ctl_small_model, formula, name
+    ):
+        """Capitalised, numbered and glued names are checked like lowercase ones."""
+        result = model_checking(formula, ctl_small_model.filename)
+        assert result["error"]["type"] == "validation"
+        assert f"{name!r} not among the model's declared propositions" in (
+            result["error"]["message"]
+        )
+
 
 @pytest.mark.integration
 @pytest.mark.model_checking

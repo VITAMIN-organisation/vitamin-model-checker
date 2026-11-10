@@ -22,9 +22,10 @@ User formulas must not contain `E` / `A` or coalitions. `R` / `W` are not in the
 surface syntax.
 
 An operator is followed by a space, `(` or `!`: `X p`, `F G p`. `Xp` and `FGp` are
-names, and an undeclared name is false, so see
-[operators and names](../logic_knowledge_base.md#operators-and-names) when a formula is
-unexpectedly false.
+names, and so is `pUq`: write `p U q`. A name that is not among the model's
+declared propositions is an error that names it, so see
+[operators and names](../logic_knowledge_base.md#operators-and-names) when a name you
+did not mean to declare appears in the message.
 
 ## Semantic denotations
 
@@ -35,7 +36,8 @@ unexpectedly false.
    sure-win on the pruned model.
 
 The rewrite is a parsing bridge, not a semantics-preserving embedding of LTL
-into CTL.
+into CTL. It is built from the parsed formula, so `p U q U r` (which groups to the
+right) becomes `A(p U A(q U r))`.
 
 Implementation techniques (strategy pruning, condition cache): [algorithm_design.md](../algorithm_design.md).
 

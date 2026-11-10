@@ -53,7 +53,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `docs/logic_knowledge_base.md`, "Operators and names".
   - LTL: `Xp`, `FGp`, `AXp`, `AGAFp` and similar, in upper or lower case, are
     names. Write `X p`, `F G p`, `AX p`, `AG AF p`. `ltl_to_ctl` no longer splits
-    them.
+    them. `pUq` is a name too, so `ltl_to_ctl` leaves it alone; before, it
+    rewrote it to `A(p U q)`. Write `p U q`.
+  - LTL: a name that is not among the model's declared propositions is an error
+    that names it ("Proposition(s) 'Goal' not among the model's declared
+    propositions [...]"). Before, only all-lowercase names were checked, so a
+    capitalised, numbered or glued name such as `Goal`, `p1` or `pUq` was
+    silently false.
   - NatSL: the goal needs a space after its operator (`F goal`). `Fgoal`, and a
     goal with no operator such as `Goal`, are rejected with an error. The
     normalised formula in the result now reads `...:(x,1)F goal`.
@@ -65,6 +71,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- LTL: `ltl_to_ctl` is built from the parsed formula instead of regex rewriting.
+  Before, `p U !q` was left unrewritten, and `p U q U r` became the left-grouped
+  `A(A(p U q) U r)` although the parser groups it to the right. Now it is
+  `A(p U A(q U r))`. Nested and parenthesised operands such as
+  `((a && b)) U c` are handled. A formula the parser rejects raises a
+  `ValueError` that names it, instead of being passed on unchanged.
 - NatATL, NatATL_Recall and NatATLF read a proposition that starts with `F`, `G`,
   `X` or `U` (`Fuel`, `Goal`, `Until`) as an operator followed by the rest of the
   name, so `<{1},1>F Fuel` failed with a CTL syntax error. This is the same

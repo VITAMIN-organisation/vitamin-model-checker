@@ -1,21 +1,51 @@
-import re
+from typing import Any
 
-_KEYWORD_TO_SYMBOL = (
-    (re.compile(r"\buntil\b", re.IGNORECASE), "U"),
-    (re.compile(r"\beventually\b", re.IGNORECASE), "F"),
-    (re.compile(r"\bglobally\b", re.IGNORECASE), "G"),
-    (re.compile(r"\bnext\b", re.IGNORECASE), "X"),
-)
+from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
-# Add a universal path quantifier before each bare temporal operator. An operator
-# is a word of its own: `Xp` and `Fuel` are names, so operators and atoms must be
-# separated (`X p`, `F Fuel`), as in every other logic.
-_PREFIX_TEMPORAL = re.compile(r"(?<![AE])(?<![a-zA-Z0-9_])([XFG])(?=\s|[(!]|$)")
+# The parser keeps the spelling the user wrote (`and`, `NEXT`), so map each spelling
+# to one symbol.
+_SYMBOL = {
+    "!": "!",
+    "NOT": "!",
+    "&&": "&&",
+    "AND": "&&",
+    "||": "||",
+    "OR": "||",
+    "->": "->",
+    "IMPLIES": "->",
+    "X": "X",
+    "NEXT": "X",
+    "F": "F",
+    "EVENTUALLY": "F",
+    "G": "G",
+    "GLOBALLY": "G",
+    "U": "U",
+    "UNTIL": "U",
+}
+_CONNECTIVES = ("&&", "||", "->")
 
-_UNTIL_PATTERN = re.compile(
-    r"(\([^()]*\)|A\([^()]*\)|[a-zA-Z]\w*)\s*U\s*"
-    r"(\([^()]*\)|A\([^()]*\)|[a-zA-Z]\w*)"
-)
+
+def _symbol(node: Any) -> str | None:
+    return None if isinstance(node, str) else _SYMBOL[node[0].upper()]
+
+
+def _operand(node: Any) -> str:
+    """Render an operand of a connective or Until, in parentheses unless it is a name or an Until."""
+    text = _render(node)
+    return text if _symbol(node) in (None, "U") else f"({text})"
+
+
+def _render(node: Any) -> str:
+    symbol = _symbol(node)
+    if symbol is None:
+        return node
+    if symbol == "U":
+        return f"A({_operand(node[1])} U {_operand(node[2])})"
+    if len(node) == 3:
+        return f"{_operand(node[1])} {symbol} {_operand(node[2])}"
+    child = node[1]
+    body = _operand(child) if _symbol(child) in _CONNECTIVES else _render(child)
+    return f"!{body}" if symbol == "!" else f"A{symbol} {body}"
 
 
 def ltl_to_ctl(ltl_formula: str) -> str:
@@ -25,24 +55,8 @@ def ltl_to_ctl(ltl_formula: str) -> str:
     the CTL parser accepts after strategy pruning. This is a syntactic bridge
     for VITAMIN's strategic LTL mode, not a classical LTL-to-CTL embedding.
     """
-    formula = ltl_formula.strip()
-    for pattern, replacement in _KEYWORD_TO_SYMBOL:
-        formula = pattern.sub(replacement, formula)
-
-    prev = None
-    while prev != formula:
-        prev = formula
-        formula = _PREFIX_TEMPORAL.sub(r"A\1 ", formula)
-
-    placeholder = "__U_PLACEHOLDER__"
-    while placeholder in formula:
-        placeholder = f"{placeholder}_X"
-
-    while True:
-        new_formula = _UNTIL_PATTERN.sub(rf"A(\1 {placeholder} \2)", formula)
-        if new_formula == formula:
-            break
-        formula = new_formula
-
-    formula = formula.replace(placeholder, "U")
-    return re.sub(r"\s+", " ", formula).strip()
+    parser = FormulaParserFactory.get_parser_instance("LTL")
+    ast = parser.parse(ltl_formula)
+    if ast is None:
+        raise ValueError(f"Invalid LTL formula {ltl_formula!r}: {parser.errors[0]}")
+    return _render(ast)

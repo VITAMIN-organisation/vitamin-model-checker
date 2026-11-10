@@ -153,11 +153,11 @@ LTL has no prefix: its `F`, `G`, `X` and `U` follow the precedence table of the
 
 Temporal operators (`X`, `F`, `G`, `U`, and in CTL, ICTL and TCTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`) are words of their own. Follow one with a space, `(` or `!`: `F p`, `F (p && q)`, `F !p`.
 
-An operator written with no space before a name, such as `Fp` or `FFuel`, is part of that name, so no logic reads it as an operator applied to the name. A name that only starts with an operator letter, such as `Fuel` or `Goal`, is valid when it stands alone: in `F Fuel` the space makes `F` the operator and `Fuel` the name.
+An operator written with no space before a name, such as `Fp` or `FFuel`, is part of that name, so no logic reads it as an operator applied to the name. A name that only starts with an operator letter, such as `Fuel` or `Goal`, is valid when it stands alone: in `F Fuel` the space makes `F` the operator and `Fuel` the name. A binary operator follows the same rule: `pUq` is one name, and `p U q` is the Until.
 
 Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py` checks it for each registered logic. The form with no space fails in one of three ways:
 
-- LTL and ATL* read it as one name. ATL* then reports that the name is not a declared proposition. LTL treats an undeclared proposition as false when the library is called directly, so a formula that is unexpectedly false may lack a space after an operator. The Workbench rejects undeclared names before the checker runs.
+- LTL and ATL* read it as one name, then report that the name is not among the model's declared propositions, with the name in the message. LTL checks every name, whatever its case or digits.
 - NatSL rejects it: `Fgoal`, and a goal with no operator such as `Goal`, are errors. A lowercase operator (`f goal`) is also an error, because operators are uppercase.
 - Every other parser reports a syntax error.
 
