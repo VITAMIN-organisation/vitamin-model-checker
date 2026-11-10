@@ -148,6 +148,8 @@ formulas; its rules and messages are in [the ATL* reference](ATL_STAR/algorithm.
 LTL has no prefix: its `F`, `G`, `X` and `U` follow the precedence table of the
 [Spot LTL library](https://spot.lre.epita.fr/tl.pdf) (section 3.1), so
 `F p && q` is `(F p) && q` and `p U q && r` is `(p U q) && r`.
+NatSL has no connectives after its prefix, so it rejects `E{1}x: (x, 1) F p && q`
+without offering two readings; see [the NatSL reference](NatSL/algorithm.md#supported-fragment).
 
 ### Operators and names
 

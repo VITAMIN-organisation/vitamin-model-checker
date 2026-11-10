@@ -24,6 +24,29 @@ Strategy variables may use multi-character identifiers such as `controller`, `op
 
 Supported temporal goals are `F`, `G`, and `X`, including their negated forms. The operator is uppercase and followed by a space; `not` is lowercase.
 
+The full logic is larger. The NatSL paper, AAMAS 2022 (local copy
+`docs/papers/AAMAS22.pdf`, section 3.1, Definition 2), defines
+
+```text
+phi ::= p | Es_a^{<=k}. phi | (a, s_a) phi | f(phi, ..., phi) | X phi | phi U phi
+```
+
+Here `p` is a proposition, `a` an agent, `s_a` a strategy variable and `k` the
+complexity bound: the checker writes `Es_a^{<=k}.` as `E{k}s:` and `(a, s_a)` as
+`(s, a)`. Each `f` is a function on truth values; the paper uses them for true,
+disjunction and negation ("function 1, function x, y -> max(x, y) and function
+x -> -x"). Definition 2 gives no precedence and does not say how far a quantifier
+reaches in a formula such as `Es. phi U psi`.
+
+The fragment needs no such rule, because a goal is one operator over one
+proposition. Any connective in a goal, as in `E{1}x: (x, 1) F p && q` or
+`E{1}x: (x, 1) F (p && q)`, is rejected with the message for every malformed goal:
+"Unsupported goal; this prototype accepts F p, G p, X p and their negations, with
+an uppercase operator and a space after it". The other logics with a prefix report
+`F p && q` as ambiguous and give both readings
+([knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)); NatSL
+supports neither reading, so it does not offer them.
+
 ## Semantics
 
 Quantifier order is preserved by the NatSL parser.

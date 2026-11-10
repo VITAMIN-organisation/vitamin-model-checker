@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the one-operand operators and the binary ones (`U`, and `R`, `W` where a logic has
   them): `p U q` is accepted, `pUq` is one name, `pU q` and `p Uq` are rejected, and
   a lowercase operator (`f p`, `p u q`) is rejected.
+- A test pins that NatSL rejects a connective in a goal, such as
+  `E{1}x:(x,1) F p && q`, with "Unsupported goal", for `&&`, `||`, `->` and the
+  words (`test_natsl_spacing.py`). The behaviour is unchanged; NatSL never accepted
+  one. See `docs/NatSL/algorithm.md`.
 - ICTL accepts the path quantifier over a parenthesized or bracketed Until or
   Release, `A(p U q)` and `A[p U q]`, the forms the ICTL papers write (EUMAS 2025,
   AREA 2023). `A p U q` still works. Before, `A(p U q)` and `A[p U q]` failed with

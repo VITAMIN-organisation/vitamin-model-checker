@@ -58,3 +58,15 @@ def test_natsl_goal_operator_is_uppercase(formula):
     """`f goal` is not an operator: operators are uppercase, `not` lowercase."""
     with pytest.raises(NatSLParseError, match="uppercase operator"):
         parse_formula(formula)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("connective", ["&&", "||", "->", "and", "or", "implies"])
+def test_natsl_connective_after_the_prefix_is_rejected(connective):
+    """A goal takes no connective, so neither reading of `F p && q` parses.
+
+    Every other logic with a prefix rejects this as ambiguous; if NatSL goals
+    gain connectives, that rule applies to them too.
+    """
+    with pytest.raises(NatSLParseError, match="Unsupported goal"):
+        parse_formula(f"E{{1}}x:(x,1) F p {connective} q")
