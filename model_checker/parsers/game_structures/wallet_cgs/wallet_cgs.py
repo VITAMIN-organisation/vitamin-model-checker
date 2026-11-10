@@ -1,5 +1,6 @@
 import re
 
+from model_checker.parsers.game_structures.cgs import cgs_actions
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 
@@ -61,15 +62,9 @@ class WalletCGS(CGS):
                     self.wallets[state] = tuple(wallet_values)
 
     def parse_parameterized_action(self, action_string):
-        """Parse parameterized actions - handle both action codes and contract numbers"""
+        """(name, value, is_consumption, is_income) of an action token; numbers,
+        `I` and any token without a letter-and-amount shape are neutral."""
         action_string = str(action_string).strip()
-
-        # Contract actions (numbers) are always neutral
-        if action_string.isdigit():
-            return action_string, 0, False, False
-
-        if action_string == "I":  # Idle action
-            return "I", 0, False, False
 
         # Parse pattern like "D20", "B50", "W30", etc.
         match = re.match(r"^([A-Z])(\d+)$", action_string)
@@ -87,43 +82,33 @@ class WalletCGS(CGS):
             return action_string, 0, False, False
 
     def check_action_feasibility(self, state, agent, action_string):
-        """Check if an action is feasible according to WCGS rules - returns (bool, reason)"""
-        action_name, parameter, is_consumption, is_income = (
-            self.parse_parameterized_action(action_string)
+        """(feasible, reason) for one agent's action, per AAMAS26b Def. 3.1 and 4.1:
+        a consumption action of value v needs W(state, agent) >= v; income and
+        neutral actions are always permitted (p. 3)."""
+        action_name, parameter, is_consumption, _ = self.parse_parameterized_action(
+            action_string
         )
-
-        # Contract actions (numbers) are always feasible - they're system triggers
-        if str(action_string).isdigit():
-            return True, "Contract action - always feasible"
+        if not is_consumption:
+            return True, "Income or neutral action - always feasible"
 
         wallet = self.wallets.get(state, (0,) * self.get_number_of_agents())[agent - 1]
+        if wallet >= parameter:
+            return True, "Sufficient funds"
+        action_desc = self.get_action_description(action_name)
+        return (
+            False,
+            f"Insufficient funds for {action_desc}{parameter}: need {parameter}, have {wallet}",
+        )
 
-        # CONSUMPTION ACTIONS (Act↓): Require sufficient wallet balance
-        if is_consumption:
-            if wallet >= parameter:
-                return True, "Sufficient funds"
-            else:
-                action_desc = self.get_action_description(action_name)
-                return (
-                    False,
-                    f"Insufficient funds for {action_desc}{parameter}: need {parameter}, have {wallet}",
-                )
-
-        # INCOME ACTIONS (Act↑): Require external preconditions
-        elif is_income:
-            available_funds = self.get_available_system_funds(state, agent, action_name)
-            if available_funds >= parameter:
-                return True, "Sufficient system funds"
-            else:
-                action_desc = self.get_action_description(action_name)
-                return (
-                    False,
-                    f"Insufficient system funds for {action_desc}{parameter}: need {parameter}, system has {available_funds}",
-                )
-
-        # Neutral actions (Idle and others) are always feasible
-        else:
-            return True, "Neutral action - always feasible"
+    def is_profile_feasible(self, state, profile):
+        """True when every agent of a `|`-joined joint profile can take its action in
+        `state`; the contract is checked like any agent (Def. 4.1 has no exemption)."""
+        return all(
+            self.check_action_feasibility(state, agent, action)[0]
+            for agent, action in enumerate(
+                profile.split(cgs_actions.AGENT_ACTION_SEPARATOR), start=1
+            )
+        )
 
     def get_action_description(self, action_char):
         """Get human-readable action description"""
@@ -141,18 +126,6 @@ class WalletCGS(CGS):
             "I": "idle",
         }
         return descriptions.get(action_char, f"action_{action_char}")
-
-    def get_available_system_funds(self, state, agent, action_name):
-        """Get available funds in the system for this income action.
-        Always use the last agent as the system/contract pool.
-        """
-        num_agents = self.get_number_of_agents()
-        if num_agents >= 1:
-            contract_index = num_agents - 1
-            return self.wallets.get(state, (0,) * self.get_number_of_agents())[
-                contract_index
-            ]
-        return 0
 
     def _contract_agent(self):
         """The last agent is the contract/system pool only when there is more than one agent."""

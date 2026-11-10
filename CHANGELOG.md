@@ -112,6 +112,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Wallet_ATL ignored the wallets when it built the coalition's moves, so an agent
+  with 5 could still win through a `D20` move: `<<1>>X goal` was true where the
+  Wallet ATL paper (AAMAS 2026, Def. 3.1 and 4.1) makes it false. The pre-image now
+  uses only moves every agent can pay for, and a state with no affordable move is
+  an error that names the state.
+- WalletCGS: an income action no longer needs funds in the last agent's wallet;
+  the paper allows income and neutral actions always.
 - WalletCGS with one agent: `get_next_states` treated the only agent as the contract agent
   and skipped its wallet check, so an action it could not pay for (`D6` with 5 in the
   wallet) still led to a next state. `get_valid_actions` and `get_next_states` now share

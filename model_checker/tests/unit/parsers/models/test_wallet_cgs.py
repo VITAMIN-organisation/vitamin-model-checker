@@ -74,3 +74,33 @@ def test_income_moves_money_only_when_the_pool_can_pay(temp_file, action, after)
     """The pool holds 10: W5 and W10 are paid in full, W11 not at all; the total stays 10."""
     model = _model(temp_file, f"{action}:I *", agents=2, wallet="0:10")
     assert model.simulate_transition("s0", {1: action, 2: "I"}) == after
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("action", "feasible"),
+    [
+        ("D5", True),  # 5 >= 5
+        ("D6", False),  # 5 < 6
+        ("W50", True),  # income is always permitted (AAMAS26b p. 3)
+        ("I", True),  # neutral
+    ],
+)
+def test_feasibility_follows_the_paper(temp_file, action, feasible):
+    model = _model(temp_file, f"{action} *", agents=1, wallet="5")
+    assert model.check_action_feasibility("s0", 1, action)[0] is feasible
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("profile", "feasible"),
+    [
+        ("D20|0", False),  # agent 1 holds 5 < 20
+        ("D5|0", True),  # agent 1 holds 5
+        ("IDLE|D5", False),  # agent 2, the contract, holds 0 < 5: no exemption
+        ("IDLE|0", True),
+    ],
+)
+def test_profile_is_feasible_only_if_every_agent_can_pay(temp_file, profile, feasible):
+    model = _model(temp_file, "I|0 *", agents=2, wallet="5:0")
+    assert model.is_profile_feasible("s0", profile) is feasible

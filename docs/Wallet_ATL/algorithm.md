@@ -28,9 +28,32 @@ invalid.
 
 ## Semantic denotations
 
-ATL-style coalition modalities with wallet guards applied as a static filter on
-state names that currently satisfy the guard from the `Wallets` section. Guards
-do not yet recompute balances along deposit/spend transitions.
+Source: the paper that defines the logic, "Wallet ATL: Towards Reliable Smart
+Contract Verification" (AAMAS 2026; kept locally as `docs/papers/AAMAS26b.pdf`,
+which git does not track).
+
+An action token is one of three kinds:
+
+- Consumption: `D`, `B`, `S`, `T` or `N` followed by an amount, as in `D20`.
+- Income: `W`, `R`, `E`, `F` or `U` followed by an amount, as in `W20`.
+- Neutral: every other token, such as `I`, `IDLE`, a number like `0`, or `*`.
+
+A joint move (one action per agent) counts only when every agent can take its
+part at the current state. A consumption action of amount `v` needs at least `v`
+in the acting agent's wallet there; income and neutral actions are always
+allowed (the paper's Def. 3.1 and 4.1, and p. 3: "Actions in Act-up are always
+permitted"). An agent that models the contract is checked like any other.
+
+The pre-image, the set of states from which the coalition can force the next
+state into a given set, uses only these moves (the paper's Def. 4.2-4.3 and
+Algorithm 1). So agent 1 with 5 in the wallet cannot win through a `D20` move.
+If, at some state, every transition needs an action that some agent cannot pay
+for at that state, model checking stops with an error naming the state: a game
+structure gives each agent at least one move per state (JACM 2002 Def. 2.1).
+
+Balances come from the `Wallets` section, one row per state. A wallet guard
+(`wallet(agent, op, value)`, see [Formula language](#formula-language)) keeps the
+states whose balance meets it; balances are not recomputed along transitions.
 
 Implementation techniques (transition cache, early-stop): [algorithm_design.md](../algorithm_design.md).
 
@@ -39,7 +62,7 @@ Implementation techniques (transition cache, early-stop): [algorithm_design.md](
 | Aspect | Theory | Implementation |
 |---|---|---|
 | Coalition syntax | Wallet-aware | Dedicated `<<...>>` (avoids clash with `<A><k>`) |
-| Wallet dynamics | May track spend/deposit | Static balance filter today |
+| Wallet dynamics | Balances change along transitions (Def. 4.4) | Balances read from `Wallets`; moves checked against them; not updated along transitions |
 | Temporal ops | X, F, G, U | Same |
 
 ## Model-checking pipeline

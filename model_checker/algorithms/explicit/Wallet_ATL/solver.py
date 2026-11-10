@@ -58,8 +58,10 @@ def _walletatl_binary_key(parser_instance: Any, val: Any) -> str | None:
     return None
 
 
-def solve_tree(cgs, node, transition_cache: dict | None = None) -> None:
-    """Recursively solve Wallet_ATL formula tree bottom-up."""
+def solve_tree(cgs, node, transition_cache: dict) -> None:
+    """Recursively solve Wallet_ATL formula tree bottom-up. `transition_cache` must
+    come from `build_feasible_transition_cache`: without it `pre` reads the
+    unfiltered matrix and ignores the wallets."""
     parser_instance = FormulaParserFactory.get_parser_instance("Wallet_ATL")
     solve_formula_tree(
         cgs,

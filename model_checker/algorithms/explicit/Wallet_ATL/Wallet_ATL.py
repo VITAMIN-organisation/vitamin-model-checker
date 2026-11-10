@@ -4,9 +4,6 @@
 import re
 from typing import Any
 
-from model_checker.algorithms.explicit.ATL.preimage import (
-    build_transition_cache,
-)
 from model_checker.algorithms.explicit.shared import (
     format_model_checking_result,
     resolve_atom,
@@ -21,6 +18,7 @@ from model_checker.utils.error_handler import (
 )
 from model_checker.utils.formula_tree import build_formula_tree
 
+from .preimage import build_feasible_transition_cache
 from .solver import solve_tree
 
 _UNARY_OPERATOR_MAP = {
@@ -174,7 +172,7 @@ def _core_walletatl_checking(cgs, formula: str) -> dict[str, Any]:
             formula_leaves(normalized_ast), cgs.atomic_propositions
         )
 
-    transition_cache = build_transition_cache(cgs)
+    transition_cache = build_feasible_transition_cache(cgs)
     solve_tree(cgs, root, transition_cache)
 
     initial_state = cgs.initial_state

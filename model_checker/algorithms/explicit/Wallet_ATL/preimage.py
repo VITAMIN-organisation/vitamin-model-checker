@@ -3,7 +3,11 @@
 from collections.abc import Iterable, Sequence
 from typing import Any
 
-from model_checker.algorithms.explicit.ATL.preimage import pre
+from model_checker.algorithms.explicit.ATL.preimage import (
+    TransitionCache,
+    build_transition_cache,
+    pre,
+)
 from model_checker.parsers.syntax_patterns import (
     WALLET_COALITION_PREFIX_RE,
     WALLET_CONSTRAINT_AND_RE,
@@ -11,6 +15,34 @@ from model_checker.parsers.syntax_patterns import (
 )
 
 WalletConstraint = tuple[int, tuple[str, int]]
+
+
+def build_feasible_transition_cache(cgs) -> TransitionCache:
+    """The ATL transition cache without the joint moves that some agent cannot pay
+    for at the source state, so `pre` only uses moves of the WCGS protocol
+    (AAMAS26b Def. 3.1 and 4.1-4.3).
+
+    A state that loses every move is an error: a WCGS is a game structure, which
+    gives each agent at least one move per state (JACM 2002 Def. 2.1)."""
+    cache: TransitionCache = {}
+    stuck = []
+    for index, moves in build_transition_cache(cgs).items():
+        state = cgs.get_state_name_by_index(index)
+        # A profile can lead to several targets; check it once per state.
+        verdicts = {
+            profile: cgs.is_profile_feasible(state, profile)
+            for profile in {profile for profile, _ in moves}
+        }
+        feasible = [move for move in moves if verdicts[move[0]]]
+        if moves and not feasible:
+            stuck.append(str(state))
+        cache[index] = feasible
+    if stuck:
+        raise ValueError(
+            f"State(s) {stuck} have no feasible move: every transition needs a "
+            "consumption action the acting agent cannot pay for."
+        )
+    return cache
 
 
 def is_wallet_coalition_operator(value: Any) -> bool:

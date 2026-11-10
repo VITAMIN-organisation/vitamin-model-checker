@@ -573,10 +573,12 @@ ATL with wallet-aware coalitions over `WalletCGS` models.
 **Model type:** `WalletCGS`. See [Wallet_ATL usage](Wallet_ATL/usage.md).
 
 > [!NOTE]
-> **Wallet guards:** Balance filters are applied as a **static** state-name
-> constraint from the `Wallets` section (which states currently satisfy the
-> guard). They do not yet recompute balances along transitions from deposit/spend
-> action encodings.
+> **Wallet guards:** a guard keeps the states whose balance in the `Wallets`
+> section meets it. Balances are not recomputed along transitions.
+
+A joint move is available only when every agent can pay for its part, so a
+`D20` move needs at least 20 in the acting agent's wallet. The rules are in
+[Wallet_ATL algorithm](Wallet_ATL/algorithm.md#semantic-denotations).
 
 ---
 

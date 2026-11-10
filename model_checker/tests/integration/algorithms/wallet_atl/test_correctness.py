@@ -123,3 +123,67 @@ class TestWalletATLResultSet:
             wallet_atl_model, "<< 1 : wallet(1, >= 0) >> G q"
         )
         assert extract_states_from_result(result) == {"s1"}
+
+
+def _two_agent_model(rows: str, wallet_s0: str, wallet_s1: str = "0:0") -> str:
+    """Agent 1 acts, agent 2 is the contract; goal holds only at s1, which loops on `*`."""
+    return (
+        f"Transition\n{rows}\n0 *\nName_State\ns0 s1\nInitial_State\ns0\n"
+        "Atomic_propositions\ngoal\nLabelling\n0\n1\nNumber_of_agents\n2\n"
+        f"Wallets\ns0: {wallet_s0}\ns1: {wallet_s1}\n"
+    )
+
+
+def _states(temp_file, content: str, formula: str) -> set:
+    result = model_checking(formula, temp_file(content))
+    assert "error" not in result, result
+    return extract_states_from_result(result)
+
+
+@pytest.mark.integration
+@pytest.mark.model_checking
+@pytest.mark.semantic
+class TestWalletATLFeasibleMoves:
+    """AAMAS26b Def. 3.1 and 4.1: a consumption action `Dv` is a move only when the
+    acting agent holds at least v; income (`Wv`) and neutral moves are always moves
+    ("Actions in Act↑ are always permitted", p. 3). Strategies use only such moves."""
+
+    @pytest.mark.parametrize(
+        ("alice", "expected"),
+        [
+            # 5 < 20: D20 is not a move, Alice can only idle in s0; s1 loops on goal
+            ("5:0", {"s1"}),
+            # 20 >= 20: Alice plays D20 to reach s1
+            ("20:0", {"s0", "s1"}),
+        ],
+    )
+    def test_unaffordable_deposit_is_not_a_move(self, temp_file, alice, expected):
+        content = _two_agent_model("I|0 D20|0", alice)
+        assert _states(temp_file, content, "<<1>>X goal") == expected
+
+    @pytest.mark.parametrize(
+        ("wallets", "expected"),
+        [
+            # the contract holds 0, so D5 is not its move: s0 can only go to s1
+            ("100:0", {"s0", "s1"}),
+            # the contract holds 5 and may play D5, keeping the game in s0
+            ("100:5", {"s1"}),
+        ],
+    )
+    def test_opponent_moves_are_checked_too(self, temp_file, wallets, expected):
+        content = _two_agent_model("I|D5 I|0", wallets)
+        assert _states(temp_file, content, "<<1>>X goal") == expected
+
+    @pytest.mark.parametrize("move", ["W50|0", "I|0", "IDLE|0"])
+    def test_income_and_idle_need_no_funds(self, temp_file, move):
+        """All wallets are 0, yet income (W50) and idle (I, IDLE) are moves, so s0 reaches s1."""
+        content = _two_agent_model(f"0 {move}", "0:0")
+        assert _states(temp_file, content, "<<1>>X goal") == {"s0", "s1"}
+
+    def test_state_without_a_feasible_move_is_refused(self, temp_file):
+        """s0's only move is D20 with 5 in the wallet; a CGS needs a move per state
+        (JACM 2002 Def. 2.1), so the model is rejected and the message names s0."""
+        content = _two_agent_model("0 D20|0", "5:0")
+        result = model_checking("<<1>>X goal", temp_file(content))
+        assert "error" in result, result
+        assert "s0" in result["error"]["message"]
