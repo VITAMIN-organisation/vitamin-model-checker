@@ -1,17 +1,19 @@
-"""DBMAdapter tests using the in-repo minimal timedCGS fixture."""
+"""DBMAdapter: from a timedCGS and clock formulas to zones.
+
+The fixture tctl_tol_minimal.txt has one clock x, the invariant x <= 2 in both
+states and no guard on s0 -> s1, so every predecessor zone below is 0 <= x <= 2.
+"""
 
 from pathlib import Path
 
 import pytest
 
 from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
+from model_checker.parsers.game_structures.timed_cgs.DBM.DBM import DBM
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 
 _FIXTURE = (
-    Path(__file__).resolve().parents[4]
-    / "fixtures"
-    / "timedCGS"
-    / "tctl_tol_minimal.txt"
+    Path(__file__).resolve().parents[4] / "fixtures/timedCGS/tctl_tol_minimal.txt"
 )
 
 
@@ -22,143 +24,98 @@ def minimal_tcgs() -> TimedCGS:
     return tcgs
 
 
-@pytest.mark.unit
-def test_compute_predecessors_feasible(minimal_tcgs):
-    zone = DBMAdapter.compute_predecessors(
-        minimal_tcgs, source="s0", target="s1", formulas="x>=0"
-    )[0]
-    assert not zone.is_empty()
+def _bounds(zone: DBM) -> tuple:
+    """(upper bound of x, minus its lower bound)."""
+    return zone.elements[1][0].constant, zone.elements[0][1].constant
 
 
 @pytest.mark.unit
-def test_compute_predecessors_infeasible(minimal_tcgs):
+@pytest.mark.parametrize("formula", ["x>=0", "x>=1"])
+def test_predecessor_zone_lets_time_run_back_to_zero(minimal_tcgs, formula):
+    """Reaching s1 with x >= 0 or x >= 1 is possible from any x in [0, 2] at s0."""
+    [zone] = DBMAdapter.compute_predecessors(minimal_tcgs, "s0", "s1", formula)
+    assert _bounds(zone) == (2.0, 0)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("formula", ["x<0", "x>6"])
+def test_formula_outside_the_invariant_has_no_predecessor(minimal_tcgs, formula):
+    """x < 0 never holds and x > 6 breaks s1's invariant, so the zone is inconsistent."""
     with pytest.raises(ValueError, match="not consistent"):
-        DBMAdapter.compute_predecessors(
-            minimal_tcgs, source="s0", target="s1", formulas="x<0"
-        )[0]
+        DBMAdapter.compute_predecessors(minimal_tcgs, "s0", "s1", formula)
 
 
 @pytest.mark.unit
-def test_zone_at_target_tight_invariant(minimal_tcgs):
-    zone = DBMAdapter._zone_at_target(minimal_tcgs, "s0", ["x>6"])
-    assert zone.is_empty()
+def test_disjunction_gives_one_zone_per_branch(minimal_tcgs):
+    """`(x<=2 and x>=1) or x<5` gives two zones; the invariant cuts both to [0, 2]."""
+    formula = ("or", ("and", "x<=2", "x>=1"), "x<5")
+    zones = DBMAdapter.compute_predecessors(minimal_tcgs, "s0", "s1", formula)
+    assert [_bounds(zone) for zone in zones] == [(2.0, 0), (2.0, 0)]
 
 
 @pytest.mark.unit
-def test_max_clock_constants(minimal_tcgs):
+def test_state_names_come_from_name_state(tmp_path):
+    """Locations named locA and locB work; indices are not read from `sN` names."""
+    content = (
+        "Transition\n* 0\n0 *\nName_State\nlocA locB\nInitial_State\nlocA\n"
+        "Atomic_propositions\np\nLabelling\n1\n0\nNumber_of_agents\n1\n"
+        "Clocks\nx\nClock_constraints\nx<=1\nx<=1\nInvariants\nx<=2\nx<=2\n"
+    )
+    path = tmp_path / "named.txt"
+    path.write_text(content)
+    tcgs = TimedCGS()
+    tcgs.read_file(path)
+    [zone] = DBMAdapter.compute_predecessors(tcgs, "locA", "locB", "x>=0")
+    assert _bounds(zone) == (2.0, 0)
+
+
+@pytest.mark.unit
+def test_max_clock_constant_is_the_largest_bound(minimal_tcgs):
+    """Guards use 1 and invariants 2, so extrapolation must keep values up to 2."""
     assert DBMAdapter.get_max_clock_constraints(minimal_tcgs) == [2]
 
 
 @pytest.mark.unit
-def test_parse_constraints_keeps_two_char_operators():
+def test_constraint_tokens_keep_two_character_operators():
+    """`x>=3` is >=, `x==2` is ==, and `x=0` is a reset, not a bound."""
     bounds, resets = DBMAdapter.parse_constraints(
         ["x>=3", "x>1", "x==2", "x=0"], {"x": 0}
     )
-    ops = [op for _idx, op, _val in bounds]
-    assert ops == [">=", ">", "=="]
+    assert [op for _clock, op, _value in bounds] == [">=", ">", "=="]
     assert resets == [(1, 0)]
 
-    with pytest.raises(ValueError, match="Unrecognized constraint token"):
-        DBMAdapter.parse_constraints(["not-a-constraint"], {"x": 0})
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("token", "message"),
+    [
+        ("not-a-constraint", "Unrecognized constraint token"),
+        ("y>=1", "Unknown clock"),
+        ("y=0", "Unknown clock 'y' in reset 'y=0'"),
+    ],
+)
+def test_bad_constraint_token_is_refused(token, message):
+    """A malformed token or an undeclared clock, in a guard or a reset."""
+    with pytest.raises(ValueError, match=message):
+        DBMAdapter.parse_constraints([token], {"x": 0})
 
 
 @pytest.mark.unit
-def test_parse_constraints_rejects_unknown_clock():
-    with pytest.raises(ValueError, match="Unknown clock"):
-        DBMAdapter.parse_constraints(["y>=1"], {"x": 0})
-
-
-@pytest.mark.unit
-def test_zone_helpers_use_state_name_mapping(tmp_path):
-    """State indices must come from Name_State, not sN digit parsing."""
-    content = """
-Transition
-* 0
-0 *
-Name_State
-locA locB
-Initial_State
-locA
-Atomic_propositions
-p
-Labelling
-1
-0
-Number_of_agents
-1
-Clocks
-x
-Clock_constraints
-x<=1
-x<=1
-Invariants
-x<=2
-x<=2
-"""
-    path = tmp_path / "custom_named_states.txt"
-    path.write_text(content)
-    tcgs = TimedCGS()
-    tcgs.read_file(path)
-
-    zone = DBMAdapter._zone_at_target(tcgs, "locA", ["x>6"])
-    assert zone.is_empty()
-
-    predecessors = DBMAdapter.compute_predecessors(
-        tcgs, source="locA", target="locB", formulas="x>=0"
-    )
-    assert predecessors
-    assert not predecessors[0].is_empty()
-
-
-@pytest.mark.unit
-def test_apply_bounds_equality():
-    from model_checker.parsers.game_structures.timed_cgs.DBM.DBM import DBM
-
+def test_equality_bound_fixes_the_clock():
+    """x == 3 is x <= 3 and x >= 3."""
     dbm = DBM(2)
-    # x == 3 -> translates to x <= 3 and x >= 3
     DBMAdapter.apply_bounds(dbm, [(1, "==", "3")])
-    assert dbm.elements[1][0].constant == 3
-    assert dbm.elements[0][1].constant == -3
+    assert _bounds(dbm) == (3, -3)
 
 
 @pytest.mark.unit
-def test_forward_transition_with_reset(minimal_tcgs):
-    from model_checker.parsers.game_structures.timed_cgs.DBM.DBM import DBM
-
-    original_constraints = minimal_tcgs.clock_constraint_struct
+def test_forward_step_applies_guard_then_reset(minimal_tcgs):
+    """With guard x >= 1 and reset x = 0 on s0 -> s1, x is 0 right after the step."""
     minimal_tcgs.clock_constraint_struct = [["", "x>=1,x=0"], ["", ""]]
-
     zone = DBM(len(minimal_tcgs.clocks))
-    # current zone: x >= 1
     DBMAdapter.apply_bounds(zone, [(1, ">=", "1")])
-
-    successor_zone = DBMAdapter.forward_transition_zone(
+    successor = DBMAdapter.forward_transition_zone(
         minimal_tcgs, zone, source_idx=0, target_idx=1
     )
-    assert successor_zone is not None
-    # Discrete step with reset yields clocks at the reset value; delay is separate.
-    assert successor_zone.elements[1][0].constant == 0
-    assert successor_zone.elements[0][1].constant == 0
-
-    # restore
-    minimal_tcgs.clock_constraint_struct = original_constraints
-
-
-@pytest.mark.unit
-def test_compute_predecessors_nested_logic(minimal_tcgs):
-    # Test nested AST: E ((x<=2 and x>=1) or x<5) U p
-    nested_formula = ("or", ("and", "x<=2", "x>=1"), "x<5")
-    zones = DBMAdapter.compute_predecessors(
-        minimal_tcgs, source="s0", target="s1", formulas=nested_formula
-    )
-    assert len(zones) == 2
-    # One zone for x<=2 & x>=1 (predecessor bounds back to 0 due to down())
-    assert all(
-        z.elements[1][0].constant == 2 and z.elements[0][1].constant == 0 for z in zones
-    )
-
-
-@pytest.mark.unit
-def test_parse_constraints_unknown_clock_in_reset():
-    with pytest.raises(ValueError, match="Unknown clock 'y' in reset 'y=0'"):
-        DBMAdapter.parse_constraints(["y=0"], {"x": 0})
+    assert successor is not None
+    assert _bounds(successor) == (0, 0)

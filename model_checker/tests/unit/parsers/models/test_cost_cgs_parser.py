@@ -1,4 +1,4 @@
-"""Unit tests for costCGS cost section parsing."""
+"""costCGS cost lines: `<joint> <state>$<costs>` gives each agent's cost of a joint action at a state."""
 
 import pytest
 
@@ -7,49 +7,42 @@ from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
 
 
 @pytest.mark.unit
-class TestCostCGSCostParsing:
-    def test_malformed_cost_line_too_few_fields_raises(self):
-        instance = CostCGS()
-        with pytest.raises(ValueError, match="Malformed cost line"):
-            cost_cgs_parser.parse_cost_line("I*", instance, parse_split=False)
+@pytest.mark.parametrize(
+    ("line", "split", "message"),
+    [
+        ("I*", False, "Malformed cost line"),
+        ("I* s0$", False, "Malformed cost entry"),
+        ("I* s0$1:x", False, "Invalid cost value"),
+        ("I* s0$1:x,y", True, "Invalid cost value"),
+    ],
+)
+def test_malformed_cost_line_is_refused(line, split, message):
+    """No state, no cost after `$`, or a cost that is not a number."""
+    with pytest.raises(ValueError, match=message):
+        cost_cgs_parser.parse_cost_line(line, CostCGS(), parse_split=split)
 
-    def test_malformed_cost_entry_missing_cost_raises(self):
-        instance = CostCGS()
-        # Missing cost part after '$'
-        with pytest.raises(ValueError, match="Malformed cost entry"):
-            cost_cgs_parser.parse_cost_line("I* s0$", instance, parse_split=False)
 
-    def test_invalid_numeric_cost_raises_clear_error(self):
-        instance = CostCGS()
-        with pytest.raises(ValueError, match="Invalid cost value"):
-            cost_cgs_parser.parse_cost_line("I* s0$1:x", instance, parse_split=False)
+@pytest.mark.unit
+def test_cost_lookup_accepts_compact_and_piped_joints():
+    """`AAC` and `A|A|C` name the same joint, so both find the cost written for AAC."""
+    instance = CostCGS()
+    instance.number_of_agents = 3
+    cost_cgs_parser.parse_cost_line("AAC s0$1,1,1", instance, parse_split=True)
+    cost_cgs_parser.parse_cost_line("*** s1$2:2", instance, parse_split=False)
+    cost_cgs_parser.normalize_cost_action_keys(instance)
 
-    def test_invalid_numeric_cost_split_raises_clear_error(self):
-        instance = CostCGS()
-        with pytest.raises(ValueError, match="Invalid cost value"):
-            cost_cgs_parser.parse_cost_line("I* s0$1:x,y", instance, parse_split=True)
+    assert instance.get_cost_for_action("AAC", "s0") == [[1, 1, 1]]
+    assert instance.get_cost_for_action("A|A|C", "s0") == [[1, 1, 1]]
+    assert instance.get_cost_for_action("***", "s1") == [2, 2]
+    assert instance.get_cost_for_action("*|*|*", "s1") == [2, 2]
 
-    def test_get_cost_for_action_accepts_pipe_and_compact(self):
-        """Pipe-normalized profiles resolve to compact cost table keys."""
-        instance = CostCGS()
-        instance.number_of_agents = 3
-        cost_cgs_parser.parse_cost_line("AAC s0$1,1,1", instance, parse_split=True)
-        cost_cgs_parser.parse_cost_line("*** s1$2:2", instance, parse_split=False)
-        cost_cgs_parser.normalize_cost_action_keys(instance)
 
-        assert "A|A|C;s0" in instance.cost_for_action
-        assert "*|*|*;s1" in instance.cost_for_action
-        assert instance.get_cost_for_action("AAC", "s0") == [[1, 1, 1]]
-        assert instance.get_cost_for_action("A|A|C", "s0") == [[1, 1, 1]]
-        assert instance.get_cost_for_action("*|*|*", "s1") == [2, 2]
-        assert instance.get_cost_for_action("***", "s1") == [2, 2]
-
-    def test_get_cost_for_action_accepts_caret_compact_joints(self):
-        """Compact joints with non-letter tokens (e.g. AA^) normalize for lookup."""
-        instance = CostCGS()
-        instance.number_of_agents = 3
-        cost_cgs_parser.parse_cost_line("AA^ s0$1:1", instance, parse_split=False)
-        cost_cgs_parser.normalize_cost_action_keys(instance)
-        assert "A|A|^;s0" in instance.cost_for_action
-        assert instance.get_cost_for_action("AA^", "s0") == [1, 1]
-        assert instance.get_cost_for_action("A|A|^", "s0") == [1, 1]
+@pytest.mark.unit
+def test_cost_lookup_accepts_non_letter_action_tokens():
+    """A compact joint may use symbols such as `^`; it normalizes like letters."""
+    instance = CostCGS()
+    instance.number_of_agents = 3
+    cost_cgs_parser.parse_cost_line("AA^ s0$1:1", instance, parse_split=False)
+    cost_cgs_parser.normalize_cost_action_keys(instance)
+    assert instance.get_cost_for_action("AA^", "s0") == [1, 1]
+    assert instance.get_cost_for_action("A|A|^", "s0") == [1, 1]

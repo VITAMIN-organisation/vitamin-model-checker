@@ -1,4 +1,8 @@
-"""Unit tests for timedCGS file parsing."""
+"""timedCGS files: the Clocks, Clock_constraints and Invariants sections.
+
+Clock_constraints holds one cell per transition (guards and resets, `0`, `*` or
+`-` for none); Invariants holds one row per state and allows only `<` and `<=`.
+"""
 
 from pathlib import Path
 
@@ -9,115 +13,106 @@ from model_checker.parsers.game_structures.timed_cgs import timed_cgs_parser
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 
 _FIXTURE = (
-    Path(__file__).resolve().parents[4]
-    / "fixtures"
-    / "timedCGS"
-    / "tctl_tol_minimal.txt"
+    Path(__file__).resolve().parents[4] / "fixtures/timedCGS/tctl_tol_minimal.txt"
 )
 
 
+def _sections(*lines, states=("s0", "s1")):
+    """Parse only the timed sections of `lines` for a model with `states`."""
+    instance = type("Timed", (), {})()
+    instance.states = list(states)
+    timed_cgs_parser.parse_timed_sections([f"{line}\n" for line in lines], instance)
+    return instance
+
+
 @pytest.mark.unit
-class TestTimedCgsParser:
-    def test_filter_drops_timed_sections_but_keeps_cost_sections(self):
-        lines = [
-            "Transition\n",
-            "0\n",
-            "Clocks\n",
-            "x\n",
-            "Costs_for_actions\n",
-            "a s0$1\n",
-            "Name_State\n",
-            "s0\n",
-        ]
-        filtered = cgs_parser.filter_lines_for_common_sections(
-            lines,
-            timed_cgs_parser.TIMED_SECTION_HEADERS,
-            exit_skip_on=(
-                cgs_parser.SECTION_HEADERS | cgs_parser.EXTENSION_SECTION_HEADERS
-            ),
-        )
-        stripped = [line.strip() for line in filtered]
-        assert "Clocks" not in stripped
-        assert "x" not in stripped
-        assert "Costs_for_actions" in stripped
-        assert "a s0$1" in stripped
-        assert "Name_State" in stripped
+def test_fixture_loads_clocks_guards_and_invariants():
+    """The minimal TCTL/TOL fixture: one clock x, guard x<=1, invariant x<=2 at s0."""
+    model = TimedCGS()
+    model.read_file(_FIXTURE)
+    assert list(model.states) == ["s0", "s1"]
+    assert model.clocks_dict == {"x": 0}
+    assert model.clock_constraint_struct[0][0] == "x<=1"
+    assert model.invariants_arr[0] == ["x", 2.0]
 
-    def test_read_minimal_fixture(self):
-        tcgs = TimedCGS()
-        tcgs.read_file(_FIXTURE)
-        assert list(tcgs.states) == ["s0", "s1"]
-        assert tcgs.clocks == ["x"]
-        assert tcgs.clocks_dict == {"x": 0}
-        assert len(tcgs.clock_constraint_struct) == 2
-        assert tcgs.clock_constraint_struct[0][0] == "x<=1"
-        assert tcgs.invariants_arr[0] == ["x", 2.0]
 
-    def test_comma_separated_guards_and_reset_are_kept(self):
-        instance = type("T", (), {})()
-        instance.clock_constraint_struct = [[""]]
-        timed_cgs_parser._parse_clock_constraints_row(instance, "x>=1,x=0", 0)
-        assert instance.clock_constraint_struct[0][0] == "x>=1,x=0"
+@pytest.mark.unit
+def test_cells_keep_guards_with_resets_and_empty_markers_are_empty():
+    """`x>=1,x=0` stays one cell; `-`, `0` and `*` mean no constraint."""
+    parsed = _sections("Clocks", "x", "Clock_constraints", "x>=1,x=0 -", "0 *")
+    assert parsed.clock_constraint_struct == [["x>=1,x=0", ""], ["", ""]]
 
-    def test_dash_empty_cell_is_skipped_like_zero(self):
-        instance = type("T", (), {})()
-        instance.clock_constraint_struct = [[""]]
-        timed_cgs_parser._parse_clock_constraints_row(instance, "-", 0)
-        assert instance.clock_constraint_struct[0][0] == ""
 
-    def test_malformed_clock_constraint_raises(self):
-        instance = type("T", (), {})()
-        instance.clock_constraint_struct = [[""]]
-        with pytest.raises(ValueError, match="Malformed clock constraint"):
-            timed_cgs_parser._parse_clock_constraints_row(instance, "x>3y", 0)
+@pytest.mark.unit
+def test_two_clocks_on_one_line():
+    """`x y` declares two clocks, each with its own guard cell."""
+    parsed = _sections("Clocks", "x y", "Clock_constraints", "x<=1 y>=2", "0 0")
+    assert parsed.clocks == ["x", "y"]
+    assert parsed.clock_constraint_struct[0] == ["x<=1", "y>=2"]
 
-    def test_malformed_invariant_raises(self):
-        instance = type("T", (), {})()
-        instance.invariants_arr = [[]]
-        with pytest.raises(ValueError, match="Malformed invariant"):
-            timed_cgs_parser._parse_invariants_row(instance, "x>=5", 0)
 
-    def test_no_constraint_tokens_are_skipped(self):
-        instance = type("T", (), {})()
-        instance.clock_constraint_struct = [["", ""]]
-        timed_cgs_parser._parse_clock_constraints_row(instance, "0 *", 0)
-        assert instance.clock_constraint_struct[0] == ["", ""]
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("section", "cell", "message"),
+    [
+        (
+            "Clock_constraints",
+            "x>3y 0",
+            "Malformed clock constraint 'x>3y' at row 0, column 0",
+        ),
+        ("Invariants", "x>=5", "Malformed invariant 'x>=5' at location 0"),
+    ],
+)
+def test_malformed_constraint_is_refused_with_its_place(section, cell, message):
+    """A broken guard, or a lower bound used as an invariant, names the cell."""
+    with pytest.raises(ValueError, match=message):
+        _sections("Clocks", "x", section, cell, "0 0")
 
-    def test_non_timed_header_stops_invariant_parsing(self):
-        instance = type("T", (), {})()
-        instance.states = ["s0"]
-        lines = [
-            "Invariants\n",
-            "x<=2\n",
-            "Number_of_agents\n",
-            "x<=9\n",
-        ]
-        timed_cgs_parser.parse_timed_sections(lines, instance)
-        assert instance.invariants_arr[0] == ["x", 2.0]
 
-    @pytest.mark.parametrize("comment", ["# note\n", "// note\n"])
-    def test_comment_lines_are_not_rows_or_clocks(self, comment):
-        instance = type("T", (), {})()
-        instance.states = ["s0"]
-        lines = [
-            "Clocks\n",
-            "x\n",
-            comment,
-            "Clock_constraints\n",
-            comment,
-            "x<=1\n",
-            "Invariants\n",
-            comment,
-            "x<=2\n",
-        ]
-        timed_cgs_parser.parse_timed_sections(lines, instance)
-        assert instance.clocks == ["x"]
-        assert instance.clock_constraint_struct[0][0] == "x<=1"
-        assert instance.invariants_arr[0] == ["x", 2.0]
+@pytest.mark.unit
+def test_core_section_header_ends_the_invariants():
+    """A row after `Number_of_agents` is not an invariant of the next state."""
+    parsed = _sections("Invariants", "x<=2", "Number_of_agents", "x<=9", states=("s0",))
+    assert parsed.invariants_arr == [["x", 2.0]]
 
-    def test_comment_between_rows_keeps_the_row_count(self):
-        instance = type("T", (), {})()
-        instance.states = ["s0", "s1"]
-        lines = ["Clock_constraints\n", "x<=1\n", "# note\n", "x>=2\n"]
-        timed_cgs_parser.parse_timed_sections(lines, instance)
-        assert instance.clock_constraint_struct[1][0] == "x>=2"
+
+@pytest.mark.unit
+@pytest.mark.parametrize("comment", ["# note", "// note"])
+def test_comments_are_neither_rows_nor_clocks(comment):
+    """A comment line between rows does not shift the rows after it."""
+    parsed = _sections(
+        "Clocks", "x", comment,
+        "Clock_constraints", comment, "x<=1 0", comment, "x>=2 0",
+        "Invariants", comment, "x<=2",
+    )  # fmt: skip
+    assert parsed.clocks == ["x"]
+    assert [row[0] for row in parsed.clock_constraint_struct] == ["x<=1", "x>=2"]
+    assert parsed.invariants_arr[0] == ["x", 2.0]
+
+
+@pytest.mark.unit
+def test_timed_sections_are_dropped_before_the_cgs_parser_runs():
+    """The CGS parser must not see Clocks rows; cost sections pass through."""
+    lines = [
+        "Transition",
+        "0",
+        "Clocks",
+        "x",
+        "Costs_for_actions",
+        "a s0$1",
+        "Name_State",
+        "s0",
+    ]
+    filtered = cgs_parser.filter_lines_for_common_sections(
+        lines,
+        timed_cgs_parser.TIMED_SECTION_HEADERS,
+        exit_skip_on=cgs_parser.SECTION_HEADERS | cgs_parser.EXTENSION_SECTION_HEADERS,
+    )
+    assert filtered == [
+        "Transition",
+        "0",
+        "Costs_for_actions",
+        "a s0$1",
+        "Name_State",
+        "s0",
+    ]

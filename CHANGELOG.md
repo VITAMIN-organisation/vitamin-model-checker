@@ -85,6 +85,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (`test_proposition_names.py`, `test_coalition_validation.py`,
   `test_precedence.py`). Eleven files that repeated these checks for a few logics
   are merged into these or removed.
+- Tests: the model file tests assert exact results. Every broken fixture in
+  `tests/fixtures/tests/` is checked for its message, every valid fixture must load
+  (`test_fixture_models_load.py`), and `BitVectorStateSet` is compared with a Python
+  `set` on random inputs. Seven files that repeated each other or checked only types
+  are merged or removed, and the bit vector and NatATL idle tests move next to the
+  code they test.
 
 ### Fixed
 

@@ -1,10 +1,13 @@
-"""ZoneGraph tests using the in-repo minimal timedCGS fixture."""
+"""Zone graph of a timedCGS: the symbolic states reachable from all clocks at zero.
+
+In tctl_tol_minimal.txt only s0 -> s0 exists, guarded by x <= 1, and s0's
+invariant is x <= 2, so x ranges over [0, 2] at s0 and s1 is never reached.
+"""
 
 from pathlib import Path
 
 import pytest
 
-from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
 from model_checker.parsers.game_structures.timed_cgs.semantics import (
     states_with_time_constraints,
 )
@@ -12,10 +15,12 @@ from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
 _FIXTURE = (
-    Path(__file__).resolve().parents[4]
-    / "fixtures"
-    / "timedCGS"
-    / "tctl_tol_minimal.txt"
+    Path(__file__).resolve().parents[4] / "fixtures/timedCGS/tctl_tol_minimal.txt"
+)
+
+_HEADER = (
+    "Transition\n* 0\n0 *\nName_State\ns0 s1\nInitial_State\ns0\n"
+    "Atomic_propositions\np\nLabelling\n1\n0\nNumber_of_agents\n1\nClocks\nx\n"
 )
 
 
@@ -26,179 +31,82 @@ def minimal_tcgs() -> TimedCGS:
     return tcgs
 
 
-@pytest.fixture
-def minimal_zone_graph(minimal_tcgs) -> ZoneGraph:
-    return ZoneGraph(minimal_tcgs)
-
-
-@pytest.mark.unit
-def test_initial_zone_is_clocks_at_zero(minimal_zone_graph, minimal_tcgs):
-    initial = minimal_zone_graph.initial_time_state
-    assert initial is not None
-    assert initial.location == minimal_tcgs.initial_state
-    for clock_idx in range(1, initial.zone.size):
-        assert initial.zone.elements[clock_idx][0].constant == 0
-        assert initial.zone.elements[0][clock_idx].constant == 0
-
-
-@pytest.mark.unit
-def test_has_path_from_initial(minimal_zone_graph):
-    assert minimal_zone_graph.has_path_from("s0")
-
-
-@pytest.mark.unit
-def test_has_path_from_with_feasible_guard(minimal_zone_graph):
-    assert minimal_zone_graph.has_path_from("s0", [(1, ">=", 0)])
-
-
-@pytest.mark.unit
-def test_has_path_from_with_infeasible_guard(minimal_zone_graph):
-    assert not minimal_zone_graph.has_path_from("s0", [(1, ">", 200)])
-
-
-@pytest.mark.unit
-def test_has_path_from_guard_exceeds_invariant(minimal_zone_graph):
-    # s0 invariant is x<=2; x>2 is infeasible on every zone including delay states
-    assert not minimal_zone_graph.has_path_from("s0", [(1, ">", 2)])
-
-
-@pytest.mark.unit
-def test_find_path_from_returns_paths_when_feasible(minimal_zone_graph):
-    assert len(minimal_zone_graph.find_path_from("s0")) > 0
-
-
-@pytest.mark.unit
-def test_states_with_time_constraints_respects_invariants(minimal_tcgs):
-    zone_graph = ZoneGraph(minimal_tcgs)
-    states = states_with_time_constraints(minimal_tcgs, zone_graph, "x>10")
-    assert "s0" not in states
-
-
-@pytest.mark.unit
-def test_states_with_time_constraints_feasible_guard(minimal_tcgs):
-    zone_graph = ZoneGraph(minimal_tcgs)
-    states = states_with_time_constraints(minimal_tcgs, zone_graph, "x>=0")
-    assert "s0" in states
-
-
-@pytest.mark.unit
-def test_zone_graph_pre_image_uses_invariants(minimal_tcgs):
-    zone_graph = ZoneGraph(minimal_tcgs)
-    bounds, _ = DBMAdapter.parse_constraints(["x>10"], minimal_tcgs.clocks_dict)
-    assert not zone_graph.has_path_from("s0", bounds)
-    feasible, _ = DBMAdapter.parse_constraints(["x<=1"], minimal_tcgs.clocks_dict)
-    assert zone_graph.has_path_from("s0", feasible)
-
-
-@pytest.mark.unit
-def test_initial_zone_applies_location_invariant(tmp_path):
-    content = """
-Transition
-*
-Name_State
-s0
-Initial_State
-s0
-Atomic_propositions
-p
-Labelling
-1
-Number_of_agents
-1
-Clocks
-x
-Clock_constraints
-0
-Invariants
-x<=0
-"""
-    path = tmp_path / "invariant_initial.txt"
+def _load(tmp_path, content: str) -> TimedCGS:
+    path = tmp_path / "model.txt"
     path.write_text(content)
     tcgs = TimedCGS()
     tcgs.read_file(path)
-    zone_graph = ZoneGraph(tcgs)
-
-    assert zone_graph.states
-    for state in zone_graph.states:
-        if state.location != "s0":
-            continue
-        assert state.zone.elements[1][0].constant <= 0
+    return tcgs
 
 
 @pytest.mark.unit
-def test_zone_graph_no_premature_leaves(tmp_path):
-    content = """
-Transition
-* 0
-0 *
-Name_State
-s0 s1
-Initial_State
-s0
-Atomic_propositions
-p
-Labelling
-1
-0
-Number_of_agents
-1
-Clocks
-x
-Clock_constraints
-0 x>=1
-0 0
-Invariants
-0
-0
-"""
-    path = tmp_path / "infinite_cycle.txt"
-    path.write_text(content)
-    tcgs = TimedCGS()
-    tcgs.read_file(path)
-
-    zone_graph = ZoneGraph(tcgs)
-
-    assert len(zone_graph.states) > 0
-    for state, successors in zone_graph.graph.items():
-        assert len(successors) > 0, (
-            f"State {state.location} {state.zone} is a premature leaf!"
-        )
+def test_initial_state_has_every_clock_at_zero(minimal_tcgs):
+    """The start zone is x = 0 at the initial location."""
+    initial = ZoneGraph(minimal_tcgs).initial_time_state
+    assert initial.location == "s0"
+    assert (
+        initial.zone.elements[1][0].constant,
+        initial.zone.elements[0][1].constant,
+    ) == (0, 0)
 
 
 @pytest.mark.unit
-def test_zone_graph_zeno_cycle(tmp_path):
-    content = """
-Transition
-* 0
-0 *
-Name_State
-s0 s1
-Initial_State
-s0
-Atomic_propositions
-p
-Labelling
-1
-0
-Number_of_agents
-1
-Clocks
-x
-Clock_constraints
-x>=1 x>=1
-0 0
-Invariants
-x<=5
-0
-"""
-    path = tmp_path / "zeno_cycle.txt"
-    path.write_text(content)
-    tcgs = TimedCGS()
-    tcgs.read_file(path)
+def test_reachable_zones_stop_at_the_invariant(minimal_tcgs):
+    """At s0, x reaches up to 1 (the guard) and 2 (the invariant), never more; s1 is unreachable."""
+    graph = ZoneGraph(minimal_tcgs)
+    assert {state.location for state in graph.states} == {"s0"}
+    assert sorted(state.zone.elements[1][0].constant for state in graph.states) == [
+        0,
+        1,
+        2,
+    ]
 
-    zone_graph = ZoneGraph(tcgs)
 
-    assert len(zone_graph.states) > 0
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("bounds", "reachable"),
+    [
+        ([(1, ">=", 0)], True),
+        ([(1, ">=", 2)], True),
+        ([(1, ">", 2)], False),
+        ([(1, ">", 200)], False),
+    ],
+)
+def test_path_exists_only_inside_the_invariant(minimal_tcgs, bounds, reachable):
+    """x >= 2 is reachable at the invariant's edge; x > 2 is not."""
+    assert ZoneGraph(minimal_tcgs).has_path_from("s0", bounds) is reachable
 
-    for state, successors in zone_graph.graph.items():
-        assert len(successors) > 0, f"State {state.location} is a premature leaf!"
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("constraint", "states"),
+    [("x>=0", {"s0"}), ("x==2", {"s0"}), ("x>2", set()), ("x>10", set())],
+)
+def test_states_where_a_clock_constraint_can_hold(minimal_tcgs, constraint, states):
+    """A state counts when some reachable zone there meets the constraint."""
+    graph = ZoneGraph(minimal_tcgs)
+    assert states_with_time_constraints(minimal_tcgs, graph, constraint) == states
+
+
+@pytest.mark.unit
+def test_initial_zone_is_cut_by_the_location_invariant(tmp_path):
+    """With invariant x <= 0 time cannot pass at s0, so every zone there has x = 0."""
+    tcgs = _load(
+        tmp_path,
+        "Transition\n*\nName_State\ns0\nInitial_State\ns0\nAtomic_propositions\np\n"
+        "Labelling\n1\nNumber_of_agents\n1\nClocks\nx\nClock_constraints\n0\nInvariants\nx<=0\n",
+    )
+    graph = ZoneGraph(tcgs)
+    assert graph.states
+    assert {state.zone.elements[1][0].constant for state in graph.states} == {0}
+
+
+@pytest.mark.unit
+def test_unbounded_clock_has_no_dead_ends(tmp_path):
+    """Without invariants time can always pass, so every symbolic state has a successor."""
+    tcgs = _load(
+        tmp_path, _HEADER + "Clock_constraints\n0 x>=1\n0 0\nInvariants\n0\n0\n"
+    )
+    graph = ZoneGraph(tcgs)
+    assert graph.graph
+    assert all(successors for successors in graph.graph.values())
