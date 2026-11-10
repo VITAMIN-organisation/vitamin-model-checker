@@ -124,7 +124,7 @@ Demon, so `<A><n> phi` can hold where ATL `<A> phi` fails.
 
 - `build_state_cache`: state name -> index map on the CGS.
 - `@lru_cache` helpers for capacity / successor / knowledge-related functions
-  (`X_agt_cap`, `succ`, `Omega_Y`, ...).
+  (`succ`, `Omega_Y`, ...).
 
 **Why:** CapATL pre-image and knowledge helpers query state indices and
 capacity combinations repeatedly.

@@ -6,7 +6,6 @@ from model_checker.algorithms.explicit.CapATL.solver import (
 )
 from model_checker.algorithms.explicit.CapATL.utils import (
     Omega_Y,
-    X_agt_cap,
     build_state_cache,
     function_F_for_succ,
     indistinguishable_action,
@@ -47,7 +46,6 @@ def _validate_capatl_model(cgs):
 
 def _core_capatl_checking(cgs, formula):
     """Run CapATL model checking on a loaded model."""
-    X_agt_cap.cache_clear()
     indistinguishable_action.cache_clear()
     function_F_for_succ.cache_clear()
     succ.cache_clear()

@@ -1,5 +1,7 @@
 """CapATL model checking: capacity constraints, error cases."""
 
+import re
+
 import pytest
 
 from model_checker.algorithms.explicit.CapATL.CapATL import (
@@ -62,6 +64,19 @@ class TestCapATLSemantics:
         assert "error" not in result
         assert extract_states_from_result(result) == {"q0", "q1", "q2"}
         assert ": True" in result.get("initial_state", "")
+
+    @pytest.mark.parametrize("name", ["pa", "p1", "g2"])
+    def test_capatl_proposition_name_with_a_digit(self, name, test_data_dir, temp_file):
+        """A name such as p1 is a proposition like pa, not a capacity reference.
+
+        Same model as the fixture with g renamed, so <{1}>F name gives the same
+        states as <{1}>F g: q0, q1 and q2 (see test_capatl_eventually_winning_states).
+        """
+        fixture = test_data_dir / "capCGS/CAPATL/capatl_3agents_3states_example.txt"
+        content = re.sub(r"^g a$", f"{name} a", fixture.read_text(), flags=re.M)
+        result = model_checking(f"<{{1}}>F {name}", temp_file(content))
+        assert "error" not in result
+        assert extract_states_from_result(result) == {"q0", "q1", "q2"}
 
     def test_capatl_next_winning_states(self, capatl_model):
         """X g holds at q0 (B** to q2) and at q2 (self-loop), not at q1."""

@@ -76,15 +76,6 @@ def get_capacities_from_actionvector(cgs, action, agents):
     return find_combinations(result1)
 
 
-@functools.lru_cache(maxsize=1)
-def X_agt_cap(cgs):
-    """Generate all capacity combinations across agents."""
-    cap_assgn = cgs.get_capacities_assignment()
-    capacity_lists = [elem[1:] for elem in cap_assgn]
-    combinations = find_combinations(capacity_lists)
-    return [list(value) for value in combinations]
-
-
 def pointed_knowledge_set(cgs):
     """Generate all possible state-knowledge pairs."""
     pk_set = []
@@ -273,11 +264,3 @@ def succ(cgs, pk_for_Y):
             successors.append(p_knowledge(succ_name, new_know_tuple, agents_tot))
 
     return successors
-
-
-def verify_digits_and_letters(s):
-    """Check if string contains both digits and letters (e.g. '1c')."""
-    s = str(s)
-    has_digit = any(c.isdigit() for c in s)
-    has_alpha = any(c.isalpha() for c in s)
-    return has_digit and has_alpha

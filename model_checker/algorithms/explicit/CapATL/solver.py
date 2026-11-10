@@ -14,11 +14,7 @@ from model_checker.algorithms.explicit.CapATL.operators import (
     handle_release,
     handle_until,
 )
-from model_checker.algorithms.explicit.CapATL.utils import (
-    X_agt_cap,
-    pointed_knowledge_set,
-    verify_digits_and_letters,
-)
+from model_checker.algorithms.explicit.CapATL.utils import pointed_knowledge_set
 from model_checker.algorithms.explicit.shared.atom_utils import (
     resolve_atom_with_constants,
 )
@@ -49,25 +45,9 @@ def build_tree(cgs: CapCGSProtocol, tpl: Any, parser=None) -> Node_PK | None:
                 return None
         return root
 
-    tpl_str = str(tpl)
-    if verify_digits_and_letters(tpl_str):
-        # Atomic capacity constraint (e.g. 1c)
-        ag_str = "".join(filter(str.isdigit, tpl_str))
-        if not ag_str:
-            return None
-        ag_idx = int(ag_str) - 1
-        cap_a = tpl_str[len(ag_str) :]
-
-        all_cap_combos = {tuple(elem) for elem in X_agt_cap(cgs)}
-        winning_combos = {
-            c for c in all_cap_combos if ag_idx < len(c) and c[ag_idx] == cap_a
-        }
-        if not winning_combos:
-            return None
-        return Node_PK(winning_combos)
-
-    # Atomic proposition
-    states_set = resolve_atom_with_constants(cgs, tpl_str, parser)
+    # Atomic proposition: capacities appear only as `a is c` inside K, which the
+    # solver does not evaluate, so every leaf is a proposition name.
+    states_set = resolve_atom_with_constants(cgs, str(tpl), parser)
     if states_set is None:
         return None
     Theta = pointed_knowledge_set(cgs)
