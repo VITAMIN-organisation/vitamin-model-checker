@@ -112,6 +112,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Wallet_ATL X, F and U also required the guard at the state the move leads to,
+  so `<<1:wallet(1, >= 10)>>X goal` and `F goal` were false at a state holding 10
+  whose successor (where goal holds) holds 5. They now follow the Wallet ATL
+  paper's Algorithm 1 (AAMAS 2026, lines 9 and 18-25), so a state where `goal`
+  holds counts for F and U even if the guard fails there. See
+  [Wallet_ATL operators](docs/Wallet_ATL/algorithm.md#operators).
 - Wallet_ATL ignored the wallets when it built the coalition's moves, so an agent
   with 5 could still win through a `D20` move: `<<1>>X goal` was true where the
   Wallet ATL paper (AAMAS 2026, Def. 3.1 and 4.1) makes it false. The pre-image now

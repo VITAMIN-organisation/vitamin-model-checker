@@ -68,7 +68,12 @@ class TestWalletATLSemantics:
         assert (": True" in init) is initial_expected
 
     def test_wallet_guard_filters_states_by_balance(self, wallet_atl_model):
-        """Static guards use Wallets balances (both states have 5 on this fixture)."""
+        """Both states hold 5 and q holds only at s1.
+
+        With >= 5 the guard holds everywhere and s0 can move to s1: {s0, s1}.
+        With >= 10 no state can start a guarded move, so s0 is out; s1 stays
+        because q already holds there (Algorithm 1 line 20 starts from [[q]]).
+        """
         ok = _core_walletatl_checking(wallet_atl_model, "<<1:wallet(1, >= 5)>>F q")
         assert "error" not in ok, ok
         assert extract_states_from_result(ok) == {"s0", "s1"}
@@ -77,10 +82,11 @@ class TestWalletATLSemantics:
             wallet_atl_model, "<<1:wallet(1, >= 10)>>F q"
         )
         assert "error" not in blocked, blocked
-        assert extract_states_from_result(blocked) == set()
+        assert extract_states_from_result(blocked) == {"s1"}
 
     def test_wallet_until_applies_guards(self, wallet_atl_model):
-        """Until must filter both operands with wallet constraints, like F/X/G."""
+        """Same sets as F: the guard is checked where a move starts, and the states
+        where q already holds count from the start (Algorithm 1 lines 18-25)."""
         unconstrained = _core_walletatl_checking(wallet_atl_model, "<<1>> p U q")
         assert "error" not in unconstrained, unconstrained
         assert extract_states_from_result(unconstrained) == {"s0", "s1"}
@@ -95,7 +101,7 @@ class TestWalletATLSemantics:
             wallet_atl_model, "<<1:wallet(1, >= 10)>> p U q"
         )
         assert "error" not in blocked, blocked
-        assert extract_states_from_result(blocked) == set()
+        assert extract_states_from_result(blocked) == {"s1"}
 
 
 @pytest.mark.integration
@@ -125,12 +131,15 @@ class TestWalletATLResultSet:
         assert extract_states_from_result(result) == {"s1"}
 
 
-def _two_agent_model(rows: str, wallet_s0: str, wallet_s1: str = "0:0") -> str:
-    """Agent 1 acts, agent 2 is the contract; goal holds only at s1, which loops on `*`."""
+def _two_agent_model(
+    rows: str, wallet_s0: str, wallet_s1: str = "0:0", p_at_s0: bool = False
+) -> str:
+    """Agent 1 acts, agent 2 is the contract; s1 loops on `*`. goal holds only at
+    s1; p holds at s1, and also at s0 when `p_at_s0`."""
     return (
         f"Transition\n{rows}\n0 *\nName_State\ns0 s1\nInitial_State\ns0\n"
-        "Atomic_propositions\ngoal\nLabelling\n0\n1\nNumber_of_agents\n2\n"
-        f"Wallets\ns0: {wallet_s0}\ns1: {wallet_s1}\n"
+        f"Atomic_propositions\ngoal p\nLabelling\n0 {int(p_at_s0)}\n1 1\n"
+        f"Number_of_agents\n2\nWallets\ns0: {wallet_s0}\ns1: {wallet_s1}\n"
     )
 
 
@@ -187,3 +196,60 @@ class TestWalletATLFeasibleMoves:
         result = model_checking("<<1>>X goal", temp_file(content))
         assert "error" in result, result
         assert "s0" in result["error"]["message"]
+
+
+@pytest.mark.integration
+@pytest.mark.model_checking
+@pytest.mark.semantic
+class TestWalletATLGuards:
+    """AAMAS26b Algorithm 1: the guard filters the states a coalition move starts
+    from (wPre(Pre(A, S))), not the states it moves to.
+
+    Two-state model: s0 -I|0-> s1, s1 loops; goal only at s1; agent 1 holds 10 at s0."""
+
+    @pytest.mark.parametrize(
+        ("wallet_s1", "expected"),
+        [
+            # Pre(1, {s1}) = {s0, s1}; wPre keeps s0 (10 >= 10) and drops s1 (5 < 10)
+            ("5:0", {"s0"}),
+            # the guard holds at both states, so wPre keeps all of Pre
+            ("10:0", {"s0", "s1"}),
+        ],
+    )
+    def test_guard_is_checked_where_the_move_starts(
+        self, temp_file, wallet_s1, expected
+    ):
+        content = _two_agent_model("0 I|0", "10:0", wallet_s1)
+        assert _states(temp_file, content, "<<1:wallet(1, >= 10)>>X goal") == expected
+
+    @pytest.mark.parametrize(
+        "formula",
+        [
+            # Algorithm 1 lines 18-25: start {s1}; s0 holds 10 and moves to s1
+            "<<1:wallet(1, >= 10)>>F goal",
+            # same, and p holds at s0 on the way
+            "<<1:wallet(1, >= 10)>> p U goal",
+        ],
+    )
+    def test_eventually_holds_where_next_does(self, temp_file, formula):
+        """<<1:C>>X goal holds at s0, so the F and U forms hold there too, and s1
+        counts because goal holds there (the start set has no guard)."""
+        content = _two_agent_model("0 I|0", "10:0", "5:0", p_at_s0=True)
+        assert _states(temp_file, content, formula) == {"s0", "s1"}
+
+    def test_globally_checks_the_guard_at_every_step(self, temp_file):
+        """Three states: s0 (holds 10, p) -> s1 (holds 5, p) -> s1; s2 (holds 10,
+        no p) loops.
+
+        Algorithm 1 lines 10-17: rho = all states, tau = [[p]] = {s0, s1}; round 1
+        keeps wPre(Pre({s0, s1})) & [[p]] = {s0} (s1 fails the guard); round 2 finds
+        no move from any state into {s0}; the result is empty. Def. 4.5 would check
+        the guard only at s0 and keep it, an open question in
+        docs/Wallet_ATL/algorithm.md.
+        """
+        content = (
+            "Transition\n0 I|0 0\n0 * 0\n0 0 *\nName_State\ns0 s1 s2\n"
+            "Initial_State\ns0\nAtomic_propositions\np\nLabelling\n1\n1\n0\n"
+            "Number_of_agents\n2\nWallets\ns0: 10:0\ns1: 5:0\ns2: 10:0\n"
+        )
+        assert _states(temp_file, content, "<<1:wallet(1, >= 10)>>G p") == set()

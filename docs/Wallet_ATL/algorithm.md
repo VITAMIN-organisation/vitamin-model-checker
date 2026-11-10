@@ -51,9 +51,65 @@ If, at some state, every transition needs an action that some agent cannot pay
 for at that state, model checking stops with an error naming the state: a game
 structure gives each agent at least one move per state (JACM 2002 Def. 2.1).
 
-Balances come from the `Wallets` section, one row per state. A wallet guard
-(`wallet(agent, op, value)`, see [Formula language](#formula-language)) keeps the
-states whose balance meets it; balances are not recomputed along transitions.
+Balances come from the `Wallets` section, one row per state, and are not
+recomputed along transitions. A wallet guard (`wallet(agent, op, value)`, see
+[Formula language](#formula-language)) is checked at the state where a coalition
+move starts; [Operators](#operators) says where each operator checks it.
+
+### Operators
+
+In a formula `<<A:C>>...`, `A` is the coalition and `C` is the conjunction of
+its wallet guards (none for a plain `<<A>>`). `Pre(A, S)` is the pre-image
+above, `wPre(S)` keeps the states of `S` where every guard in `C` holds (all of
+`S` when `C` is empty; the paper's Algorithm 2), and `[[phi]]` is the set of
+states where the operand `phi` holds; `psi` is the goal of U and F. A fixpoint
+is computed by repeating one step until the set stops changing, and `rho` is the
+set built so far. Two cases are not handled yet: with two guards on the same
+agent only the last one is checked, and a guard on an agent outside `A` is
+ignored; both are planned to become errors. Table 1 lists how each operator is
+computed:
+
+**Table 1: Wallet_ATL operators and the lines of the paper's Algorithm 1 they follow.**
+
+| Formula | Computed as | Paper |
+| :--- | :--- | :--- |
+| `<<A:C>>X phi` | `wPre(Pre(A, [[phi]]))` | Algorithm 1 line 9 |
+| `<<A:C>>G phi` | from all states, repeat: `rho` becomes the states of `wPre(Pre(A, rho))` that are in `[[phi]]` | Algorithm 1 lines 10-17 |
+| `<<A:C>>phi U psi` | from `[[psi]]`, repeat: add to `rho` the states of `wPre(Pre(A, rho))` that are in `[[phi]]` | Algorithm 1 lines 18-25 |
+| `<<A:C>>F psi` | equals `<<A:C>>true U psi` | not in the paper's grammar, which has X, U and G |
+
+For example, take s0 with 10 in agent 1's wallet, whose only move leads to s1
+with 5, where `goal` holds. With `C = wallet(1, >= 10)`, `<<1:C>>X goal` holds
+at s0: the guard holds where the move starts, and the next state need not meet
+it. `<<1:C>>F goal` holds at s0 and at s1.
+
+### Open questions
+
+The paper is silent on these cases or gives two answers. The code keeps the
+answer named in each item:
+
+- The start set of U and F: the paper's Algorithm 1 line 20 starts from
+  `[[psi]]` with no guard, so a state where `psi` already holds counts even if
+  the guard fails there (s1 in the example). The paper's prose says "provided
+  all wallet constraints are satisfied". The code follows Algorithm 1, which also
+  keeps `<<A:C>>X psi` implying `<<A:C>>F psi`.
+- Where the guard is checked: Algorithm 1 checks it in every round of G and U,
+  so at every state of the path, while the paper's Def. 4.5 checks it only at the
+  first state of a path. The code follows Algorithm 1.
+- A state where the guard fails, for X, for G, and for U where `psi` does not
+  hold: Def. 4.5 keeps only the paths whose first state meets every guard of `C`,
+  so read literally it makes the formula true there by vacuity (a claim about
+  all of zero paths). Algorithm 1 and the prose make it false, and so does the
+  code.
+- G when `phi` holds at every state: Algorithm 1's starting set already equals
+  its first update, so it skips the loop and returns all states, guard or not.
+  The code applies `wPre` in every round, as in the other cases.
+- Balance updates: the paper's Def. 4.4 changes only the acting agent's wallet,
+  while its section 3.2 and Example 3.3 also move the amount to or from the
+  contract. The code applies neither rule (see
+  [Semantic denotations](#semantic-denotations)).
+- A consumption letter with no amount (`D`): the paper's Def. 3.1 takes amounts
+  `v` in the positive integers; the code treats `D` as a neutral action.
 
 Implementation techniques (transition cache, early-stop): [algorithm_design.md](../algorithm_design.md).
 
@@ -63,7 +119,7 @@ Implementation techniques (transition cache, early-stop): [algorithm_design.md](
 |---|---|---|
 | Coalition syntax | Wallet-aware | Dedicated `<<...>>` (avoids clash with `<A><k>`) |
 | Wallet dynamics | Balances change along transitions (Def. 4.4) | Balances read from `Wallets`; moves checked against them; not updated along transitions |
-| Temporal ops | X, F, G, U | Same |
+| Temporal ops | X, U, G | X, U, G, and F as `true U` (see [Operators](#operators)) |
 
 ## Model-checking pipeline
 

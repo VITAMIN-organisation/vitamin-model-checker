@@ -573,8 +573,10 @@ ATL with wallet-aware coalitions over `WalletCGS` models.
 **Model type:** `WalletCGS`. See [Wallet_ATL usage](Wallet_ATL/usage.md).
 
 > [!NOTE]
-> **Wallet guards:** a guard keeps the states whose balance in the `Wallets`
-> section meets it. Balances are not recomputed along transitions.
+> **Wallet guards:** a guard is checked against the balances in the `Wallets`
+> section at the state where a coalition move starts. Balances are not
+> recomputed along transitions. Where each operator checks the guard is in
+> [Wallet_ATL operators](Wallet_ATL/algorithm.md#operators).
 
 A joint move is available only when every agent can pay for its part, so a
 `D20` move needs at least 20 in the acting agent's wallet. The rules are in
