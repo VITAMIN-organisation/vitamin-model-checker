@@ -11,7 +11,10 @@ logger = logging.getLogger(__name__)
 def model_checking(formula: str, model: str) -> dict[str, Any]:
     """NatATLF model checking of `formula` on the model file `model`: a dict with
     Satisfiability, Complexity Bound and Winning Strategy, or an error dict."""
-    from model_checker.utils.error_handler import create_error_response
+    from model_checker.utils.error_handler import (
+        create_error_response,
+        value_error_to_response,
+    )
 
     if not formula or not formula.strip():
         return create_error_response("validation", "Formula not entered")
@@ -48,15 +51,6 @@ def model_checking(formula: str, model: str) -> dict[str, Any]:
     except FileNotFoundError:
         return create_error_response("system", f"Model file not found: {model}")
     except ValueError as e:
-        error_msg = str(e)
-        if (
-            "index" in error_msg.lower()
-            or "dimension" in error_msg.lower()
-            or "unrecognized" in error_msg.lower()
-        ):
-            return create_error_response("model", error_msg)
-        if "formula" in error_msg.lower() or "parsing" in error_msg.lower():
-            return create_error_response("syntax", error_msg)
-        return create_error_response("system", error_msg)
+        return value_error_to_response(str(e))
     except Exception as e:
         return create_error_response("system", f"Error during model checking: {str(e)}")

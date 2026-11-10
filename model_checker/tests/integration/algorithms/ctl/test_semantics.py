@@ -1,110 +1,109 @@
-"""CTL semantics: expected state sets from temporal definitions vs implementation output."""
+"""CTL on small models, every expected set worked out by hand.
+
+The main model is atl_2agents_4states_simple.txt, read as a Kripke structure:
+s0 -> s1, s2;  s1 -> s2, s3;  s2 -> s3;  s3 -> s3.  p holds at s0 and s3,
+q at s1 and s3, so s2 is the only state with neither.
+"""
 
 import pytest
 
-from model_checker.algorithms.explicit.CTL.CTL import (
-    _core_ctl_checking,
+from model_checker.algorithms.explicit.CTL.CTL import model_checking
+from model_checker.tests.helpers.model_helpers import extract_states_from_result
+from model_checker.tests.helpers.synthetic_models import build_cgs_model_content
+
+_ALL = {"s0", "s1", "s2", "s3"}
+
+
+def _states(formula, path):
+    result = model_checking(formula, path)
+    assert "error" not in result, result
+    return extract_states_from_result(result)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("formula", "expected"),
+    [
+        # next
+        ("EX p", {"s1", "s2", "s3"}),  # s0's successors s1, s2 both lack p
+        ("AX p", {"s2", "s3"}),  # s1 can step to s2, where p is false
+        ("EX q", _ALL),  # every state has a successor in {s1, s3}
+        ("AX q", {"s2", "s3"}),  # s0 and s1 can step to s2
+        ("!EX p", {"s0"}),
+        # eventually and globally
+        # only s0 has p without q, and nothing leads back to it
+        ("EF (p && !q)", {"s0"}),
+        # s2 is reachable from s0 and s1, not from s3
+        ("EF (!p && !q)", {"s0", "s1", "s2"}),
+        ("AF q", _ALL),  # both branches from s0 pass s1 or reach s3
+        ("AF (!p && !q)", {"s2"}),  # s0 and s1 can go round s2 to s3
+        ("EG p", {"s3"}),  # s0 must leave p at once; s3 loops on p
+        ("EG !p", set()),  # every path reaches s3, where p holds
+        ("AG (p || q)", {"s3"}),  # every other state can reach s2
+        # until
+        ("E[p U q]", {"s0", "s1", "s3"}),  # s0 (p) steps to s1 (q); s2 has neither
+        ("A[p U q]", {"s1", "s3"}),  # from s0 the path to s2 breaks p U q
+        ("E[!q U p]", {"s0", "s2", "s3"}),  # s2 (!q) steps to s3 (p); s1 has q and no p
+        # p already holds at s0: the until is met at once
+        ("E[q U p]", {"s0", "s1", "s3"}),
+        # nesting
+        ("AG (EX p)", {"s1", "s2", "s3"}),  # s0 itself fails EX p
+        ("EF (AG (EX p))", _ALL),
+    ],
 )
-from model_checker.tests.helpers.model_helpers import (
-    build_cgs_model_content,
-    extract_states_from_result,
-    load_cgs_from_content,
+def test_formula_on_the_four_state_model(cgs_simple_parser, formula, expected):
+    """Each set follows from the edges and labels in the module docstring."""
+    assert _states(formula, cgs_simple_parser.filename) == expected
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("formula", "expected"),
+    [
+        ("EG p", {"s0"}),  # s0 can loop on itself forever
+        ("AG p", set()),  # s0 can also leave to s1
+        ("AF !p", {"s1"}),  # s0 may loop forever and never reach !p
+        ("EF !p", {"s0", "s1"}),
+    ],
 )
-
-
-@pytest.mark.semantic
-@pytest.mark.model_checking
-class TestCTLSemanticVerificationSimpleModel:
-    """Semantic verification tests using cgs_simple.txt model.
-
-    Model structure:
-        States: s0, s1, s2, s3
-        Transitions:
-            s0 -> s1 (AC,AD)
-            s0 -> s2 (BC,BD)
-            s1 -> s2 (AD,BD)
-            s1 -> s3 (AC,BC)
-            s2 -> s3 (AD,BC)
-            s3 -> s3 (*)
-        Labelling:
-            s0: p=1, q=0
-            s1: p=0, q=1
-            s2: p=0, q=0
-            s3: p=1, q=1
-    """
-
-    @pytest.mark.parametrize(
-        "formula,expected,reason",
-        [
-            ("EF p", {"s0", "s1", "s2", "s3"}, "Eventually p on some path"),
-            ("EG p", {"s3"}, "Globally p on some path"),
-        ],
+def test_self_loop_with_an_exit(temp_file, formula, expected):
+    """s0 loops or moves to s1, which loops; p holds only at s0."""
+    path = temp_file(
+        build_cgs_model_content(
+            transitions=[["I", "a"], ["0", "I"]],
+            state_names=["s0", "s1"],
+            initial_state="s0",
+            prop_names=["p"],
+            labelling=[["1"], ["0"]],
+            num_agents=1,
+        )
     )
-    def test_simple_model_semantics(self, cgs_simple_parser, formula, expected, reason):
-        """Table-driven semantic checks on cgs_simple.txt."""
-        result = _core_ctl_checking(cgs_simple_parser, formula)
+    assert _states(formula, path) == expected
 
-        states = extract_states_from_result(result)
-        assert states is not None, "Failed to extract states from result"
-        assert states == expected, (
-            f"{formula} expected {expected} ({reason}) but got {states}"
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("formula", "expected"),
+    [
+        ("EX p", {"s58"}),
+        ("EF p", {f"s{i}" for i in range(60)}),
+        ("AF p", {f"s{i}" for i in range(60)}),
+        ("EG !p", set()),
+    ],
+)
+def test_ring_of_sixty_states_uses_the_indexed_pre_image(temp_file, formula, expected):
+    """At 50 edges and more the pre-image uses a reverse index; s0 -> s1 -> ... -> s59 -> s0, p only at s59."""
+    n = 60
+    path = temp_file(
+        build_cgs_model_content(
+            transitions=[
+                ["a" if j == (i + 1) % n else "0" for j in range(n)] for i in range(n)
+            ],
+            state_names=[f"s{i}" for i in range(n)],
+            initial_state="s0",
+            prop_names=["p"],
+            labelling=[["0"]] * (n - 1) + [["1"]],
+            num_agents=1,
         )
-
-
-@pytest.mark.semantic
-@pytest.mark.model_checking
-class TestCTLSemanticVerificationCustomModels:
-    """Semantic verification tests using custom models designed for specific scenarios."""
-
-    @pytest.mark.parametrize(
-        "formula,transitions,state_names,labelling,expected,reason",
-        [
-            (
-                "AF p",
-                [
-                    ["0", "AC", "BC", "0"],
-                    ["0", "0", "0", "AC"],
-                    ["0", "0", "0", "BC"],
-                    ["0", "0", "0", "*"],
-                ],
-                ["s0", "s1", "s2", "s3"],
-                [["0"], ["0"], ["0"], ["1"]],
-                {"s0", "s1", "s2", "s3"},
-                "All paths converge to target",
-            ),
-        ],
     )
-    def test_custom_models_semantics(
-        self, temp_file, formula, transitions, state_names, labelling, expected, reason
-    ):
-        """Table-driven semantic checks on purpose-built custom models."""
-        content = build_cgs_model_content(
-            transitions=transitions,
-            state_names=state_names,
-            initial_state=state_names[0],
-            labelling=labelling,
-        )
-        parser = load_cgs_from_content(temp_file, content)
-        result = _core_ctl_checking(parser, formula)
-
-        states = extract_states_from_result(result)
-        assert states is not None, "Failed to extract states from result"
-        assert states == expected, (
-            f"{formula} expected {expected} ({reason}) but got {states}"
-        )
-
-    @pytest.mark.parametrize(
-        "formula,expected,reason",
-        [("EF (p and q)", {"s0", "s1", "s2", "s3"}, "Eventually p and q on some path")],
-    )
-    def test_complex_nested_formulas(
-        self, cgs_simple_parser, formula, expected, reason
-    ):
-        """Table-driven checks for complex nested CTL formulas on cgs_simple.txt."""
-        result = _core_ctl_checking(cgs_simple_parser, formula)
-
-        states = extract_states_from_result(result)
-        assert states is not None, "Failed to extract states from result"
-        assert states == expected, (
-            f"{formula} expected {expected} ({reason}) but got {states}"
-        )
+    assert _states(formula, path) == expected

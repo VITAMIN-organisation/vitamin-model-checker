@@ -3,6 +3,8 @@
 import pytest
 
 from model_checker.algorithms.explicit.shared.result_formatters import (
+    initial_state_holds,
+    states_of_result,
     verify_initial_state,
 )
 from model_checker.algorithms.explicit.shared.state_utils import (
@@ -15,6 +17,10 @@ from model_checker.algorithms.explicit.shared.verification_result import (
 )
 from model_checker.tests.helpers.model_helpers import load_cgs_from_content
 from model_checker.tests.helpers.synthetic_models import build_cgs_model_content
+from model_checker.utils.error_handler import (
+    unresolved_leaves_error,
+    value_error_to_response,
+)
 from model_checker.utils.literals import parse_state_set_literal
 
 
@@ -32,6 +38,66 @@ def test_state_names_and_indices_round_trip(temp_file):
     cgs = load_cgs_from_content(temp_file, content)
     assert state_names_to_indices(cgs, ["s2", "s0"]) == {0, 2}
     assert state_indices_to_names(cgs, [2, 0]) == {"s0", "s2"}
+
+
+@pytest.mark.unit
+def test_inner_ctl_result_reads_its_states_and_verdict():
+    """LTL and NatATL read CTL results through these helpers while pruning."""
+    result = {"res": "Result: ('s0', 's2')", "initial_state": "Initial state s0: True"}
+    assert states_of_result(result, "p") == {"s0", "s2"}
+    assert initial_state_holds(result, "p") is True
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("read", [states_of_result, initial_state_holds])
+def test_inner_ctl_error_raises_instead_of_reading_as_empty_or_false(read):
+    """An error from a nested CTL check would otherwise prune the model to nothing, or say False."""
+    error = {
+        "res": "Error: bad",
+        "initial_state": "",
+        "error": {"type": "syntax", "message": "bad"},
+    }
+    with pytest.raises(ValueError, match="Internal CTL check of 'A' failed: bad"):
+        read(error, "A")
+
+
+@pytest.mark.unit
+def test_inner_error_keeps_its_type_for_the_outer_classifier():
+    """A semantic error inside pruning stays semantic in the result the user sees."""
+    error = {
+        "res": "",
+        "initial_state": "",
+        "error": {"type": "semantic", "message": "x"},
+    }
+    with pytest.raises(ValueError) as raised:
+        states_of_result(error, "p")
+    assert value_error_to_response(str(raised.value))["error"]["type"] == "semantic"
+
+
+@pytest.mark.unit
+def test_result_without_a_state_set_raises():
+    """A result that is not `Result: ...` must not read as the empty set."""
+    with pytest.raises(ValueError, match="returned 'nonsense'"):
+        states_of_result({"res": "nonsense", "initial_state": ""}, "p")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("leaves", "message"),
+    [
+        (
+            {"p", "zz", "true"},
+            "Proposition(s) 'zz' not among the model's declared propositions ['p']",
+        ),
+        ({"p", "true"}, "This logic does not evaluate the constant(s) 'true'"),
+        ({"p"}, "This logic could not resolve the name(s) 'p' in the model"),
+    ],
+    ids=["undeclared_name", "unsupported_constant", "declared_but_unresolved"],
+)
+def test_unresolved_leaf_error_names_the_cause(leaves, message):
+    """Undeclared names come first, then constants the logic cannot evaluate, then any other leaf."""
+    error = unresolved_leaves_error(leaves, ["p"])["error"]
+    assert (error["type"], error["message"]) == ("semantic", message)
 
 
 @pytest.mark.unit

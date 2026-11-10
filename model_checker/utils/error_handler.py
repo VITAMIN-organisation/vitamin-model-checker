@@ -21,6 +21,50 @@ def create_error_response(
     }
 
 
+def undeclared_propositions_message(names, declared) -> str:
+    """The message for formula names the model does not declare, listing them and the declared ones."""
+    listed = ", ".join(repr(name) for name in sorted(names))
+    return (
+        f"Proposition(s) {listed} not among the model's declared "
+        f"propositions {sorted(map(str, declared))}"
+    )
+
+
+def _undeclared(names, declared) -> set[str]:
+    return {str(name) for name in names} - {str(p) for p in declared}
+
+
+def raise_if_undeclared(names, declared) -> None:
+    """Raise a semantic ValueError naming every one of `names` that is not in `declared`."""
+    undeclared = _undeclared(names, declared)
+    if undeclared:
+        raise ValueError(
+            f"[SEMANTIC] {undeclared_propositions_message(undeclared, declared)}"
+        )
+
+
+_CONSTANTS = frozenset({"true", "false"})
+
+
+def unresolved_leaves_error(leaves, declared) -> dict[str, Any]:
+    """The semantic error result when a solver could not resolve every leaf of the formula.
+
+    Names the undeclared propositions; failing that, the constants this logic does
+    not evaluate; failing that, every leaf it could not resolve.
+    """
+    leaves = {str(leaf) for leaf in leaves}
+    undeclared = _undeclared(leaves - _CONSTANTS, declared)
+    if undeclared:
+        message = undeclared_propositions_message(undeclared, declared)
+    elif leaves & _CONSTANTS:
+        listed = ", ".join(repr(c) for c in sorted(leaves & _CONSTANTS))
+        message = f"This logic does not evaluate the constant(s) {listed}"
+    else:
+        listed = ", ".join(repr(leaf) for leaf in sorted(leaves))
+        message = f"This logic could not resolve the name(s) {listed} in the model"
+    return create_error_response("semantic", message)
+
+
 _TAGGED_ERROR_PREFIXES = (
     ("[SEMANTIC]", functools.partial(create_error_response, "semantic")),
     ("[SYNTAX]", functools.partial(create_error_response, "syntax")),

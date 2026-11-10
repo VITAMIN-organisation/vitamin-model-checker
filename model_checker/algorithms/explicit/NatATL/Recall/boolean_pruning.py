@@ -7,8 +7,10 @@ from model_checker.algorithms.explicit.NatATL.Recall.condition_cache import (
     ctl_model_checking_cached,
 )
 from model_checker.algorithms.explicit.NatATL.Recall.tree_structure import Node
+from model_checker.algorithms.explicit.shared.result_formatters import (
+    states_of_result,
+)
 from model_checker.parsers.game_structures.cgs.cgs import CGS
-from model_checker.utils.literals import parse_state_set_literal
 
 logger = logging.getLogger(__name__)
 
@@ -65,14 +67,7 @@ def boolean_pruning(
 ) -> int:
     """Prune the tree by a boolean condition."""
     states = ctl_model_checking_cached(str(condition), model_path, preloaded_model=cgs)
-
-    if "res" in states and ": " in states["res"]:
-        state_set = parse_state_set_literal(states["res"].split(": ")[1])
-    else:
-        logger.warning(
-            "Boolean pruning failed to parse states for condition '%s'", condition
-        )
-        state_set = set()
+    state_set = states_of_result(states, str(condition))
 
     logger.debug(
         "States where '%s' holds: %s (count: %d)", condition, state_set, len(state_set)

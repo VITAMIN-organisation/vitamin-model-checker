@@ -5,8 +5,11 @@ from model_checker.algorithms.explicit.CTL.CTL import model_checking
 from model_checker.algorithms.explicit.NatATL.Memoryless.matrix_utils import (
     modify_matrix,
 )
+from model_checker.algorithms.explicit.shared.result_formatters import (
+    initial_state_holds,
+    states_of_result,
+)
 from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
-from model_checker.utils.literals import parse_state_set_literal
 
 
 def process_transition_matrix_data(cgs, model, agents, *strategies):
@@ -33,7 +36,7 @@ def process_transition_matrix_data(cgs, model, agents, *strategies):
                 cgs._condition_cache[cache_key] = states
             else:
                 states = cgs._condition_cache[cache_key]
-            state_set = parse_state_set_literal(states["res"].split(": ")[1])
+            state_set = states_of_result(states, condition)
 
             if iteration > 0:
                 if state_set:
@@ -113,7 +116,6 @@ def pruning(cgs, model, agents, formula, current_agents):
             pass
         else:
             raise
-    result = model_checking(formula, model, preloaded_model=cgs1)
-    if result.get("initial_state", "").endswith(": True"):
-        return True
-    return False
+    return initial_state_holds(
+        model_checking(formula, model, preloaded_model=cgs1), formula
+    )

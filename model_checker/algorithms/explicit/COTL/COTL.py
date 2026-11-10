@@ -6,12 +6,16 @@ from model_checker.algorithms.explicit.shared import (
     format_model_checking_result,
     verify_initial_state,
 )
+from model_checker.algorithms.explicit.shared.atom_utils import formula_leaves
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.obstruction_model.obstruction_model import (
     ObstructionModel,
 )
-from model_checker.utils.error_handler import create_error_response
+from model_checker.utils.error_handler import (
+    create_error_response,
+    unresolved_leaves_error,
+)
 
 
 def _core_cotl_checking(model, formula):
@@ -29,8 +33,8 @@ def _core_cotl_checking(model, formula):
 
     root = build_resolved_formula_tree(model, parsed, parser)
     if root is None:
-        return create_error_response(
-            "semantic", "One or more atoms do not exist in the model"
+        return unresolved_leaves_error(
+            formula_leaves(parsed), model.atomic_propositions
         )
 
     solve_tree(model, root)

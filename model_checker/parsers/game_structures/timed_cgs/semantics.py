@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
+from model_checker.utils.error_handler import undeclared_propositions_message
 
 if TYPE_CHECKING:
     from model_checker.parsers.formulas.TCTL.parser import Expr
@@ -11,11 +12,14 @@ if TYPE_CHECKING:
     from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
 
-def states_where_prop_holds(tcgs: "TimedCGS", prop: str) -> set[int] | None:
-    """State indices where prop holds; None if the atom is missing."""
+def states_where_prop_holds(tcgs: "TimedCGS", prop: str) -> set[int]:
+    """State indices where prop holds; an undeclared prop is a semantic error, not false everywhere."""
     index = proposition_index(tcgs.atomic_propositions, prop)
     if index is None:
-        return None
+        raise ValueError(
+            "[SEMANTIC] "
+            + undeclared_propositions_message({prop}, tcgs.atomic_propositions)
+        )
     return {
         state_idx
         for state_idx, row in enumerate(tcgs.matrix_prop)

@@ -13,12 +13,16 @@ from model_checker.algorithms.explicit.shared import (
     resolve_atom,
     verify_initial_state,
 )
+from model_checker.algorithms.explicit.shared.atom_utils import formula_leaves
 from model_checker.algorithms.explicit.shared.resource_bounded_to_atl import (
     wallet_atl_to_atl,
 )
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.utils.error_handler import create_error_response
+from model_checker.utils.error_handler import (
+    create_error_response,
+    unresolved_leaves_error,
+)
 from model_checker.utils.formula_tree import build_formula_tree
 
 from .solver import solve_tree
@@ -179,8 +183,8 @@ def _core_walletatl_checking(cgs, formula: str) -> dict[str, Any]:
         lambda atom: resolve_atom(cgs, atom),
     )
     if root is None:
-        return create_error_response(
-            "semantic", "One or more atoms do not exist in the model"
+        return unresolved_leaves_error(
+            formula_leaves(normalized_ast), cgs.atomic_propositions
         )
 
     transition_cache = build_transition_cache(cgs)

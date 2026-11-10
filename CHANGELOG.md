@@ -103,9 +103,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   attractor oracle moves from `model_checker/automata/games/_attractor_oracle.py` to
   `model_checker/tests/helpers/attractor_oracle.py`, so it no longer ships in the
   package. Tests of enum members, dataclass defaults and import wiring are removed.
+- Tests: CTL, ATL and ATL* each have one semantics file whose expected state sets
+  are worked out from the model, with a reason per row; CTL's eight test files and
+  ATL's three become two and one. A new `test_error_contract.py` runs every
+  registered logic on a valid formula, a formula cut short, an undeclared
+  proposition and an agent the model lacks. CTL trace tests check the trace type
+  and that the path follows real edges.
 
 ### Fixed
 
+- TCTL and TOL: a name the model does not declare is a semantic error that names
+  it. Before, it was read as a proposition false everywhere, so `AG !zz` held. LTL's
+  Nash and sure-win functions (`model_checking_sure_win`, `model_checking_exists_nash`
+  and the others that call `initialize`) check names too; before, `F zz` gave a
+  verdict there. NatATLF reports an undeclared name as `semantic`, not `system`, and
+  NatATL, NatATL_Recall and NatATLF name it in the message. LTL reports it as
+  `semantic` instead of `validation`, with the same message. See "Operators and
+  names" in `docs/logic_knowledge_base.md` (`test_error_contract.py`).
+- Every logic names an undeclared proposition in its error ("Proposition(s) 'zz'
+  not among the model's declared propositions [...]"). Before, ATL, ATLF, CTL,
+  CapATL, COTL, IATL, ICTL, OATL, OL, RABATL, RBATL and Wallet_ATL said only that
+  the atom does not exist, and IATL and ICTL called it a syntax error. A constant the
+  logic does not evaluate, such as `true` in ICTL, IATL and ATLF, is named as such.
+- LTL: `res` reads `Result: True` or `Result: False`, as in NatATL. Before, it was
+  the literal text `Result: {satisfied}` or `Result: {}`.
+- LTL, NatATL, NatATL_Recall and NatATLF refuse a model proposition named `A`, `E`,
+  `AF` or another name the CTL parser reads as an operator, with a semantic error
+  that names it. Before, such a name gave wrong verdicts: these logics check
+  through CTL text, where `A` is a path quantifier, and the failed CTL checks of
+  strategy conditions were read as "holds nowhere" and the failed goal check as
+  False. A failed inner CTL check now raises instead.
 - ATL*: a proposition whose name starts with a Spot operator letter, such as
   `Granted`, `Fuel` or `Xray`, gave a wrong verdict or a "RuntimeError:
   unimplemented", because Spot read `Granted` as `G(ranted)`. Names are now quoted

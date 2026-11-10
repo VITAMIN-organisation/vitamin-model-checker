@@ -32,8 +32,6 @@ def regions_where_prop_holds(
     tcgs: "TimedCGS", zone_graph: "ZoneGraph", prop: str
 ) -> RegionSet:
     prop_indices = states_where_prop_holds(tcgs, prop)
-    if prop_indices is None:
-        return set()
     location_names = {
         str(tcgs.get_state_name_by_index(index)) for index in prop_indices
     }

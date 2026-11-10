@@ -4,6 +4,7 @@ from typing import Any
 
 from model_checker.algorithms.explicit.IATL.checker import IATLModelChecker
 from model_checker.algorithms.explicit.IATL.solver import solve_tree
+from model_checker.algorithms.explicit.shared.atom_utils import formula_leaves
 from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,
     verify_initial_state,
@@ -11,7 +12,10 @@ from model_checker.algorithms.explicit.shared.result_formatters import (
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.bcgs.bcgs import BCGS
-from model_checker.utils.error_handler import create_error_response
+from model_checker.utils.error_handler import (
+    create_error_response,
+    unresolved_leaves_error,
+)
 
 
 def _core_iatl_checking(parser: BCGS, formula: str) -> dict[str, Any]:
@@ -29,8 +33,8 @@ def _core_iatl_checking(parser: BCGS, formula: str) -> dict[str, Any]:
 
     root = checker.build_tree(parsed)
     if root is None:
-        return create_error_response(
-            "semantic", "Syntax Error: the atom does not exist"
+        return unresolved_leaves_error(
+            formula_leaves(parsed), parser.atomic_propositions
         )
 
     solve_tree(checker, root)

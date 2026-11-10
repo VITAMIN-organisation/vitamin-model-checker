@@ -1,10 +1,7 @@
-"""Cross-checks classical ATL against ATL* on the fragment ATL can already
-express: coalition only at the formula's root, with exactly one temporal
-operator (X/F/G/U) inside. ATL_STAR is a different algorithm end to end
-(automata-theoretic reduction to a parity game, not a coalition pre-image
-fixpoint), so the two implementations agreeing across this whole fragment,
-on real VITAMIN fixtures, is the actual correctness evidence for the
-reduction (a single known-verdict fixture isn't enough on its own).
+"""ATL and ATL* must agree on every formula both can write: one coalition over one X, F, G or U.
+
+The two use different algorithms (a pre-image fixpoint against a parity game
+built from an automaton), so agreement on the fixtures checks the reduction.
 """
 
 import pytest

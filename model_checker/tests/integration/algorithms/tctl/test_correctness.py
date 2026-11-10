@@ -59,8 +59,6 @@ def _initial_satisfied(result):
         ("AG p", {"s0"}, True),
         ("EF x<=1", {"s0"}, True),
         ("AG x<=1", {"s0"}, True),
-        ("E p U q", set(), False),
-        ("A p U q", set(), False),
         ("E p U p", {"s0"}, True),
         ("A p U p", {"s0"}, True),
         ("E (p U p)", {"s0"}, True),

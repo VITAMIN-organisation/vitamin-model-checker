@@ -5,6 +5,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
+from model_checker.utils.error_handler import raise_if_undeclared
 from model_checker.utils.formula_tree import build_formula_tree
 
 
@@ -52,16 +53,48 @@ def resolve_atom_with_constants(
     return resolve_atom(cgs, s)
 
 
-def ensure_formula_atoms_exist(cgs: AtomicModel, ctl_formula: str) -> None:
-    """Raise ValueError if a converted CTL formula uses an unknown atom."""
+def formula_leaves(node: Any) -> set[str]:
+    """Every leaf of a tuple formula tree (node[0] is the operator), constants included."""
+    if isinstance(node, str):
+        return {node}
+    return set().union(*(formula_leaves(child) for child in node[1:]))
+
+
+def formula_propositions(node: Any) -> set[str]:
+    """The leaves without the constants `true` and `false` (lowercase only, so `TRUE` is a name)."""
+    return formula_leaves(node) - {"true", "false"}
+
+
+def ensure_ctl_readable_propositions(cgs: AtomicModel) -> None:
+    """Raise ValueError for model propositions the CTL parser reads as operators (A, E, AF, ...).
+
+    LTL and NatATL check strategy conditions and the goal as CTL text, so such a
+    name would turn every check that mentions it into a wrong verdict.
+    """
     from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 
-    ctl_parser = FormulaParserFactory.get_parser_instance("CTL")
-    ctl_ast = ctl_parser.parse(ctl_formula)
+    parser = FormulaParserFactory.get_parser_instance("CTL")
+    unreadable = sorted(
+        str(p) for p in cgs.atomic_propositions if parser.parse(str(p)) != str(p)
+    )
+    if unreadable:
+        listed = ", ".join(repr(name) for name in unreadable)
+        raise ValueError(
+            f"[SEMANTIC] Proposition(s) {listed} cannot be used by this logic: it is "
+            "checked through CTL, where these names are path quantifiers or "
+            "operators. Rename them in the model."
+        )
+
+
+def ensure_formula_atoms_exist(cgs: AtomicModel, ctl_formula: str) -> None:
+    """Raise ValueError naming every proposition of a converted CTL formula the model lacks."""
+    from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+
+    ensure_ctl_readable_propositions(cgs)
+    ctl_ast = FormulaParserFactory.get_parser_instance("CTL").parse(ctl_formula)
     if ctl_ast is None:
         raise ValueError(f"Invalid converted CTL formula: {ctl_formula}")
-    if build_resolved_formula_tree(cgs, ctl_ast, ctl_parser) is None:
-        raise ValueError("Atomic proposition not found in model")
+    raise_if_undeclared(formula_propositions(ctl_ast), cgs.atomic_propositions)
 
 
 def build_resolved_formula_tree(

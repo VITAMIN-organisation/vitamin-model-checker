@@ -10,7 +10,10 @@ from model_checker.algorithms.explicit.NatATL.Memoryless.solver import (
 from model_checker.algorithms.explicit.NatATL.Memoryless.strategies import (
     initialize,
 )
-from model_checker.utils.error_handler import create_error_response
+from model_checker.utils.error_handler import (
+    create_error_response,
+    value_error_to_response,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,19 +45,7 @@ def model_checking(formula: str, model_path: str) -> dict[str, Any]:
     except FileNotFoundError:
         return create_error_response("system", f"Model file not found: {model_path}")
     except ValueError as e:
-        error_msg = str(e)
-        if (
-            "index" in error_msg.lower()
-            or "dimension" in error_msg.lower()
-            or "unrecognized" in error_msg.lower()
-        ):
-            return create_error_response("model", error_msg)
-        # ValueError might also indicate syntax issues in formula parsing
-        if "formula" in error_msg.lower() or "parsing" in error_msg.lower():
-            return create_error_response("syntax", error_msg)
-        if "atomic proposition" in error_msg.lower() or "atom" in error_msg.lower():
-            return create_error_response("semantic", error_msg)
-        return create_error_response("system", error_msg)
+        return value_error_to_response(str(e))
     except Exception as e:
         logger.exception("Unexpected error during NatATL verification")
         return create_error_response("system", f"Error during model checking: {str(e)}")

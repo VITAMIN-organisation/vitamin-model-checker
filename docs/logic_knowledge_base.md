@@ -163,6 +163,10 @@ Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/te
 - NatSL rejects it: `Fgoal`, and a goal with no operator such as `Goal`, are errors. A lowercase operator (`f goal`) is also an error, because operators are uppercase.
 - Every other parser reports a syntax error.
 
+A name the model does not declare is an error in every logic, wherever it sits in the formula: under `!`, inside an Until or a conjunction. The error type is `semantic` (NatSL reports `validation`), so a typo never reads as a proposition that is false everywhere, which would make `AG !typo` true. The message names it: "Proposition(s) 'zz' not among the model's declared propositions [...]". `model_checker/tests/integration/algorithms/test_error_contract.py` checks this for each registered logic.
+
+LTL, NatATL, NatATL_Recall and NatATLF check their goal and strategy conditions as CTL text, where `A` and `E` are path quantifiers. A model proposition named `A`, `E`, `AF` or another name the CTL parser reads as an operator is therefore refused by these four logics with a semantic error that names it; rename it in the model. The other logics accept such names.
+
 
 **Truth Table:**
 

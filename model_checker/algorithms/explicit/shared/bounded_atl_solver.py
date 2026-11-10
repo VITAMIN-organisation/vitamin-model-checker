@@ -2,6 +2,7 @@
 
 from model_checker.algorithms.explicit.shared.atom_utils import (
     build_resolved_formula_tree,
+    formula_leaves,
 )
 from model_checker.algorithms.explicit.shared.boolean_operators import (
     handle_and,
@@ -21,7 +22,10 @@ from model_checker.algorithms.explicit.shared.result_formatters import (
     verify_initial_state,
 )
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.utils.error_handler import create_error_response
+from model_checker.utils.error_handler import (
+    create_error_response,
+    unresolved_leaves_error,
+)
 
 _COALITION_UNARY_KEYS = frozenset(
     {"COALITION_GLOBALLY", "COALITION_NEXT", "COALITION_EVENTUALLY"}
@@ -119,8 +123,8 @@ def run_bounded_atl_checking(cgs, formula, cost_filter: CostFilter, logic: str):
 
     root = build_resolved_formula_tree(cgs, res_parsing, parser)
     if root is None:
-        return create_error_response(
-            "semantic", "Atomic proposition not found in model"
+        return unresolved_leaves_error(
+            formula_leaves(res_parsing), cgs.atomic_propositions
         )
 
     solve_tree(cgs, root, cost_filter=cost_filter, logic=logic, parser=parser)

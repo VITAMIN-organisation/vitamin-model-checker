@@ -31,10 +31,7 @@ def solve_ast_children(
 
 
 def eval_atomic_prop(tcgs: "TimedCGS", node) -> None:
-    prop_states = states_where_prop_holds(tcgs, node.name)
-    if prop_states is None:
-        return
-    for state_idx in prop_states:
+    for state_idx in states_where_prop_holds(tcgs, node.name):
         node.satisfying_states.add(str(tcgs.get_state_name_by_index(state_idx)))
 
 

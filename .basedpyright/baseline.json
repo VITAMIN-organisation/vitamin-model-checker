@@ -646,32 +646,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/NatATL/Memoryless/pruning.py": [
-            {
-                "code": "reportAttributeAccessIssue",
-                "range": {
-                    "startColumn": 36,
-                    "endColumn": 52,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportAttributeAccessIssue",
-                "range": {
-                    "startColumn": 20,
-                    "endColumn": 36,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportAttributeAccessIssue",
-                "range": {
-                    "startColumn": 36,
-                    "endColumn": 52,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/algorithms/explicit/NatATL/Memoryless/solver.py": [
             {
                 "code": "reportArgumentType",

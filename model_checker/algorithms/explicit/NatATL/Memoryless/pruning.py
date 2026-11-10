@@ -13,8 +13,11 @@ from model_checker.algorithms.explicit.CTL.CTL import model_checking
 from model_checker.algorithms.explicit.NatATL.Memoryless.matrix_utils import (
     modify_matrix,
 )
+from model_checker.algorithms.explicit.shared.result_formatters import (
+    initial_state_holds,
+    states_of_result,
+)
 from model_checker.parsers.game_structures.cgs import CGS
-from model_checker.utils.literals import parse_state_set_literal
 
 logger = logging.getLogger(__name__)
 
@@ -33,23 +36,16 @@ def process_transition_matrix_data_fixed(
             strategy["condition_action_pairs"]
         ):
             # Cache model_checking results for conditions to avoid redundant CTL calls
-            if not hasattr(cgs, "_condition_cache"):
-                cgs._condition_cache = {}
+            cache = vars(cgs).setdefault("_condition_cache", {})
             cache_key = (condition, model_path)
-            if cache_key not in cgs._condition_cache:
-                states_result = model_checking(
+            if cache_key not in cache:
+                cache[cache_key] = model_checking(
                     condition, model_path, preloaded_model=cgs
                 )
-                cgs._condition_cache[cache_key] = states_result
-            else:
-                states_result = cgs._condition_cache[cache_key]
-            res_str = states_result.get("res", "")
-
-            state_set: set[str] = set()
-            if ": " in res_str:
-                state_set = parse_state_set_literal(res_str.split(": ")[1])
-
-            applicable_states = state_set - covered_states
+            states_result = cache[cache_key]
+            applicable_states = (
+                states_of_result(states_result, condition) - covered_states
+            )
 
             if applicable_states:
                 # Apply to graph
@@ -95,11 +91,6 @@ def pruning(
         cgs, model_path, agents, *current_agents
     )
 
-    # Use in-memory CTL model checking
-    result = model_checking(formula, model_path, preloaded_model=cgs1)
-
-    if "Initial state" in result.get("initial_state", "") and str(True) in result.get(
-        "initial_state", ""
-    ):
-        return True
-    return False
+    return initial_state_holds(
+        model_checking(formula, model_path, preloaded_model=cgs1), formula
+    )

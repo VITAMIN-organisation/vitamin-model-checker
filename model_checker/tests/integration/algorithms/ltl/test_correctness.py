@@ -24,7 +24,7 @@ class TestLTLErrorHandling:
         """Test LTL with non-existent atomic proposition."""
         result = model_checking("F nonexistent", cgs_simple_parser.filename)
         assert "error" in result
-        assert result["error"]["type"] == "validation"
+        assert result["error"]["type"] == "semantic"
 
     @pytest.mark.parametrize(
         "formula,name",
@@ -42,7 +42,7 @@ class TestLTLErrorHandling:
     ):
         """Capitalised, numbered and glued names are checked like lowercase ones."""
         result = model_checking(formula, ctl_small_model.filename)
-        assert result["error"]["type"] == "validation"
+        assert result["error"]["type"] == "semantic"
         assert f"{name!r} not among the model's declared propositions" in (
             result["error"]["message"]
         )
@@ -52,62 +52,47 @@ class TestLTLErrorHandling:
 @pytest.mark.model_checking
 @pytest.mark.semantic
 class TestLTLSemantics:
-    """LTL sure-win oracles: Result {satisfied}/{} and initial-state truth."""
+    """LTL sure-win verdicts: `res` and the initial-state line both read True or False."""
+
+    @staticmethod
+    def _assert_verdict(result, holds):
+        assert "error" not in result, result
+        assert result["res"] == f"Result: {holds}"
+        assert result["initial_state"] == f"Initial state s0: {holds}"
 
     @pytest.mark.parametrize(
-        "formula,expected_res,expected_initial",
+        ("formula", "holds"),
+        [("F q", True), ("F p", True), ("G p", False), ("X q", True), ("p U q", True)],
+    )
+    def test_ltl_semantics_ctl_fixture(self, ctl_small_model, formula, holds):
+        """Verdicts on ctl_1agent_4states."""
+        self._assert_verdict(model_checking(formula, ctl_small_model.filename), holds)
+
+    @pytest.mark.parametrize(
+        ("formula", "holds"),
         [
-            ("F q", "{satisfied}", True),
-            ("F p", "{satisfied}", True),
-            ("G p", "{}", False),
-            ("X q", "{satisfied}", True),
-            ("p U q", "{satisfied}", True),
+            ("F p", True),
+            ("F q", True),
+            ("G q", False),
+            ("X q", False),
+            ("p U q", False),
         ],
     )
-    def test_ltl_semantics_ctl_fixture(
-        self, ctl_small_model, formula, expected_res, expected_initial
-    ):
-        """Pinned LTL bridge results on ctl_1agent_4states."""
-        result = model_checking(formula, ctl_small_model.filename)
-        assert "error" not in result
-        assert result["res"] == f"Result: {expected_res}"
-        suffix = "True" if expected_initial else "False"
-        assert result["initial_state"].strip().endswith(suffix)
-
-    def test_ltl_semantics_linear_chain(self, temp_file):
-        """3-state chain s0->s1->s2; p at s0,s2; q at s2."""
-        content = generate_linear_chain(
-            3, num_agents=2, prop_names=["p", "q"], action_label="AC"
+    def test_ltl_semantics_linear_chain(self, temp_file, formula, holds):
+        """Chain s0 -> s1 -> s2 with p at s0 and s2, q at s2: X q fails at s0 because s1 lacks q."""
+        path = temp_file(
+            generate_linear_chain(
+                3, num_agents=2, prop_names=["p", "q"], action_label="AC"
+            )
         )
-        path = temp_file(content)
+        self._assert_verdict(model_checking(formula, path), holds)
 
-        cases = [
-            ("F p", "{satisfied}", True),
-            ("F q", "{satisfied}", True),
-            ("G q", "{}", False),
-            ("X q", "{}", False),
-            ("p U q", "{}", False),
-        ]
-        for formula, expected_res, expected_initial in cases:
-            result = model_checking(formula, path)
-            assert "error" not in result, result
-            assert result["res"] == f"Result: {expected_res}"
-            suffix = "True" if expected_initial else "False"
-            assert result["initial_state"].strip().endswith(suffix)
-
-    def test_ltl_eventually_goal_on_minimal_model(self, ltl_minimal_model):
-        """F goal is sure-win on the minimal LTL fixture."""
-        result = model_checking("F goal", ltl_minimal_model.filename)
-        assert "error" not in result
-        assert result["res"] == "Result: {satisfied}"
-        assert result["initial_state"].strip().endswith("True")
-
-    def test_ltl_counterexample_globally_false_on_minimal(self, ltl_minimal_model):
-        """G goal fails on the minimal LTL fixture."""
-        result = model_checking("G goal", ltl_minimal_model.filename)
-        assert "error" not in result
-        assert result["res"] == "Result: {}"
-        assert result["initial_state"].strip().endswith("False")
+    @pytest.mark.parametrize(
+        ("formula", "holds"), [("F goal", True), ("G goal", False)]
+    )
+    def test_ltl_on_the_minimal_fixture(self, ltl_minimal_model, formula, holds):
+        """goal is reached on ltl_1agent_3states_minimal but does not hold everywhere."""
+        self._assert_verdict(model_checking(formula, ltl_minimal_model.filename), holds)
 
 
 @pytest.mark.integration

@@ -5,6 +5,11 @@ import logging
 from collections.abc import Generator
 
 from model_checker.algorithms.explicit.shared import strategies_base
+from model_checker.algorithms.explicit.shared.atom_utils import (
+    ensure_ctl_readable_propositions,
+    formula_propositions,
+)
+from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.formulas.LTL.ltl_to_ctl import ltl_to_ctl
 from model_checker.parsers.game_structures.cgs import (
     CGS,
@@ -12,6 +17,7 @@ from model_checker.parsers.game_structures.cgs import (
     cgs_actions,
     cgs_validation,
 )
+from model_checker.utils.error_handler import raise_if_undeclared
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +106,13 @@ def initialize(
     cgs.filename = filename
     logger.debug("Formula: %s", formula)
 
+    # ltl_to_ctl raises on a syntax error, so the LTL tree below always parses.
+    CTLformula = ltl_to_ctl(formula)
+    # Checked on the LTL tree: the CTL lexer would read a proposition named A or E as a quantifier.
+    ltl_ast = FormulaParserFactory.get_parser_instance("LTL").parse(formula)
+    raise_if_undeclared(formula_propositions(ltl_ast), cgs.atomic_propositions)
+    ensure_ctl_readable_propositions(cgs)
+
     try:
         cgs_validation.validate_nat_idle_requirements(
             cgs.graph, cgs.get_number_of_agents()
@@ -109,7 +122,6 @@ def initialize(
             pass
         else:
             raise
-    CTLformula = ltl_to_ctl(formula)
     logger.debug("Formula natATL: %s", formula)
     logger.debug("Formula CTL: %s", CTLformula)
 

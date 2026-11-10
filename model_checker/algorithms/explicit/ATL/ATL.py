@@ -11,9 +11,13 @@ from model_checker.algorithms.explicit.shared import (
     format_model_checking_result,
     verify_initial_state,
 )
+from model_checker.algorithms.explicit.shared.atom_utils import formula_leaves
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.utils.error_handler import create_error_response
+from model_checker.utils.error_handler import (
+    create_error_response,
+    unresolved_leaves_error,
+)
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS
@@ -29,7 +33,9 @@ def _core_atl_checking(cgs: "CGS", formula: str) -> dict[str, Any]:
 
     root = build_resolved_formula_tree(cgs, res_parsing, parser)
     if root is None:
-        return create_error_response("semantic", "The atom does not exist")
+        return unresolved_leaves_error(
+            formula_leaves(res_parsing), cgs.atomic_propositions
+        )
 
     transition_cache = build_transition_cache(cgs)
 

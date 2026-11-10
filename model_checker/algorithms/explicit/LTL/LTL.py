@@ -22,7 +22,10 @@ from model_checker.algorithms.explicit.SolutionConcepts.Solution_Concepts import
 from model_checker.models.model_factory import create_model_parser_for_logic
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cgs import CGSProtocol
-from model_checker.utils.error_handler import create_error_response
+from model_checker.utils.error_handler import (
+    create_error_response,
+    value_error_to_response,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,28 +56,6 @@ def _load_ltl_model(filename: str) -> Any:
     return cgs
 
 
-def _formula_propositions(node: Any) -> set[str]:
-    """Names in a parsed LTL formula; the parser's leaves are names and `true`/`false`."""
-    if isinstance(node, str):
-        return {node} - {"true", "false"}
-    return set().union(*(_formula_propositions(child) for child in node[1:]))
-
-
-def _validate_formula_propositions(
-    ast: Any, atomic_propositions: list[str]
-) -> dict[str, Any] | None:
-    """Return an error dict if the formula uses undeclared propositions; otherwise None."""
-    invalid = _formula_propositions(ast) - set(atomic_propositions)
-    if invalid:
-        names = ", ".join(repr(name) for name in sorted(invalid))
-        return create_error_response(
-            "validation",
-            f"Proposition(s) {names} not among the model's declared "
-            f"propositions {sorted(atomic_propositions)}",
-        )
-    return None
-
-
 def _run_sure_win_and_format_result(
     filename: str,
     formula: str,
@@ -83,16 +64,11 @@ def _run_sure_win_and_format_result(
     cgs: CGSProtocol,
 ) -> dict[str, Any]:
     """Run sure-win check and return the standard result dict with ``res`` and ``initial_state``."""
-    initial_state = cgs.initial_state
     result = model_checking_sure_win(filename, formula, k, agents, cgs=cgs)
-    if result.get("Satisfiability"):
-        return {
-            "res": "Result: {satisfied}",
-            "initial_state": f"Initial state {initial_state}: True",
-        }
+    satisfied = bool(result.get("Satisfiability"))
     return {
-        "res": "Result: {}",
-        "initial_state": f"Initial state {initial_state}: False",
+        "res": f"Result: {satisfied}",
+        "initial_state": f"Initial state {cgs.initial_state}: {satisfied}",
     }
 
 
@@ -332,16 +308,11 @@ def model_checking(formula: str, filename: str) -> dict[str, Any]:
         return err
 
     try:
-        ast, parse_err = _parse_ltl_formula(formula)
+        _, parse_err = _parse_ltl_formula(formula)
         if parse_err is not None:
             return parse_err
 
         cgs = _load_ltl_model(filename)
-        atomic_propositions = cgs.atomic_propositions
-        prop_err = _validate_formula_propositions(ast, atomic_propositions)
-        if prop_err is not None:
-            return prop_err
-
         k = 5
         agents = list(range(1, cgs.get_number_of_agents() + 1))
         return _run_sure_win_and_format_result(filename, formula, k, agents, cgs)
@@ -349,9 +320,6 @@ def model_checking(formula: str, filename: str) -> dict[str, Any]:
     except FileNotFoundError:
         return create_error_response("system", f"Model file not found: {filename}")
     except ValueError as e:
-        error_msg = str(e)
-        if "index" in error_msg.lower() or "dimension" in error_msg.lower():
-            return create_error_response("model", error_msg)
-        return create_error_response("system", error_msg)
+        return value_error_to_response(str(e))
     except Exception as e:
         return create_error_response("system", f"Error during model checking: {str(e)}")
