@@ -154,13 +154,16 @@ class WalletCGS(CGS):
             ]
         return 0
 
+    def _contract_agent(self):
+        """The last agent is the contract/system pool only when there is more than one agent."""
+        num_agents = self.get_number_of_agents()
+        return num_agents if num_agents > 1 else None
+
     def get_valid_actions(self, state, agent, wallet_constraint=None):
         """Get valid actions for an agent in a state with wallet feasibility checks"""
         state_index = self.get_index_by_state_name(state)
         valid_actions = set()
-        num_agents = self.get_number_of_agents()
-        # Last agent is the contract/system pool only when there is more than one agent.
-        contract_agent = num_agents if num_agents > 1 else None
+        contract_agent = self._contract_agent()
 
         for transition in self.graph[state_index]:
             if transition == 0:
@@ -193,6 +196,7 @@ class WalletCGS(CGS):
         possible_transitions = self.graph[state_index]
 
         next_states = []
+        contract_agent = self._contract_agent()
 
         for i, transition in enumerate(possible_transitions):
             if transition == 0:
@@ -216,8 +220,6 @@ class WalletCGS(CGS):
             if match:
                 # 2. Check wallet feasibility for all user agents
                 all_feasible = True
-                num_agents = self.get_number_of_agents()
-                contract_agent = num_agents  # last agent is the contract
 
                 for agent, action in actions.items():
                     if agent == contract_agent:
@@ -272,7 +274,8 @@ class WalletCGS(CGS):
         current_wallets = list(
             self.wallets.get(current_state, (0,) * self.get_number_of_agents())
         )
-        total_agents = self.get_number_of_agents()
+        contract_agent = self._contract_agent()
+        system_index = contract_agent - 1 if contract_agent else None
 
         for agent, action_str in actions.items():
             action_name, parameter, is_consumption, is_income = (
@@ -284,15 +287,12 @@ class WalletCGS(CGS):
                 current_wallets[agent_index] -= parameter
 
                 # The last agent is the system pool, which receives what is consumed.
-                if total_agents > 1:
-                    system_index = total_agents - 1
-                    if system_index != agent_index:
-                        current_wallets[system_index] += parameter
+                if system_index is not None and system_index != agent_index:
+                    current_wallets[system_index] += parameter
 
             elif is_income:
                 # Income: agent gains funds only when system pool can cover it.
-                if total_agents > 1:
-                    system_index = total_agents - 1
+                if system_index is not None:
                     if (
                         system_index != agent_index
                         and current_wallets[system_index] >= parameter

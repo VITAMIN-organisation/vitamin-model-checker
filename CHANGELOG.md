@@ -112,6 +112,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- WalletCGS with one agent: `get_next_states` treated the only agent as the contract agent
+  and skipped its wallet check, so an action it could not pay for (`D6` with 5 in the
+  wallet) still led to a next state. `get_valid_actions` and `get_next_states` now share
+  one rule: the last agent is the contract only when there is more than one agent.
 - ICTL, IATL and ATLF: `true` and `false` were rejected with "does not evaluate the
   constant". They now mean all states and no state (in ATLF the value 1 and 0 everywhere).
 - `true` and `false` are reserved words, so a model that declares a proposition with

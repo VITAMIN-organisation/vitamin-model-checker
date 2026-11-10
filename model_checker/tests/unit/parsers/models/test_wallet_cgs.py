@@ -56,6 +56,17 @@ def test_transition_needing_an_unaffordable_action_leads_nowhere(temp_file):
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(("action", "states"), [("D5", ["s0"]), ("D6", [])])
+def test_single_agent_pays_for_its_own_transition(temp_file, action, states):
+    """With one agent there is no contract agent, so the lone agent's wallet (5) is checked.
+
+    D5 is affordable and D6 is not, as in `get_valid_actions`.
+    """
+    model = _model(temp_file, f"{action} *", agents=1, wallet="5")
+    assert model.get_next_states("s0", {1: action}) == states
+
+
+@pytest.mark.unit
 @pytest.mark.parametrize(
     ("action", "after"), [("W5", (5, 5)), ("W10", (10, 0)), ("W11", (0, 10))]
 )
