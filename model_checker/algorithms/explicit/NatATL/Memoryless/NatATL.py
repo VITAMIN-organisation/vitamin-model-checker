@@ -1,9 +1,5 @@
-"""
-NatATL Memoryless model checker.
-
-Iteratively explores strategy complexities (bound k) to find a winning strategy
-using a memoryless verification algorithm.
-"""
+"""NatATL model checker with memoryless strategies: tries the complexity bounds up to
+k until a strategy wins."""
 
 import logging
 from typing import Any

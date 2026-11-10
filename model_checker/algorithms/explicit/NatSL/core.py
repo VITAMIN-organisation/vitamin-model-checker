@@ -1,15 +1,10 @@
-"""Executable restricted NatSL[1G] model checker.
+"""Model checker for restricted NatSL[1G]: prefix ``E* A*``, a full binding, one goal.
 
-The supported prefix is ``E* A*`` followed by a complete binding and one Boolean
-temporal goal. For each existential profile, the current NatATL pruning and CTL
-backend first checks the stronger case in which opponents are unrestricted. A
-positive answer is a sound shortcut. A negative answer is inconclusive, so all
-bounded universal natural strategies are then enumerated explicitly.
-
-The time-oriented implementation materializes strategy domains and stores failed
-existentially-pruned models for a second universal phase. The space-oriented
-implementation generates domains lazily and checks the universal profiles before
-moving to the next existential profile.
+- Each existential profile is first checked against unrestricted opponents (NatATL
+  pruning and CTL). A yes is final; a no is not, so the bounded universal
+  strategies are then enumerated.
+- Time mode builds all strategy domains first and checks the universal phase after;
+  space mode builds them lazily, one existential profile at a time.
 """
 
 from __future__ import annotations
@@ -321,9 +316,8 @@ class RestrictedNatSL1GEvaluator:
                             f"Joint action {joint_action!r} in row {row_index} must contain "
                             "exactly one action symbol per agent"
                         )
-                    # A joint action may have multiple successors in a CGS.
-                    # NatSL pruning retains every successor compatible with
-                    # the selected action, so determinism is not required here.
+                    # A joint action may have several successors (pruning keeps them
+                    # all); this map only serves as the row's set of joint actions.
                     destination_by_joint_action.setdefault(joint_action, destination)
                     for agent, action in enumerate(joint_action, start=1):
                         action_sets[agent].add(action)

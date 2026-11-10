@@ -1,9 +1,4 @@
-"""
-CTL operator handlers extended with witness/counterexample trace generation.
-
-Extends standard CTL operators to produce execution traces that demonstrate
-why formulas hold or fail, aiding debugging and result interpretation.
-"""
+"""CTL operator handlers that also return a witness or counterexample trace."""
 
 from model_checker.algorithms.explicit.CTL.operators import (
     _compute_af,
@@ -29,11 +24,7 @@ from model_checker.utils.literals import parse_state_set_literal
 
 
 class OperatorWithTrace:
-    """
-    Base class for CTL operators that generate traces.
-
-    Stores the result states and optional predecessor map for trace reconstruction.
-    """
+    """Result states of a CTL operator, with the predecessors that rebuild a trace."""
 
     def __init__(self):
         self.result_states: set[str] = set()
@@ -45,11 +36,7 @@ class OperatorWithTrace:
 def handle_ex_with_trace(
     cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
-    """
-    Handle EX operator with trace generation.
-
-    For witness: shows a state and its successor that satisfies phi.
-    """
+    """EX with a trace: a state and a successor that satisfies phi."""
     states = parse_state_set_literal(node.left.value)
     result_states, predecessors = pre_image_exist_with_trace(cached_edges, states)
     result_states = {str(s) for s in result_states}
@@ -67,11 +54,7 @@ def handle_ex_with_trace(
 def handle_ef_with_trace(
     cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
-    """
-    Handle EF operator with trace generation.
-
-    For witness: shows a path from initial state to a state satisfying phi.
-    """
+    """EF with a trace: a path from the initial state to a state satisfying phi."""
     target = parse_state_set_literal(node.left.value)
 
     def update_with_trace(T):
@@ -97,15 +80,11 @@ def handle_ef_with_trace(
 def handle_ax_with_trace(
     cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
-    """
-    Handle AX operator with trace generation.
-
-    For counterexample: shows a state and a successor that doesn't satisfy phi.
-    """
+    """AX with a trace: the counterexample is a state with a successor failing phi."""
     states = parse_state_set_literal(node.left.value)
     result = {str(s) for s in pre_image_all(cached_edges, cgs.all_states_set, states)}
 
-    # For counterexample, we need to find a state in result and a successor not in phi
+    # Counterexample: a state in result with a successor outside phi.
     predecessors = {}
 
     # Build map of states to their bad successors (not in phi)
@@ -133,11 +112,7 @@ def handle_ax_with_trace(
 def handle_af_with_trace(
     cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
-    """
-    Handle AF operator with trace generation.
-
-    For witness: AF phi = !EG !phi. For counterexample: show path that stays in !phi forever.
-    """
+    """AF with a trace (AF phi = !EG !phi): the counterexample stays in !phi forever."""
     result = _compute_af(cgs, node, cached_edges)
     node.value = str(tuple(sorted({str(s) for s in result})))
     predecessors = build_predecessor_map_forward(cached_edges, str(cgs.initial_state))
@@ -152,11 +127,7 @@ def handle_af_with_trace(
 def handle_eg_with_trace(
     cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
-    """
-    Handle EG operator with trace generation.
-
-    For witness: shows a cycle or infinite path where phi holds globally.
-    """
+    """EG with a trace: a cycle or infinite path where phi always holds."""
     result = _compute_eg(cgs, node, cached_edges)
     node.value = str(tuple(sorted({str(s) for s in result})))
     eg_edges = [
@@ -179,12 +150,8 @@ def handle_eg_with_trace(
 def handle_ag_with_trace(
     cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
-    """
-    Handle AG operator with trace generation.
-
-    For witness: AG phi holds when phi holds at every state on every path.
-    A witness is a path that stays within the set of states satisfying AG phi.
-    """
+    """AG with a trace: the witness is a path that stays in the states where AG phi
+    holds."""
     all_states = cgs.all_states_set
     phi_states = parse_state_set_literal(node.left.value)
     not_phi = all_states - {str(s) for s in phi_states}
@@ -211,11 +178,7 @@ def handle_ag_with_trace(
 def handle_eu_with_trace(
     cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
-    """
-    Handle EU operator with trace generation.
-
-    For witness: shows path where phi holds until psi.
-    """
+    """EU with a trace: a path where phi holds until psi."""
     phi_states = parse_state_set_literal(node.left.value)
     psi_states = parse_state_set_literal(node.right.value)
 
@@ -247,11 +210,7 @@ def handle_eu_with_trace(
 def handle_au_with_trace(
     cgs, node, cached_edges: list[tuple[str, str]]
 ) -> OperatorWithTrace:
-    """
-    Handle AU operator with trace generation.
-
-    For witness: shows all paths reach psi with phi holding until then.
-    """
+    """AU with a trace: every path reaches psi, with phi holding until then."""
     result = _compute_au(cgs, node, cached_edges)
     node.value = str(tuple(sorted({str(s) for s in result})))
     predecessors = build_predecessor_map_forward(cached_edges, str(cgs.initial_state))

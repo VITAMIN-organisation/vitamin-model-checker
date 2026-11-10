@@ -80,14 +80,7 @@ def _has_birelational_transition_cells(content: str) -> bool:
 
 
 def detect_model_type_from_file(filename: str) -> str:
-    """Detect model type from model file content.
-
-    Args:
-        filename: Path to the model file.
-
-    Returns:
-        Detected model type id (e.g. CGS, costCGS, BirelationalMatrix).
-    """
+    """The model type of the file `filename`, such as CGS or BirelationalMatrix."""
     if not os.path.isfile(filename):
         raise FileNotFoundError(f"Model file not found: {filename}")
 
@@ -98,15 +91,8 @@ def detect_model_type_from_file(filename: str) -> str:
 
 
 def detect_model_type_from_content(content: str) -> str:
-    """Detect model type from model file content string.
-
-    Args:
-        content: Model file content as string.
-
-    Returns:
-        One of CGS, costCGS, capCGS, WalletCGS, timedCGS, BCGS,
-        BirelationalMatrix, or ObstructionModel.
-    """
+    """The model type of the file text `content`: CGS, costCGS, capCGS, WalletCGS,
+    timedCGS, BCGS, BirelationalMatrix or ObstructionModel."""
     lines = {line.strip() for line in content.splitlines()}
     if "Number_of_demons" in lines:
         return "ObstructionModel"
@@ -156,12 +142,7 @@ def _create_parser_direct(model_type: str):
 def create_model_parser(
     filename: str, expected_type: str = None
 ) -> BCGS | CGS | CostCGS | CapCGS | BirelationalMatrix | TimedCGS | WalletCGS:
-    """Create appropriate model parser instance based on model file content.
-
-    Detects the game structure type or uses the expected type to resolve
-    the parser class from registered entry points, with a direct-import
-    fallback when entry points are unavailable.
-    """
+    """The model parser for the file's model type, or for the expected type."""
     actual_type = expected_type or detect_model_type_from_file(filename)
 
     try:
@@ -179,15 +160,8 @@ def create_model_parser(
 def create_model_parser_for_logic(
     filename: str, logic_type: str = None
 ) -> BCGS | CGS | CostCGS | CapCGS | BirelationalMatrix | TimedCGS | WalletCGS:
-    """Create appropriate model parser instance based on formula type requirements.
-
-    Args:
-        filename: Path to the model file.
-        logic_type: Logic type name (e.g., "ATL", "OATL", "CapATL").
-
-    Returns:
-        Instance of CGS, costCGS, or capCGS parser.
-    """
+    """The model parser (CGS, costCGS or capCGS) that `logic_type`, such as "OATL",
+    needs for the file `filename`."""
     from model_checker.registries import get_expected_model_type
 
     expected_type = get_expected_model_type(logic_type)

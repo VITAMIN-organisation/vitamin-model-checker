@@ -7,12 +7,7 @@ from typing import cast
 
 @dataclass
 class Strategy:
-    """A positional strategy: state -> action.
-
-    `action` is generically `Hashable`, not necessarily a joint action:
-    `games/_attractor_oracle.py` produces plain-symbol strategies,
-    `arena.py`-based games produce joint actions.
-    """
+    """A positional strategy, state -> action (a plain symbol or a joint action)."""
 
     choices: dict[Hashable, Hashable] = field(default_factory=dict)
 
@@ -21,14 +16,7 @@ class Strategy:
         return self.choices.get(state)
 
     def project(self, player: Hashable) -> Strategy:
-        """Project a joint-action strategy onto one player's own actions.
-
-        Only valid when `choices` holds `arena.py`'s `JointAction` shape.
-
-        Raises:
-            ValueError: `player` isn't one of the agents in some state's
-                joint action.
-        """
+        """This joint-action strategy restricted to `player`'s own actions."""
         projected: dict[Hashable, Hashable] = {}
         for state, action in self.choices.items():
             per_agent = dict(cast(Iterable[tuple[Hashable, Hashable]], action))

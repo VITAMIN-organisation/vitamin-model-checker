@@ -86,11 +86,7 @@ def handle_clock_expr(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
 
 
 def handle_freeze(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
-    """Locations that satisfy the freeze operand after resetting the freeze clock.
-
-    TOL reports location names: a location is kept when some zone there, after
-    the reset, is covered by the operand's satisfying set.
-    """
+    """Locations where a zone satisfies the operand once the freeze clock is reset."""
     from model_checker.parsers.game_structures.timed_cgs.regions import (
         region_matches_label,
         region_with_clock_reset,

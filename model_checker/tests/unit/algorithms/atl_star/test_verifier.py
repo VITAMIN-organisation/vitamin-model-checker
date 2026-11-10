@@ -59,6 +59,15 @@ def test_unknown_proposition_nested_in_a_coalitions_path_formula_raises(model):
         sat(Coalition(frozenset({1}), Prop("missing")), model)
 
 
+@pytest.mark.parametrize("name", ["granted", "Granted", "Fuel", "Xray"])
+def test_proposition_starting_with_an_operator_letter_reaches_spot_whole(name):
+    """Unquoted, Spot reads `Granted` as `G(ranted)` and the verdict is wrong."""
+    cgs = ToyCGS()
+    cgs.atomic_propositions = [name]
+    formula = Coalition(frozenset({1, 2}), Until(True_(), Prop(name)))
+    assert sat(formula, adapt(cgs)) == {"s0", "s1"}
+
+
 def test_grand_coalition_can_force_eventually_granted(model):
     formula = Coalition(frozenset({1, 2}), Until(True_(), Prop("granted")))
     assert sat(formula, model) == {"s0", "s1"}

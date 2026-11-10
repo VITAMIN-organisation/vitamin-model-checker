@@ -49,12 +49,8 @@ def _render(node: Any) -> str:
 
 
 def ltl_to_ctl(ltl_formula: str) -> str:
-    """Adapt an LTL formula string for the CTL-backed sure-win checker.
-
-    Turns the user formula into a universally quantified CTL-shaped string that
-    the CTL parser accepts after strategy pruning. This is a syntactic bridge
-    for VITAMIN's strategic LTL mode, not a classical LTL-to-CTL embedding.
-    """
+    """Rewrite an LTL formula as the A-quantified CTL text the sure-win checker uses;
+    a syntactic bridge, not a real LTL-to-CTL translation."""
     parser = FormulaParserFactory.get_parser_instance("LTL")
     ast = parser.parse(ltl_formula)
     if ast is None:

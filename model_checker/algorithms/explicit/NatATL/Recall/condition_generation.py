@@ -1,9 +1,5 @@
-"""
-Condition generation utilities for NatATL Recall strategies.
-
-Generates boolean conditions, negated conditions, stories (regex patterns with
-Kleene star), and composed regular expressions for recall strategy conditions.
-"""
+"""Conditions for NatATL Recall strategies: boolean and negated conditions, stories
+(with Kleene star) and composed regular expressions."""
 
 import logging
 from itertools import product
@@ -14,20 +10,8 @@ logger = logging.getLogger(__name__)
 def generate_conditions(
     atomic_props: list[str], connectives: list[str], max_complexity: int
 ) -> list[str]:
-    """
-    Generate boolean conditions by combining atomic propositions with connectives.
-
-    Unlike the shared version which yields lazily, this returns a complete list
-    for use in regex generation pipelines.
-
-    Args:
-        atomic_props: List of atomic proposition names
-        connectives: List of connective operators (['and', 'or'])
-        max_complexity: Maximum complexity bound for conditions
-
-    Returns:
-        List of condition strings
-    """
+    """All conditions of `atomic_props` and `connectives` up to `max_complexity`, as
+    a list (the shared generator yields them lazily)."""
     conditions: set[str] = set()
 
     def generate_condition(k: int, condition: list[str]) -> None:
@@ -62,11 +46,8 @@ def generate_conditions(
 def generate_negated_conditions(
     conditions: list[str], max_complexity: int
 ) -> list[str]:
-    """
-    Generate all negation variants of conditions within complexity bounds.
-
-    For recall strategies, also considers Kleene star (*) in complexity calculation.
-    """
+    """All negations of the conditions within the complexity bound, where a Kleene
+    star also counts toward complexity."""
     negated_conditions: set[str] = set()
     for condition in conditions:
         atomic_props = condition.split(" && ")
@@ -86,19 +67,8 @@ def generate_negated_conditions(
 
 
 def generate_stories(conditions: list[str], max_complexity: int) -> list[str]:
-    """
-    Generate "story" patterns - regex sequences with Kleene star.
-
-    Stories represent history patterns like "a then a* then b" meaning
-    "a followed by zero or more a's followed by b". These are essential
-    for recall strategies that depend on execution history.
-
-    Args:
-        conditions: List of condition strings to expand with Kleene star
-        max_complexity: Maximum complexity bound
-
-    Returns:
-        List of story patterns containing at least one Kleene star
+    """Expand `conditions` into stories up to `max_complexity`: history patterns with at
+    least one Kleene star, such as "a then a* then b", which recall strategies need.
     """
     stories: set[str] = set()
     for condition in conditions:
@@ -122,20 +92,8 @@ def generate_stories(conditions: list[str], max_complexity: int) -> list[str]:
 def generate_regular_expressions(
     patterns: set[str], composition_ops: list[str], max_complexity: int
 ) -> list[str]:
-    """
-    Generate composed regular expressions from patterns.
-
-    Combines patterns using composition operators (like sequencing '.')
-    to create more complex regex patterns for recall conditions.
-
-    Args:
-        patterns: Set of base patterns to compose
-        composition_ops: List of composition operators (e.g., ['.'])
-        max_complexity: Maximum complexity bound
-
-    Returns:
-        List of composed regular expression strings
-    """
+    """Compose `patterns` with `composition_ops` (such as `.` for sequencing) into
+    regular expressions up to `max_complexity`."""
     expressions: set[str] = set()
 
     def generate_expression(k: int, expression: list[str]) -> None:
@@ -170,22 +128,9 @@ def generate_regular_expressions(
 
 
 def create_reg_exp(max_complexity: int, atomic_propositions: list[str]) -> list[str]:
-    """
-    Create regular expressions for recall strategy conditions.
-
-    Generates all possible regex patterns from atomic propositions up to
-    the given complexity. This includes:
-    - Simple propositions and their negations
-    - Stories (sequences with Kleene star for repetition)
-    - Composed expressions
-
-    Args:
-        max_complexity: Maximum complexity bound (k value from formula)
-        atomic_propositions: List of atomic props from the model
-
-    Returns:
-        List of regex pattern strings
-    """
+    """Return every recall-condition regex over `atomic_propositions` up to
+    `max_complexity`, the formula's `k`: propositions and their negations, stories,
+    and their compositions."""
     connectives = ["and", "or"]
     composition_operators = ["."]
 

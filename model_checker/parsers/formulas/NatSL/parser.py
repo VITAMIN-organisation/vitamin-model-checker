@@ -1,14 +1,8 @@
-"""Parser for the restricted NatSL fragment.
+"""Parser for the restricted NatSL fragment, such as ``E{2}x A{2}y: (x, 1)(y, 2) F a``.
 
-Concrete syntax::
-
-    E{2}x A{2}y: (x, 1)(y, 2) F a
-
-Optional whitespace is allowed around ``:``, bindings, goals, and between
-quantifiers. Bounds remain required in ``{k}`` form. Goals are limited to
-F/G/X and their negations. The operator is uppercase and followed by whitespace:
-``Fa`` is one name, not ``F a``, and ``f a`` is not a goal. Quantifier order is
-preserved.
+- Each quantifier needs a bound ``{k}``, and their order is kept.
+- A goal is ``F``, ``G`` or ``X``, then a space and a name, or its negation: ``Fa``
+  is one name, and ``f a`` is not a goal.
 """
 
 from __future__ import annotations

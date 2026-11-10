@@ -35,11 +35,8 @@ def zone_graph_pre_image_states(
     target_states,
     constraints: tuple | str | None,
 ) -> set[str]:
-    """Locations that can move into ``target_states`` under an optional clock guard.
-
-    Without a guard this is ordinary discrete predecessor. With a guard, only
-    zone-graph steps that satisfy the timed constraint are considered.
-    """
+    """Locations that can move into ``target_states``, under the clock guard when one
+    is given."""
     # Cycle: regions.py imports this module.
     from model_checker.parsers.game_structures.timed_cgs.regions import (
         timed_predecessors,

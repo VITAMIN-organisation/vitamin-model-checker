@@ -27,11 +27,8 @@ def _evaluate_bounded_coalition_operator(
     fixpoint_start,
     mask,
 ):
-    """Evaluate a temporal coalition operator under a per-step resource budget.
-
-    Every forced transition must stay within ``bound``; the budget is not spent
-    across the path. ``mask`` restricts intermediate states (for example phi in U).
-    """
+    """Evaluate a coalition operator where each forced step costs at most ``bound``
+    (per step, not per path); ``mask`` limits the states in between."""
 
     def update(states):
         return states | (

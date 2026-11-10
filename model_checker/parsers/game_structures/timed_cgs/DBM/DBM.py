@@ -24,10 +24,7 @@ class DBM:
                     self.elements[i][j] = Bound(np.inf, "<=")
 
     def close(self):
-        """
-        Applies the Floyd-Warshall algorithm to compute the all-pairs shortest paths
-        (or tightest bounds) in the DBM
-        """
+        """Tighten every bound with Floyd-Warshall (all-pairs shortest paths)."""
         result = self.copy()
         result._close_in_place()
         return result
@@ -117,10 +114,7 @@ class DBM:
                     elems[i][j] = path
 
     def k_normalize(self, max_constants: list):
-        """
-        Args:
-        max_constants: a list of the maximum constant each clock is compared to in the automaton.
-        """
+        """k-normalize the zone with `max_constants`, each clock's largest constant."""
         final_max_constants = [0] + max_constants
         elems = self.elements
         size = self.size
@@ -189,9 +183,7 @@ class DBM:
         return DBM(self.size - 1, elements=self.elements)
 
     def __eq__(self, other):
-        """
-        Determines if two DBMs are exactly the same, entry by entry.
-        """
+        """Whether two DBMs are equal entry by entry."""
         if isinstance(other, DBM):
             if other.size != self.size:
                 return False

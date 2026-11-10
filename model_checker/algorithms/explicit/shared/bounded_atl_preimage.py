@@ -96,16 +96,8 @@ def _action_forces_all_to_target(
     use_bit_vector: bool,
 ) -> bool:
     """True if every destination compatible with action's coalition move is in target.
-
-    Compatibility is checked by intersecting the coalition mask of ``action`` with
-    the coalition masks of joint profiles in each destination column. Comparing
-    against opponent masks would never match (those masks use complementary
-    position sets) and would make this check vacuously true.
-
-    Wildcard actions (containing '*') are expanded by get_coalition_actions via
-    cgs_actions._expand_action_wildcards before the compatibility check runs.
-    They are not unconditionally accepted.
-    """
+    Only coalition masks are compared: opponent masks never match, so the check would
+    always be true."""
     move_profile = cgs_actions.get_coalition_actions(
         {action}, formatted_agents, num_agents
     )

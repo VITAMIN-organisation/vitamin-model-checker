@@ -1,19 +1,6 @@
-"""NatATL parser (PLY-based).
+"""NatATL parser (PLY): coalition and bound `<{1,2}, k>` before U, G, X and F.
 
-What it handles:
-- NatATL formulas with canonical coalition syntax <{1,2}, k> on U/G/X/F
-  operators and boolean connectives.
-- Propositions matching [a-zA-Z][a-zA-Z0-9_]*.
-
-What it rejects:
-- Invalid coalition shapes (empty, trailing commas).
-- Missing coalitions for temporal operators.
-- ATL-style coalitions <1,2> without explicit bound.
-- Reserved words and invalid proposition identifiers in the AST.
-
-Behavior:
-- Returns AST tuple/string on success or None on invalid input; raises
-  ValueError/CoalitionValueError for coalition structure issues.
+The bound is required, so an ATL-style coalition without it is rejected.
 """
 
 import re
@@ -61,11 +48,7 @@ _NATATL_COALITION_OPERATOR_PATTERN = re.compile(
 
 
 class NatATLParser(BaseLogicParser):
-    """Parser for NatATL formulas (coalition/bound syntax and temporal ops).
-
-    Use parse(formula) to get an AST tuple or None on invalid input.
-    Set max_coalition (n_agent) before parsing for coalition validation.
-    """
+    """`parse` returns an AST tuple, or None with the reason in `errors`."""
 
     def __init__(self):
         """Initialize the NatATL lexer and parser (PLY)."""

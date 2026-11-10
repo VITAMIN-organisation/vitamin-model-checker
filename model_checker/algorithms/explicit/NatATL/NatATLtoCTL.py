@@ -17,12 +17,8 @@ _NATATL_AGENTS_IN_MODAL_RE = re.compile(r"<\{([\d,]+)\},\s*\d+>")
 
 
 def _n_agent_for_conversion(natatl_formula: str, n_agent: int) -> int:
-    """Use model agent count when set; otherwise allow agents present in the formula.
-
-    Parser range checks are fail-closed. Conversion helpers historically defaulted
-    to n_agent=0 for syntax-only transforms, so when no model size is supplied we
-    take the max agent id appearing in capacity modals as the ceiling.
-    """
+    """The agent bound for conversion: the model's agent count, or the largest agent
+    id in the formula when no model size is given."""
     if n_agent > 0:
         return n_agent
     found: list[int] = []
@@ -32,12 +28,8 @@ def _n_agent_for_conversion(natatl_formula: str, n_agent: int) -> int:
 
 
 def natatl_to_ctl(natatl_formula: str, n_agent: int = 0) -> str:
-    """
-    Transform a NatATL formula into a CTL formula (FORALL path quantifier).
-
-    When n_agent > 0, coalition agents must lie in [1, n_agent]. When n_agent is 0
-    (syntax-only conversion), the ceiling is the largest agent id in the formula.
-    """
+    """Translate a NatATL formula to CTL with the A path quantifier; agents must be
+    within `n_agent`, or within the formula's largest agent id when it is 0."""
     ast = parse_natatl_formula(
         natatl_formula, n_agent=_n_agent_for_conversion(natatl_formula, n_agent)
     )

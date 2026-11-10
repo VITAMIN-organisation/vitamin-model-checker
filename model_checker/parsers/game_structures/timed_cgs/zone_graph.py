@@ -144,11 +144,8 @@ class ZoneGraph:
         tcgs: TimedCGS,
         extra_max_constants: list[int] | None = None,
     ):
-        """Finite symbolic graph of (location, zone) pairs for timed model checking.
-
-        ``extra_max_constants`` raises per-clock extrapolation bounds using
-        constants that appear only in the formula, not in the automaton.
-        """
+        """The (location, zone) graph for timed model checking; ``extra_max_constants``
+        adds the formula's clock constants to the extrapolation bounds."""
         self.tcgs = tcgs
         self.graph, self.states, self.initial_time_state = _build_zone_graph(
             tcgs, extra_max_constants
@@ -191,12 +188,8 @@ class ZoneGraph:
     def find_path_from(
         self, target_location: str, constraints: list | None = None
     ) -> list[list[TimeState]]:
-        """
-        All backward paths from target_location to the initial location.
-
-        When constraints are given, each step must satisfy the clock guard
-        together with the location invariant.
-        """
+        """All backward paths from `target_location` to the initial location; with
+        `constraints`, each step must meet the clock guard and the invariant."""
         starts = self._backward_path_starts(target_location)
         if not self.states or not starts:
             return []

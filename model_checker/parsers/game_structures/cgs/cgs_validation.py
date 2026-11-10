@@ -80,12 +80,8 @@ def validate_labelling_matrix_dimensions(
 
 
 def validate_nat_idle_requirements(graph: list[list], n_agents: int) -> None:
-    """Check that every row has at least one idle joint action for each agent position.
-
-    Required for NatATL. A row is valid if there exists at least one joint action in that row
-    where each agent's token is an idle token ("I" or "IDLE"). Raises ValueError if a row is
-    all zeros/empty or if some agent position has no idle-capable joint action.
-    """
+    """Raise ValueError unless every row has a joint action where each agent is idle
+    ("I" or "IDLE"), as NatATL requires."""
     for i, row in enumerate(graph):
         if not any(elem not in _EMPTY_TRANSITION_CELLS for elem in row):
             raise ValueError(f"All elements in row {i} are 0")
@@ -114,11 +110,8 @@ def validate_nat_idle_requirements(graph: list[list], n_agents: int) -> None:
 
 
 def validate_total_transitions(graph: list[list], states) -> list[str]:
-    """Require every state to have at least one outgoing transition.
-
-    CTL/ATL-style semantics assume a total (serial) transition relation: every
-    state has a successor. Terminal states should use a self-loop such as ``*``.
-    """
+    """Require a successor for every state, as CTL and ATL assume; a terminal state
+    uses a self-loop such as ``*``."""
     errors = []
     if len(graph) == 0:
         return errors
@@ -169,11 +162,8 @@ def collect_state_errors(model) -> list[str]:
 
 
 def collect_model_structure_errors(cgs) -> list[str]:
-    """Run all structure checks on a CGS instance and return a list of error messages.
-
-    Covers states, number of agents, initial state, transition matrix, and labelling.
-    Empty list means the model structure is valid.
-    """
+    """The structure errors of a CGS (states, agents, initial state, transitions,
+    labelling); an empty list means it is valid."""
     errors = collect_state_errors(cgs)
 
     try:

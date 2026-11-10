@@ -1,8 +1,5 @@
-"""
-OL operator handlers for formula tree evaluation.
-
-Unary: NOT, <Jn>X, <Jn>F, <Jn>G. Binary: OR, AND, IMPLIES, <Jn>U, <Jn>R, <Jn>W.
-"""
+"""OL operator handlers: NOT, <Jn>X, <Jn>F, <Jn>G, OR, AND, IMPLIES, <Jn>U, <Jn>R and
+<Jn>W."""
 
 from collections.abc import Callable
 

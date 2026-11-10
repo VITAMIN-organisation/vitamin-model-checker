@@ -1,10 +1,8 @@
-"""
-Matrix-based pruning for NatATL Memoryless verification.
+"""Matrix-based pruning for NatATL Memoryless.
 
-Applies condition-action strategies to restrict the CGS transition matrix,
-then runs CTL model checking on the pruned model. A memoryless strategy
-restricts transitions based on the current state, so the matrix can be
-pruned directly without tree expansion.
+A memoryless strategy depends only on the current state, so its condition-action
+rules cut the CGS transition matrix directly, with no tree; CTL model checking then
+runs on the pruned model.
 """
 
 import copy

@@ -39,20 +39,8 @@ def discover_logic_resource(
     group: str,
     resource_type_label: str = "Logic resource",
 ) -> Any:
-    """Discover a logic-related resource via entry points.
-
-    Args:
-        logic_name: Name of the logic or resource key.
-        group: Entry point group to search in (e.g. 'vitamin.parsers').
-        resource_type_label: Label for error messages.
-
-    Returns:
-        The discovered resource (module, class, or callable).
-
-    Raises:
-        ImportError: If the resource exists but fails to load.
-        LookupError: If the resource name is unknown.
-    """
+    """Load the resource `logic_name` from the entry point `group`, such as
+    `vitamin.parsers`."""
     eps = get_entry_points(group)
     for ep in eps:
         if ep.name == logic_name:

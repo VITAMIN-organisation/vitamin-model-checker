@@ -1,13 +1,8 @@
-"""TCTL parser (PLY-based native subclass).
+"""TCTL parser (PLY) for TimedCGS models, with freeze variables and clock constraints.
 
-What it handles:
-- TCTL formulas over TimedCGS models (freeze variables, clock constraints).
-- AST generation using specialized Expr nodes.
-
-What it rejects:
-- The next operator (`X`, `AX`, `EX`, `next`): "TCTL has no next-time operator
-  [...] because if time is dense then, by definition, there is no unique next time"
-  (Alur, Courcoubetis, Dill, Information and Computation 1993, p. 10).
+It rejects the next operator: "TCTL has no next-time operator [...] because if time
+is dense then, by definition, there is no unique next time" (Alur, Courcoubetis,
+Dill, Information and Computation 1993, p. 10).
 """
 
 import re
@@ -29,9 +24,7 @@ _NEXT_OPERATOR = re.compile(
 )
 
 
-# ==========================================
-# AST Nodes
-# ==========================================
+# --- AST nodes ---
 class Expr:
     def __init__(self) -> None:
         self.satisfying_regions: set = set()

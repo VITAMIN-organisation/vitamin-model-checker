@@ -20,17 +20,7 @@ class FormulaParserFactory:
 
     @staticmethod
     def get_parser_instance(logic_name: str) -> Any:
-        """Get a thread-local parser instance for the specified logic.
-
-        Args:
-            logic_name: Name of the logic (e.g., "CTL", "ATL").
-
-        Returns:
-            A thread-local Parser instance (e.g. CTLParser, ATLParser) to ensure thread-safety.
-
-        Raises:
-            ImportError: If the parser module or class cannot be found.
-        """
+        """This thread's parser for `logic_name`, such as "CTL"."""
         # Initialize thread-local storage for instances if not present
         if not hasattr(FormulaParserFactory._local, "instances"):
             FormulaParserFactory._local.instances = {}

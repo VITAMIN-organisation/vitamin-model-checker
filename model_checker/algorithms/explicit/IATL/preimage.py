@@ -120,9 +120,8 @@ def pre_image_exists(
     num_agents: int,
     transition_cache: TransitionCache = None,
 ) -> set[str]:
-    """
-    exists: Some coalition choice + All opponent responses -> target
-    Pre_d(A, X): existential coalition pre-image (<A>X)."""
+    """Pre_d(A, X) for <A>X: some coalition choice whose every opponent response
+    leads into X."""
     return _coalition_pre_image(
         graph_matrix,
         state_list,
@@ -156,9 +155,7 @@ def pre_image_forall(
     num_agents: int,
     transition_cache: TransitionCache = None,
 ) -> set[str]:
-    """
-    forall: All coalition choices + Some opponent successor -> target
-    Pre_f(A, X): universal coalition pre-image ([A]X)."""
+    """Pre_f(A, X) for [A]X: every coalition choice has some successor in X."""
     return _coalition_pre_image(
         graph_matrix,
         state_list,

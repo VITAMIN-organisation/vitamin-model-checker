@@ -32,20 +32,9 @@ def initialize(
     str,
     Any,
 ]:
-    """
-    Initialize model and parse NatATL formula for recall verification.
-
-    Performs model loading, validation, formula parsing, and extracts all
-    parameters needed for strategy generation.
-
-    Args:
-        model_path: Path to the CGS model file
-        formula: NatATL formula string
-        cgs: Optional existing CGS object (avoids reloading)
-
-    Returns:
-        Tuple of (k, agent_actions, actions_list, atomic_propositions,
-                 CTLformula, agents, filename, model_parser)
+    """Load and validate the model, parse the NatATL formula, and return what strategy
+    generation needs: `(k, agent_actions, actions_list, atomic_propositions,
+    CTLformula, agents, filename, model_parser)`. Pass `cgs` to reuse a loaded model.
     """
     filename = os.path.abspath(model_path)
     if not os.path.isfile(filename):

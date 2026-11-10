@@ -1,9 +1,4 @@
-"""LTL parser (PLY-based).
-
-What it handles:
-- LTL formulas with temporal operators (X, F, G, U) and boolean connectives.
-- Propositions matching [a-zA-Z][a-zA-Z0-9_]*.
-"""
+"""LTL parser (PLY): the temporal operators X, F, G and U with connectives."""
 
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,

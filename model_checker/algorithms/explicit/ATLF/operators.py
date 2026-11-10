@@ -1,8 +1,5 @@
-"""
-Handler functions for all ATLF operators (unary: NOT/<A>X/<A>F/<A>G; binary: OR/AND/IMPLIES/<A>U).
-
-ATLF uses real-valued semantics where each state has a value in [0, 1].
-"""
+"""Handlers for the ATLF operators, where each state has a value in [0, 1]: NOT, <A>X,
+<A>F, <A>G, OR, AND, IMPLIES and <A>U."""
 
 from model_checker.algorithms.explicit.ATLF.preimage import (
     build_transition_cache,
@@ -20,12 +17,7 @@ from model_checker.utils.literals import parse_tuple_list_literal
 
 
 def _compute_coalition_globally_fixpoint(cgs, phi_states, trans_cache):
-    """
-    Greatest fixpoint for <A>G phi with real-valued semantics.
-
-    Starts from value 1 everywhere and iterates until the valuation stabilizes
-    under the pre-image and intersection with phi.
-    """
+    """Greatest fixpoint of <A>G phi on real values, starting from 1 everywhere."""
     current_value = set_value_tuple_list(cgs, 1)
     candidate = phi_states
     while not first_included_in_second(current_value, candidate):
@@ -36,12 +28,7 @@ def _compute_coalition_globally_fixpoint(cgs, phi_states, trans_cache):
 
 
 def _compute_coalition_eventually_fixpoint(cgs, phi_states, trans_cache):
-    """
-    Least fixpoint for <A>F phi with real-valued semantics.
-
-    Starts from value 0 everywhere and iteratively accumulates the valuation
-    until the pre-image no longer increases the values.
-    """
+    """Least fixpoint of <A>F phi on real values, starting from 0 everywhere."""
     current_value = set_value_tuple_list(cgs, 0)
     candidate = phi_states
     while not first_included_in_second(candidate, current_value):
@@ -51,12 +38,7 @@ def _compute_coalition_eventually_fixpoint(cgs, phi_states, trans_cache):
 
 
 def _compute_coalition_until_fixpoint(cgs, phi_states, psi_states, trans_cache):
-    """
-    Least fixpoint for <A>(phi U psi) with real-valued semantics.
-
-    Starts from value 0 everywhere and iteratively accumulates the valuation
-    based on psi and the constrained pre-image through phi.
-    """
+    """Least fixpoint of <A>(phi U psi) on real values, starting from 0 everywhere."""
     current_value = set_value_tuple_list(cgs, 0)
     candidate = psi_states
     while not first_included_in_second(candidate, current_value):

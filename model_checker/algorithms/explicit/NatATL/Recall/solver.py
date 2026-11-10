@@ -1,9 +1,5 @@
-"""
-NatATL Recall solver: strategy enumeration and verification loop.
-
-Enumerates recall strategies using tree-based pruning rather than
-matrix-based pruning, returning the first winning strategy found.
-"""
+"""NatATL Recall solver: enumerate recall strategies, prune the tree for each, and
+return the first one that wins."""
 
 import copy
 import logging
@@ -39,31 +35,8 @@ def solve_natatl_recall(
     model_parser: Any,
     filename: str,
 ) -> dict[str, Any]:
-    """
-    Solve NatATL Recall verification by enumerating and checking strategies.
-
-    Iterates complexity bounds from 1 to k, generates all strategies (with
-    regex conditions), applies tree-based pruning, and returns the first
-    winning strategy found.
-
-    Key differences from Memoryless:
-    - Uses tree-based pruning instead of matrix-based
-    - Supports regex conditions in addition to boolean formulas
-    - Builds execution tree once per complexity level and deep-copies for each strategy
-
-    Args:
-        k: Maximum complexity bound
-        agent_actions: Dictionary mapping agent keys to their available actions
-        actions_list: List of action lists for each agent
-        atomic_propositions: List of atomic propositions in the model
-        CTLformula: CTL formula to verify (converted from NatATL)
-        agents: List of agent numbers in the coalition
-        model_parser: Model parser object (CGS)
-        filename: Path to model file
-
-    Returns:
-        Dictionary with Satisfiability, Complexity Bound, and Winning Strategy
-    """
+    """Try recall strategies for bounds 1 to `k` and return the first winning one, as
+    a dict with Satisfiability, Complexity Bound and Winning Strategy."""
     start_time = time.time()
     found_solution = False
     result: dict[str, Any] = {}
@@ -76,8 +49,7 @@ def solve_natatl_recall(
     while not found_solution and i <= k:
         logger.debug("Checking strategies at complexity level %d", i)
 
-        # Build tree once per complexity level and deepcopy for each strategy.
-        # Pruning modifies the tree in-place, so we need a fresh copy per verification.
+        # One tree per complexity level, deep-copied per strategy: pruning changes it.
         if i == 1:
             states = model_parser.states
             base_tree = build_tree_from_CGS(model_parser, states, height)

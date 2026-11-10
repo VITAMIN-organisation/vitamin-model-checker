@@ -21,11 +21,8 @@ def prune_tree(
     current_depth: int = 0,
     visited: set[int] | None = None,
 ) -> None:
-    """
-    Drop child edges whose agent action is not allowed at nodes on ``path``.
-
-    ``visited`` tracks node ids so shared subtrees are not pruned twice.
-    """
+    """Drop child edges whose agent action is not allowed at nodes on ``path``;
+    ``visited`` keeps shared subtrees from being pruned twice."""
     if visited is None:
         visited = set()
 

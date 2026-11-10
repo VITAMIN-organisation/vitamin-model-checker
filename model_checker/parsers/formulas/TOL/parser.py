@@ -1,9 +1,4 @@
-"""TOL parser (PLY-based native subclass).
-
-What it handles:
-- TOL formulas over TimedCGS models with Demonic operators and time variables.
-- AST generation using specialized Expr nodes.
-"""
+"""TOL parser (PLY) for TimedCGS models, with demonic operators and time variables."""
 
 import re
 
@@ -16,9 +11,7 @@ from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
 
 
-# ==========================================
-# AST Nodes
-# ==========================================
+# --- AST nodes ---
 class Expr:
     def __init__(self):
         self.satisfying_states = set()

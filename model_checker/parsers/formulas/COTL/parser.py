@@ -1,8 +1,8 @@
-"""COTL formula parser: `<legion><budget>` modalities with X, WX, F, G, U, R, W.
+"""COTL formula parser: `<legion><budget>` before X, WX, F, G, U, R and W.
 
-The legion is a set of demon indices and may be empty (`<>`); the budget is an
-integer >= 0. WX is weak next. Binary operators may be written with or without
-parentheses: `<1><2> (p U q)` or `<1><2> p U q`.
+- The legion is a set of demon indices and may be empty (`<>`); the budget is an
+  integer >= 0.
+- WX is weak next. `<1><2> (p U q)` and `<1><2> p U q` are the same formula.
 """
 
 import re

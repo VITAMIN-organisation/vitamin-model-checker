@@ -44,17 +44,8 @@ def modify_matrix(
     state_to_index: dict[str, int],
     in_place: bool = False,
 ) -> list[list]:
-    """Keep only transitions where one agent plays action in the given states.
-
-    Joint profiles in each cell may use compact form (``AC``) or explicit form
-    (``A|C``); both are read as per-agent token vectors. Matching joints are
-    written back in pipe-separated form.
-
-    Row selection uses ``state_to_index`` (O(|states|)) instead of scanning the
-    label matrix. When ``in_place`` is True, matching rows are updated in the
-    input graph; callers should copy the graph once before the first in-place
-    prune if the original must stay unchanged.
-    """
+    """Keep only the transitions where one agent plays `action` in the given states.
+    With ``in_place=True`` the input graph is changed, so copy it first if needed."""
     rows_to_update = _row_indices_for_states(state_to_index, states)
     if not rows_to_update:
         if in_place:

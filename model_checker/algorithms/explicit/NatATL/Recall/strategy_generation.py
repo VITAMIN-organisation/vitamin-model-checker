@@ -1,8 +1,4 @@
-"""
-Recall strategy generation for NatATL.
-
-Lazy enumeration of collective strategies with duplicate detection.
-"""
+"""Lazy enumeration of NatATL Recall collective strategies, without duplicates."""
 
 import logging
 from collections.abc import Generator
@@ -17,12 +13,8 @@ def generate_strategies(
     agents: list[int],
     found_solution: bool,
 ) -> Generator[list[dict], None, None]:
-    """
-    Generate collective strategies for all agents via lazy enumeration.
-
-    Each strategy maps conditions (including regex) to actions. Uses depth-first
-    search to enumerate combinations without memory explosion.
-    """
+    """Yield the collective strategies (condition -> action per agent) one by one, so
+    they are never all in memory."""
     logger.debug("Generating strategies...")
     strategies = [[] for _ in range(len(agents))]
 
@@ -82,16 +74,8 @@ def is_duplicate(existing_strategies: list[dict], new_strategy: dict) -> bool:
 def generate_guarded_action_pairs(
     regex_list: list[str], agent_actions: list[list[str]]
 ) -> dict[str, list[tuple[str, str]]]:
-    """
-    Generate cartesian product of regex conditions and actions per agent.
-
-    Args:
-        regex_list: List of regex pattern strings
-        agent_actions: List of action sets, one per agent
-
-    Returns:
-        Dict mapping agent keys to lists of (regex, action) pairs
-    """
+    """Every `(regex, action)` pair of `regex_list` and each agent's actions in
+    `agent_actions`, keyed by agent."""
     result = {}
     for i, actions in enumerate(agent_actions):
         agent_key = f"actions_agent{i + 1}"

@@ -44,9 +44,7 @@ def legit_strategy_check(
     strategy_index: int,
     model_path: str,
 ) -> bool:
-    """
-    Check that ``action`` is available on every state where ``condition`` holds.
-    """
+    """Whether ``action`` is available in every state where ``condition`` holds."""
     condition_type = is_regex_or_boolean_formula(condition)
 
     if condition_type == "Boolean Formula":

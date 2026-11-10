@@ -1,9 +1,4 @@
-"""
-VITAMIN Model Checker - Verification Tool for Multi-Agent Systems
-
-This package provides model checking capabilities for various temporal logics
-including CTL, ATL, LTL, and their extensions.
-"""
+"""VITAMIN model checker for multi-agent systems: CTL, ATL, LTL and their extensions."""
 
 try:
     from importlib.metadata import PackageNotFoundError, version

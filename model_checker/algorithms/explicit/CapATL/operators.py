@@ -1,10 +1,5 @@
-"""
-Handler functions for all CapATL operators
-(
-    unary: NOT/NEXT/EVENTUALLY/GLOBALLY;
-    binary: AND/OR/UNTIL/RELEASE
-).
-"""
+"""Handlers for the CapATL operators: NOT, NEXT, EVENTUALLY, GLOBALLY, AND, OR,
+IMPLIES, UNTIL and RELEASE."""
 
 from model_checker.algorithms.explicit.CapATL.preimage import pre
 from model_checker.algorithms.explicit.CapATL.utils import (

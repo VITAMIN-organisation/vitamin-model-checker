@@ -1,9 +1,5 @@
-"""
-NatATL Recall model checker.
-
-Main entry point for verifying NatATL with recall strategies.
-Integrates tree generation, regex/boolean pruning, and CTL model checking.
-"""
+"""NatATL model checker with recall strategies: builds the execution tree, prunes it
+by regex and boolean conditions, and checks it with CTL."""
 
 import logging
 from typing import Any

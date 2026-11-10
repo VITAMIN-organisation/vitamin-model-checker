@@ -1,12 +1,5 @@
-"""
-Wallet_ATL model checker.
-
-Uses the same explicit-algorithm structure as ATL:
-- parser via FormulaParserFactory
-- tree building via utils.formula_tree.build_formula_tree
-- operator solving via dedicated solver/operators modules
-- execution wrapper via engine.execution.create_model_checking_entry
-"""
+"""Wallet_ATL model checker, built like ATL: `FormulaParserFactory`, then
+`build_formula_tree`, its own solver and operators, and the shared entry wrapper."""
 
 import re
 from typing import Any

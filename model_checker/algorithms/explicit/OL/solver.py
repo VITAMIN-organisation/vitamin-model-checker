@@ -1,8 +1,4 @@
-"""
-Formula tree solver for OL model checking.
-
-Recursively evaluates OL formula trees using bottom-up evaluation.
-"""
+"""Bottom-up evaluation of OL formula trees."""
 
 from model_checker.algorithms.explicit.OL.operators import (
     TERNARY_EVALUATORS,

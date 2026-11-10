@@ -1,8 +1,5 @@
-"""
-Bound vector utilities for resource-bounded logics (RABATL, RBATL).
-
-Parses <J><b1,b2,...>Op and provides lexicographic increment/difference for bound vectors.
-"""
+"""Bound vectors for RBATL and RABATL: parse `<J><b1,b2,...>Op`, and increment or
+subtract vectors in lexicographic order."""
 
 from model_checker.algorithms.explicit.shared.coalition_constraints import (
     parse_coalition_and_bound_vector,

@@ -13,34 +13,12 @@ except ImportError:  # pragma: no cover
 
 
 def solve(game: Game) -> GameSolution:
-    """Solve a Game via Spot's game-solving convention.
+    """Solve a deadlock-free Game with Spot: each player's winning region and strategy.
 
-    Spot's SWIG bindings have no docstrings; facts here are easy to get
-    backwards: `set_state_players`/`get_state_winners` use **True = player
-    0**, and `get_strategy(aut)` returns per-state 1-based edge numbers for
-    both players at once. `0` means no edge, but for a losing owner Spot can
-    also return other numbers with no matching edge in `aut` at all (seen on
-    genuine 3+-color parity games, SWIG surfaces them as huge unsigned
-    values, e.g. a C++ `-5` as `4294967291`); any edge number absent from
-    `edge_labels` is treated the same as `0`. Assumes a deadlock-free arena.
-
-    `spot.solve_game` only computes correct winners for states reachable
-    from the one state it's told is initial (confirmed empirically,
-    undocumented); everything else silently defaults to a loss, even though
-    winning regions are otherwise a whole-graph fixed point. So every state
-    in `game.arena.states` — not just the ones marked initial, since a
-    winning state that's simply never declared initial would otherwise be
-    silently misreported as a loss — gets bridged from a throwaway state via
-    an unmarked edge and solving anchors there instead, invisible in the
-    returned `GameSolution`, and harmless to any acceptance condition, since
-    an unmarked one-off prefix can't affect what recurs infinitely often.
-
-    Raises:
-        ImportError: if Spot isn't importable.
-        ValueError: if `objective` is unset, the arena has no state at all,
-            `player_states` isn't a proper partition, or the arena is
-            nondeterministic (some `(state, action)` has more than one
-            successor).
+    Spot quirks handled here (found by testing): True means player 0; `get_strategy`
+    can return edge numbers that do not exist, read as no edge; and `solve_game` is
+    right only for states reachable from its start, so one extra start state links
+    to every state.
     """
     if spot is None:
         raise ImportError(
@@ -65,13 +43,8 @@ def solve(game: Game) -> GameSolution:
             "every arena state must belong to exactly one of player_states[0]/[1]"
         )
 
-    # A `Strategy` records only the chosen action, not which successor it
-    # led to (see strategy.py), so an arena where one action from a state
-    # has more than one possible target would let Spot "win" via a specific
-    # edge that the returned Strategy can't actually tell apart from a
-    # losing one sharing the same action. Rejected outright rather than
-    # solved unsoundly: this game model is 2-player, total-information,
-    # with no third "nature" player to own leftover nondeterminism.
+    # A `Strategy` records the action, not the successor, so Spot could win on an edge
+    # the Strategy cannot tell from a losing one; with no nature player, reject it.
     for (source, symbol), targets in game.arena.transitions.items():
         if len(targets) > 1:
             raise ValueError(
@@ -139,16 +112,9 @@ def solve(game: Game) -> GameSolution:
 
 
 def _set_acceptance(aut, objective: AcceptanceCondition) -> None:
-    """Configure `aut`'s acceptance kind from `objective`. Edge marks are
-    applied separately by the caller, from `objective.priorities`.
-
-    A PARITY objective with no priorities at all is well-defined, not an
-    error: with a single color, the acceptance formula reduces to `Fin(0)`
-    (odd styles) or `Inf(0)` (even styles), confirmed empirically, and
-    exactly what you want for e.g. a translated "always true" LTL formula,
-    where no transition ever needs marking and every run should accept
-    under an odd style (the orientation `Automaton.from_ltl` always uses).
-    """
+    """Set `aut`'s acceptance kind from `objective`; the caller sets the edge marks.
+    A parity objective with no priorities is allowed: under the odd style every run
+    accepts."""
     if objective.kind is AcceptanceKind.BUCHI:
         aut.set_buchi()
     elif objective.kind is AcceptanceKind.CO_BUCHI:

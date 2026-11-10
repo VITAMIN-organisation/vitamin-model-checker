@@ -1,9 +1,5 @@
-"""
-Pruning module for LTL model checker.
-
-Implements matrix-based pruning for LTL with game-theoretic solution concepts.
-Reuses modify_matrix from NatATL.Memoryless (same CGS transition format).
-"""
+"""Matrix-based pruning for the LTL solution concepts, reusing `modify_matrix` from
+NatATL Memoryless."""
 
 from model_checker.algorithms.explicit.CTL.CTL import model_checking
 from model_checker.algorithms.explicit.NatATL.Memoryless.matrix_utils import (

@@ -107,12 +107,7 @@ class VerificationResult:
         return result
 
     def to_dict(self) -> dict[str, Any]:
-        """
-        Convert result to dictionary format for API responses.
-
-        This format is compatible with the existing API structure while
-        adding optional trace/strategy fields.
-        """
+        """The result as an API dict, with optional trace and strategy fields."""
         return {
             "res": f"Result: {self.states}",
             "initial_state": f"Initial state {self.initial_state}: {self.satisfied}",
@@ -124,11 +119,7 @@ class VerificationResult:
         }
 
     def to_compact_dict(self) -> dict[str, str]:
-        """
-        Convert result to compact dictionary format.
-
-        Returns only 'res' and 'initial_state' fields.
-        """
+        """The result with only its 'res' and 'initial_state' fields."""
         return {
             "res": f"Result: {self.states}",
             "initial_state": f"Initial state {self.initial_state}: {self.satisfied}",

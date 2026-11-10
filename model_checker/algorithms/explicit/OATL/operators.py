@@ -22,11 +22,8 @@ def _states(cgs, node_value: str) -> set[int]:
 
 
 def _solve(cgs, node, pre: DemonicPreimage, fixpoint) -> None:
-    """Compute the fixpoint and store the resulting states on the node.
-
-    Missing costs are tried at +inf and at 0. If the two results differ, the
-    answer depends on those costs and the check fails.
-    """
+    """Compute the fixpoint and store its states on the node. Missing costs are tried
+    at +inf and at 0; if the results differ, the check fails."""
     coalition, bound = extract_coalition_and_cost(node.value)
 
     def run(uncosted_cost: float) -> set[int]:

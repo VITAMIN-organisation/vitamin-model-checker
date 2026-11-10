@@ -9,17 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 def model_checking(formula: str, model: str) -> dict[str, Any]:
-    """
-    Executes NatATLF model checking.
-
-    Args:
-        formula: NatATLF formula string.
-        model: Path to model file.
-
-    Returns:
-        Dictionary with Satisfiability, Complexity Bound, and Winning Strategy,
-        or error dictionary.
-    """
+    """NatATLF model checking of `formula` on the model file `model`: a dict with
+    Satisfiability, Complexity Bound and Winning Strategy, or an error dict."""
     from model_checker.utils.error_handler import create_error_response
 
     if not formula or not formula.strip():

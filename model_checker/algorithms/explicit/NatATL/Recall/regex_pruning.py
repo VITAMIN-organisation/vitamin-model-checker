@@ -19,9 +19,7 @@ def regex_pruning(
     strategy_index: int,
     height: int,
 ) -> int:
-    """
-    Prune tree based on regex pattern matching on paths.
-    """
+    """Prune the tree by matching a regex pattern on its paths."""
     path = depth_first_search(cgs, tree, condition, height, height)
     if path is None:
         logger.debug("No path matches regex condition: %s", condition)

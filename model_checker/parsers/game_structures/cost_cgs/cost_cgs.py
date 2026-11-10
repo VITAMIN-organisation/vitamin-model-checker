@@ -15,12 +15,7 @@ from model_checker.parsers.game_structures.cost_cgs import cost_cgs_parser
 
 
 class CostCGS(CGS):
-    """Parser and in-memory representation for a CostCGS model file.
-
-    Adds cost sections (e.g. Costs_for_actions, Transition_With_Costs) on top
-    of the base CGS. Use read_file(path) to load a file; then use
-    get_cost_for_action(action, state) or cost_for_action for cost data.
-    """
+    """A CostCGS model: a CGS plus cost sections such as Costs_for_actions."""
 
     def _reset_state(self):
         super()._reset_state()
@@ -44,11 +39,8 @@ class CostCGS(CGS):
     # --- Cost Accessor Methods ---
 
     def get_cost_for_action(self, action: str, state: str) -> Any:
-        """Look up cost for action at state; all-wildcard actions use the '*' key.
-
-        Keys are pipe-normalized at load time. Compact profiles are still accepted
-        so callers and hand-built tables remain compatible.
-        """
+        """The cost of `action` at `state`; an all-wildcard action uses the '*' key.
+        Both ``A|C`` and compact ``AC`` profiles are accepted."""
         action = str(action)
         num_agents = self.get_number_of_agents()
         candidates = [action]

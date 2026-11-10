@@ -1,15 +1,11 @@
-"""AST for ATL* syntax.
+"""AST for ATL* formulas.
 
-phi ::= p | not phi | phi1 and phi2 | <<A>> psi
-psi ::= phi | not psi | psi1 and psi2 | X psi | psi1 U psi2
+phi ::= p | not phi | phi1 and phi2 | <<A>> psi                 (state formulas)
+psi ::= phi | not psi | psi1 and psi2 | X psi | psi1 U psi2     (path formulas)
 
-A single recursive `Formula` type covers both sorts, since every phi is
-trivially a psi (`psi ::= phi | ...`); only *where* `Coalition` may appear
-well-formed differs, which is a semantic constraint for `verifier.py`, not
-a syntactic one.
-
-`True_` isn't in the grammar above, it's a boolean constant `parser.py`
-needs to desugar `F`/`G` without inventing a fake atomic proposition.
+- One `Formula` type covers both, since every phi is also a psi; `verifier.py`
+  checks where a `Coalition` may appear.
+- `True_` is not in the grammar: the parser needs it to write `F` and `G`.
 """
 
 from __future__ import annotations

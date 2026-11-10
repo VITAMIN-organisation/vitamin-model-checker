@@ -1,33 +1,10 @@
-"""Flattens a `Witness`'s own strategy into a JSON-ready structure.
+"""Turn a `Witness` strategy into dicts and lists that `json.dumps` accepts.
 
-`Witness.strategy` is keyed by `(cgs_state, automaton_state)` tuples and
-valued by joint-action `frozenset`s, neither is valid JSON (`json.dumps`
-raises on both a tuple-keyed dict and a `frozenset`). `export_strategy`
-produces plain dicts/lists a caller can hand straight to `json.dumps`.
-
-Two things `witness.strategy.choices` alone doesn't give a consumer:
-
-- `choices` is the *whole* solved game's positional strategy (`_solve_coalition`
-  solves from every state at once), not just the part reachable from
-  `witness.start` — exporting it as-is would include positions a run starting
-  at `start` can never reach, and would look identical regardless of which
-  state the witness was actually requested for. `export_strategy` instead
-  walks `witness.product_ts` from `start`, following only real transitions,
-  so only reachable positions are exported.
-- a position's `choices` entry is only the coalition's own partial move
-  (e.g. `{(1, "A")}`), never the full joint action, the rest of the system
-  is adversarial and free to respond however it likes, so one committed move
-  can be consistent with more than one real successor. `export_strategy`
-  therefore exports a transition *relation* (`transitions`, one row per real
-  successor, carrying the full joint action that leads to it), not a single
-  next-state column.
-
-Nested witnesses (`Witness.nested`) are out of scope for now: callers
-(`ATL_STAR._core_synthesize_strategy`) only ever build a `Witness` through
-`verifier.require_simple_coalition`, which already rejects a formula with a
-nested coalition before such a `Witness` could exist; `export_strategy`
-itself also rejects one directly, in case it's ever called with a `Witness`
-bypassing that check.
+- Only positions reachable from `witness.start` are exported, found by walking
+  `witness.product_ts`; `strategy.choices` covers the whole game.
+- A coalition move fixes only its own part of the joint action, so each position
+  lists one transition per real successor.
+- Nested witnesses are rejected.
 """
 
 from __future__ import annotations
@@ -65,13 +42,7 @@ class StrategyExport(TypedDict):
 def _as_joint_action(
     value: Hashable, *, position: tuple[str, int]
 ) -> frozenset[tuple[Hashable, Hashable]]:
-    """Validate and cast a `Strategy.choices` value into a joint action.
-
-    Raises:
-        ValueError: `value` isn't a joint action (a `frozenset` of
-            `(agent, action)` pairs), e.g. a `Strategy` that didn't come
-            from `witness()`/`check()`.
-    """
+    """`value` as a joint action; ValueError if it is not one."""
     is_joint_action = isinstance(value, frozenset) and all(
         isinstance(entry, tuple) and len(entry) == 2 for entry in value
     )
@@ -84,17 +55,10 @@ def _as_joint_action(
 
 
 def export_strategy(witness: Witness) -> StrategyExport:
-    """Walk `witness` from `witness.start`, exporting only reachable
-    positions, the coalition's move at each, and every real transition that
-    move allows (see module docstring for why both of those need a walk,
-    not a flat read of `witness.strategy.choices`).
+    """Export the part of the strategy that a run from `witness.start` can reach.
 
-    Raises:
-        ValueError: `witness.nested` is non-empty (not supported yet); some
-            reachable position's strategy entry isn't a joint action, is
-            missing entirely, or leads only to `product.complete()`'s
-            rejecting sink — each would otherwise silently cut the export
-            short while still reporting the overall result as satisfied.
+    Raises ValueError if the witness has nested witnesses or the strategy has a gap,
+    instead of returning an export that is silently incomplete.
     """
     if witness.nested:
         raise ValueError(

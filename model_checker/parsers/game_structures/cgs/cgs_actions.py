@@ -48,12 +48,8 @@ def wildcard_joint_profile(num_agents: int) -> str:
 
 
 def build_action_list(action_string: str, num_agents: int) -> list[str]:
-    """Expand one transition cell into pipe-normalized joint profiles.
-
-    Compact joints such as ``AC`` and explicit joints such as ``A|C`` both become
-    per-agent token lists joined with ``|``. The cell wildcard ``*`` becomes one
-    profile with ``*`` in every agent position.
-    """
+    """Expand one transition cell into `|`-joined joint profiles: ``AC`` and ``A|C``
+    give the same profile, and ``*`` gives ``*`` for every agent."""
     raw = str(action_string).strip() if action_string is not None else ""
     if not raw:
         return []
@@ -66,15 +62,9 @@ def build_action_list(action_string: str, num_agents: int) -> list[str]:
 
 
 def parse_joint_action_cell(cell: str, num_agents: int) -> list[list[str]]:
-    """Parse one transition-matrix cell into joint action choices.
-
-    Joint moves in a cell are separated by ",". Each joint is either:
-    - one character per agent (e.g. "AC" means agent 1 does A, agent 2 does C), or
-    - tokens separated by "|" for longer names (e.g. "IDLE|MOVE").
-
-    Both forms denote the same per-agent move vector. Only the first num_agents
-    tokens are used. "I" and "IDLE" map to IDLE.
-    """
+    """The joint actions of one transition cell, separated by ",": ``AC`` (one
+    character per agent) or ``IDLE|MOVE``. Only the first `num_agents` tokens
+    count, and ``I`` means ``IDLE``."""
     if not isinstance(cell, str):
         return []
 
@@ -118,11 +108,8 @@ def parse_joint_action_cell(cell: str, num_agents: int) -> list[list[str]]:
 def extract_actions_for_agents(
     graph: list[list], agents: list[int]
 ) -> dict[str, list[str]]:
-    """Return ``agent{n}`` -> action tokens from graph cells for 1-based agent ids.
-
-    Call ``validate_agent_numbers`` first. Cell encoding is defined by
-    ``parse_joint_action_cell``.
-    """
+    """The actions each of `agents` plays in `graph`, keyed ``agent{n}``; call
+    ``validate_agent_numbers`` first."""
     agent_indices = {agent: agent - 1 for agent in agents}
     actions_per_agent = {f"agent{agent}": set() for agent in agents}
 
@@ -130,7 +117,7 @@ def extract_actions_for_agents(
         str(elem) for row in graph for elem in row if elem != 0 and elem != "*"
     )
 
-    # Infer number of agents from the largest agent index we care about
+    # Number of agents: the largest requested agent index, plus one.
     num_agents = max(agent_indices.values()) + 1 if agent_indices else 0
 
     for elem_str in valid_elements:
@@ -152,12 +139,8 @@ def extract_actions_for_agents(
 def process_action_string(
     action_string: str, agents: set[int], include_agents: bool = True
 ) -> str:
-    """Keep or drop agent positions in a pipe-separated profile; others become "-".
-
-    ``action_string`` must already be a per-agent profile (``A|C``), as produced by
-    ``build_action_list``. include_agents=True keeps the given agents;
-    False keeps the others (opponents).
-    """
+    """Replace with "-" the agents of a profile such as ``A|C`` that are not kept:
+    `agents` when `include_agents` is True, the others when it is False."""
     tokens = [
         normalize_action_token(t) for t in action_string.split(AGENT_ACTION_SEPARATOR)
     ]

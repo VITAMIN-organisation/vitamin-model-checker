@@ -83,12 +83,8 @@ def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None
 
 
 def normalize_cost_action_keys(instance: Any) -> None:
-    """Rewrite cost table keys to pipe-normalized joint profiles.
-
-    Compact names such as ``AAC`` become ``A|A|C``. Bare ``*`` is kept as ``*``;
-    compact all-wildcards such as ``***`` become ``*|*|*``. Call after
-    ``Number_of_agents`` is available.
-    """
+    """Rewrite cost keys as `|`-joined profiles (``AAC`` to ``A|A|C``, ``***`` to
+    ``*|*|*``, ``*`` unchanged); call it once ``Number_of_agents`` is known."""
     num_agents = instance.get_number_of_agents()
     normalized: dict[str, Any] = {}
     for key, costs in instance.cost_for_action.items():

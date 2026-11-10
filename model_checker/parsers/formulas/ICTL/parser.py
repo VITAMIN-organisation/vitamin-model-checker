@@ -1,10 +1,4 @@
-"""ICTL parser (PLY-based native subclass).
-
-What it handles:
-- ICTL formulas with path quantifiers (A/E) combined with temporal operators (X, F, G, U, R).
-- Boolean connectives (AND/OR/NOT/IMPLIES).
-- Propositions matching [a-zA-Z][a-zA-Z0-9_]*.
-"""
+"""ICTL parser (PLY): path quantifiers A and E over X, F, G, U and R."""
 
 from model_checker.parsers.formulas.parser_utils import (
     PROPOSITION_TOKEN_PATTERN,

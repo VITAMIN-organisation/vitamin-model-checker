@@ -33,11 +33,8 @@ def collect_formula_clocks(node, model_clocks: set[str]) -> tuple[str, ...]:
 
 
 def max_constants_from_formula(node, clocks_dict: dict[str, int]) -> list[int]:
-    """Largest constant per clock used in formula guards.
-
-    Needed so zone extrapolation keeps distinctions required by the formula,
-    not only those present in automaton invariants and transition guards.
-    """
+    """Each clock's largest constant in the formula guards, so zone extrapolation
+    keeps the distinctions the formula needs."""
     maxima = [0] * len(clocks_dict)
     if node is None:
         return maxima

@@ -1,11 +1,9 @@
 """ATL* model checking on concurrent game structures.
 
-Automata-theoretic: the formula is reduced to a deterministic parity
-automaton (`automata.Automaton.from_ltl`), producted with the CGS, and
-solved as a 2-player parity game (see `verifier.py`). This is a different
-approach from classical ATL's coalition pre-image fixpoint (`ATL/preimage.py`),
-needed because ATL* allows unrestricted nesting of temporal operators
-inside a coalition's path formula.
+- The path formula becomes a deterministic parity automaton, which is combined with
+  the CGS and solved as a 2-player parity game (see `verifier.py`).
+- ATL's fixpoint method (`ATL/preimage.py`) does not work here, because ATL* allows
+  any nesting of temporal operators inside a coalition.
 """
 
 from typing import TYPE_CHECKING, Any
@@ -42,12 +40,7 @@ class _ParseAdaptError(Exception):
 def _parse_and_adapt(
     cgs: "CGS", formula: str
 ) -> tuple[Formula, cgs_adapter.AdaptedCGS]:
-    """Parse `formula` and adapt `cgs`, the boilerplate every ATL_STAR entry
-    point needs before it can do its own, different thing.
-
-    Raises:
-        _ParseAdaptError: parsing failed, or `cgs_adapter.adapt` rejected `cgs`.
-    """
+    """Parse `formula` and adapt `cgs`, the first step of every ATL* entry point."""
     parser = FormulaParserFactory.get_parser_instance("ATL_STAR")
     parsed_formula = parser.parse(formula, n_agent=cgs.get_number_of_agents())
     if parsed_formula is None:
@@ -135,18 +128,9 @@ def _core_synthesize_strategy(
 def synthesize_strategy(
     formula: str, filename: str, state: str | None = None
 ) -> dict[str, Any]:
-    """Synthesize a JSON-serializable witness strategy for `formula` against
-    the model in `filename`, at `state` (default: the model's own initial
-    state).
-
-    Only supports a formula whose outermost operator is a single coalition
-    with no further coalition nested inside its path formula — broader
-    formula shapes (nested coalitions such as `<<1>> G <<2>> F p`, or
-    top-level combinations of coalitions such as `(<<1>> F p) & (<<2>> G q)`)
-    are rejected with a clear error, deferred to a later iteration.
-    Strategy synthesis is kept separate from `model_checking` so that entry
-    point stays focused on plain ATL* model checking.
-    """
+    """A JSON-ready winning strategy for `formula` on the model in `filename` at
+    `state` (default: the initial state). Only one coalition, with none nested
+    inside, is supported."""
 
     def _core(cgs: "CGS", formula_text: str) -> dict[str, Any]:
         return _core_synthesize_strategy(cgs, formula_text, state)

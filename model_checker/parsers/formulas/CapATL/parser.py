@@ -1,30 +1,7 @@
-"""CapATL parser (PLY-based).
+"""CapATL parser (PLY): coalitions `<{1,2}>` and the knowledge operator `K1(...)`.
 
-What it handles:
-- CapATL formulas with coalition-prefixed temporal operators (U, R, X, F, G)
-  and boolean connectives.
-- Coalition syntax `<{1,2}>` (paper-style agent set; no numeric formula bound).
-- Knowledge operator `K1(1 is c1 && !(2 is c2))` (alias `kcap1(...)`): agent 1
-  knows that the capacity assignment satisfies the capacity formula inside, which
-  holds only `agent is capacity`, `!`, `&&`, `||`, `->`, `true` and `false`
-  (AAMAS 2024 p. 125-126). It may stand alone or inside any formula.
-- Symbolic boolean operator `&&` and textual `and`, `not`;
-  release/until/next/eventually/globally operators `R`, `U`, `X`, `F`, `G`.
-
-What it rejects:
-- `K1` without parentheses, `K` inside a capacity formula, and propositions
-  inside a capacity formula: the paper's grammar has none of these.
-- Weak Until (W): CapATL path formulas use X, U and R (G/F are supported sugar).
-- Formula bound `<{A}, k>` (numeric k is not CapATL; capacities live in the model).
-- Uppercase textual boolean keywords; uppercase is limited to modal letters U/R/X/F/G/K.
-- Non-ASCII characters, invalid special characters, empty/None formulas, null bytes.
-- Empty or malformed coalitions (e.g., `<>`, trailing commas, negative indices, or
-  out-of-range agents).
-- Formulas without a coalition modality (must use `<{coalition}>` or knowledge ops).
-
-Behavior:
-- Returns an AST tuple on success or None on invalid input; does not raise for
-  user-facing parse errors.
+The knowledge operator follows AAMAS 2024 p. 125-126: the parentheses are required,
+and the capacity formula inside holds only `agent is capacity` and connectives.
 """
 
 import re
@@ -81,11 +58,7 @@ _FORMULA_BOUND_PATTERN = re.compile(rf"<{{{AGENT_LIST}}},\s*-?\d+>")
 
 
 class CapATLParser(BaseLogicParser):
-    """Parser for CapATL formulas (coalition modalities and capability atoms).
-
-    Use parse(formula) to get an AST tuple or None on invalid input.
-    Set n_agent before parsing for coalition validation.
-    """
+    """`parse` returns an AST tuple, or None with the reason in `errors`."""
 
     def __init__(self):
         """Initialize the CapATL lexer and parser (PLY)."""

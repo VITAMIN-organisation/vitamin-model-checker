@@ -1,33 +1,13 @@
-"""
-Witness word generation for NatATL Recall regex patterns.
-
-Generates sequences of atomic propositions that match regex patterns used
-in recall strategies, supporting Kleene star (*) and concatenation (.).
-"""
+"""Generate the words of propositions that match NatATL Recall regex patterns, with
+`*` and `.`."""
 
 
 class RegexWitnessGenerator:
-    """
-    Generator for witness words matching regex patterns.
-
-    Generates all possible sequences of atomic propositions that match a given
-    regex pattern. Supports Kleene star (*) for repetition and concatenation (.)
-    for sequencing.
-
-    Example:
-        Pattern "a and b.q*" with length 3 generates words like:
-        - "a and b . q . q"
-        - "a and b . q . q . q"
-    """
+    """Generates the words of propositions that match a regex with `*` (repetition)
+    and `.` (sequencing): `a and b.q*` gives `a and b . q . q` and longer words."""
 
     def __init__(self, pattern: str, length: int):
-        """
-        Initialize witness generator.
-
-        Args:
-            pattern: Regex pattern string (e.g., "a and b.q*")
-            length: Desired length of generated witness words
-        """
+        """`pattern` is a regex such as `"a and b.q*"`; `length` is the word length."""
         self.original_pattern = pattern
         self.length = length
         self.groups = self._split_groups_by_star(pattern)
@@ -35,15 +15,7 @@ class RegexWitnessGenerator:
         self._generate_combinations()
 
     def _split_groups_by_star(self, pattern: str) -> list:
-        """
-        Split pattern into groups separated by '*' or '.' operators.
-
-        Args:
-            pattern: Regex pattern string
-
-        Returns:
-            List of pattern groups, with '*' preserved in group strings
-        """
+        """Split `pattern` at `*` and `.` into groups, each `*` kept in its group."""
         groups = []
         buffer = []
         for char in pattern:
@@ -68,13 +40,7 @@ class RegexWitnessGenerator:
         self._backtrack([], 0)
 
     def _backtrack(self, current: list, pos: int) -> None:
-        """
-        Backtracking algorithm to generate witness words.
-
-        Args:
-            current: Current partial word being built
-            pos: Current position in groups list
-        """
+        """Extend the partial word `current` from group `pos` on, by backtracking."""
         if pos >= len(self.groups):
             if len(current) == self.length:
                 self.combinations.append(" . ".join(current))
@@ -91,12 +57,7 @@ class RegexWitnessGenerator:
                 self._backtrack(current + [group], pos + 1)
 
     def next_word(self) -> str | None:
-        """
-        Get the next generated witness word.
-
-        Returns:
-            Next witness word string, or None if all words have been generated
-        """
+        """The next witness word, or None when all have been generated."""
         while self.combinations:
             word = self.combinations.pop(0)
             if word not in self.generated:
@@ -106,20 +67,9 @@ class RegexWitnessGenerator:
 
 
 def store_word(word: str) -> list[str]:
-    """
-    Parse a witness word string into a list of proposition strings.
+    """Split a witness word on ` . `.
 
-    Splits a witness word (e.g., "a and b . q . q") into individual
-    proposition components, removing whitespace.
-
-    Args:
-        word: Witness word string with " . " separators
-
-    Returns:
-        List of proposition strings
-
-    Example:
-        store_word("a and b . q . q") -> ["a and b", "q", "q"]
+    `"a and b . q . q"` gives `["a and b", "q", "q"]`.
     """
     substrings = word.split(" . ")
     result = []

@@ -25,12 +25,8 @@ class ParityStyle(Enum):
 
 @dataclass(frozen=True)
 class AcceptanceCondition:
-    """A Büchi, co-Büchi, or parity acceptance condition.
-
-    `priorities` is keyed per-transition (`(source, label, target)`),
-    matching Spot's own per-edge acceptance marks. `PARITY` also needs
-    `parity_kind`/`parity_style`.
-    """
+    """A Büchi, co-Büchi or parity condition, with a priority per transition
+    `(source, label, target)`."""
 
     kind: AcceptanceKind
     parity_kind: ParityKind | None = None
@@ -41,11 +37,7 @@ class AcceptanceCondition:
 
 
 def priority_from_mark(mark) -> int | None:
-    """Convert a Spot edge acceptance mark to its single priority, or `None` if unmarked.
-
-    Raises:
-        ValueError: if `mark` carries more than one color.
-    """
+    """The priority of a Spot edge mark, or None if the edge is unmarked."""
     colors = list(mark.sets())
     if not colors:
         return None

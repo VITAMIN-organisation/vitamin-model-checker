@@ -11,13 +11,8 @@ from model_checker.parsers.game_structures.cgs.cgs import CGS
 
 
 class CapCGS(CGS):
-    """Parser and in-memory representation for a CapCGS model file.
-
-    Adds capacity sections (Capacities, Capacities_assignment,
-    Actions_for_capacities) on top of the base CGS. After read_file(path), use
-    capacities_list, capacities_assignment, action_capacities, and
-    get_capacities_assignment() for capacity data.
-    """
+    """A CapCGS model: a CGS plus the Capacities, Capacities_assignment and
+    Actions_for_capacities sections."""
 
     def __init__(self):
         """Initialize an empty CapCGS; load data with read_file or read_from_model_object."""
@@ -42,11 +37,8 @@ class CapCGS(CGS):
     # --- Private Parsing Methods - Capacity Sections ---
 
     def _parse_capacity_sections(self, lines):
-        """Parse capacity-specific sections: Capacities, Capacities_assignment, Actions_for_capacities.
-
-        Args:
-            lines: List of file lines (list of str).
-        """
+        """Read the Capacities, Capacities_assignment and Actions_for_capacities
+        sections."""
         current_section = None
         capacities_list = []
 
@@ -105,11 +97,7 @@ class CapCGS(CGS):
     # --- Private Parsing Methods - Common Sections ---
 
     def _parse_common_sections(self, lines):
-        """Parse common CGS sections (states, labelling, agents, etc.), skipping transitions and capacity sections.
-
-        Args:
-            lines: List of file lines (list of str).
-        """
+        """Read the plain CGS sections; transitions and capacities come later."""
         sections_to_skip = {
             "Transition",  # Skip transitions - will be parsed separately
             "Capacities",
@@ -124,11 +112,7 @@ class CapCGS(CGS):
     # --- Private Parsing Methods - Transitions ---
 
     def _parse_transitions(self, lines):
-        """Parse the Transition section and fill the graph and actions list.
-
-        Args:
-            lines: List of file lines (list of str).
-        """
+        """Read the Transition section into the graph and the actions list."""
         rows_graph = cgs_parser.extract_transition_rows(lines)
         if not rows_graph:
             return
@@ -151,12 +135,7 @@ class CapCGS(CGS):
     # --- Capacity Accessor Methods ---
 
     def get_capacities_assignment(self) -> list[list[str]]:
-        """Return capacities assignment formatted by agent.
-
-        Returns:
-            List of lists; each inner list is [agent_id, cap1, cap2, ...]
-            for that agent's assigned capacities (e.g. [['1', 'cap1', 'cap2'], ['2', 'cap3']]).
-        """
+        """Each agent's capacities, as `[['1', 'cap1', 'cap2'], ['2', 'cap3']]`."""
         cap_ass = self.capacities_assignment
         result = []
         num_agents = self.get_number_of_agents()
@@ -174,9 +153,5 @@ class CapCGS(CGS):
 
     @property
     def capacities_list(self) -> list[str]:
-        """Return the list of capacity names from the Capacities section.
-
-        Returns:
-            List of capacity name strings.
-        """
+        """The capacity names of the Capacities section."""
         return self.capacities.tolist() if len(self.capacities) > 0 else []

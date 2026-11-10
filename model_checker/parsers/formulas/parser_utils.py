@@ -45,11 +45,8 @@ _V = TypeVar("_V")
 
 
 class NodeMarks(Generic[_V]):
-    """AST nodes marked during one parse, each with an optional value.
-
-    It keeps the nodes, not only their ids: the id of a node freed during the parse
-    can be given to a later node, which would then count as marked.
-    """
+    """AST nodes marked during one parse, each with an optional value. It keeps the
+    nodes, not their ids, because a freed node's id can be reused by a later one."""
 
     def __init__(self) -> None:
         self._marks: dict[int, tuple[object, _V | None]] = {}
@@ -77,12 +74,8 @@ class OpenPrefix(NamedTuple):
 def ambiguous_prefix_message(
     prefix: str, connective: str, operator: str | None = None
 ) -> str:
-    """The message for a connective right after an unclosed prefix, as in
-    `AF p && q`; `operator` is the U, R or W of a prefix Until.
-
-    No defining paper of a logic with prefixes states a precedence rule, so the
-    formula has two readings and the user writes the parentheses.
-    """
+    """The error for a connective after an unclosed prefix, as in `AF p && q`, which
+    has two readings; `operator` is the U, R or W of a prefix Until."""
     if operator is None:
         shown = f"{prefix} ... {connective} ..."
         both = f"{prefix} (... {connective} ...)"
@@ -152,11 +145,8 @@ def validate_natsl_temporal_atom(atom: str) -> tuple[bool, str | None]:
 def validate_release_weak_rejected(
     formula: str, logic_name: str
 ) -> tuple[bool, str | None]:
-    """Reject Release (R) and Weak Until (W) when the logic solver does not evaluate them.
-
-    Covers glued forms (<1><5>R p) and binary infix (<1><5> p R q).
-    Single-letter R/W are case-sensitive so proposition names like ``r`` are kept.
-    """
+    """Reject R and W, glued (`<1><5>R p`) or infix (`<1><5> p R q`), for a logic
+    whose solver lacks them; a proposition named ``r`` stays valid."""
     # After a coalition/bound prefix: standalone R/W (uppercase) or release/weak words.
     if re.search(
         rf"(?:{COALITION_ATL_TOKEN})+.*?(?:(?<![A-Za-z0-9_])[RW](?![A-Za-z0-9_])|(?i:release\b|weak\b))",
@@ -178,11 +168,8 @@ def validate_release_weak_rejected(
 
 
 def validate_ctl_path_quantifiers(formula: str) -> tuple[bool, str | None]:
-    """Reject CTL formulas whose temporal operators are not path-quantified.
-
-    Uses token-boundary checks so proposition names such as Goal or Flux are not
-    mistaken for bare G/F/X operators.
-    """
+    """Reject a CTL temporal operator with no A or E before it; names such as `Goal`
+    are not mistaken for `G`."""
     stripped = formula.strip()
     if not stripped:
         return True, None
@@ -229,11 +216,8 @@ def validate_ctl_path_quantifiers(formula: str) -> tuple[bool, str | None]:
 
 
 def validate_coalition(coalition_str: str, max_coalition: int) -> None:
-    """Check ATL-style coalitions like "<1,2,3>".
-
-    Each agent index must be from 1 to max_coalition. Raises CoalitionValueError
-    on failure.
-    """
+    """Raise CoalitionValueError unless each agent of a coalition such as `<1,2,3>` is
+    between 1 and `max_coalition`."""
     if coalition_str == "<>" or EMPTY_COALITION_RE.fullmatch(coalition_str):
         raise CoalitionValueError("Empty coalition '<>' is not allowed")
     if coalition_str.endswith(",>"):

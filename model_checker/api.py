@@ -1,9 +1,6 @@
-"""Standard public API for the model-checker library.
-
-Exposes stable facades for model checking execution, parsing factories,
-game structure models, and conformance utilities. New integrations update
-this surface via ``model_checker.api_integrated``.
-"""
+"""Stable public API of the model-checker library: model checking, parser factories,
+game structures and conformance tools. New integrations extend it through
+``model_checker.api_integrated``."""
 
 from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,

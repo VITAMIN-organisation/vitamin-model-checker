@@ -1,12 +1,9 @@
-"""ATL* parser entry point (`vitamin.parsers`).
+"""ATL* parser entry point for `vitamin.parsers`.
 
-Not PLY-based, unlike every other VITAMIN parser: in ATL* a coalition can
-scope over an arbitrarily nested path formula (unlike ATL, where it is
-always immediately followed by exactly one temporal operator), so there is
-no single grammar production to special-case the way ATL's parser does.
-`grammar.py` is a hand-written recursive-descent parser instead; this file
-only adapts its `parse`/`ATLStarParseError` to the `.parse(formula,
-n_agent=...)` / `.errors` interface `FormulaParserFactory` expects.
+- The parsing is in `grammar.py`, a hand-written parser. PLY does not fit, because
+  an ATL* coalition can cover any nested path formula, not one temporal operator.
+- This file gives it the `.parse(formula, n_agent=...)` and `.errors` interface
+  that `FormulaParserFactory` expects.
 """
 
 from typing import Any
@@ -18,11 +15,7 @@ from model_checker.parsers.formulas.ATL_STAR.grammar import (
 
 
 class ATLStarParser:
-    """Parser for ATL* formulas.
-
-    Use parse(formula) to get a `Formula` AST or None on invalid input.
-    Pass n_agent to validate coalitions' agent ids against the model.
-    """
+    """`parse` returns a `Formula`, or None with the reason in `errors`."""
 
     def __init__(self) -> None:
         self.errors: list[str] = []

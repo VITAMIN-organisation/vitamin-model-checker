@@ -1,17 +1,5 @@
-"""OATL parser (PLY-based).
-
-Supported:
-- Coalition and Demon budget (`<1,2><5>F p`, `<1><0>G p`), budget n >= 0.
-- Boolean connectives (&&, ||, !, ->) and temporal ops (X, F, G, U, R, W);
-  binary ops with or without parentheses (`<1><5> (p U q)`, `<1><5> p U q`).
-
-Rejects:
-- Missing budget after a coalition (e.g., `<1>F p`).
-- Malformed coalitions or invalid agent indices relative to n_agent.
-- Non-ASCII, null bytes, or disallowed special characters in propositions.
-
-Returns:
-- AST tuple on success, or None on invalid input.
+"""OATL parser (PLY): coalition and Demon budget `<1,2><5>` (budget 0 allowed) before
+X, F, G, U, R and W.
 """
 
 import re
@@ -64,11 +52,7 @@ _BOUND_PRESENT_RE = re.compile(rf"<{AGENT_LIST}><\d+>")
 
 
 class OATLParser(BaseLogicParser):
-    """Parser for OATL formulas (coalition, Demon budget, temporal ops).
-
-    Use parse(formula) to get an AST tuple or None on invalid input.
-    Set n_agent before parsing for coalition validation.
-    """
+    """`parse` returns an AST tuple, or None with the reason in `errors`."""
 
     def __init__(self):
         """Initialize the OATL lexer and parser (PLY)."""

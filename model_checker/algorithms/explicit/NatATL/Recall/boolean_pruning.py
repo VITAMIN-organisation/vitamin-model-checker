@@ -1,9 +1,5 @@
-"""
-Boolean (propositional) pruning for NatATL Recall.
-
-Uses CTL model checking to determine which states satisfy propositional
-conditions, then prunes the execution tree accordingly.
-"""
+"""Boolean pruning for NatATL Recall: CTL finds where a condition holds, and the
+execution tree is pruned there."""
 
 import logging
 
@@ -24,9 +20,7 @@ def prune_tree_nodes(
     strategy_index: int,
     current_level: int = 0,
 ) -> int:
-    """
-    Generic tree pruning: remove children where agent action doesn't match.
-    """
+    """Remove the children whose agent action does not match."""
     pruning_occurred = 0
 
     if node.state in state_set:
@@ -69,9 +63,7 @@ def boolean_pruning(
     strategy_index: int,
     model_path: str,
 ) -> int:
-    """
-    Prune tree based on boolean (propositional) condition.
-    """
+    """Prune the tree by a boolean condition."""
     states = ctl_model_checking_cached(str(condition), model_path, preloaded_model=cgs)
 
     if "res" in states and ": " in states["res"]:

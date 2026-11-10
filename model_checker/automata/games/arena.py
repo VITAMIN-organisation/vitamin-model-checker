@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Hashable
+from collections.abc import Set as AbstractSet
 from typing import TypeAlias, cast
 
 from ..transition_system import TransitionSystem
@@ -11,20 +12,11 @@ JointAction: TypeAlias = frozenset[tuple[Hashable, Hashable]]
 
 
 def concurrent_to_turnbased(
-    ts: TransitionSystem, controlled_players: set[Hashable]
+    ts: TransitionSystem, controlled_players: AbstractSet[Hashable]
 ) -> Game:
-    """Turn a concurrent, joint-action-labeled `TransitionSystem` into a
-    turn-based 2-player Game: `controlled_players` forms player 0's
-    coalition, everyone else is player 1.
-
-    Unfolds each simultaneous move in two steps via a fresh intermediate
-    state: the coalition picks its partial action, then the environment
-    picks the rest.
-
-    `Game.objective` is left `None`, wire it up separately (typically from
-    `product()`'s result, remapped through `remap_priorities` first, since
-    one `ts` transition becomes two arena transitions here).
-    """
+    """Turn a concurrent transition system into a turn-based 2-player game: player 0
+    (`controlled_players`) picks its part of each move, then player 1 the rest.
+    `objective` is left for the caller, through `remap_priorities`."""
     arena = TransitionSystem()
     player1_states: set[Hashable] = set()
 
@@ -46,7 +38,9 @@ def concurrent_to_turnbased(
 
 
 def _split_joint_action(
-    source: Hashable, joint_action: JointAction, controlled_players: set[Hashable]
+    source: Hashable,
+    joint_action: JointAction,
+    controlled_players: AbstractSet[Hashable],
 ) -> tuple[JointAction, JointAction, Hashable]:
     """Split a joint action into the coalition's part, the opponents' part,
     and the intermediate arena state."""
@@ -65,16 +59,11 @@ def _split_joint_action(
 
 def remap_priorities(
     priorities: dict[tuple[Hashable, Hashable, Hashable], int],
-    controlled_players: set[Hashable],
+    controlled_players: AbstractSet[Hashable],
 ) -> dict[tuple[Hashable, Hashable, Hashable], int]:
-    """Remap a `ts`-keyed `AcceptanceCondition.priorities` dict onto the
-    arena `concurrent_to_turnbased(ts, controlled_players)` returns.
-
-    Each `ts` transition unfolds into two arena edges; only the second
-    (intermediate -> target) corresponds 1:1 to it, so only it carries the
-    priority, this still preserves Büchi/co-Büchi/parity semantics, since
-    every real `ts` step contributes its color exactly once either way.
-    """
+    """Move the priorities of `ts` transitions onto the arena of
+    `concurrent_to_turnbased`: only the second of the two arena steps keeps the
+    color, so each real step still counts once."""
     remapped: dict[tuple[Hashable, Hashable, Hashable], int] = {}
     for (source, symbol, target), priority in priorities.items():
         joint_action = cast(JointAction, symbol)

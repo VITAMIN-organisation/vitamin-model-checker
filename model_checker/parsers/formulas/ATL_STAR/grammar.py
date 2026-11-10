@@ -1,11 +1,6 @@
-"""Parses ATL* formula text into the AST defined in formula.py.
+"""Recursive-descent parser from ATL* formula text to the AST of formula.py.
 
-Hand-written recursive-descent, not PLY: a coalition here can scope over an
-arbitrarily nested path formula (unlike ATL, where it's always immediately
-followed by exactly one temporal operator), so there's no single production
-to special-case the way `ATL/parser.py` does.
-
-Grammar (lowest to highest precedence; parentheses always disambiguate):
+Grammar, lowest to highest precedence:
 
     formula     := implication
     implication := disjunction ('->' implication)?     (sugar, right-assoc)
@@ -18,24 +13,11 @@ Grammar (lowest to highest precedence; parentheses always disambiguate):
     atom        := PROP | 'true' | 'false' | '(' formula ')'
     agents      := INT (',' INT)*
 
-Each keyword also accepts its word form (`not`/`!`, `and`/`&&`, `or`/`||`,
-`implies`/`->`, `next`/`X`, `eventually`/`F`, `globally`/`G`, `until`/`U`),
-case-insensitive. A single `&` or `|`, and `>` for implication, are rejected, as in
-every other logic. Only uppercase `X`/`F`/`G`/`U` are reserved as
-single-letter operators, so lowercase single-letter propositions stay free.
-
-A coalition binds like a prefix operator over the tightest following
-`unary`, parenthesize the operand for anything beyond a bare
-atom/negation/next (e.g. `<<1>>(F p && G q)`). A `U` right after the operand
-belongs to the coalition: `<<1>> p U q` is `<<1>>(p U q)`, as ATL writes it, and
-ATL is a fragment of ATL*. A coalition over only the left operand is written
-`(<<1>> p) U q`. `F`, `G`, `||`, and `->` are sugar, desugared here into the
-seven primitive constructors (`Prop`, `True_`, `Not`, `And`, `Coalition`,
-`Next`, `Until`) so `verifier.py` only has to handle those.
-
-A keyword needs a non-identifier boundary to be recognized as itself:
-identifiers are matched greedily, so `Xp` tokenizes as one proposition named
-`Xp`, not `X` followed by `p`, write `X p` for the operator.
+- Word forms (`not`, `and`, `until`, ...) work in any case. `X`, `F`, `G`, `U` are
+  uppercase only, so lowercase one-letter propositions stay free.
+- `<<1>> p U q` is `<<1>>(p U q)`, as in ATL (JACM 2002, p. 689).
+- `F`, `G`, `||` and `->` become the seven constructors of formula.py, so the
+  verifier handles only those.
 """
 
 from __future__ import annotations
@@ -76,9 +58,8 @@ _SINGLE_LETTER_KEYWORDS = {
     "G": "GLOBALLY",
     "U": "UNTIL",
 }
-# Case-sensitive (uppercase only) so lowercase single-letter props like "p"/"g"
-# stay available, unlike the multi-word keywords below, which are matched
-# case-insensitively since a real proposition named e.g. "until" is unlikely.
+# Uppercase only, so one-letter props like `p` stay free; the word keywords below
+# match in any case, since a proposition named `until` is unlikely.
 
 _TOKEN_RE = re.compile(
     r"""
@@ -231,9 +212,8 @@ class _Parser:
         open_token = self._expect("COALITION_OPEN")
         agents = self._agents()
         self._expect("COALITION_CLOSE")
-        # ATL writes <<A>> phi1 U phi2 for the coalition over the Until, and ATL is
-        # the fragment of ATL* whose temporal operators each follow a path
-        # quantifier (Alur, Henzinger, Kupferman, JACM 2002, pp. 685 and 689).
+        # <<A>> phi1 U phi2 is the coalition over the Until, as in ATL (JACM 2002,
+        # p. 689).
         coalition = Coalition(agents=agents, path_formula=self._until())
         token = self._peek()
         if token.kind in _CONNECTIVES:
@@ -290,17 +270,7 @@ class _Parser:
 
 
 def parse(text: str, num_agents: int | None = None) -> Formula:
-    """Parse ATL* formula text into a `Formula`.
-
-    Args:
-        text: the formula text.
-        num_agents: if given, every coalition's agent ids must fall in
-            `[1, num_agents]`.
-
-    Raises:
-        ATLStarParseError: on malformed text, an out-of-range agent id
-            (reported at that agent's own position in `text`), or trailing
-            input after a complete formula.
-    """
+    """Parse ATL* text into a `Formula`, with agent ids up to `num_agents` when given;
+    ATLStarParseError names the position of a mistake."""
     tokens = _tokenize(text)
     return _Parser(tokens, num_agents=num_agents).parse_formula()

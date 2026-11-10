@@ -1,26 +1,12 @@
-"""
-Epistemic state data structures for CapATL model checking.
-
-Defines pointed knowledge (state-knowledge pairs) and coalition knowledge
-with actions:
-- Formula tree nodes
-
-These structures are essential for knowledge-based reasoning about agent capacities.
-"""
+"""Data structures for CapATL: pointed knowledge (`p_knowledge`, a state-knowledge
+pair), its coalition form with actions (`p_knowledge_for_Y`), and formula tree nodes
+(`Node_PK`)."""
 
 import numpy as np
 
 
 class p_knowledge_for_Y:
-    """Represents a state-knowledge-action tuple for a specific coalition Y.
-
-    Attributes:
-        state: The current state name or tuple.
-        knowledge: A tuple of capacity sets for each agent.
-        action: The joint action performed by coalition Y.
-        coalition: The coalition string identifier.
-        agents: The set of all agents in the model.
-    """
+    """A state, each agent's capacity knowledge, and the joint action of coalition Y."""
 
     def __init__(self, state, knowledge, beta, agents, agents_tot):
         self.state = tuple(state) if isinstance(state, (list, np.ndarray)) else state
@@ -54,13 +40,7 @@ class p_knowledge_for_Y:
 
 
 class p_knowledge:
-    """Represents a state-knowledge pair (Sigma, Delta).
-
-    Attributes:
-        state: The current state name or tuple.
-        knowledge: A tuple of capacity sets for each agent.
-        agents: The set of all agents in the model.
-    """
+    """A state with each agent's capacity knowledge, the pair (Sigma, Delta)."""
 
     def __init__(self, state, knowledge, agents):
         self.state = tuple(state) if isinstance(state, (list, np.ndarray)) else state

@@ -58,12 +58,8 @@ def regions_with_clock_guard(
 
 
 def region_matches_label(region: TimeState, label: RegionSet) -> bool:
-    """Return whether ``region`` is covered by the labelled set.
-
-    Used after operations that change the zone (for example a clock reset):
-    the resulting symbolic state still counts as satisfying the formula when
-    some labelled zone at the same location contains it.
-    """
+    """Whether a labelled zone at the same location contains ``region``, so a zone
+    changed by a clock reset still counts as satisfying the formula."""
     for other in label:
         if other.location != region.location:
             continue
@@ -88,11 +84,8 @@ def timed_predecessors(
     targets: RegionSet,
     guard: str | tuple | None = None,
 ) -> RegionSet:
-    """Symbolic states that can reach ``targets`` in one zone-graph step.
-
-    Includes both delay and discrete successors. When ``guard`` is given, only
-    predecessors whose zone satisfies that guard are kept.
-    """
+    """Symbolic states that reach ``targets`` in one delay or discrete step, kept only
+    if their zone satisfies ``guard`` when one is given."""
     if not targets:
         return set()
 

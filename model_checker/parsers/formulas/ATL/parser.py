@@ -1,11 +1,5 @@
-"""ATL parser (PLY-based).
-
-What it handles:
-- ATL formulas with coalition-prefixed temporal operators (U, G, X, F) and boolean connectives.
-- Coalition syntax `<1,2>` with agent indices in [1, n_agent].
-- Symbolic boolean operators `&&`, `||`, `!`, `->` and lowercase keywords
-  `and`, `or`, `not`, `implies`.
-"""
+"""ATL parser (PLY): coalitions `<1,2>`, with agents 1 to `n_agent`, before U, G, X
+and F."""
 
 import re
 
@@ -48,11 +42,7 @@ _COALITION_OPERATOR_PATTERN = re.compile(
 
 
 class ATLParser(BaseLogicParser):
-    """Parser for ATL formulas (coalition-prefixed temporal operators and boolean connectives).
-
-    Use parse(formula) to get an AST tuple or None on invalid input.
-    Set n_agent before parsing if coalition validation is required.
-    """
+    """`parse` returns an AST tuple, or None with the reason in `errors`."""
 
     def __init__(self):
         """Initialize the ATL lexer and parser (PLY)."""

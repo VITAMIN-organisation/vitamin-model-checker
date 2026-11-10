@@ -78,6 +78,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- ATL*: a proposition whose name starts with a Spot operator letter, such as
+  `Granted`, `Fuel` or `Xray`, gave a wrong verdict or a "RuntimeError:
+  unimplemented", because Spot read `Granted` as `G(ranted)`. Names are now quoted
+  in the text passed to Spot (`test_verifier.py`).
 - CapATL: the knowledge operator K^a_cap of AAMAS 2024 (p. 125-126) parses, typed
   `K1(1 is c)` or `kcap1(1 is c)`, alone or inside a formula such as
   `<{1}> F (g && K2(3 is c || 3 is cop))`. Inside the parentheses only

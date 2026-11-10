@@ -17,7 +17,7 @@ NO_CONSTRAINT_TOKENS = frozenset({"0", "-", "*"})
 BOUND_OPERATORS = COMPARISON_OPERATORS
 INVARIANT_OPERATORS = ("<=", "<")
 RESET_OPERATOR = "="
-# Formula clock-name prefix historically does not treat ``==`` as a bound.
+# A formula clock prefix does not treat ``==`` as a bound.
 FORMULA_PREFIX_OPERATORS = ("<=", ">=", "<", ">")
 
 _CLOCK = r"(\w+)"

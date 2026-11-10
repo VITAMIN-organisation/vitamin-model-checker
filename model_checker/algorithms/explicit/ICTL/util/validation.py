@@ -11,11 +11,8 @@ _TRANSITION_CELLS = frozenset({"R", "P,R"})
 
 
 def _check_c1(graph: np.ndarray) -> bool:
-    """Check forward confluence of transitions along the knowledge preorder.
-
-    If a more informative state s' refines s, every R-successor of s must be
-    matched by an R-successor of s' that is at least as informative.
-    """
+    """Forward confluence: if s' refines s, each successor of s has a successor of s'
+    that is at least as informative."""
     n = graph.shape[0]
     for s in range(n):
         for s_prime in range(n):
@@ -34,11 +31,8 @@ def _check_c1(graph: np.ndarray) -> bool:
 
 
 def _check_c2(graph: np.ndarray) -> bool:
-    """Check backward confluence of transitions along the knowledge preorder.
-
-    If s' refines s, every R-successor of s' must be matched by an R-successor
-    of s that is no more informative than that successor.
-    """
+    """Backward confluence: if s' refines s, each successor of s' has a successor of
+    s that is no more informative."""
     n = graph.shape[0]
     for s in range(n):
         for s_prime in range(n):
@@ -125,11 +119,8 @@ def _check_model_metadata(model: Any) -> None:
 
 
 def check_conditions_hold(model: Any) -> None:
-    """Reject models that are not valid well-behaved ICTL birelational frames.
-
-    Checks serial transitions, a partial knowledge order, confluence between
-    knowledge and time (C1/C2), and monotone atomic labelling.
-    """
+    """Reject a model that is not an ICTL birelational frame: serial transitions, a
+    partial knowledge order, confluence C1/C2 and monotone labelling."""
     graph = model.graph
     preorder = np.vectorize(lambda cell: cell in _PREORDER_CELLS, otypes=[bool])(graph)
 

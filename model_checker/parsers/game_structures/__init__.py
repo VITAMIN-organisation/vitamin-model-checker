@@ -1,10 +1,5 @@
-"""Model representations for VITAMIN.
-
-Contains implementations of various model types:
-- CGS: Concurrent Game Structures
-- CapCGS: Capability-based CGS
-- CostCGS: Cost-based CGS
-"""
+"""Model file readers for VITAMIN, one subpackage per model type: CGS, costCGS,
+capCGS, WalletCGS, timedCGS, BCGS, BirelationalMatrix and ObstructionModel."""
 
 from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs.cgs import CGS

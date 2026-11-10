@@ -15,12 +15,7 @@ from model_checker.parsers.game_structures.cgs import (
 
 
 class CGS:
-    """Parser and in-memory representation for a CGS model file.
-
-    Use read_file(path) to load a file, or read_from_model_object(model) to
-    build from an existing model. The rest of the API gives access to states,
-    actions, graph, and labelling; validation lives in cgs_validation.
-    """
+    """A CGS model, loaded with `read_file(path)` or `read_from_model_object(model)`."""
 
     # --- Initialization and File Reading ---
 

@@ -1,18 +1,6 @@
-"""CTL parser (PLY-based).
+"""CTL parser (PLY): path quantifiers A and E over the operators X, F, G and U.
 
-What it handles:
-- CTL formulas with path quantifiers (A/E) combined with temporal operators (X, F, G, U).
-- Boolean connectives (AND/OR/NOT/IMPLIES) and parentheses/brackets for grouping.
-- Propositions matching [a-zA-Z][a-zA-Z0-9_]*.
-
-What it rejects:
-- Unicode or disallowed special characters (only (), [], logical operators allowed).
-- Temporal operators (X, F, G, U) without a preceding path quantifier (A/E).
-- Invalid proposition identifiers or reserved words used as proposition names.
-
-Behavior:
-- Returns an AST tuple on success or None on invalid input; does not raise for
-  user-facing parse errors.
+Square brackets appear only in `A[p U q]` (Clarke, Emerson, Sistla 1986, p. 246).
 """
 
 from ..parser_utils import (
@@ -57,10 +45,7 @@ _CTL_VALID_OPERATORS = {
 
 
 class CTLParser(BaseLogicParser):
-    """Parser for CTL formulas (path quantifiers A/E and temporal operators X, F, G, U).
-
-    Use parse(formula) to get an AST tuple or None on invalid input.
-    """
+    """`parse` returns an AST tuple, or None with the reason in `errors`."""
 
     def __init__(self):
         """Initialize the CTL lexer and parser (PLY)."""

@@ -19,21 +19,13 @@ def attractor(
     player: int,
     target: set[Hashable],
 ) -> tuple[set[Hashable], Strategy]:
-    """The reachability attractor for `player`: the least fixed point
-    containing `target`, plus a positional winning strategy.
-
-    Test oracle only, cross-validated against `solver.py`. A state owned by
-    `player` joins as soon as one action leads into the attractor; an
-    opponent state joins only once *every* action does. Assumes a
-    deadlock-free arena.
-    """
+    """Test oracle: the states from which `player` can force the game into `target`,
+    with a winning strategy."""
     attracted = set(target)
     choices: dict[Hashable, Hashable] = {}
     owned = player_states.get(player, set())
 
-    # Indexed once by source state so the fixed-point loop below does an O(1)
-    # lookup per state instead of rescanning every transition in the arena on
-    # every single iteration.
+    # Indexed once by source, so the fixed-point loop does not rescan the arena.
     actions_by_state: dict[Hashable, set[Hashable]] = {}
     for source, symbol in arena.transitions:
         actions_by_state.setdefault(source, set()).add(symbol)
@@ -64,11 +56,7 @@ def attractor(
 
 
 def solve_reachability(game: Game, player: int, target: set[Hashable]) -> GameSolution:
-    """Solve a plain reachability objective: does `player` have a strategy
-    forcing the arena into `target`? Test oracle only, simpler than the
-    Büchi/co-Büchi/parity objectives `solver.py` handles. No opponent
-    strategy is computed.
-    """
+    """Test oracle: solve a reachability game for `player` toward `target`."""
     win_region, strategy = attractor(game.arena, game.player_states, player, target)
     opponent = 1 - player
     return GameSolution(

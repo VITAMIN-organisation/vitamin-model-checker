@@ -24,11 +24,8 @@ from .parser_utils import (
 
 
 class BaseLogicParser:
-    """Base class for PLY-based formula parsers.
-
-    Subclasses define tokens and grammar rules; parse(formula) returns an AST
-    tuple or None on invalid input. Use build() after setting tokens.
-    """
+    """Base of the PLY formula parsers: subclasses add tokens and grammar rules, then
+    call `build()`."""
 
     def __init__(self):
         """Initialize logger, token list, and lexer/parser placeholders."""
@@ -128,11 +125,8 @@ class BaseLogicParser:
         self._grouped.mark(p[0])
 
     # --- Prefix scope ---
-    # A prefix (coalition, path quantifier, bound or freeze, with its temporal
-    # operator) whose scope no parenthesis closes is "open": `<1>F p && q` reads as
-    # `(<1>F p) && q` or `<1>F (p && q)`. The rules below record which nodes are
-    # parenthesized, connectives or open, and reject a connective next to an open
-    # prefix, whichever way the grammar's precedence grouped it.
+    # A prefix no parenthesis closes is open (`<1>F p && q` has two readings). These
+    # rules mark nodes and reject a connective next to an open prefix, however grouped.
 
     def _reset_marks(self) -> None:
         self._grouped: NodeMarks[None] = NodeMarks()
@@ -171,10 +165,8 @@ class BaseLogicParser:
             self._open.mark(node, open_right)
 
     def _attachment(self, node, attached) -> None:
-        """Record `node` of a rule `x SEP y` that attaches `y` to `x` and is no
-        connective itself, such as the TCTL/TOL clock constraint `p : x<5`. A
-        connective at the top of `y` still sits next to any prefix over `node`:
-        `AF p : x<5 && q` reads as `(AF p : x<5) && q` or `AF (p : x<5 && q)`."""
+        """Record a rule that attaches a part, such as the clock constraint in
+        `p : x<5`, so that `AF p : x<5 && q` is still rejected as ambiguous."""
         if attached in self._connectives and attached not in self._grouped:
             self._connectives.mark(node, self._connectives.value(attached))
         open_attached = self._open_prefix_of(attached)
@@ -215,12 +207,8 @@ class BaseLogicParser:
         self.errors.append(err_msg)
 
     def build(self, **kwargs):
-        """Build the lexer and parser.
-
-        Reuses existing parser tables when available to avoid regeneration.
-        PLY errorlog is set to NullLogger by default to suppress benign
-        token/grammar warnings (unused tokens, multiply defined, unreachable).
-        """
+        """Build the lexer and parser, reusing the stored tables; PLY's harmless
+        grammar warnings are silenced."""
         parser_file = inspect.getfile(self.__class__)
         parser_dir = os.path.dirname(parser_file)
         generated_dir = os.path.join(parser_dir, "generated")
@@ -259,16 +247,7 @@ class BaseLogicParser:
         self.parser = yacc.yacc(module=self, **parser_kwargs)
 
     def parse(self, formula: str, **kwargs: Any) -> Any:
-        """Parse a formula string into an AST or return None if invalid.
-
-        Args:
-            formula: Formula string to parse.
-            **kwargs: Passed to the PLY parser.
-
-        Returns:
-            AST tuple on success, or None if pre-validation fails, parse fails,
-            or post-validation fails. Specific errors are available in self.errors.
-        """
+        """Parse `formula` into an AST, or return None with reasons in `self.errors`."""
         self.errors = []
         valid, err = self._pre_validation(formula)
         if not valid:

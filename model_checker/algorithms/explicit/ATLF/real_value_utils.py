@@ -30,17 +30,12 @@ def difference_values(states1, states2):
 
 
 def update_values(p, t):
-    """
-    Returns a new list of tuples with the value of t if value_t is bigger than value_p,
-    with the value of p otherwise.
-    """
+    """`p` with each state's value raised to its value in `t` when that is larger."""
     dict_t = _to_dict(t)
     return [(state, max(val_p, dict_t.get(state, val_p))) for state, val_p in p]
 
 
 def first_included_in_second(p, t):
-    """
-    Returns if p is included in t (value-wise: for each state, value_p <= value_t).
-    """
+    """Whether `p` is included in `t`: value_p <= value_t in every state."""
     dict_t = _to_dict(t)
     return all(val_p <= dict_t.get(state, val_p) for state, val_p in p)

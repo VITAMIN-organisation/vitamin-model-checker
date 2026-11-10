@@ -1,10 +1,7 @@
-"""
-Projection from resource-bounded ATL formulas to plain ATL.
+"""Drop the resource bounds of a formula to get plain ATL.
 
-Used by the ATL prefilter to quickly reject formulas that are false even without
-resource constraints.  If the unbounded ATL check already returns False at the
-initial state, no resource allocation can make the formula true, so the expensive
-bounded checker is skipped entirely.
+The ATL prefilter uses it: if the formula is false at the initial state even with
+no bounds, no resource allocation can make it true, so the bounded check is skipped.
 """
 
 import re
@@ -17,10 +14,8 @@ def resource_bounded_atl_to_atl(formula: str) -> str:
 
 
 def wallet_atl_to_atl(formula: str) -> str:
-    """
-    Remove wallet constraints and double angle brackets to produce standard ATL.
-    E.g. ``<< 1, 2 : wallet(1, >= 10) >> F p`` becomes ``<1,2> F p``.
-    """
+    """Drop the wallet constraints to get ATL: ``<< 1, 2 : wallet(1, >= 10) >> F p``
+    becomes ``<1,2> F p``."""
 
     def replacer(match):
         agents_part = match.group(1)

@@ -1,9 +1,5 @@
-"""
-Condition caching for NatATL Recall to avoid redundant CTL model_checking calls.
-
-When the same (condition, model_path) is evaluated in legit_strategy_check and
-boolean_pruning across strategies, the result is cached. Key: (condition, model_path).
-"""
+"""Cache of CTL results for NatATL Recall conditions, keyed by (condition, model_path),
+so `legit_strategy_check` and `boolean_pruning` do not check one twice."""
 
 from typing import Any
 
@@ -15,22 +11,9 @@ def ctl_model_checking_cached(
     model_path: str,
     preloaded_model: Any | None = None,
 ) -> dict[str, Any]:
-    """
-    Run CTL model_checking for a condition with caching.
-
-    Uses (condition, model_path) as cache key. On hit, returns cached result.
-    On miss, calls model_checking, stores and returns.
-
-    Args:
-        condition: CTL condition formula string
-        model_path: Path to model file
-        preloaded_model: Optional CGS to avoid re-reading the file
-
-    Returns:
-        Same dict as CTL model_checking (res, initial_state, etc.)
-    """
+    """CTL `model_checking` of `condition`, cached on `preloaded_model`; without a
+    preloaded model nothing is cached."""
     if not preloaded_model:
-        # Fallback to a global or don't cache if no model object is available
         return model_checking(condition, model_path, preloaded_model=preloaded_model)
 
     if not hasattr(preloaded_model, "_condition_cache"):

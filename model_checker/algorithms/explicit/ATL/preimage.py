@@ -49,11 +49,9 @@ def _split_coalition_and_opponent_moves(
 def build_transition_cache(
     cgs: CGSProtocol, coalition: str | None = None
 ) -> TransitionCache:
-    """Cache outgoing transitions per state for faster pre-image computation.
-
-    Without coalition: state maps to a list of (joint_profile, next_state_index).
-    With coalition: state maps to coalition_move -> [(opponent_move, next_state_index)].
-    """
+    """Each state's outgoing transitions, for the pre-image: a list of
+    (joint_profile, next_state) or, with a coalition, coalition_move ->
+    [(opponent_move, next_state)]."""
     cache: TransitionCache = {}
 
     coalition_context: tuple[set[int], int] | None = None

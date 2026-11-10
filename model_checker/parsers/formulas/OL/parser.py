@@ -1,16 +1,6 @@
-"""OL parser (PLY-based).
+"""OL parser (PLY): demonic cost prefix `<J2>` before U, R, W, G, X and F.
 
-Supported:
-- OL formulas with demonic cost prefixes like `<J1>F p`, `<J2>G p`.
-- Boolean connectives (&&, ||, !, ->) and temporal ops (U, R, W, G, X, F).
-
-Rejects:
-- Numeric-only prefixes (e.g. `<5>F p`) and bare temporal operators (e.g. `F p`).
-- Missing or malformed demonic costs (e.g., `<J>F p`, `<J0>F p`).
-- Empty formulas, non-ASCII, nulls, or disallowed special characters.
-
-Returns:
-- AST tuple on success, or None on invalid input.
+The prefix is required and its cost is at least 1, so `F p` and `<J0>F p` are rejected.
 """
 
 import re
@@ -60,10 +50,7 @@ class DemonicValueError(Exception):
 
 
 class OLParser(BaseLogicParser):
-    """Parser for OL formulas (demonic cost prefixes and temporal ops).
-
-    Use parse(formula) to get an AST tuple or None on invalid input.
-    """
+    """`parse` returns an AST tuple, or None with the reason in `errors`."""
 
     def __init__(self):
         """Initialize the OL lexer and parser (PLY)."""

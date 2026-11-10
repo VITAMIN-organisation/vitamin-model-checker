@@ -1,17 +1,6 @@
-"""RBATL parser (PLY-based).
+"""RBATL parser (PLY): coalition and resource bound `<1,2><5>` before U, G, X and F.
 
-Supported:
-- Resource-bounded ATL with coalition-bound operators like `<1,2><5>F p` and `<1><3>G p`.
-- Boolean connectives (&&, ||, !, ->) and temporal ops (U, G, X, F).
-
-Rejects:
-- Release (R) and Weak Until (W) (solver does not evaluate them).
-- Coalitions missing a bound (e.g., `<1>F p`).
-- Invalid or out-of-range coalition members relative to n_agent.
-- Non-ASCII, null bytes, or disallowed special characters.
-
-Returns:
-- AST tuple on success, or None on invalid input.
+R and W are rejected because the solver does not evaluate them.
 """
 
 import re
@@ -44,11 +33,7 @@ _RBATL_BOUND_PRESENT_RE = re.compile(COALITION_BOUND_TOKEN)
 
 
 class RBATLParser(BaseLogicParser):
-    """Parser for RBATL formulas (coalition-bound operators and temporal ops).
-
-    Use parse(formula) to get an AST tuple or None on invalid input.
-    Set n_agent before parsing for coalition validation.
-    """
+    """`parse` returns an AST tuple, or None with the reason in `errors`."""
 
     def __init__(self):
         """Initialize the RBATL lexer and parser (PLY)."""

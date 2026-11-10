@@ -27,13 +27,13 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',126),
+  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',123),
   ('expression -> NOT expression','expression',2,'p_expression_not','parser.py',170),
   ('expression -> expression AND expression','expression',3,'p_expression_binary','parser.py',179),
   ('expression -> expression OR expression','expression',3,'p_expression_binary','parser.py',180),
   ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','parser.py',181),
-  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',190),
-  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',191),
+  ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',182),
+  ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',183),
   ('expression -> COALITION temporal_body','expression',2,'p_expression_ternary','parser.py',191),
   ('temporal_body -> GLOBALLY expression','temporal_body',2,'p_temporal_body','parser.py',229),
   ('temporal_body -> NEXT expression','temporal_body',2,'p_temporal_body','parser.py',230),

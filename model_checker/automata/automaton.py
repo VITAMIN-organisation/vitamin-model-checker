@@ -26,14 +26,7 @@ class Automaton:
 
     @staticmethod
     def from_ltl(formula: str) -> Automaton:
-        """Build a deterministic, max-odd parity automaton from an LTL formula.
-
-        `change_parity` runs unconditionally (its orientation is rarely
-        already max-odd), a safe no-op otherwise.
-
-        Raises:
-            ImportError: if Spot isn't importable.
-        """
+        """Build a deterministic max-odd parity automaton from an LTL formula."""
         if spot is None:
             raise ImportError(
                 "Spot is required for Automaton.from_ltl() "
@@ -46,14 +39,7 @@ class Automaton:
         return Automaton(graph=graph)
 
     def acceptance_condition(self) -> AcceptanceCondition:
-        """Classify this automaton's acceptance condition.
-
-        `priorities` here is keyed by this automaton's own state numbers
-        `product()` builds its own instead of reusing this one.
-
-        Raises:
-            ValueError: if the acceptance is neither Büchi, co-Büchi, nor parity.
-        """
+        """This automaton's acceptance condition: Büchi, co-Büchi or parity."""
         if spot is None:
             raise ImportError(
                 "Spot is required for Automaton.acceptance_condition() "

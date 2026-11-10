@@ -1,33 +1,19 @@
-"""Adapts a VITAMIN `CGS` (matching `CGSProtocol`) into an `automata.TransitionSystem`.
+"""Turn a VITAMIN CGS into an `automata.TransitionSystem`.
 
-Action cells hold comma-separated joint-action profiles, each either
-`|`-separated (one token per agent) or one character per agent, both
-real formats, per VITAMIN's own `cgs_actions.parse_joint_action_cell`.
-Extra tokens beyond `number_of_agents` are dropped, not an error;
-`"I"`/`"IDLE"` normalize to one canonical idle token.
-
-A wildcard (`"*"`) cell means "self-loop on the source state, for any
-action" (per `cgs_utils.get_edges`/`graph_relations.labeled_pairs`,
-regardless of which column it's in). Materialized as an explicit
-self-loop for every action already used elsewhere in the CGS, added after
-the whole graph is built, and skipped for any action the source already
-has a real destination for. If the whole CGS never defines a single real
-action (every cell is a wildcard), falls back to one synthetic all-"*"
-joint action instead of leaving the state with no transitions at all.
-
-Reads `cgs.graph` via `get_edges()` instead of a raw O(states^2) scan of
-the dense state x state matrix (cached on a real VITAMIN `CGS` until
-`cgs.graph` changes). Since VITAMIN's `get_edges()` collapses a wildcard's
-target to its own source regardless of column, a self-referencing edge is
-ambiguous (genuine diagonal self-loop, a wildcard, or both) and can't be
-trusted from `get_edges()` alone, those states fall back to a full row
-scan; `source != target` edges are read directly (unambiguous).
+- Joint actions: `|`-separated or one character per agent, as in
+  `cgs_actions.parse_joint_action_cell`. Extra tokens are dropped, and `I` and
+  `IDLE` are the same idle action.
+- Wildcard `*`: a self-loop for every action the CGS uses elsewhere, except the
+  actions the state already has. A CGS with only `*` cells gets one all-`*` action.
+- Edges come from `get_edges()` instead of a full matrix scan. Its self-edges can
+  mean a diagonal entry or a wildcard, so those rows are scanned in full.
 """
 
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import cast
 
 from model_checker.automata import TransitionSystem
 from model_checker.parsers.game_structures.cgs.protocols import CGSProtocol
@@ -37,32 +23,30 @@ WILDCARD = "*"
 IDLE_TOKENS = {"I", "IDLE"}
 CANONICAL_IDLE_TOKEN = "IDLE"
 
-# `adapt()` only reads a subset of `CGSProtocol`'s surface (get_edges(),
-# build_action_list(), etc.) — see its own docstring for the exact
-# convention `get_edges()` must follow for wildcard cells.
-
 JointAction = frozenset[tuple[int, str]]
 
 
 @dataclass(frozen=True)
 class AdaptedCGS:
-    """The `TransitionSystem` view of a CGS, plus what `product()` and
-    `concurrent_to_turnbased()` need beyond a bare transition relation."""
+    """A CGS as a `TransitionSystem`, with its labels and players."""
 
     transition_system: TransitionSystem
-    labels: dict[Hashable, frozenset[str]]
+    labels: dict[str, frozenset[str]]
     players: tuple[int, ...]
     propositions: frozenset[str]
 
+    @property
+    def states(self) -> frozenset[str]:
+        return frozenset(cast("set[str]", self.transition_system.states))
+
+    @property
+    def initial_state(self) -> str:
+        (state,) = self.transition_system.initial_states
+        return cast(str, state)
+
 
 def adapt(cgs: CGSProtocol) -> AdaptedCGS:
-    """Build the `TransitionSystem`, per-state AP labels, and player ids for `cgs`.
-
-    Raises:
-        ValueError: a joint-action profile has fewer tokens/characters than
-            `cgs.get_number_of_agents()`, or `cgs.initial_state` doesn't name
-            a real state.
-    """
+    """Build the transition system, labels and players of `cgs`."""
     num_agents = cgs.get_number_of_agents()
     players = tuple(range(1, num_agents + 1))
     state_names = [str(cgs.get_state_name_by_index(i)) for i in range(len(cgs.states))]
@@ -152,8 +136,7 @@ def _normalize_action_token(token: str) -> str:
     return CANONICAL_IDLE_TOKEN if stripped in IDLE_TOKENS else stripped
 
 
-def _labels_of(props: list[object], row: object) -> frozenset[str]:
-    """`props`: `cgs.atomic_propositions`, converted to a list once by the
-    caller, it's identical for every state, so redoing it per state (once
-    was the original shape here) is pure waste at the CGS's own scale."""
+def _labels_of(props: list[object], row: Iterable[object]) -> frozenset[str]:
+    """The propositions whose entry in the 0/1 label `row` is 1; the caller builds
+    `props` once, since it is the same for every state."""
     return frozenset(str(props[i]) for i, value in enumerate(row) if value == 1)

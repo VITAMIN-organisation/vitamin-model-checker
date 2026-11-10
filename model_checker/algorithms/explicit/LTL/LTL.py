@@ -1,10 +1,9 @@
-"""
-LTL model checking with game-theoretic solution concepts.
+"""LTL model checking with game-theoretic solution concepts.
 
-Extends LTL verification with sure-win strategies (coalition can force the
-formula to hold), Nash equilibria, and "win/lose in some Nash" checks.
-Formulas are converted to CTL; strategies are enumerated by complexity and
-the model is pruned under each candidate strategy before verification.
+- Checks sure-win strategies (the coalition can force the formula), Nash
+  equilibria, and "win or lose in some Nash equilibrium".
+- The formula is translated to CTL; strategies are enumerated by complexity, and
+  the model is pruned under each candidate before it is checked.
 """
 
 import logging
@@ -269,12 +268,8 @@ def model_checking_wins_some_nash(
     atomic_propositions: Any,
     target_agent: int,
 ) -> dict[str, Any]:
-    """Test one strategy profile for a single agent.
-
-    Satisfiability is False when the target agent meets the CTL goal on the play
-    from this strategy and no agent can improve by deviating alone (Nash).
-    Otherwise Satisfiability is True.
-    """
+    """Test one strategy profile for one agent: Satisfiability is False if the agent
+    meets the CTL goal and the profile is a Nash equilibrium, else True."""
     result = {}
 
     if pruning(
@@ -307,11 +302,8 @@ def model_checking_lose_some_nash(
     atomic_propositions: Any,
     target_agent: int,
 ) -> dict[str, Any]:
-    """Test one strategy profile for a single agent (lose case).
-
-    Satisfiability is True when the target agent misses the CTL goal and the
-    profile is Nash. Otherwise Satisfiability is False.
-    """
+    """Test one strategy profile for one agent: Satisfiability is True if the agent
+    misses the CTL goal and the profile is a Nash equilibrium, else False."""
     result = {}
 
     if not pruning(
