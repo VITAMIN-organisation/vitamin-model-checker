@@ -966,7 +966,7 @@ Used for CapATL.
 
 ### WalletCGS (CGS with Wallets)
 Used for Wallet_ATL.
-- **Section**: `Wallets` - one line per state, `state: balance1 balance2 ...`.
+- **Section**: `Wallets` - one line per state, `state: balance1 balance2 ...`. Every state needs a row; see [WalletCGS Sections](file_formats.md#walletcgs-sections).
 - Extends standard CGS sections. Actions can encode wallet operations (for example `D20`, `B50`).
 
 ### timedCGS (Timed costCGS)

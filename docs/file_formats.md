@@ -169,7 +169,8 @@ Use this format for CapATL-style capability reasoning.
 ## WalletCGS Sections
 
 `WalletCGS` extends CGS with a `Wallets` section. Each line maps a state to
-one balance per agent:
+one balance per agent. Every state needs a row; a state without one is a load
+error that names it. Example:
 
 ```text
 Wallets

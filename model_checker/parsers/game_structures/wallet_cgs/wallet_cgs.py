@@ -61,6 +61,15 @@ class WalletCGS(CGS):
                         )
                     self.wallets[state] = tuple(wallet_values)
 
+        # AAMAS26b Def. 3.1: W : Q x Ag -> Q+ gives a balance in every state.
+        # Not in validate_model_structure: read_from_model_object loads no wallets.
+        missing = [str(s) for s in self.states if str(s) not in self.wallets]
+        if missing:
+            raise ValueError(
+                f"Wallets has no row for state(s) {', '.join(missing)}; "
+                "every state needs one balance per agent."
+            )
+
     def parse_parameterized_action(self, action_string):
         """(name, value, is_consumption, is_income) of an action token; numbers,
         `I` and any token without a letter-and-amount shape are neutral."""
@@ -91,7 +100,7 @@ class WalletCGS(CGS):
         if not is_consumption:
             return True, "Income or neutral action - always feasible"
 
-        wallet = self.wallets.get(state, (0,) * self.get_number_of_agents())[agent - 1]
+        wallet = self.wallets[state][agent - 1]
         if wallet >= parameter:
             return True, "Sufficient funds"
         action_desc = self.get_action_description(action_name)
@@ -213,7 +222,7 @@ class WalletCGS(CGS):
 
     def check_wallet_constraint(self, state, agent, constraint):
         """Check if wallet satisfies a constraint"""
-        wallets = self.wallets.get(state, (0,) * self.get_number_of_agents())
+        wallets = self.wallets[state]
         agent_index = agent - 1
 
         if agent_index < 0 or agent_index >= len(wallets):
@@ -244,9 +253,7 @@ class WalletCGS(CGS):
     def simulate_transition(self, current_state, actions):
         """Simulate a transition and return the new wallets, keeping the total balance.
         For external callers; Wallet_ATL itself does not use it."""
-        current_wallets = list(
-            self.wallets.get(current_state, (0,) * self.get_number_of_agents())
-        )
+        current_wallets = list(self.wallets[current_state])
         contract_agent = self._contract_agent()
         system_index = contract_agent - 1 if contract_agent else None
 

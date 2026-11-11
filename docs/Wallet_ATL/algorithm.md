@@ -72,9 +72,12 @@ for at that state, model checking stops with an error naming the state: a game
 structure gives each agent at least one move per state (JACM 2002 Def. 2.1).
 
 Balances come from the `Wallets` section, one row per state, and are not
-recomputed along transitions. A wallet guard (`wallet(agent, op value)`, see
-[Formula language](#formula-language)) is checked at the state where a coalition
-move starts; [Operators](#operators) says where each operator checks it.
+recomputed along transitions. A state with no row is a load error that names
+it, because the paper's wallet function assigns "each agent a non-negative
+balance in every state" (Def. 3.1, p. 3). A wallet guard
+(`wallet(agent, op value)`, see [Formula language](#formula-language)) is
+checked at the state where a coalition move starts; [Operators](#operators)
+says where each operator checks it.
 
 ### Operators
 

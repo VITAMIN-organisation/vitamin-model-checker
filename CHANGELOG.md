@@ -25,6 +25,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: a WalletCGS file needs a `Wallets` row for every state. Before, a state
+  with no row loaded and was read as holding 0 for every agent; loading now fails
+  with `Wallets has no row for state(s) s1; ...`, since the Wallet ATL paper
+  (AAMAS 2026, Def. 3.1) gives every agent a balance in every state. To keep the
+  old result, add a row of zeros for that state.
 - Breaking: every logic spells the connectives `&&`, `||`, `!`, `->` or the words
   `and`, `or`, `not`, `implies`. A single `&` or `|`, and `>` as implication, are
   rejected with an "Invalid character" error. Before, ATL*, TCTL and TOL took `&`
