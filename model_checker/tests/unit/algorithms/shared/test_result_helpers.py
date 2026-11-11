@@ -102,16 +102,30 @@ def test_unresolved_leaf_error_names_the_cause(leaves, message):
 
 @pytest.mark.unit
 def test_trace_dict_is_the_shape_callers_read():
-    """CTL returns this dict as `trace`; the Workbench reads states, type, description and length."""
+    """CTL returns this dict as `trace`; the Workbench reads states, type, description and cycle_start_index."""
     trace = StateTrace(
-        states=["s0", "s1"], trace_type="counterexample", description="Violation found"
+        states=["s0", "s1"],
+        trace_type="counterexample",
+        description="Violation found",
+        cycle_start_index=1,
     )
     assert trace.to_dict() == {
         "states": ["s0", "s1"],
         "type": "counterexample",
         "description": "Violation found",
         "length": 2,
+        "cycle_start_index": 1,
     }
+    assert str(trace).startswith("Counterexample: s0 -> s1 -> (back to s1)")
+    path = StateTrace(states=["s0", "s1"], trace_type="witness")
+    assert path.to_dict()["cycle_start_index"] is None
+
+
+@pytest.mark.unit
+def test_lasso_must_loop_back_to_one_of_its_states():
+    """A trace of two states has indices 0 and 1, so index 2 is refused by name."""
+    with pytest.raises(ValueError, match="cycle_start_index 2 is outside the 2 states"):
+        StateTrace(states=["s0", "s1"], trace_type="witness", cycle_start_index=2)
 
 
 @pytest.mark.unit

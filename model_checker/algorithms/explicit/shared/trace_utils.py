@@ -1,4 +1,4 @@
-"""Build witness and counterexample paths from predecessor maps."""
+"""Build witness and counterexample paths and lassos from an edge list."""
 
 from collections import deque
 
@@ -15,45 +15,10 @@ def _build_adjacency(edges: list[tuple[str, str]]) -> dict[str, list[str]]:
     return adjacency
 
 
-def reconstruct_trace_from_predecessors(
-    initial_state: str,
-    target_states: set[str],
-    predecessors: dict[str, str],
-    max_length: int = MAX_TRACE_LENGTH,
-) -> list[str] | None:
-    """Walk backward from a target state to the initial state using predecessors."""
-    if not target_states:
-        return None
-
-    if initial_state in target_states:
-        return [initial_state]
-
-    for target in target_states:
-        current = target
-        path = [current]
-        visited = {current}
-
-        while current != initial_state and len(path) < max_length:
-            if current not in predecessors:
-                break
-            current = predecessors[current]
-            if current in visited:
-                break
-            path.append(current)
-            visited.add(current)
-
-        if current == initial_state:
-            path.reverse()
-            return path
-
-    return None
-
-
 def reconstruct_trace_bfs(
     edges: list[tuple[str, str]],
     initial_state: str,
     target_states: set[str],
-    max_length: int = MAX_TRACE_LENGTH,
 ) -> list[str] | None:
     """Shortest path from the initial state to any target, using forward BFS."""
     if not target_states:
@@ -69,7 +34,7 @@ def reconstruct_trace_bfs(
     while queue:
         current, path = queue.popleft()
 
-        if len(path) > max_length:
+        if len(path) > MAX_TRACE_LENGTH:
             continue
 
         if current in target_states:
@@ -83,27 +48,36 @@ def reconstruct_trace_bfs(
     return None
 
 
-def build_predecessor_map_bfs(
-    edges: list[tuple[str, str]], target_states: set[str]
-) -> dict[str, str]:
-    """Map each state to one predecessor, searching backward from targets."""
-    reverse_adj: dict[str, list[str]] = {}
-    for source, target in edges:
-        reverse_adj.setdefault(target, []).append(source)
+def find_lasso(
+    edges: list[tuple[str, str]],
+    start: str,
+    allowed: set[str],
+) -> tuple[list[str], int] | None:
+    """A lasso from start inside allowed: its states, each once, and the index the last one steps back to.
 
-    predecessors: dict[str, str] = {}
-    queue = deque(target_states)
-    visited = set(target_states)
+    The walk takes the first successor in allowed at each step. None when start
+    is outside allowed, when the walk reaches a state with no successor in
+    allowed, or when it passes MAX_TRACE_LENGTH states.
+    """
+    if start not in allowed:
+        return None
 
-    while queue:
-        current = queue.popleft()
-        for predecessor in reverse_adj.get(current, []):
-            if predecessor not in visited:
-                visited.add(predecessor)
-                predecessors[predecessor] = current
-                queue.append(predecessor)
+    adjacency = _build_adjacency(edges)
+    path = [start]
+    index_of = {start: 0}
 
-    return predecessors
+    while len(path) <= MAX_TRACE_LENGTH:
+        successor = next(
+            (state for state in adjacency.get(path[-1], []) if state in allowed), None
+        )
+        if successor is None:
+            return None
+        if successor in index_of:
+            return path, index_of[successor]
+        index_of[successor] = len(path)
+        path.append(successor)
+
+    return None
 
 
 def reverse_adjacency(graph: dict, nodes: set | None = None) -> dict:
@@ -174,50 +148,6 @@ def collect_backward_paths(
     for start in starts:
         dfs(start, [])
     return paths
-
-
-def build_predecessor_map_forward(
-    edges: list[tuple[str, str]], initial_state: str
-) -> dict[str, str]:
-    """Map each reachable state to the predecessor found by forward BFS."""
-    adjacency = _build_adjacency(edges)
-    predecessors: dict[str, str] = {}
-    queue = deque([initial_state])
-    visited = {initial_state}
-
-    while queue:
-        current = queue.popleft()
-        for successor in adjacency.get(current, []):
-            if successor not in visited:
-                visited.add(successor)
-                predecessors[successor] = current
-                queue.append(successor)
-
-    return predecessors
-
-
-def extract_shortest_trace(
-    initial_state: str,
-    target_states: set[str],
-    all_states: set[str],
-    edges: list[tuple[str, str]],
-    max_length: int = MAX_TRACE_LENGTH,
-) -> list[str] | None:
-    """Shortest path to a valid target state, or None if there is no path."""
-    # Validate inputs
-    if initial_state not in all_states:
-        return None
-
-    if not target_states:
-        return None
-
-    # Filter target states to only valid ones
-    valid_targets = target_states.intersection(all_states)
-    if not valid_targets:
-        return None
-
-    # Use BFS to find shortest path
-    return reconstruct_trace_bfs(edges, initial_state, valid_targets, max_length)
 
 
 def format_trace_with_properties(

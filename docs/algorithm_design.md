@@ -16,7 +16,6 @@ structures, caches, cleanup, and search strategies.
 | Zone graph | `TCTL`, `TOL` | `timed_cgs/zone_graph.py` |
 | Obstruction filter (`triangle`) | `TOL` | `TOL/preimage.py` |
 | Strategy pruning + condition cache | `LTL`, `NatATL`, `NatSL` | `LTL/pruning.py`, `NatATL/*/pruning*.py`, `condition_cache.py` |
-| CTL edge list reuse | `CTL` (trace path) | `CTL/operators_with_trace.py` |
 | Performance regression tests | `ATL`, `CTL`, `OATL`, ... | `tests/performance/` |
 
 ## Transition Move Cache
@@ -170,18 +169,6 @@ re-running CTL on identical conditions is redundant.
 - NatSL: uses its shared bounded-strategy core with exact action pruning; inadmissible strategies are rejected instead of receiving an implicit idle-action fallback.
 
 **Advantage:** Cuts repeated CTL checks inside strategy enumeration.
-
-## CTL Trace Edge Reuse
-
-**What:** Trace-enabled CTL handlers take a cached edge list and build
-predecessor maps for witness / counterexample reconstruction.
-
-**Why:** Trace construction needs the same edge relation as labelling; listing
-edges once avoids repeated `get_edges()` work during fixpoints with traces.
-
-**How:** `CTL/operators_with_trace.py` with `cached_edges`.
-
-**Advantage:** Shared edge view for both labelling and path reconstruction.
 
 ## Performance Regression Tests
 

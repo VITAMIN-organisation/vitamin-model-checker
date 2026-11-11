@@ -12,16 +12,28 @@ class TraceType(StrEnum):
 
 @dataclass
 class StateTrace:
-    """A path through the model (witness or counterexample)."""
+    """A path through the model (witness or counterexample).
+
+    A lasso lists each state once: after the last state the path steps back to
+    ``states[cycle_start_index]`` and repeats from there forever.
+    """
 
     states: list[str]
     trace_type: TraceType  # "witness" or "counterexample"
     description: str = ""
+    cycle_start_index: int | None = None
 
     def __post_init__(self) -> None:
         # Allow callers to pass either a TraceType or matching string literal.
         if not isinstance(self.trace_type, TraceType):
             self.trace_type = TraceType(self.trace_type)
+        if self.cycle_start_index is not None and not (
+            0 <= self.cycle_start_index < len(self.states)
+        ):
+            raise ValueError(
+                f"cycle_start_index {self.cycle_start_index} is outside the "
+                f"{len(self.states)} states of the trace"
+            )
 
     def __str__(self) -> str:
         """Format trace for human-readable output."""
@@ -29,6 +41,8 @@ class StateTrace:
             return f"{self.trace_type.capitalize()}: (empty trace)"
 
         trace_str = " -> ".join(self.states)
+        if self.cycle_start_index is not None:
+            trace_str += f" -> (back to {self.states[self.cycle_start_index]})"
         result = f"{self.trace_type.capitalize()}: {trace_str}"
         if self.description:
             result += f"\n  Description: {self.description}"
@@ -41,6 +55,7 @@ class StateTrace:
             "type": self.trace_type,
             "description": self.description,
             "length": len(self.states),
+            "cycle_start_index": self.cycle_start_index,
         }
 
 
@@ -88,9 +103,13 @@ class VerificationResult:
     strategy: StrategyTrace | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    def _res_line(self) -> str:
+        """The states as a sorted tuple, the form the CTL result without a trace prints."""
+        return f"Result: {tuple(sorted(self.states))}"
+
     def __str__(self) -> str:
         """Format result for human-readable output."""
-        result = f"Result: {self.states}\n"
+        result = f"{self._res_line()}\n"
         result += f"Initial state {self.initial_state}: {self.satisfied}"
 
         if self.trace:
@@ -109,7 +128,7 @@ class VerificationResult:
     def to_dict(self) -> dict[str, Any]:
         """The result as an API dict, with optional trace and strategy fields."""
         return {
-            "res": f"Result: {self.states}",
+            "res": self._res_line(),
             "initial_state": f"Initial state {self.initial_state}: {self.satisfied}",
             "satisfied": self.satisfied,
             "states": sorted(self.states),
@@ -121,6 +140,6 @@ class VerificationResult:
     def to_compact_dict(self) -> dict[str, str]:
         """The result with only its 'res' and 'initial_state' fields."""
         return {
-            "res": f"Result: {self.states}",
+            "res": self._res_line(),
             "initial_state": f"Initial state {self.initial_state}: {self.satisfied}",
         }

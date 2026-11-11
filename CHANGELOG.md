@@ -30,6 +30,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   with `Wallets has no row for state(s) s1; ...`, since the Wallet ATL paper
   (AAMAS 2026, Def. 3.1) gives every agent a balance in every state. To keep the
   old result, add a row of zeros for that state.
+- Breaking: CTL with `generate_trace=True` always returns the full result (`res`,
+  `initial_state`, `satisfied`, `states`, `trace`, `strategy`, `metadata`), and
+  `trace` is `None` when the outermost operator is a false E-operator (`EX`, `EF`,
+  `EG`, `EU`), a true A-operator (`AX`, `AF`, `AG`, `AU`), a boolean connective or
+  an atom. Before, every formula got a trace, so code that reads
+  `result["trace"]["states"]` must now handle `None`. See "Traces" in
+  `docs/CTL/algorithm.md`.
 - Breaking: every logic spells the connectives `&&`, `||`, `!`, `->` or the words
   `and`, `or`, `not`, `implies`. A single `&` or `|`, and `>` as implication, are
   rejected with an "Invalid character" error. Before, ATL*, TCTL and TOL took `&`
@@ -219,6 +226,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The PyPI package includes `model_checker/knowledge/knowledge_bundle.json.gz`,
   rebuilt from the current docs and source. Earlier releases left it out, so an
   installed package had no documentation bundle.
+- CTL traces (`generate_trace=True`) were always the initial state alone, for
+  every formula. A true `EX`, `EF` or `EU` now gives a witness path to a state
+  that satisfies the operand, and a true `EG` a witness lasso. A false `AX` or
+  `AG` gives a counterexample path to a state that violates the operand, a false
+  `AF` a counterexample lasso (a path that ends in a loop), and a false `AU` a
+  path or a lasso. A lasso lists each state once in `trace["states"]`, and the new
+  key `trace["cycle_start_index"]` is the index its last state steps back to; it
+  is `None` for a path.
+- CTL with `generate_trace=True` printed `res` as an unordered set
+  (`Result: {'s3', 's0'}`). It is now the sorted tuple that the result without a
+  trace prints (`Result: ('s0', 's3')`).
 
 ### Removed
 
@@ -231,6 +249,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   feasibility use `check_action_feasibility` and `is_profile_feasible`. Nothing
   replaces the next-state and balance-update helpers: balances are not updated
   along transitions (see `docs/Wallet_ATL/algorithm.md`).
+- Breaking: the helpers that only the old CTL traces used. From
+  `algorithms.explicit.shared`: `reconstruct_trace_from_predecessors`,
+  `build_predecessor_map_bfs`, `build_predecessor_map_forward`,
+  `extract_shortest_trace` and `least_fixpoint_with_trace`. From
+  `algorithms.explicit.CTL`: the module `operators_with_trace`,
+  `preimage.pre_image_exist_with_trace`, `solver.solve_tree_with_trace` and
+  `solver.extract_trace_for_result`. Also the `max_length` parameter of
+  `reconstruct_trace_bfs`; the limit is `MAX_TRACE_LENGTH`. `solver.solve_tree`
+  labels the tree, and
+  `traces.build_trace` builds the trace with `reconstruct_trace_bfs` and
+  `find_lasso` from `shared.trace_utils`.
 
 ## [1.7.0] - 2026-11-05
 

@@ -96,72 +96,12 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/CTL/CTL.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 52,
-                    "endColumn": 62,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportOptionalMemberAccess",
-                "range": {
-                    "startColumn": 60,
-                    "endColumn": 65,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportOptionalMemberAccess",
-                "range": {
-                    "startColumn": 22,
-                    "endColumn": 27,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportOptionalMemberAccess",
-                "range": {
-                    "startColumn": 48,
-                    "endColumn": 53,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportOptionalMemberAccess",
-                "range": {
-                    "startColumn": 35,
-                    "endColumn": 40,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/algorithms/explicit/CTL/operators.py": [
             {
                 "code": "reportArgumentType",
                 "range": {
                     "startColumn": 61,
                     "endColumn": 71,
-                    "lineCount": 1
-                }
-            }
-        ],
-        "./model_checker/algorithms/explicit/CTL/solver.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 46,
-                    "endColumn": 56,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 46,
-                    "endColumn": 56,
                     "lineCount": 1
                 }
             }

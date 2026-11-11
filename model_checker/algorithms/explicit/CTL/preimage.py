@@ -1,4 +1,4 @@
-"""Pre-image computation for CTL (EX, AX, Release) and predecessor tracking for traces."""
+"""Pre-image computation for CTL (EX, AX, Release)."""
 
 from typing import Any
 
@@ -109,22 +109,3 @@ def pre_release_universal(
         result = new_result
 
     return result
-
-
-def pre_image_exist_with_trace(
-    transitions: list[tuple[Any, Any]],
-    target_states: set[str],
-) -> tuple[set[str], dict[str, str]]:
-    """Existential pre-image plus a predecessor-to-successor map for trace building."""
-    target_states = {str(s) for s in target_states}
-    reverse_index = _build_reverse_index(transitions)
-    predecessors = set()
-    predecessors_map: dict[str, str] = {}
-    for state in target_states:
-        state_str = str(state)
-        if state_str in reverse_index:
-            for pred in reverse_index[state_str]:
-                predecessors.add(pred)
-                if pred not in predecessors_map:
-                    predecessors_map[pred] = state_str
-    return predecessors, predecessors_map

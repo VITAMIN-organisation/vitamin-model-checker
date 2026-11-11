@@ -15,12 +15,8 @@ from model_checker.algorithms.explicit.shared.state_utils import (
     state_names_to_indices,
 )
 from model_checker.algorithms.explicit.shared.trace_utils import (
-    build_predecessor_map_bfs,
-    build_predecessor_map_forward,
-    extract_shortest_trace,
     format_trace_with_properties,
     reconstruct_trace_bfs,
-    reconstruct_trace_from_predecessors,
 )
 from model_checker.algorithms.explicit.shared.verification_builders import (
     create_verification_result,
@@ -49,10 +45,6 @@ __all__ = [
     "StateTrace",
     "StrategyTrace",
     # Trace utilities
-    "reconstruct_trace_from_predecessors",
     "reconstruct_trace_bfs",
-    "build_predecessor_map_bfs",
-    "build_predecessor_map_forward",
-    "extract_shortest_trace",
     "format_trace_with_properties",
 ]

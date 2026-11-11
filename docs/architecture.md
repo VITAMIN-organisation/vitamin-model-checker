@@ -140,26 +140,30 @@ flowchart TB
 
 ## Trace Flow
 
-Some logics can return witness or counterexample traces. CTL has the most
-complete trace coverage today.
+CTL is the only logic with a `generate_trace` option. It returns a witness or a
+counterexample for the outermost operator of the formula, or no trace; see
+[Traces](CTL/algorithm.md#traces) for the cases.
 
 ```mermaid
 flowchart TD
     evaluate["Algorithm evaluates formula"]
-    predecessors["Track predecessors"]
     fixpoint["Run fixpoint or search"]
     satisfied["Check initial state"]
     witness["Build witness"]
     counterexample["Build counterexample"]
+    none["No trace"]
     trace["VerificationResult / trace data"]
 
-    evaluate --> predecessors --> fixpoint --> satisfied
+    evaluate --> fixpoint --> satisfied
     satisfied --> witness --> trace
     satisfied --> counterexample --> trace
+    satisfied --> none --> trace
 ```
 
-Trace helpers live in `model_checker/shared/`. Keep trace construction in shared
-helpers when several logics can reuse the same path reconstruction behavior.
+Path and lasso helpers live in
+`model_checker/algorithms/explicit/shared/trace_utils.py`. Keep trace
+construction in shared helpers when several logics can reuse the same path
+reconstruction behavior.
 
 ## Adding Logic
 

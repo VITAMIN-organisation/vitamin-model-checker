@@ -203,11 +203,11 @@ CTL is a branching-time logic defined over computation trees. Formulas are evalu
 - `EF p`: Eventually p (reachability).
 - `AG (p -> AF q)`: Always if p, then eventually q on all paths (liveness/response).
 
-**Traces (optional):** When `generate_trace=True`, the returned path is a
-**reachability path into or out of the denotation** of the root formula. It is
-**not** a full CTL path witness/counterexample (for example it need not exhibit
-a violating suffix for `AG`, nor a lassopath for `EG`/`AF`). Treat traces as
-debugging hints only; trust the satisfying state set for semantics.
+**Traces (optional):** With `generate_trace=True` the result has a `trace` for
+the outermost operator of the formula at the initial state: a witness when an
+operator that starts with `E` holds, a counterexample when one that starts with
+`A` fails, and `None` otherwise. See [Traces](CTL/algorithm.md#traces) for each
+case.
 
 ### Current Implementation
 
@@ -218,8 +218,8 @@ debugging hints only; trust the satisfying state set for semantics.
 **Implemented Logic Support:**
 - Path quantifiers `E` / `A` with temporal operators `X`, `F`, `G`, and `U`.
 - Boolean connectives shared with the common formula syntax.
-- Optional traces (`generate_trace=True`) are reachability hints into or out of
-  the denotation, not full CTL path witnesses.
+- Optional traces (`generate_trace=True`): a witness or a counterexample for the
+  outermost operator, as described under "Traces (optional)" above.
 
 See [CTL algorithm reference](CTL/algorithm.md) for denotations and operators.
 

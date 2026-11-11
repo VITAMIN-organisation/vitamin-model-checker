@@ -57,11 +57,11 @@ def handle_ef(cgs: "CGS", node: Any) -> None:
     node.value = str(tuple(sorted({str(s) for s in result})))
 
 
-def _compute_af(cgs: "CGS", node: Any, cached_edges=None) -> set[str]:
-    """Compute AF phi = all_states - EG not_phi. Returns the state set."""
+def handle_af(cgs: "CGS", node: Any) -> None:
+    """Handle AF operator (AF phi = all_states - EG not_phi): all paths eventually reach phi."""
     all_states = cgs.all_states_set
     not_phi = all_states - parse_state_set_literal(node.left.value)
-    edges = cached_edges if cached_edges is not None else cgs.get_edges()
+    edges = cgs.get_edges()
     reverse_index = (
         cgs.get_reverse_index() if hasattr(cgs, "get_reverse_index") else None
     )
@@ -72,19 +72,14 @@ def _compute_af(cgs: "CGS", node: Any, cached_edges=None) -> set[str]:
         )
 
     eg_not_phi = greatest_fixpoint(all_states.copy(), update)
-    return all_states - eg_not_phi
+    node.value = str(tuple(sorted({str(s) for s in all_states - eg_not_phi})))
 
 
-def handle_af(cgs: "CGS", node: Any) -> None:
-    """Handle AF operator: all paths eventually reach phi."""
-    node.value = str(tuple(sorted({str(s) for s in _compute_af(cgs, node)})))
-
-
-def _compute_eg(cgs: "CGS", node: Any, cached_edges=None) -> set[str]:
-    """Compute EG phi. Returns the state set."""
+def handle_eg(cgs: "CGS", node: Any) -> None:
+    """Handle EG operator: there exists a path where phi holds globally."""
     all_states = cgs.all_states_set
     target = parse_state_set_literal(node.left.value)
-    edges = cached_edges if cached_edges is not None else cgs.get_edges()
+    edges = cgs.get_edges()
     reverse_index = (
         cgs.get_reverse_index() if hasattr(cgs, "get_reverse_index") else None
     )
@@ -94,12 +89,8 @@ def _compute_eg(cgs: "CGS", node: Any, cached_edges=None) -> set[str]:
             pre_image_exist(edges, T, reverse_index=reverse_index)
         )
 
-    return greatest_fixpoint(all_states.copy(), update)
-
-
-def handle_eg(cgs: "CGS", node: Any) -> None:
-    """Handle EG operator: there exists a path where phi holds globally."""
-    node.value = str(tuple(sorted({str(s) for s in _compute_eg(cgs, node)})))
+    result = greatest_fixpoint(all_states.copy(), update)
+    node.value = str(tuple(sorted({str(s) for s in result})))
 
 
 def handle_ag(cgs: "CGS", node: Any) -> None:
@@ -143,12 +134,12 @@ def handle_eu(cgs: "CGS", node: Any) -> None:
     node.value = str(tuple(sorted({str(s) for s in result})))
 
 
-def _compute_au(cgs: "CGS", node: Any, cached_edges=None) -> set[str]:
+def _compute_au(cgs: "CGS", node: Any) -> set[str]:
     """Compute A(phi U psi) = mu Y. psi or (phi and AX Y). Returns the state set."""
     phi_states = {str(s) for s in parse_state_set_literal(node.left.value)}
     psi_states = parse_state_set_literal(node.right.value)
     all_states = cgs.all_states_set
-    edges = cached_edges if cached_edges is not None else cgs.get_edges()
+    edges = cgs.get_edges()
 
     def update(T: set[str]) -> set[str]:
         return T.union(phi_states.intersection(pre_image_all(edges, all_states, T)))
