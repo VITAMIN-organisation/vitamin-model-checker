@@ -62,7 +62,7 @@ to locate:
 14. [IATL](#iatl---intuitionistic-atl)
 15. [TCTL](#tctl---timed-ctl)
 16. [TOL](#tol---timed-obstruction-logic)
-17. [Empty Coalition Policy](#empty-coalition-policy)
+17. [Empty and Repeated Coalition Policy](#empty-coalition-policy)
 18. [Atomic Proposition Policy](#atomic-proposition-policy)
 19. [Model Syntax](#model-syntax)
 
@@ -813,7 +813,7 @@ same way.
 ---
 
 <a id="empty-coalition-policy"></a>
-## Empty Coalition Policy
+## Empty and Repeated Coalition Policy
 
 VITAMIN does **not** support an empty strategic coalition written as `<>`. In ATL literature an empty coalition can be related to opponent-only or path-level reasoning; in this implementation that overlaps CTL existential quantification (`E`, `EF`, ...) without making the logic explicit.
 
@@ -843,6 +843,8 @@ VITAMIN does **not** support an empty strategic coalition written as `<>`. In AT
 | OL | `<J5>` (cost, not agents) | N/A |
 | Wallet_ATL | `<<1>>` | `<<>>` invalid (lexer) |
 | CTL / LTL | `E` / `A` or none | `<> ` invalid syntax |
+
+VITAMIN also rejects a coalition that lists an agent twice, because a coalition is a set of agents (ATL, JACM 2002 p. 685, rule S3: A "is a set of players"). This holds in every logic whose coalition lists agents, including IATL's `[A]` and COTL's list of demons (its legion). For example, `<1,1> F p` in ATL and `<{2,1,2}> F p` in CapATL are errors that name the repeated agent.
 
 ---
 

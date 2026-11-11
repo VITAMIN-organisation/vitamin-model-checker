@@ -6,6 +6,8 @@ agent. COTL's legion may be empty (the coalition with no demons), so COTL is lef
 out of the empty case.
 """
 
+import re
+
 import pytest
 
 from model_checker.tests.helpers.formula_cases import parse, parse_errors
@@ -66,6 +68,24 @@ def test_agent_outside_the_model_is_rejected_by_number(logic, agent):
 
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", sorted(_COALITION))
+@pytest.mark.parametrize(
+    ("agents", "repeated"),
+    [
+        ("1,1", "1"),  # agent 1 listed twice in a row
+        ("2,1,2", "2"),  # agent 2 listed again after another agent
+    ],
+)
+def test_agent_listed_twice_is_rejected_by_number(logic, agents, repeated):
+    """A coalition is a set of agents (docs/logic_knowledge_base.md, "Empty and
+    Repeated Coalition Policy"), so no agent is listed twice; the error names the
+    repeated agent."""
+    [error, *_] = parse_errors(logic, _formula(logic, agents))
+    # ATL* says "agent id", COTL calls its agents demons.
+    assert re.search(rf"Duplicate (agent( id)?|demon) {repeated}\b", error), error
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("logic", sorted(_COALITION))
 def test_model_with_no_agents_accepts_no_coalition(logic):
     """With n_agent = 0 even agent 1 is out of range."""
     assert parse(logic, _formula(logic, "1"), n_agent=0) is None
@@ -77,6 +97,7 @@ def test_iatl_box_coalition_is_checked_like_the_diamond():
     assert parse("IATL", "[1,2]G p") is not None
     assert parse("IATL", "[3]G p") is None
     assert parse("IATL", "[]G p") is None
+    assert parse("IATL", "[1,1]G p") is None
 
 
 @pytest.mark.unit

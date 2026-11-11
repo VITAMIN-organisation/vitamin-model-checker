@@ -12,9 +12,9 @@ from model_checker.parsers.syntax_patterns import COTL_LEGION_BUDGET_TOKEN
 from ..parser_utils import (
     BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
-    CoalitionValueError,
     run_common_prechecks,
     until_operands,
+    validate_agents,
     validate_ast,
 )
 from ..shared_parser import BaseLogicParser
@@ -108,14 +108,7 @@ class COTLParser(BaseLogicParser):
 
     def _check_legion(self, token: str) -> None:
         legion, _ = parse_legion_budget(token)
-        for demon in legion:
-            if not 1 <= demon <= self.number_of_demons:
-                raise CoalitionValueError(
-                    f"Demon {demon} in '{token}' is not between 1 and "
-                    f"{self.number_of_demons}"
-                )
-        if len(set(legion)) != len(legion):
-            raise CoalitionValueError(f"Demon listed twice in '{token}'")
+        validate_agents(list(legion), self.number_of_demons, member="demon")
 
     def parse(self, formula, n_agent=0, **kwargs):
         """`n_agent` is the number of demons in the model."""

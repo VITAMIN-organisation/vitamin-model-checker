@@ -250,6 +250,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   letters, digits or `_`, and no reserved word. `true` and `false` are the
   constants, as in every other logic: `E{1}x: (x, 1) F true` holds and `F false`
   does not. Before, the checker reported them as unknown propositions.
+- ATL, ATLF, IATL, CapATL, OATL, RBATL, RABATL, NatATL, NatATL_Recall,
+  NatATLF and Wallet_ATL accepted a coalition that lists an agent twice
+  (`<1,1>F p`, `<<2,1,2>>F p`). It is now an error that names the agent
+  (`Duplicate agent 2 in coalition`); ATL* and COTL already rejected it.
+- COTL's legion errors use the same wording as the other logics, with `demon`
+  for the repeat: `Duplicate demon 2 in coalition` and `Invalid coalition value
+  3: must be between 1 and 2`.
 
 ### Removed
 

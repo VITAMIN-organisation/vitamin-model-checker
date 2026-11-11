@@ -5,6 +5,7 @@ import re
 from model_checker.parsers.formulas.parser_utils import (
     normalize_formula_text,
     run_common_prechecks,
+    validate_agents,
     validate_ast,
     validate_proposition_identifier,
 )
@@ -190,12 +191,7 @@ class Wallet_ATLParser(BaseLogicParser):
     def p_expression_ternary(self, p):
         """expression : COALITION temporal_body"""
         coalition_info = p[1]
-        max_coalition = self.MAX_COALITION
-        for agent in coalition_info["agents"]:
-            if agent < 1 or agent > max_coalition:
-                raise ValueError(
-                    f"Invalid coalition value {agent}: must be between 1 and {max_coalition}"
-                )
+        validate_agents(coalition_info["agents"], self.MAX_COALITION)
         for constraint in coalition_info["constraints"]:
             agent = constraint["agent"]
             # AAMAS26b's syntax ranges guards over all agents but Def. 4.5 only

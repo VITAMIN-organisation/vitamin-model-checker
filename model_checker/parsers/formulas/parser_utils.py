@@ -210,9 +210,27 @@ def validate_ctl_path_quantifiers(formula: str) -> tuple[bool, str | None]:
     return True, None
 
 
+def validate_agents(
+    agents: list[int], max_coalition: int, member: str = "agent"
+) -> None:
+    """Raise CoalitionValueError unless each agent is between 1 and `max_coalition`
+    and listed once: a coalition is a set of agents (ATL, JACM 2002 p. 685).
+    `member` names the agents in the duplicate message (COTL's are demons)."""
+    limit = int(max_coalition)
+    seen: set[int] = set()
+    for agent in agents:
+        if agent <= 0 or agent > limit:
+            raise CoalitionValueError(
+                f"Invalid coalition value {agent}: must be between 1 and {max_coalition}"
+            )
+        if agent in seen:
+            raise CoalitionValueError(f"Duplicate {member} {agent} in coalition")
+        seen.add(agent)
+
+
 def validate_coalition(coalition_str: str, max_coalition: int) -> None:
-    """Raise CoalitionValueError unless each agent of a coalition such as `<1,2,3>` is
-    between 1 and `max_coalition`."""
+    """Raise CoalitionValueError unless a coalition such as `<1,2,3>` passes
+    `validate_agents`."""
     if coalition_str == "<>" or EMPTY_COALITION_RE.fullmatch(coalition_str):
         raise CoalitionValueError("Empty coalition '<>' is not allowed")
     if coalition_str.endswith(",>"):
@@ -222,12 +240,7 @@ def validate_coalition(coalition_str: str, max_coalition: int) -> None:
     if not coalition_values:
         raise CoalitionValueError("Empty coalition not allowed")
 
-    for value in coalition_values:
-        agent_num = int(value)
-        if agent_num <= 0 or agent_num > int(max_coalition):
-            raise CoalitionValueError(
-                f"Invalid coalition value {value}: must be between 1 and {max_coalition}"
-            )
+    validate_agents([int(value) for value in coalition_values], max_coalition)
 
 
 def validate_coalition_pattern(coalition_str, pattern, max_coalition):
@@ -287,21 +300,10 @@ def validate_natatl_coalition(
 
     if int(k_value) < 1:
         raise CoalitionValueError(f"Invalid bound {k_value}: must be at least 1")
-    if not coalition_values or coalition_values.strip() == "":
-        raise CoalitionValueError("Empty coalition not allowed")
-    if coalition_values.endswith(","):
-        raise CoalitionValueError("Trailing comma in coalition not allowed")
-
-    agent_list = [v.strip() for v in coalition_values.split(",") if v.strip()]
-    if not agent_list:
-        raise CoalitionValueError("Empty coalition not allowed")
-
-    for value in agent_list:
-        agent_num = int(value)
-        if agent_num <= 0 or agent_num > int(max_coalition):
-            raise CoalitionValueError(
-                f"Invalid coalition value {value}: must be between 1 and {max_coalition}"
-            )
+    # AGENT_LIST in the regex already rules out an empty list and a trailing comma.
+    validate_agents(
+        [int(value) for value in coalition_values.split(",")], max_coalition
+    )
 
     return coalition_values, k_value
 
@@ -444,6 +446,7 @@ __all__ = [
     "normalize_formula_text",
     "run_common_prechecks",
     "validate_ast",
+    "validate_agents",
     "validate_coalition",
     "validate_coalition_bound_token",
     "validate_ctl_path_quantifiers",
