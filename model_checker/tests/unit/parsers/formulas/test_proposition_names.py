@@ -32,6 +32,9 @@ _DOCUMENTED_RESERVED = {
     "always",
     "forall",
     "exist",
+    "weak",
+    "with",
+    "is",
     "true",
     "false",
 }
@@ -48,7 +51,7 @@ _RESERVED_CASES = sorted(
 
 @pytest.mark.unit
 def test_reserved_words_match_the_docs():
-    """The parser's list and the documented list are the same fourteen words."""
+    """The parser's list and the documented list are the same words."""
     assert FORMULA_RESERVED_WORDS == _DOCUMENTED_RESERVED
 
 

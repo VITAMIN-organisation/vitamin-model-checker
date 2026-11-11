@@ -53,10 +53,12 @@ def test_paper_forms_parse(formula, tree):
         ("<{1}> F (K2(p))", "'p' inside K(...)"),
         ("<{1}> F (K4(1 is c))", "Agent 4 in 'K4'"),
         ("<{1}> F (K1(4 is c))", "Agent 4 in '4 is c'"),
+        ("K1(1 IS c)", "Syntax error near token 'IS'"),
     ],
 )
 def test_forms_outside_the_paper_are_rejected_with_a_message(formula, message):
-    """No parentheses, a nested K, a proposition inside K, or an agent out of range."""
+    """No parentheses, a nested K, a proposition inside K, an agent out of range,
+    or `is` not in lowercase (word operators are lowercase only)."""
     result, errors = _parse(formula)
     assert result is None
     assert any(message in error for error in errors), errors

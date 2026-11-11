@@ -84,6 +84,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and `<<1>> F True` are errors such as `Atomic proposition 'Until' clashes with
   reserved keyword.`; before, words matched in any case. `exist`, `forall`,
   `release` and `_goal` are no longer proposition names.
+- Breaking: `weak`, `with` and `is` are reserved words in every logic and in every
+  model, in any letter case. A model that declares one of them as a proposition
+  fails to load, and LTL `F weak` or OL `<J1> F With` fail with an error such as
+  `Atomic proposition 'weak' clashes with reserved keyword.`; in a logic that reads
+  the lowercase word as an operator (OATL `<1><2> F weak`) it is a syntax error.
+  Before, most logics and all models accepted them as proposition names. CapATL
+  reads `is` in lowercase only: `K1(1 IS c)` is a syntax error.
 - Breaking: NatATL, NatATL_Recall and NatATLF reject a bound `k` below 1, such as
   `<{1}, 0>F p`, with "Invalid bound 0: must be at least 1". Before, `k = 0` parsed
   and the solver returned false for every formula.

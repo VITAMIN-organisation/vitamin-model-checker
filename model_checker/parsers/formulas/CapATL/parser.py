@@ -55,7 +55,7 @@ class CapATLParser(BaseLogicParser):
         return t
 
     def t_IS(self, t):
-        r"is\b|IS\b"
+        r"is\b"
         return t
 
     def t_KCAP(self, t):

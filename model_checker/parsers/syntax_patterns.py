@@ -50,6 +50,11 @@ FORMULA_RESERVED_WORDS = (
             "always",
             "forall",
             "exist",
+            # Operator words in some logics only, reserved in all; see the KB
+            # "Atomic Proposition Policy".
+            "weak",
+            "with",
+            "is",
         }
     )
     | BOOLEAN_CONSTANTS
