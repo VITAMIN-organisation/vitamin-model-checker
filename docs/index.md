@@ -18,7 +18,7 @@ formats, logic implementations, or tests.
 | Audit IATL algorithm correctness | [IATL Algorithm](IATL/algorithm.md) |
 | Audit timed algorithm correctness | [TCTL Algorithm](TCTL/algorithm.md), [TOL Algorithm](TOL/algorithm.md) |
 | See how this repo fits with VMI and Workbench | [VITAMIN Stack](vitamin-stack.md) |
-| Contribute to this repository | [Contributing](contributing.md) |
+| Contribute to this repository | [CONTRIBUTING.md](https://github.com/VITAMIN-organisation/vitamin-model-checker/blob/main/CONTRIBUTING.md) |
 | Browse Python package docs | [API Overview](api/overview.md) |
 | Check deployment ports | [Deployment Ports](deployment-ports.md) |
 
