@@ -1,16 +1,14 @@
-"""Handler functions for CTL temporal operators (EX/AX/EF/AF/EG/AG/AR/EU/AU/ER).
+"""Handler functions for CTL temporal operators (EX/AX/EF/AF/EG/AG/EU/AU).
 
 Boolean connectives (NOT/OR/AND/IMPLIES) are handled by
 ``shared.boolean_operators`` and wired in ``CTL.solver``.
 """
 
-from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from model_checker.algorithms.explicit.CTL.preimage import (
     pre_image_all,
     pre_image_exist,
-    pre_release_universal,
 )
 from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
@@ -106,14 +104,6 @@ def handle_ag(cgs: "CGS", node: Any) -> None:
     node.value = str(tuple(sorted({str(s) for s in all_states - ef_not_phi})))
 
 
-def handle_ar(cgs: "CGS", node: Any) -> None:
-    """Handle AR operator: universal release A(phi R psi)."""
-    phi_states = parse_state_set_literal(node.left.value)
-    psi_states = parse_state_set_literal(node.right.value)
-    result = {str(s) for s in pre_release_universal(cgs, phi_states, psi_states)}
-    node.value = str(tuple(sorted({str(s) for s in result})))
-
-
 def handle_eu(cgs: "CGS", node: Any) -> None:
     """Handle EU operator: exists path where phi holds until psi."""
     phi_states = parse_state_set_literal(node.left.value)
@@ -134,8 +124,8 @@ def handle_eu(cgs: "CGS", node: Any) -> None:
     node.value = str(tuple(sorted({str(s) for s in result})))
 
 
-def _compute_au(cgs: "CGS", node: Any) -> set[str]:
-    """Compute A(phi U psi) = mu Y. psi or (phi and AX Y). Returns the state set."""
+def handle_au(cgs: "CGS", node: Any) -> None:
+    """Handle AU operator: A(phi U psi) = mu Y. psi or (phi and AX Y)."""
     phi_states = {str(s) for s in parse_state_set_literal(node.left.value)}
     psi_states = parse_state_set_literal(node.right.value)
     all_states = cgs.all_states_set
@@ -144,22 +134,5 @@ def _compute_au(cgs: "CGS", node: Any) -> set[str]:
     def update(T: set[str]) -> set[str]:
         return T.union(phi_states.intersection(pre_image_all(edges, all_states, T)))
 
-    return least_fixpoint(psi_states, update)
-
-
-def handle_au(cgs: "CGS", node: Any) -> None:
-    """Handle AU operator: all paths satisfy phi until psi."""
-    node.value = str(tuple(sorted({str(s) for s in _compute_au(cgs, node)})))
-
-
-def handle_er(cgs: "CGS", node: Any) -> None:
-    """Handle ER operator: E(phi R psi) = not A(not phi U not psi)."""
-    all_states = cgs.all_states_set
-    not_phi = all_states - parse_state_set_literal(node.left.value)
-    not_psi = all_states - parse_state_set_literal(node.right.value)
-    dual = SimpleNamespace(
-        left=SimpleNamespace(value=str(tuple(sorted({str(s) for s in not_phi})))),
-        right=SimpleNamespace(value=str(tuple(sorted({str(s) for s in not_psi})))),
-    )
-    a_not_phi_u_not_psi = _compute_au(cgs, dual)
-    node.value = str(tuple(sorted({str(s) for s in all_states - a_not_phi_u_not_psi})))
+    result = least_fixpoint(psi_states, update)
+    node.value = str(tuple(sorted({str(s) for s in result})))

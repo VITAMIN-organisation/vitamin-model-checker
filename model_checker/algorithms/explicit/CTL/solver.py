@@ -5,12 +5,10 @@ from typing import TYPE_CHECKING, Any
 from model_checker.algorithms.explicit.CTL.operators import (
     handle_af,
     handle_ag,
-    handle_ar,
     handle_au,
     handle_ax,
     handle_ef,
     handle_eg,
-    handle_er,
     handle_eu,
     handle_ex,
 )
@@ -34,7 +32,6 @@ _UNARY = {
     "AF": handle_af,
     "EG": handle_eg,
     "AG": handle_ag,
-    "AR": handle_ar,
 }
 _BINARY = {
     "OR": handle_or,
@@ -42,7 +39,6 @@ _BINARY = {
     "IMPLIES": handle_implies,
     "EU": handle_eu,
     "AU": handle_au,
-    "ER": handle_er,
 }
 
 
@@ -67,8 +63,6 @@ def _ctl_unary_key(parser_instance: Any, val: Any) -> str | None:
         "GLOBALLY", val
     ):
         return "AG"
-    if parser_instance.verify("FORALL", val) and parser_instance.verify("RELEASE", val):
-        return "AR"
     return None
 
 
@@ -83,8 +77,6 @@ def _ctl_binary_key(parser_instance: Any, val: Any) -> str | None:
         return "EU"
     if parser_instance.verify("FORALL", val) and parser_instance.verify("UNTIL", val):
         return "AU"
-    if parser_instance.verify("EXIST", val) and parser_instance.verify("RELEASE", val):
-        return "ER"
     return None
 
 

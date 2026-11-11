@@ -107,7 +107,7 @@ searches short: the work is one search per cycle state within 100 steps of
 
 | Aspect | Theory | Implementation |
 |---|---|---|
-| Release | Often present | Surface sugar via duals; see operators |
+| Release operator (`A(p R q)`) | In many textbook CTL definitions | Not in the grammar; `A(p R q)` is a syntax error |
 | Traces | Path witness / counterexample | For the root operator only; see [Traces](#traces) |
 | Model | Kripke / transition system | CGS used as transition system |
 

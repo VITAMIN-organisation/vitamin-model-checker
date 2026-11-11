@@ -1,8 +1,6 @@
-"""Pre-image computation for CTL (EX, AX, Release)."""
+"""Pre-image computation for CTL (EX, AX)."""
 
 from typing import Any
-
-from model_checker.parsers.game_structures.cgs import CGSProtocol
 
 # Below this edge count, a linear scan is faster than building a reverse-index dict.
 _SMALL_GRAPH_THRESHOLD = 50
@@ -72,40 +70,5 @@ def pre_image_all(
         successors = forward_index.get(state_str, set())
         if successors and successors.issubset(target_states):
             result.add(state_str)
-
-    return result
-
-
-def pre_release_universal(
-    cgs: CGSProtocol,
-    phi_states: set[str],
-    psi_states: set[str],
-) -> set[str]:
-    """Compute A(phi R psi) via greatest fixpoint (psi and (phi or AX Z))."""
-    all_states = cgs.all_states_set
-    phi_states = {str(s) for s in phi_states}
-    psi_states = {str(s) for s in psi_states}
-
-    result = psi_states.copy()
-    transitions = cgs.get_edges()
-
-    forward_index = {}
-    for source, target in transitions:
-        source_str = str(source)
-        if source_str not in forward_index:
-            forward_index[source_str] = set()
-        forward_index[source_str].add(str(target))
-
-    while True:
-        new_result = set()
-        for s in all_states:
-            if s in psi_states:
-                successors = forward_index.get(str(s), set())
-                if s in phi_states or (successors and successors.issubset(result)):
-                    new_result.add(s)
-
-        if new_result == result:
-            break
-        result = new_result
 
     return result
