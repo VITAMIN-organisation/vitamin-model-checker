@@ -1,44 +1,14 @@
 """ATL parser (PLY): coalitions `<1,2>`, with agents 1 to `n_agent`, before U, G, X
 and F."""
 
-import re
-
 from model_checker.parsers.formulas.parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     until_operands,
-    validate_ast,
     validate_coalition,
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 from model_checker.parsers.syntax_patterns import COALITION_ATL_TOKEN
-
-_ATL_VALID_OPERATORS = frozenset(
-    {
-        "U",
-        "G",
-        "X",
-        "F",
-        "&&",
-        "||",
-        "->",
-        "AND",
-        "OR",
-        "NOT",
-        "IMPLIES",
-        "UNTIL",
-        "GLOBALLY",
-        "NEXT",
-        "EVENTUALLY",
-        "!",
-    }
-)
-
-_ATL_MODAL_OPS = r"U|G|X|F|UNTIL|GLOBALLY|NEXT|EVENTUALLY"
-_COALITION_OPERATOR_PATTERN = re.compile(
-    rf"^{COALITION_ATL_TOKEN}({_ATL_MODAL_OPS})$",
-    re.IGNORECASE,
-)
 
 
 class ATLParser(BaseLogicParser):
@@ -86,15 +56,4 @@ class ATLParser(BaseLogicParser):
             coalition_required=True,
             allow_negative_agents=False,
             allowed_operators=None,
-        )
-
-    def _post_validation(self, formula, result):
-        if result is None:
-            return False
-        if not isinstance(result, tuple):
-            return True
-        return validate_ast(
-            result,
-            _ATL_VALID_OPERATORS,
-            coalition_pattern=_COALITION_OPERATOR_PATTERN,
         )

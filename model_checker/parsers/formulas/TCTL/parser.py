@@ -234,10 +234,8 @@ class TCTLParser(BaseLogicParser):
         p[0] = ClockExpr(p[1], p[3])
         self._attachment(p[0], p[3])
 
-    def p_expression_prop(self, p):
-        """expression : PROP"""
-        self._check_proposition_name(p[1])
-        p[0] = AtomicProp(p[1])
+    def _proposition_node(self, name):
+        return AtomicProp(name)
 
     def p_expression_time(self, p):
         """expression : PROP LEQ CONST
@@ -269,6 +267,3 @@ class TCTLParser(BaseLogicParser):
             allow_negative_agents=False,
             allowed_operators=set("<>=!&|->:.() "),
         )
-
-    def _post_validation(self, formula, result):
-        return result is not None

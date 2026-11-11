@@ -27,10 +27,10 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> expression UNTIL expression','expression',3,'p_expression_until','parser.py',47),
-  ('expression -> NEXT expression','expression',2,'p_expression_unary_temporal','parser.py',51),
-  ('expression -> GLOBALLY expression','expression',2,'p_expression_unary_temporal','parser.py',52),
-  ('expression -> EVENTUALLY expression','expression',2,'p_expression_unary_temporal','parser.py',53),
+  ('expression -> expression UNTIL expression','expression',3,'p_expression_until','parser.py',27),
+  ('expression -> NEXT expression','expression',2,'p_expression_unary_temporal','parser.py',31),
+  ('expression -> GLOBALLY expression','expression',2,'p_expression_unary_temporal','parser.py',32),
+  ('expression -> EVENTUALLY expression','expression',2,'p_expression_unary_temporal','parser.py',33),
   ('expression -> expression AND expression','expression',3,'p_expression_binary','shared_parser.py',112),
   ('expression -> expression OR expression','expression',3,'p_expression_binary','shared_parser.py',113),
   ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','shared_parser.py',114),

@@ -27,11 +27,11 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> COALITION expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',67),
-  ('expression -> COALITION LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',68),
-  ('expression -> COALITION GLOBALLY expression','expression',3,'p_expression_unary','parser.py',78),
-  ('expression -> COALITION NEXT expression','expression',3,'p_expression_unary','parser.py',79),
-  ('expression -> COALITION EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',80),
+  ('expression -> COALITION expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',41),
+  ('expression -> COALITION LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',42),
+  ('expression -> COALITION GLOBALLY expression','expression',3,'p_expression_unary','parser.py',52),
+  ('expression -> COALITION NEXT expression','expression',3,'p_expression_unary','parser.py',53),
+  ('expression -> COALITION EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',54),
   ('expression -> expression AND expression','expression',3,'p_expression_binary','shared_parser.py',112),
   ('expression -> expression OR expression','expression',3,'p_expression_binary','shared_parser.py',113),
   ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','shared_parser.py',114),

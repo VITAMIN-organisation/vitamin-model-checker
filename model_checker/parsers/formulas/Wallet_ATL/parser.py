@@ -6,8 +6,6 @@ from model_checker.parsers.formulas.parser_utils import (
     normalize_formula_text,
     run_common_prechecks,
     validate_agents,
-    validate_ast,
-    validate_proposition_identifier,
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 from model_checker.parsers.syntax_patterns import (
@@ -21,6 +19,7 @@ from model_checker.parsers.syntax_patterns import (
 _WALLET_CONSTRAINT_OPS = frozenset(COMPARISON_OPERATORS)
 _COALITION_TEMPORAL_SPACING = re.compile(r">>(?=[FGXU])")
 
+# Upper case only: the lexer leaves word connectives as typed (`and`).
 _WALLET_ATL_VALID_OPERATORS = frozenset(
     {
         "U",
@@ -28,16 +27,12 @@ _WALLET_ATL_VALID_OPERATORS = frozenset(
         "F",
         "G",
         "&&",
-        "and",
         "AND",
         "||",
-        "or",
         "OR",
         "!",
-        "not",
         "NOT",
         "->",
-        "implies",
         "IMPLIES",
         "UNTIL",
         "NEXT",
@@ -47,38 +42,23 @@ _WALLET_ATL_VALID_OPERATORS = frozenset(
 )
 
 
-def _validate_wallet_dict_ast(node, valid_operators) -> bool:
+def _validate_wallet_dict_ast(node) -> bool:
     """Walk a Wallet_ATL dict AST and reject unknown shapes or operators."""
     if not isinstance(node, dict):
         return False
 
     node_type = node.get("type")
     if node_type == "proposition":
-        prop = node.get("proposition")
-        if not isinstance(prop, str):
-            return False
-        valid, _ = validate_proposition_identifier(prop)
-        return valid
+        return isinstance(node.get("proposition"), str)
 
-    if node_type == "unary":
-        operator = node.get("operator")
-        if (
-            operator not in valid_operators
-            and str(operator).upper() not in valid_operators
-        ):
+    if node_type in ("unary", "binary"):
+        if str(node.get("operator")).upper() not in _WALLET_ATL_VALID_OPERATORS:
             return False
-        return _validate_wallet_dict_ast(node.get("formula"), valid_operators)
-
-    if node_type == "binary":
-        operator = node.get("operator")
-        if (
-            operator not in valid_operators
-            and str(operator).upper() not in valid_operators
-        ):
-            return False
+        if node_type == "unary":
+            return _validate_wallet_dict_ast(node.get("formula"))
         return _validate_wallet_dict_ast(
-            node.get("left"), valid_operators
-        ) and _validate_wallet_dict_ast(node.get("right"), valid_operators)
+            node.get("left")
+        ) and _validate_wallet_dict_ast(node.get("right"))
 
     if node_type == "coalition_wallet":
         agents = node.get("agents")
@@ -101,7 +81,7 @@ def _validate_wallet_dict_ast(node, valid_operators) -> bool:
                 return False
             if not isinstance(value, int):
                 return False
-        return _validate_wallet_dict_ast(node.get("formula"), valid_operators)
+        return _validate_wallet_dict_ast(node.get("formula"))
 
     return False
 
@@ -248,13 +228,8 @@ class Wallet_ATLParser(BaseLogicParser):
             if len(p) == 6:
                 self._grouped.mark(p[0])
 
-    def p_expression_prop(self, p):
-        """expression : PROP"""
-        self._check_proposition_name(p[1])
-        p[0] = {
-            "type": "proposition",
-            "proposition": p[1],
-        }
+    def _proposition_node(self, name):
+        return {"type": "proposition", "proposition": name}
 
     # --- Validation ---
     def _pre_validation(self, formula):
@@ -267,13 +242,7 @@ class Wallet_ATLParser(BaseLogicParser):
         )
 
     def _post_validation(self, formula, result) -> bool:
-        if result is None:
-            return False
-        if isinstance(result, dict):
-            return _validate_wallet_dict_ast(result, _WALLET_ATL_VALID_OPERATORS)
-        if isinstance(result, tuple):
-            return validate_ast(result, _WALLET_ATL_VALID_OPERATORS)
-        return False
+        return _validate_wallet_dict_ast(result)
 
     def parse(self, formula_text, max_coalition=None, n_agent=None, **kwargs):
         text = normalize_formula_text(formula_text)

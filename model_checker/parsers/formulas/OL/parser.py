@@ -9,39 +9,13 @@ import re
 from model_checker.parsers.syntax_patterns import OL_DEMONIC_TOKEN
 
 from ..parser_utils import (
-    BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     until_operands,
-    validate_ast,
 )
 from ..shared_parser import BaseLogicParser
 
 _LEADING_ZERO_BOUND_RE = re.compile(r"<J(0\d+)>")
-_OL_MODAL_OPS = r"F|G|X|U|R|W|UNTIL|RELEASE|WEAK|NEXT|EVENTUALLY|GLOBALLY"
-_OL_DEMONIC_OPERATOR_PATTERN = re.compile(
-    rf"^{OL_DEMONIC_TOKEN}({_OL_MODAL_OPS})$",
-    re.IGNORECASE,
-)
-_OL_VALID_OPERATORS = (
-    frozenset(
-        {
-            "U",
-            "R",
-            "W",
-            "X",
-            "F",
-            "G",
-            "UNTIL",
-            "RELEASE",
-            "WEAK",
-            "NEXT",
-            "EVENTUALLY",
-            "GLOBALLY",
-        }
-    )
-    | BOOLEAN_AST_OPERATORS
-)
 
 
 class OLParser(BaseLogicParser):
@@ -115,13 +89,4 @@ class OLParser(BaseLogicParser):
                 r"<J>(?!\d)",  # missing cost after J
                 r"<(?!J)\d+>",  # numeric-only prefix without J
             ),
-        )
-
-    def _post_validation(self, formula, result):
-        if result is None:
-            return False
-        return validate_ast(
-            result,
-            _OL_VALID_OPERATORS,
-            coalition_pattern=_OL_DEMONIC_OPERATOR_PATTERN,
         )

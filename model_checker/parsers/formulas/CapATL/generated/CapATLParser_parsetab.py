@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'rightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAGENT AND COALITION EVENTUALLY EVENTUALLY FALSE GLOBALLY GLOBALLY IMPLIES IS KCAP LPAREN NEXT NEXT NOT OR PROP RELEASE RPAREN TRUE UNTIL UNTILexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressionexpression : COALITION expression UNTIL expression\n        | COALITION expression RELEASE expression\n        | COALITION LPAREN expression UNTIL expression RPAREN\n        | COALITION LPAREN expression RELEASE expression RPARENexpression : NOT expressionexpression : LPAREN expression RPARENexpression : COALITION NEXT expression\n        | COALITION EVENTUALLY expression\n        | COALITION GLOBALLY expressionexpression : KCAP LPAREN capformula RPARENcapformula : LPAREN capformula RPARENcapformula : capformula AND capformula\n        | capformula OR capformula\n        | capformula IMPLIES capformulacapformula : NOT capformulacapformula : TRUE\n        | FALSEcapformula : AGENT IS PROPcapformula : KCAP LPAREN capformula RPARENcapformula : PROPexpression : FALSE\n        | TRUEexpression : PROP'
+_lr_signature = 'rightIMPLIESleftORleftANDrightNOTrightUNTILrightGLOBALLYNEXTEVENTUALLYAGENT AND COALITION EVENTUALLY EVENTUALLY FALSE GLOBALLY GLOBALLY IMPLIES IS KCAP LPAREN NEXT NEXT NOT OR PROP RELEASE RPAREN TRUE UNTIL UNTILexpression : COALITION expression UNTIL expression\n        | COALITION expression RELEASE expression\n        | COALITION LPAREN expression UNTIL expression RPAREN\n        | COALITION LPAREN expression RELEASE expression RPARENexpression : COALITION NEXT expression\n        | COALITION EVENTUALLY expression\n        | COALITION GLOBALLY expressionexpression : KCAP LPAREN capformula RPARENcapformula : LPAREN capformula RPARENcapformula : capformula AND capformula\n        | capformula OR capformula\n        | capformula IMPLIES capformulaexpression : expression AND expression\n        | expression OR expression\n        | expression IMPLIES expressioncapformula : NOT capformulaexpression : NOT expressioncapformula : TRUE\n        | FALSEexpression : LPAREN expression RPARENcapformula : AGENT IS PROPcapformula : KCAP LPAREN capformula RPARENcapformula : PROPexpression : FALSE\n        | TRUEexpression : PROP'
     
-_lr_action_items = {'COALITION':([0,2,3,4,9,10,11,13,14,15,16,23,24,40,41,],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,]),'NOT':([0,2,3,4,9,10,11,13,14,15,16,19,23,24,31,33,40,41,42,45,46,47,],[4,4,4,4,4,4,4,4,4,4,4,33,4,4,33,33,4,4,33,33,33,33,]),'LPAREN':([0,2,3,4,5,9,10,11,13,14,15,16,19,23,24,30,31,33,40,41,42,45,46,47,],[3,13,3,3,19,3,3,3,3,3,3,3,31,3,3,42,31,31,3,3,31,31,31,31,]),'KCAP':([0,2,3,4,9,10,11,13,14,15,16,19,23,24,31,33,40,41,42,45,46,47,],[5,5,5,5,5,5,5,5,5,5,5,30,5,5,30,30,5,5,30,30,30,30,]),'FALSE':([0,2,3,4,9,10,11,13,14,15,16,19,23,24,31,33,40,41,42,45,46,47,],[6,6,6,6,6,6,6,6,6,6,6,35,6,6,35,35,6,6,35,35,35,35,]),'TRUE':([0,2,3,4,9,10,11,13,14,15,16,19,23,24,31,33,40,41,42,45,46,47,],[7,7,7,7,7,7,7,7,7,7,7,34,7,7,34,34,7,7,34,34,34,34,]),'PROP':([0,2,3,4,9,10,11,13,14,15,16,19,23,24,31,33,40,41,42,45,46,47,49,],[8,8,8,8,8,8,8,8,8,8,8,37,8,8,37,37,8,8,37,37,37,37,57,]),'$end':([1,6,7,8,18,20,21,22,26,27,28,29,38,39,44,58,59,],[0,-24,-25,-26,-8,-1,-2,-3,-10,-11,-12,-9,-4,-5,-13,-6,-7,]),'AND':([1,6,7,8,12,17,18,20,21,22,25,26,27,28,29,32,34,35,37,38,39,43,44,48,50,51,52,53,54,55,56,57,58,59,60,],[9,-24,-25,-26,9,9,-8,-1,9,9,9,-10,-11,-12,-9,45,-19,-20,-23,-4,9,45,-13,-18,9,9,45,-14,-15,45,45,-21,-6,-7,-22,]),'OR':([1,6,7,8,12,17,18,20,21,22,25,26,27,28,29,32,34,35,37,38,39,43,44,48,50,51,52,53,54,55,56,57,58,59,60,],[10,-24,-25,-26,10,10,-8,-1,-2,10,10,-10,-11,-12,-9,46,-19,-20,-23,-4,10,46,-13,-18,10,10,46,-14,-15,-16,46,-21,-6,-7,-22,]),'IMPLIES':([1,6,7,8,12,17,18,20,21,22,25,26,27,28,29,32,34,35,37,38,39,43,44,48,50,51,52,53,54,55,56,57,58,59,60,],[11,-24,-25,-26,11,11,-8,-1,-2,11,11,-10,-11,-12,-9,47,-19,-20,-23,-4,11,47,-13,-18,11,11,47,-14,-15,-16,47,-21,-6,-7,-22,]),'NEXT':([2,],[14,]),'EVENTUALLY':([2,],[15,]),'GLOBALLY':([2,],[16,]),'UNTIL':([6,7,8,12,18,20,21,22,25,26,27,28,29,38,39,44,58,59,],[-24,-25,-26,23,-8,-1,-2,-3,40,-10,-11,-12,-9,-4,-5,-13,-6,-7,]),'RELEASE':([6,7,8,12,18,20,21,22,25,26,27,28,29,38,39,44,58,59,],[-24,-25,-26,24,-8,-1,-2,-3,41,-10,-11,-12,-9,-4,-5,-13,-6,-7,]),'RPAREN':([6,7,8,17,18,20,21,22,25,26,27,28,29,32,34,35,37,38,39,43,44,48,50,51,52,53,54,55,56,57,58,59,60,],[-24,-25,-26,29,-8,-1,-2,-3,29,-10,-11,-12,-9,44,-19,-20,-23,-4,-5,53,-13,-18,58,59,60,-14,-15,-16,-17,-21,-6,-7,-22,]),'AGENT':([19,31,33,42,45,46,47,],[36,36,36,36,36,36,36,]),'IS':([36,],[49,]),}
+_lr_action_items = {'COALITION':([0,2,3,5,9,10,11,13,14,15,16,23,24,40,41,],[2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,]),'KCAP':([0,2,3,5,9,10,11,13,14,15,16,18,23,24,31,33,40,41,42,45,46,47,],[4,4,4,4,4,4,4,4,4,4,4,30,4,4,30,30,4,4,30,30,30,30,]),'NOT':([0,2,3,5,9,10,11,13,14,15,16,18,23,24,31,33,40,41,42,45,46,47,],[5,5,5,5,5,5,5,5,5,5,5,33,5,5,33,33,5,5,33,33,33,33,]),'LPAREN':([0,2,3,4,5,9,10,11,13,14,15,16,18,23,24,30,31,33,40,41,42,45,46,47,],[3,13,3,18,3,3,3,3,3,3,3,3,31,3,3,42,31,31,3,3,31,31,31,31,]),'FALSE':([0,2,3,5,9,10,11,13,14,15,16,18,23,24,31,33,40,41,42,45,46,47,],[6,6,6,6,6,6,6,6,6,6,6,35,6,6,35,35,6,6,35,35,35,35,]),'TRUE':([0,2,3,5,9,10,11,13,14,15,16,18,23,24,31,33,40,41,42,45,46,47,],[7,7,7,7,7,7,7,7,7,7,7,34,7,7,34,34,7,7,34,34,34,34,]),'PROP':([0,2,3,5,9,10,11,13,14,15,16,18,23,24,31,33,40,41,42,45,46,47,49,],[8,8,8,8,8,8,8,8,8,8,8,37,8,8,37,37,8,8,37,37,37,37,57,]),'$end':([1,6,7,8,19,20,21,22,26,27,28,29,38,39,44,58,59,],[0,-24,-25,-26,-17,-13,-14,-15,-5,-6,-7,-20,-1,-2,-8,-3,-4,]),'AND':([1,6,7,8,12,17,19,20,21,22,25,26,27,28,29,32,34,35,37,38,39,43,44,48,50,51,52,53,54,55,56,57,58,59,60,],[9,-24,-25,-26,9,9,-17,-13,9,9,9,-5,-6,-7,-20,45,-18,-19,-23,-1,9,45,-8,-16,9,9,45,-9,-10,45,45,-21,-3,-4,-22,]),'OR':([1,6,7,8,12,17,19,20,21,22,25,26,27,28,29,32,34,35,37,38,39,43,44,48,50,51,52,53,54,55,56,57,58,59,60,],[10,-24,-25,-26,10,10,-17,-13,-14,10,10,-5,-6,-7,-20,46,-18,-19,-23,-1,10,46,-8,-16,10,10,46,-9,-10,-11,46,-21,-3,-4,-22,]),'IMPLIES':([1,6,7,8,12,17,19,20,21,22,25,26,27,28,29,32,34,35,37,38,39,43,44,48,50,51,52,53,54,55,56,57,58,59,60,],[11,-24,-25,-26,11,11,-17,-13,-14,11,11,-5,-6,-7,-20,47,-18,-19,-23,-1,11,47,-8,-16,11,11,47,-9,-10,-11,47,-21,-3,-4,-22,]),'NEXT':([2,],[14,]),'EVENTUALLY':([2,],[15,]),'GLOBALLY':([2,],[16,]),'UNTIL':([6,7,8,12,19,20,21,22,25,26,27,28,29,38,39,44,58,59,],[-24,-25,-26,23,-17,-13,-14,-15,40,-5,-6,-7,-20,-1,-2,-8,-3,-4,]),'RELEASE':([6,7,8,12,19,20,21,22,25,26,27,28,29,38,39,44,58,59,],[-24,-25,-26,24,-17,-13,-14,-15,41,-5,-6,-7,-20,-1,-2,-8,-3,-4,]),'RPAREN':([6,7,8,17,19,20,21,22,25,26,27,28,29,32,34,35,37,38,39,43,44,48,50,51,52,53,54,55,56,57,58,59,60,],[-24,-25,-26,29,-17,-13,-14,-15,29,-5,-6,-7,-20,44,-18,-19,-23,-1,-2,53,-8,-16,58,59,60,-9,-10,-11,-12,-21,-3,-4,-22,]),'AGENT':([18,31,33,42,45,46,47,],[36,36,36,36,36,36,36,]),'IS':([36,],[49,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'expression':([0,2,3,4,9,10,11,13,14,15,16,23,24,40,41,],[1,12,17,18,20,21,22,25,26,27,28,38,39,50,51,]),'capformula':([19,31,33,42,45,46,47,],[32,43,48,52,54,55,56,]),}
+_lr_goto_items = {'expression':([0,2,3,5,9,10,11,13,14,15,16,23,24,40,41,],[1,12,17,19,20,21,22,25,26,27,28,38,39,50,51,]),'capformula':([18,31,33,42,45,46,47,],[32,43,48,52,54,55,56,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -27,29 +27,29 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
+  ('expression -> COALITION expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',82),
+  ('expression -> COALITION expression RELEASE expression','expression',4,'p_expression_ternary','parser.py',83),
+  ('expression -> COALITION LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',84),
+  ('expression -> COALITION LPAREN expression RELEASE expression RPAREN','expression',6,'p_expression_ternary','parser.py',85),
+  ('expression -> COALITION NEXT expression','expression',3,'p_expression_unary','parser.py',93),
+  ('expression -> COALITION EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',94),
+  ('expression -> COALITION GLOBALLY expression','expression',3,'p_expression_unary','parser.py',95),
+  ('expression -> KCAP LPAREN capformula RPAREN','expression',4,'p_expression_kcap','parser.py',102),
+  ('capformula -> LPAREN capformula RPAREN','capformula',3,'p_capformula_group','parser.py',107),
+  ('capformula -> capformula AND capformula','capformula',3,'p_capformula_binary','parser.py',111),
+  ('capformula -> capformula OR capformula','capformula',3,'p_capformula_binary','parser.py',112),
+  ('capformula -> capformula IMPLIES capformula','capformula',3,'p_capformula_binary','parser.py',113),
   ('expression -> expression AND expression','expression',3,'p_expression_binary','shared_parser.py',112),
   ('expression -> expression OR expression','expression',3,'p_expression_binary','shared_parser.py',113),
   ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','shared_parser.py',114),
-  ('expression -> COALITION expression UNTIL expression','expression',4,'p_expression_ternary','parser.py',114),
-  ('expression -> COALITION expression RELEASE expression','expression',4,'p_expression_ternary','parser.py',115),
-  ('expression -> COALITION LPAREN expression UNTIL expression RPAREN','expression',6,'p_expression_ternary','parser.py',116),
-  ('expression -> COALITION LPAREN expression RELEASE expression RPAREN','expression',6,'p_expression_ternary','parser.py',117),
+  ('capformula -> NOT capformula','capformula',2,'p_capformula_not','parser.py',117),
   ('expression -> NOT expression','expression',2,'p_expression_not','shared_parser.py',119),
+  ('capformula -> TRUE','capformula',1,'p_capformula_constant','parser.py',121),
+  ('capformula -> FALSE','capformula',1,'p_capformula_constant','parser.py',122),
   ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',124),
-  ('expression -> COALITION NEXT expression','expression',3,'p_expression_unary','parser.py',125),
-  ('expression -> COALITION EVENTUALLY expression','expression',3,'p_expression_unary','parser.py',126),
-  ('expression -> COALITION GLOBALLY expression','expression',3,'p_expression_unary','parser.py',127),
-  ('expression -> KCAP LPAREN capformula RPAREN','expression',4,'p_expression_kcap','parser.py',134),
-  ('capformula -> LPAREN capformula RPAREN','capformula',3,'p_capformula_group','parser.py',139),
-  ('capformula -> capformula AND capformula','capformula',3,'p_capformula_binary','parser.py',143),
-  ('capformula -> capformula OR capformula','capformula',3,'p_capformula_binary','parser.py',144),
-  ('capformula -> capformula IMPLIES capformula','capformula',3,'p_capformula_binary','parser.py',145),
-  ('capformula -> NOT capformula','capformula',2,'p_capformula_not','parser.py',149),
-  ('capformula -> TRUE','capformula',1,'p_capformula_constant','parser.py',153),
-  ('capformula -> FALSE','capformula',1,'p_capformula_constant','parser.py',154),
-  ('capformula -> AGENT IS PROP','capformula',3,'p_capformula_is','parser.py',158),
-  ('capformula -> KCAP LPAREN capformula RPAREN','capformula',4,'p_capformula_kcap','parser.py',164),
-  ('capformula -> PROP','capformula',1,'p_capformula_prop','parser.py',172),
+  ('capformula -> AGENT IS PROP','capformula',3,'p_capformula_is','parser.py',126),
+  ('capformula -> KCAP LPAREN capformula RPAREN','capformula',4,'p_capformula_kcap','parser.py',132),
+  ('capformula -> PROP','capformula',1,'p_capformula_prop','parser.py',140),
   ('expression -> FALSE','expression',1,'p_expression_boolean','shared_parser.py',183),
   ('expression -> TRUE','expression',1,'p_expression_boolean','shared_parser.py',184),
   ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',188),

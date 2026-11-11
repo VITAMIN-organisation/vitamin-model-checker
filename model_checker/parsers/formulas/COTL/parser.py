@@ -10,22 +10,15 @@ import re
 from model_checker.parsers.syntax_patterns import COTL_LEGION_BUDGET_TOKEN
 
 from ..parser_utils import (
-    BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     until_operands,
     validate_agents,
-    validate_ast,
 )
 from ..shared_parser import BaseLogicParser
 
 _LEGION_BUDGET_RE = re.compile(r"^<(?P<legion>[\d,]*)><(?P<budget>\d+)>")
 _LEGION_BUDGET_TOKEN_RE = re.compile(COTL_LEGION_BUDGET_TOKEN)
-_TEMPORAL_OPERATORS = r"X|WX|F|G|U|R|W"
-_LEGION_OPERATOR_RE = re.compile(
-    rf"^{COTL_LEGION_BUDGET_TOKEN}({_TEMPORAL_OPERATORS})$"
-)
-_VALID_OPERATORS = BOOLEAN_AST_OPERATORS | {"X", "WX", "F", "G", "U", "R", "W"}
 
 
 def parse_legion_budget(modality: str) -> tuple[tuple[int, ...], int]:
@@ -127,10 +120,3 @@ class COTLParser(BaseLogicParser):
                 "e.g. <1,2><3> X p or <><0> X p"
             )
         return True, None
-
-    def _post_validation(self, formula, result):
-        if result is None:
-            return False
-        return validate_ast(
-            result, _VALID_OPERATORS, coalition_pattern=_LEGION_OPERATOR_RE
-        )

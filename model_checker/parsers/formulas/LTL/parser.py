@@ -3,28 +3,8 @@
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
-    validate_ast,
 )
 from ..shared_parser import BaseLogicParser
-
-_LTL_VALID_OPERATORS = {
-    "U",
-    "G",
-    "F",
-    "X",
-    "!",
-    "&&",
-    "||",
-    "->",
-    "AND",
-    "OR",
-    "NOT",
-    "IMPLIES",
-    "UNTIL",
-    "GLOBALLY",
-    "NEXT",
-    "EVENTUALLY",
-}
 
 
 class LTLParser(BaseLogicParser):
@@ -61,8 +41,3 @@ class LTLParser(BaseLogicParser):
             allow_hash_at=False,
             coalition_required=False,
         )
-
-    def _post_validation(self, formula, result):
-        if result is None:
-            return False
-        return validate_ast(result, _LTL_VALID_OPERATORS)

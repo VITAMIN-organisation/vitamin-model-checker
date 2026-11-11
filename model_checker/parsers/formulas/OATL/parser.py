@@ -11,39 +11,13 @@ from model_checker.parsers.syntax_patterns import (
 )
 
 from ..parser_utils import (
-    BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     until_operands,
-    validate_ast,
     validate_coalition_bound_token,
 )
 from ..shared_parser import BaseLogicParser
 
-_OATL_MODAL_OPS = r"F|G|X|U|R|W|UNTIL|RELEASE|WEAK|NEXT|EVENTUALLY|GLOBALLY"
-_OATL_COALITION_OPERATOR_PATTERN = re.compile(
-    rf"^{OATL_COALITION_BUDGET_TOKEN}({_OATL_MODAL_OPS})$",
-    re.IGNORECASE,
-)
-_OATL_VALID_OPERATORS = (
-    frozenset(
-        {
-            "U",
-            "R",
-            "W",
-            "X",
-            "F",
-            "G",
-            "UNTIL",
-            "RELEASE",
-            "WEAK",
-            "NEXT",
-            "EVENTUALLY",
-            "GLOBALLY",
-        }
-    )
-    | BOOLEAN_AST_OPERATORS
-)
 _MISSING_BOUND_TEMPORAL_RE = re.compile(rf"<{AGENT_LIST}>\s*[FGXURW]")
 _COALITION_BOUND_PROBE_RE = re.compile(
     rf"<{AGENT_LIST}><(?P<bound>\d+)>\s*(?P<op>[FGXURW])"
@@ -154,12 +128,3 @@ class OATLParser(BaseLogicParser):
             return False, err
 
         return self._coalition_bound_pre_validation(formula)
-
-    def _post_validation(self, formula, result):
-        if result is None:
-            return False
-        return validate_ast(
-            result,
-            _OATL_VALID_OPERATORS,
-            coalition_pattern=_OATL_COALITION_OPERATOR_PATTERN,
-        )

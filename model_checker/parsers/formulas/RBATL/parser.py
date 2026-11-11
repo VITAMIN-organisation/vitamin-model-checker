@@ -8,25 +8,14 @@ import re
 from model_checker.parsers.syntax_patterns import AGENT_LIST, COALITION_BOUND_TOKEN
 
 from ..parser_utils import (
-    BOOLEAN_AST_OPERATORS,
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     until_operands,
-    validate_ast,
     validate_coalition_bound_token,
     validate_release_weak_rejected,
 )
 from ..shared_parser import BaseLogicParser
 
-_RBATL_MODAL_OPS = r"F|G|X|U|UNTIL|NEXT|EVENTUALLY|GLOBALLY"
-_RBATL_COALITION_OPERATOR_PATTERN = re.compile(
-    rf"^{COALITION_BOUND_TOKEN}({_RBATL_MODAL_OPS})$",
-    re.IGNORECASE,
-)
-_RBATL_VALID_OPERATORS = (
-    frozenset({"U", "X", "F", "G", "UNTIL", "NEXT", "EVENTUALLY", "GLOBALLY"})
-    | BOOLEAN_AST_OPERATORS
-)
 _DEFAULT_BOUND_LIMIT = 1_000_000
 _MISSING_BOUND_TEMPORAL_RE = re.compile(rf"<{AGENT_LIST}>\s*[FGXURW]")
 _RBATL_BOUND_PRESENT_RE = re.compile(COALITION_BOUND_TOKEN)
@@ -106,12 +95,3 @@ class RBATLParser(BaseLogicParser):
                 "RBATL requires a resource bound (e.g., <1><5>) for temporal operators",
             )
         return True, None
-
-    def _post_validation(self, formula, result):
-        if result is None:
-            return False
-        return validate_ast(
-            result,
-            _RBATL_VALID_OPERATORS,
-            coalition_pattern=_RBATL_COALITION_OPERATOR_PATTERN,
-        )

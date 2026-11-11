@@ -31,10 +31,6 @@ _INVALID_PROPOSITION_MSG = "expected identifier matching [a-zA-Z][a-zA-Z0-9_]*"
 _MODAL_TOKEN_PREFIX = r"(?:^|(?<![a-zA-Z0-9_]))"
 _MODAL_TOKEN_SUFFIX = r"(?![a-zA-Z0-9_])"
 
-BOOLEAN_AST_OPERATORS = frozenset(
-    {"&&", "||", "->", "!", "AND", "OR", "IMPLIES", "NOT"}
-)
-
 
 def until_operands(p) -> tuple:
     """Return `(left, operator, right)` of the production `prefix x OP y` or
@@ -411,52 +407,12 @@ def run_common_prechecks(
     return True, None
 
 
-def validate_ast(
-    result,
-    valid_operators,
-    coalition_pattern=None,
-    operator_patterns=(),
-    leaf_patterns=(),
-):
-    """Walk a tuple parse tree `(operator, *operands)`: each operator is a known
-    operator, a coalition or an `operator_patterns` match, and each other leaf a
-    constant, a `leaf_patterns` match or a valid proposition name."""
-
-    def _is_operator(node_str):
-        # The lexer leaves word connectives as typed (`and`, `is`); the sets are upper.
-        if node_str in valid_operators or node_str.upper() in valid_operators:
-            return True
-        if coalition_pattern and coalition_pattern.match(node_str):
-            return True
-        return any(pat.match(node_str) for pat in operator_patterns)
-
-    def _is_leaf(node_str):
-        # An operator name such as GLOBALLY is never a leaf, so `F Globally` fails.
-        if node_str in BOOLEAN_CONSTANTS:
-            return True
-        if any(pat.match(node_str) for pat in leaf_patterns):
-            return True
-        valid, _ = validate_proposition_identifier(node_str)
-        return valid
-
-    def _walk(node):
-        if isinstance(node, str):
-            return _is_leaf(node)
-        if isinstance(node, tuple) and node and isinstance(node[0], str):
-            return _is_operator(node[0]) and all(_walk(child) for child in node[1:])
-        return False
-
-    return _walk(result)
-
-
 # Re-export for CGS modules that already import from parser_utils.
 __all__ = [
     "CoalitionValueError",
-    "BOOLEAN_AST_OPERATORS",
     "PROPOSITION_TOKEN_PATTERN",
     "normalize_formula_text",
     "run_common_prechecks",
-    "validate_ast",
     "validate_agents",
     "validate_coalition",
     "validate_coalition_bound_token",

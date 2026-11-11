@@ -187,7 +187,11 @@ class BaseLogicParser:
     def p_expression_prop(self, p):
         """expression : PROP"""
         self._check_proposition_name(p[1])
-        p[0] = p[1]
+        p[0] = self._proposition_node(p[1])
+
+    def _proposition_node(self, name: str) -> Any:
+        """The AST leaf for proposition `name`; logics with typed nodes override it."""
+        return name
 
     def _check_proposition_name(
         self, name: str, kind: str = "Atomic proposition"

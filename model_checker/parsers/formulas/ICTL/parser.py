@@ -4,34 +4,8 @@ from model_checker.parsers.formulas.parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     until_operands,
-    validate_ast,
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
-
-_ICTL_VALID_OPERATORS = frozenset(
-    {
-        "EX",
-        "AX",
-        "EF",
-        "AF",
-        "EG",
-        "AG",
-        "EU",
-        "AU",
-        "ER",
-        "AR",
-        "UNTIL",
-        "RELEASE",
-        "AND",
-        "OR",
-        "NOT",
-        "IMPLIES",
-        "&&",
-        "||",
-        "!",
-        "->",
-    }
-)
 
 
 class ICTLParser(BaseLogicParser):
@@ -110,10 +84,3 @@ class ICTLParser(BaseLogicParser):
             allow_negative_agents=False,
             allowed_operators=set("<>(),[]!&|->"),
         )
-
-    def _post_validation(self, formula, result):
-        if result is None:
-            return False
-        if not isinstance(result, tuple):
-            return True
-        return validate_ast(result, _ICTL_VALID_OPERATORS)

@@ -10,41 +10,10 @@ from model_checker.parsers.formulas.parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     until_operands,
-    validate_ast,
     validate_coalition,
 )
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 from model_checker.parsers.syntax_patterns import AGENT_LIST, CAPATL_COALITION_TOKEN
-
-_CAPATL_VALID_OPERATORS = frozenset(
-    {
-        "U",
-        "R",
-        "X",
-        "F",
-        "G",
-        "&&",
-        "AND",
-        "||",
-        "OR",
-        "->",
-        "IMPLIES",
-        "NOT",
-        "UNTIL",
-        "RELEASE",
-        "NEXT",
-        "EVENTUALLY",
-        "GLOBALLY",
-        "!",
-        "IS",
-    }
-)
-
-_CAPATL_MODAL_OPS = r"U|R|X|F|G|UNTIL|RELEASE|NEXT|EVENTUALLY|GLOBALLY"
-_COALITION_OPERATOR_PATTERN = re.compile(
-    rf"^{CAPATL_COALITION_TOKEN}({_CAPATL_MODAL_OPS})$",
-    re.IGNORECASE,
-)
 
 # K^a_cap of the paper, typed as `K1` or `kcap1`; `K1x` stays a proposition name.
 _KCAP_TOKEN = r"(?:K|kcap)(\d+)(?![a-zA-Z0-9_])"
@@ -52,7 +21,6 @@ _KCAP_TOKEN = r"(?:K|kcap)(\d+)(?![a-zA-Z0-9_])"
 _KCAP_IN_FORMULA = re.compile(rf"(?<![a-zA-Z0-9_]){_KCAP_TOKEN}(\s*\()?")
 # AST value of the knowledge operator after the lexer normalizes `kcap1` to `K1`.
 KCAP_OPERATOR_PATTERN = re.compile(r"^K\d+$")
-_AGENT_PATTERN = re.compile(r"^\d+$")
 # Reject NatATL-looking `<{agents}, k>`; CapATL coalitions have no formula bound.
 _FORMULA_BOUND_PATTERN = re.compile(rf"<{{{AGENT_LIST}}},\s*-?\d+>")
 
@@ -225,16 +193,3 @@ class CapATLParser(BaseLogicParser):
             )
 
         return True, None
-
-    def _post_validation(self, formula, result):
-        if result is None:
-            return False
-        if not isinstance(result, tuple):
-            return True
-        return validate_ast(
-            result,
-            _CAPATL_VALID_OPERATORS,
-            coalition_pattern=_COALITION_OPERATOR_PATTERN,
-            operator_patterns=(KCAP_OPERATOR_PATTERN,),
-            leaf_patterns=(_AGENT_PATTERN,),
-        )

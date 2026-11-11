@@ -7,41 +7,9 @@ from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
     run_common_prechecks,
     until_operands,
-    validate_ast,
     validate_ctl_path_quantifiers,
 )
 from ..shared_parser import BaseLogicParser
-
-_CTL_VALID_OPERATORS = {
-    "EX",
-    "AX",
-    "EF",
-    "AF",
-    "EG",
-    "AG",
-    "EU",
-    "AU",
-    "E",
-    "A",
-    "U",
-    "G",
-    "F",
-    "X",
-    "!",
-    "&&",
-    "||",
-    "->",
-    "AND",
-    "OR",
-    "NOT",
-    "IMPLIES",
-    "UNTIL",
-    "GLOBALLY",
-    "NEXT",
-    "EVENTUALLY",
-    "FORALL",
-    "EXIST",
-}
 
 
 class CTLParser(BaseLogicParser):
@@ -106,8 +74,3 @@ class CTLParser(BaseLogicParser):
             return False, err
 
         return validate_ctl_path_quantifiers(formula)
-
-    def _post_validation(self, formula, result):
-        if result is None:
-            return False
-        return validate_ast(result, _CTL_VALID_OPERATORS)

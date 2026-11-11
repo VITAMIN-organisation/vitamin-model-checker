@@ -14,37 +14,11 @@ from model_checker.parsers.syntax_patterns import (
 from ..parser_utils import (
     run_common_prechecks,
     until_operands,
-    validate_ast,
     validate_natatl_coalition,
 )
 from ..shared_parser import BaseLogicParser
 
 MAX_PROP_LEN_POST_VALIDATION = 1000
-
-_NATATL_VALID_OPERATORS = {
-    "U",
-    "G",
-    "F",
-    "X",
-    "!",
-    "&&",
-    "||",
-    "->",
-    "AND",
-    "OR",
-    "NOT",
-    "IMPLIES",
-    "UNTIL",
-    "GLOBALLY",
-    "NEXT",
-    "EVENTUALLY",
-}
-
-_NATATL_MODAL_OPS = r"U|G|X|F|UNTIL|GLOBALLY|NEXT|EVENTUALLY"
-_NATATL_COALITION_OPERATOR_PATTERN = re.compile(
-    rf"^{NATATL_COALITION_TOKEN}(?:{_NATATL_MODAL_OPS})$",
-    re.IGNORECASE,
-)
 
 
 class NatATLParser(BaseLogicParser):
@@ -109,14 +83,7 @@ class NatATLParser(BaseLogicParser):
         return True, None
 
     def _post_validation(self, formula, result):
-        if result is None:
-            return False
-
-        if isinstance(result, str) and len(result) > MAX_PROP_LEN_POST_VALIDATION:
-            return False
-
-        return validate_ast(
-            result,
-            _NATATL_VALID_OPERATORS,
-            coalition_pattern=_NATATL_COALITION_OPERATOR_PATTERN,
+        too_long = (
+            isinstance(result, str) and len(result) > MAX_PROP_LEN_POST_VALIDATION
         )
+        return super()._post_validation(formula, result) and not too_long

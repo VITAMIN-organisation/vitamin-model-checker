@@ -258,10 +258,8 @@ class TOLParser(BaseLogicParser):
         """
         p[0] = SimpleTimeExpr(p[1] + p[2] + p[3])
 
-    def p_expression_prop(self, p):
-        """expression : PROP"""
-        self._check_proposition_name(p[1])
-        p[0] = AtomicProp(p[1])
+    def _proposition_node(self, name):
+        return AtomicProp(name)
 
     # --- Validation ---
     def parse(self, formula, **kwargs):
@@ -277,6 +275,3 @@ class TOLParser(BaseLogicParser):
             allow_negative_agents=False,
             allowed_operators=set("<>=!&|->:.() {}"),
         )
-
-    def _post_validation(self, formula, result):
-        return result is not None
