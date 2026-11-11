@@ -1040,24 +1040,6 @@
                 }
             }
         ],
-        "./model_checker/parsers/formulas/TOL/parser.py": [
-            {
-                "code": "reportAssignmentType",
-                "range": {
-                    "startColumn": 14,
-                    "endColumn": 27,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportAssignmentType",
-                "range": {
-                    "startColumn": 13,
-                    "endColumn": 25,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/parsers/formulas/shared_parser.py": [
             {
                 "code": "reportOptionalMemberAccess",

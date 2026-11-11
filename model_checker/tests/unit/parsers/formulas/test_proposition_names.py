@@ -164,12 +164,18 @@ def test_word_operator_builds_the_symbol_tree(logic, word, symbol):
     assert repr(spelled) == repr(parse(logic, f"{_quantified(logic, symbol)} p"))
 
 
-@pytest.mark.unit
-@pytest.mark.parametrize(
-    "logic", sorted(logic for logic, ops in BINARY_OPERATORS.items() if "U" in ops)
+_BINARY_WORD_CASES = sorted(
+    (logic, word, symbol)
+    for logic, ops in BINARY_OPERATORS.items()
+    for word, symbol in [("until", "U"), ("release", "R"), ("weak", "W")]
+    if symbol in ops
 )
-def test_until_word_builds_the_symbol_tree(logic):
-    """`p until q` is `p U q`."""
-    spelled = parse(logic, binary(logic, "p until q"))
-    assert spelled is not None, f"{logic} rejected 'until'"
-    assert repr(spelled) == repr(parse(logic, binary(logic, "p U q")))
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(("logic", "word", "symbol"), _BINARY_WORD_CASES)
+def test_binary_word_operator_builds_the_symbol_tree(logic, word, symbol):
+    """`p until q` is `p U q`, `p release q` is `p R q`, `p weak q` is `p W q`."""
+    spelled = parse(logic, binary(logic, f"p {word} q"))
+    assert spelled is not None, f"{logic} rejected '{word}'"
+    assert repr(spelled) == repr(parse(logic, binary(logic, f"p {symbol} q")))

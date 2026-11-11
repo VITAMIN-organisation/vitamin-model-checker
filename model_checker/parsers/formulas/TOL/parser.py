@@ -151,43 +151,37 @@ class TOLParser(BaseLogicParser):
         self.build()
 
     # --- Specific Tokens ---
-    def t_PROP(self, t):
-        reserved = {
-            "implies": "IMPLIES",
-            "with": "TIME_SEP",
-            "not": "NOT",
-            "or": "OR",
-            "and": "AND",
-            "true": "TRUE",
-            "false": "FALSE",
-            "globally": "GLOBALLY",
-            "G": "GLOBALLY",
-        }
-        t.type = reserved.get(t.value, "PROP")
-        return t
-
-    t_PROP.__doc__ = TCTL_TOL_PROPOSITION_TOKEN
-
-    def t_IMPLIES(self, t):
-        r"->|implies\b"
-        return t
-
-    t_WEAK = r"W|weak\b"
-    t_FALSE = r"\#|false\b"
-    t_TRUE = r"\@|true\b"
-
+    # Every word rule is a function and t_PROP is a string: PLY tries all function
+    # rules before any string rule, so no word operator lexes as a name.
     def t_RELEASE(self, t):
         r"R(?![a-zA-Z0-9_])|release\b"
         t.value = "R"
         return t
 
+    def t_WEAK(self, t):
+        r"W(?![a-zA-Z0-9_])|weak\b"
+        t.value = "W"
+        return t
+
+    def t_FALSE(self, t):
+        r"\#|false\b"
+        return t
+
+    def t_TRUE(self, t):
+        r"\@|true\b"
+        return t
+
+    def t_TIME_SEP(self, t):
+        r":|,|with\b"
+        return t
+
+    t_PROP = TCTL_TOL_PROPOSITION_TOKEN
     t_DEMONIC = r"{J[1-9]\d*}"
     t_GEQ = r"\>\="
     t_LEQ = r"\<\="
     t_GREATER = r"\>"
     t_LESS = r"\<"
     t_CONST = r"\d+"
-    t_TIME_SEP = r":|,|with"
     t_DOT = r"\."
 
     # --- Grammar Rules (Overrides) ---

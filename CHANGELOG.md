@@ -136,6 +136,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- TOL reads the words `release` and `weak` as `R` and `W`, as OL does:
+  `{J1} p release q` and `{J1} (p weak q)` build the same tree as `{J1} p R q` and
+  `{J1} (p W q)`. Before, both were syntax errors because the name rule ran first.
+- RBATL and RABATL report `<1><5> p Weak q` as a syntax error, as every logic does
+  for a word operator not in lowercase. Before, `Weak` and `RELEASE` got "does not
+  support Release (R) or Weak Until (W) operators", which reads them as operators.
 - Wallet_ATL ignored some guards silently: a guard on an agent outside the
   coalition (`<<1:wallet(2, >= 100)>>X goal` ignored it), and all but the last
   guard on the same agent (`wallet(1, >= 100) && wallet(1, >= 5)` checked only

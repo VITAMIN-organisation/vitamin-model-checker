@@ -865,8 +865,8 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 
 **Reserved keywords (case-insensitive):** `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`, `weak`, `with`, `is`, `true`, `false`
 
-`weak`, `with` and `is` are reserved in every logic, although only OATL, COTL and OL
-read `weak`, TOL reads `with` and CapATL reads `is` as an operator word; a name
+`weak`, `with` and `is` are reserved in every logic, although only OATL, COTL, OL and
+TOL read `weak`, TOL reads `with` and CapATL reads `is` as an operator word; a name
 therefore means the same in every logic.
 
 `true` and `false` are the boolean constants, so a model that declares a proposition with

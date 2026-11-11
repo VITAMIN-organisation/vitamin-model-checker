@@ -151,7 +151,7 @@ def validate_release_weak_rejected(
     """Reject R and W (or the words release and weak), glued (`<1><5>R p`) or infix
     (`<1><5> p R q`), for a logic whose solver lacks them; propositions such as
     ``r`` or ``p_weak`` stay valid."""
-    operator = _MODAL_TOKEN_PREFIX + r"(?:[RW]|(?i:release|weak))" + _MODAL_TOKEN_SUFFIX
+    operator = _MODAL_TOKEN_PREFIX + r"(?:[RW]|release|weak)" + _MODAL_TOKEN_SUFFIX
     prefix = rf"(?:{COALITION_ATL_TOKEN}|{NATATL_COALITION_TOKEN})"
     if re.search(rf"{prefix}.*?{operator}", formula):
         return (
