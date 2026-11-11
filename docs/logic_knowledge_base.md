@@ -874,9 +874,10 @@ themselves are written in lowercase in a formula.
   letters (for example `P`) are not proposition tokens.
 - **ICTL**: uses the standard alphabet above; `E` / `A` / temporal tokens are
   separate lexer rules (not the restricted `ICTL_PROPOSITION_TOKEN` pattern).
-- **NatSL temporal atoms**: Use the standard alphabet above. Single uppercase
-  `E` / `A` are rejected after `F` / `!F` because they are quantifier tokens in
-  the NatSL lexer.
+- **NatSL temporal atoms**: Use the standard alphabet above, including the
+  reserved-word rule; `true` and `false` are accepted as constants. Single
+  uppercase `E` / `A` are rejected after `F`, `G` or `X` because they are
+  quantifier tokens in a NatSL formula.
 - **CTL pre-validation**: Bare temporal operators at formula start are detected
   with token-boundary rules, so proposition names such as `Goal` or `Flux` are
   not mistaken for `G` / `F` operators.

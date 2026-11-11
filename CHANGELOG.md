@@ -244,6 +244,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `release` (`<1><5>F p_weak`, `<1><5>F isweak`) as an unsupported Release or
   Weak Until operator. Only `R`, `W` and the whole words `release` and `weak`
   are rejected now.
+- NatSL goals accepted reserved words and a leading underscore as proposition
+  names (`F or`, `F next`, `F True`, `F _p`), which a model cannot declare.
+  The goal name now follows the same rule as every other logic: a letter, then
+  letters, digits or `_`, and no reserved word. `true` and `false` are the
+  constants, as in every other logic: `E{1}x: (x, 1) F true` holds and `F false`
+  does not. Before, the checker reported them as unknown propositions.
 
 ### Removed
 

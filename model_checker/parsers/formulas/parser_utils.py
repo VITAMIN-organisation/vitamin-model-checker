@@ -131,7 +131,10 @@ def validate_proposition_identifier(
 
 
 def validate_natsl_temporal_atom(atom: str) -> tuple[bool, str | None]:
-    """Validate the proposition after F/!F in a NatSL formula."""
+    """Validate the proposition after F, G or X in a NatSL goal; the constants `true`
+    and `false` are accepted, as in every other logic."""
+    if atom in BOOLEAN_CONSTANTS:
+        return True, None
     valid, err = validate_proposition_identifier(atom)
     if not valid:
         return False, err

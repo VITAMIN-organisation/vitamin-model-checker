@@ -42,7 +42,6 @@ _STILL_ACCEPTED = {
     "TCTL": {"release"},
     "ATL_STAR": {"always", "exist", "forall", "release"},
     "TOL": {"exist", "forall", "release"},
-    "NatSL": {"always", "globally", "implies", "next", "or", "release", "until"},
 }
 
 _RESERVED_CASES = sorted(
@@ -90,11 +89,11 @@ def test_reserved_constant_is_accepted_as_a_constant_in_a_formula(logic, constan
 
 
 @pytest.mark.unit
-# Wallet_ATL rejects the constants altogether; NatSL, TCTL and TOL do not refuse reserved
+# Wallet_ATL rejects the constants altogether; TCTL and TOL do not refuse reserved
 # words as names in a formula (see _STILL_ACCEPTED). The solver then reports the name as
 # undeclared, since a model cannot declare it.
 @pytest.mark.parametrize(
-    "logic", sorted(set(OPERATOR_FORMS) - {"Wallet_ATL", "NatSL", "TCTL", "TOL"})
+    "logic", sorted(set(OPERATOR_FORMS) - {"Wallet_ATL", "TCTL", "TOL"})
 )
 def test_constant_in_another_letter_case_is_never_a_proposition(logic):
     """`True` is refused as a name; ATL_STAR's lexer reads it as the constant instead."""
@@ -104,11 +103,20 @@ def test_constant_in_another_letter_case_is_never_a_proposition(logic):
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("logic", sorted(OPERATOR_FORMS))
-def test_name_with_a_leading_digit_is_rejected(logic):
-    """`1goal` is not an identifier."""
+# ATL_STAR still reads `_goal` as a name (a known bug, not the rule).
+@pytest.mark.parametrize(
+    ("logic", "name"),
+    [
+        (logic, name)
+        for logic in sorted(OPERATOR_FORMS)
+        for name in ["1goal", "_goal"]
+        if (logic, name) != ("ATL_STAR", "_goal")
+    ],
+)
+def test_name_not_starting_with_a_letter_is_rejected(logic, name):
+    """`1goal` and `_goal` are not identifiers: a name starts with a letter."""
     prefix, op = OPERATOR_FORMS[logic]
-    assert parse(logic, f"{prefix}{op} 1goal") is None
+    assert parse(logic, f"{prefix}{op} {name}") is None
 
 
 # NatSL goals take F, G and X only. TCTL has no next; ATL* has no `always` (known bug).

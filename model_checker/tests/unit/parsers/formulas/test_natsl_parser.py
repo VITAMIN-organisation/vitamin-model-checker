@@ -139,5 +139,5 @@ def test_quantifier_letter_is_not_a_goal_name(name):
     parser = NatSLParser()
     assert parser.parse(f"E{{1}}x:(x,1)F {name}") is None
     assert parser.errors == [
-        f"Reserved keyword '{name}' cannot be used as a temporal atom"
+        f"NatSL temporal atom '{name}' clashes with quantifier token '{name}'."
     ]

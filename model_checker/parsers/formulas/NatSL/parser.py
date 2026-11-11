@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from ..parser_utils import validate_natsl_temporal_atom
+
 
 class NatSLParseError(ValueError):
     """Raised when a formula is outside the supported concrete syntax."""
@@ -107,6 +109,9 @@ def parse_formula(text: str) -> NatSLFormula:
             "negations, with an uppercase operator and a space after it"
         )
     negation, operator, proposition = goal_match.groups()
+    valid, err = validate_natsl_temporal_atom(proposition)
+    if not valid:
+        raise NatSLParseError(err)
 
     variables = [quantifier.variable for quantifier in quantifiers]
     bound_variables = [variable for variable, _ in bindings]
@@ -160,16 +165,6 @@ def goal_to_ctl(goal: TemporalGoal) -> str:
 class NatSLParser:
     """Entry-point wrapper used by FormulaParserFactory."""
 
-    _RESERVED_TEMPORAL_ATOMS = {
-        "exist",
-        "forall",
-        "and",
-        "eventually",
-        "not",
-        "E",
-        "A",
-    }
-
     def __init__(self):
         self.errors = []
 
@@ -177,21 +172,7 @@ class NatSLParser:
         self.errors = []
 
         try:
-            formula = parse_formula(text)
+            return parse_formula(text)
         except NatSLParseError as exc:
             self.errors.append(str(exc))
             return None
-
-        atom = formula.goal.proposition
-
-        if atom in self._RESERVED_TEMPORAL_ATOMS:
-            self.errors.append(
-                f"Reserved keyword {atom!r} cannot be used as a temporal atom"
-            )
-            return None
-
-        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", atom):
-            self.errors.append(f"Invalid temporal atom {atom!r}")
-            return None
-
-        return formula

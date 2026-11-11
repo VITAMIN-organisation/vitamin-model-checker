@@ -27,6 +27,7 @@ from model_checker.parsers.formulas.NatSL.parser import (
     parse_formula,
 )
 from model_checker.parsers.game_structures.cgs.cgs import CGS
+from model_checker.parsers.syntax_patterns import BOOLEAN_CONSTANTS
 from model_checker.utils.error_handler import create_error_response
 from model_checker.utils.literals import parse_state_set_literal
 
@@ -259,9 +260,10 @@ class RestrictedNatSL1GEvaluator:
         self.cgs = CGS()
         self.cgs.read_file(str(self.model_path))
         self.atomic_propositions = list(map(str, self.cgs.atomic_propositions))
-        if formula.goal.proposition not in self.atomic_propositions:
+        goal = formula.goal.proposition
+        if goal not in self.atomic_propositions and goal not in BOOLEAN_CONSTANTS:
             raise ValueError(
-                f"Unknown proposition {formula.goal.proposition!r}; "
+                f"Unknown proposition {goal!r}; "
                 f"model propositions are {self.atomic_propositions}"
             )
 

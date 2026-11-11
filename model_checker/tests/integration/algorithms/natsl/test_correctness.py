@@ -25,3 +25,33 @@ class TestNatSLCorrectness:
         assert result["Satisfiability"] is False
         assert result["res"] == "Result: False"
         assert result["initial_state"].endswith("False")
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("constant", "expected"),
+    [
+        ("true", True),  # true holds in every state, so F true holds at once
+        ("false", False),  # no state satisfies false, so F false never holds
+    ],
+)
+def test_goal_constant_is_evaluated_like_in_every_other_logic(
+    natatl_standard_model, constant, expected
+):
+    """`F true` is the constant, as in CTL and ATL, not an unknown proposition."""
+    result = model_checking(
+        f"E{{1}}x: (x, 1) F {constant}", natatl_standard_model.filename
+    )
+    assert "error" not in result, result
+    assert result["Satisfiability"] is expected
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("name", ["or", "Next", "True", "_a"])
+def test_goal_name_outside_the_proposition_alphabet_is_an_error(
+    natatl_standard_model, name
+):
+    """The checker applies the shared proposition rule to the goal, not only the factory parser."""
+    result = model_checking(f"E{{1}}x: (x, 1) F {name}", natatl_standard_model.filename)
+    assert result["error"]["type"] == "validation", result
+    assert f"Atomic proposition {name!r}" in result["error"]["message"], result
