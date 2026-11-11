@@ -231,9 +231,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   that satisfies the operand, and a true `EG` a witness lasso. A false `AX` or
   `AG` gives a counterexample path to a state that violates the operand, a false
   `AF` a counterexample lasso (a path that ends in a loop), and a false `AU` a
-  path or a lasso. A lasso lists each state once in `trace["states"]`, and the new
-  key `trace["cycle_start_index"]` is the index its last state steps back to; it
-  is `None` for a path.
+  path or a lasso. A lasso is a shortest path from the initial state to the
+  nearest state on a cycle, then a shortest cycle through that state. It lists
+  each state once in `trace["states"]`, and the new key
+  `trace["cycle_start_index"]` is the index its last state steps back to; it is
+  `None` for a path.
 - CTL with `generate_trace=True` printed `res` as an unordered set
   (`Result: {'s3', 's0'}`). It is now the sorted tuple that the result without a
   trace prints (`Result: ('s0', 's3')`).

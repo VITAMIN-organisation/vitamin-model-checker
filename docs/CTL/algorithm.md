@@ -89,10 +89,14 @@ These cases have no trace, and `trace` is `None`:
 The trace explains the root operator only. For `EF (AG p)` it is a path to a
 state in `[[AG p]]`, and it does not show why `AG p` holds there.
 
-The lasso is built by walking from `s0`, each time to the first successor inside
-the set named in the table, until a state repeats. It is a valid lasso, not
-always the shortest one. When this walk passes 100 states the result has no
-trace, even if the model has a shorter lasso.
+The lasso stays inside the set named in the table. Its prefix is a shortest path
+from `s0` to the state, fewest steps from `s0`, that lies on a cycle inside that
+set (a self-loop counts; found with Tarjan's algorithm for strongly connected
+components), and its loop is a shortest cycle through that state. It is not
+always the shortest lasso: a longer prefix can lead to a shorter loop. The
+checker builds no other lasso, so the result has no trace when no such cycle is
+reachable or when this lasso has more than 100 states, even if a cycle farther
+from `s0` gives a lasso of 100 states or fewer.
 
 ## Theory vs implementation
 

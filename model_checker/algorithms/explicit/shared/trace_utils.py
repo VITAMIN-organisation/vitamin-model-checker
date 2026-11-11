@@ -1,6 +1,7 @@
 """Build witness and counterexample paths and lassos from an edge list."""
 
 from collections import deque
+from collections.abc import Iterator
 
 from model_checker.parsers.game_structures.cgs import CGSProtocol
 
@@ -48,6 +49,52 @@ def reconstruct_trace_bfs(
     return None
 
 
+def _states_on_a_cycle(adjacency: dict[str, list[str]], start: str) -> set[str]:
+    """The states reachable from start that lie on a cycle.
+
+    Iterative Tarjan over strongly connected components, so a long chain does
+    not hit the recursion limit.
+    """
+    index: dict[str, int] = {}
+    low: dict[str, int] = {}
+    stack: list[str] = []
+    on_stack: set[str] = set()
+    work: list[tuple[str, Iterator[str]]] = []
+    cyclic: set[str] = set()
+
+    def visit(state: str) -> None:
+        index[state] = low[state] = len(index)
+        stack.append(state)
+        on_stack.add(state)
+        work.append((state, iter(adjacency.get(state, []))))
+
+    visit(start)
+    while work:
+        state, successors = work[-1]
+        for successor in successors:
+            if successor not in index:
+                visit(successor)
+                break
+            if successor in on_stack:
+                low[state] = min(low[state], index[successor])
+        else:
+            work.pop()
+            if work:
+                parent = work[-1][0]
+                low[parent] = min(low[parent], low[state])
+            if low[state] == index[state]:
+                component = set()
+                member = None
+                while member != state:
+                    member = stack.pop()
+                    on_stack.discard(member)
+                    component.add(member)
+                if len(component) > 1 or state in adjacency.get(state, []):
+                    cyclic.update(component)
+
+    return cyclic
+
+
 def find_lasso(
     edges: list[tuple[str, str]],
     start: str,
@@ -55,29 +102,28 @@ def find_lasso(
 ) -> tuple[list[str], int] | None:
     """A lasso from start inside allowed: its states, each once, and the index the last one steps back to.
 
-    The walk takes the first successor in allowed at each step. None when start
-    is outside allowed, when the walk reaches a state with no successor in
-    allowed, or when it passes MAX_TRACE_LENGTH states.
+    The prefix is a shortest path to the nearest state that lies on a cycle
+    inside allowed, and the loop is a shortest cycle through that state. None
+    when start is outside allowed, when no such cycle is reachable inside
+    allowed, or when the lasso has more than MAX_TRACE_LENGTH states.
     """
     if start not in allowed:
         return None
 
-    adjacency = _build_adjacency(edges)
-    path = [start]
-    index_of = {start: 0}
+    inside = [(s, t) for s, t in edges if s in allowed and t in allowed]
+    prefix = reconstruct_trace_bfs(
+        inside, start, _states_on_a_cycle(_build_adjacency(inside), start)
+    )
+    if prefix is None:
+        return None
 
-    while len(path) <= MAX_TRACE_LENGTH:
-        successor = next(
-            (state for state in adjacency.get(path[-1], []) if state in allowed), None
-        )
-        if successor is None:
-            return None
-        if successor in index_of:
-            return path, index_of[successor]
-        index_of[successor] = len(path)
-        path.append(successor)
-
-    return None
+    entry = prefix[-1]
+    # A path from entry to a state that steps back to entry is itself a cycle.
+    steps_back = {s for s, t in inside if t == entry}
+    loop = reconstruct_trace_bfs(inside, entry, steps_back)
+    if loop is None or len(prefix) + len(loop) - 1 > MAX_TRACE_LENGTH:
+        return None
+    return prefix + loop[1:], len(prefix) - 1
 
 
 def reverse_adjacency(graph: dict, nodes: set | None = None) -> dict:

@@ -8,6 +8,7 @@ once; after its last state the path steps back to states[cycle_start_index].
 import pytest
 
 from model_checker.algorithms.explicit.CTL.CTL import model_checking
+from model_checker.tests.helpers.synthetic_models import build_cgs_model_content
 
 _EDGES = {
     ("s0", "s1"),
@@ -60,6 +61,38 @@ def test_trace_shows_why_the_root_operator_holds_or_fails(
     if cycle_start is not None:
         steps.append((states[-1], states[cycle_start]))
     assert all(step in _EDGES for step in steps)
+
+
+def _long_branch_and_short_loop() -> str:
+    """s0 -> s1 -> ... -> s120 -> s120 and s0 -> s121 -> s121, p everywhere."""
+    n = 122
+    rows = [["0"] * n for _ in range(n)]
+    for i in range(120):
+        rows[i][i + 1] = "AC"
+    rows[0][121] = "BC"
+    rows[120][120] = "*"
+    rows[121][121] = "*"
+    return build_cgs_model_content(
+        transitions=rows,
+        state_names=[f"s{i}" for i in range(n)],
+        initial_state="s0",
+        labelling=["1"] * n,
+        unknown_transitions=[["0"] * n for _ in range(n)],
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(("formula", "holds"), [("EG p", True), ("AF !p", False)])
+def test_lasso_is_short_when_the_first_branch_is_long(temp_file, formula, holds):
+    """The lasso takes the 2-state branch, though the first successor starts 120 states."""
+    result = model_checking(
+        formula, temp_file(_long_branch_and_short_loop()), generate_trace=True
+    )
+    assert result["initial_state"] == f"Initial state s0: {holds}"
+    # p holds everywhere, so every path stays in [[EG p]] and outside [[AF !p]];
+    # s121 is the nearest state on a cycle, and it loops on itself.
+    assert result["trace"]["states"] == ["s0", "s121"]
+    assert result["trace"]["cycle_start_index"] == 1
 
 
 @pytest.mark.integration

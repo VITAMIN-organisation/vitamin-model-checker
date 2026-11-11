@@ -13,6 +13,13 @@ from model_checker.algorithms.explicit.shared.trace_utils import (
 )
 
 _CHAIN = [("s0", "s1"), ("s1", "s2"), ("s2", "s3")]
+_ALL = {"s0", "s1", "s2", "s3"}
+# s0's first successor starts a chain of 120 states; its second loops on itself.
+_LONG_FIRST_BRANCH = [(f"s{i}", f"s{i + 1}") for i in range(120)] + [
+    ("s120", "s120"),
+    ("s0", "s121"),
+    ("s121", "s121"),
+]
 
 
 @pytest.mark.unit
@@ -56,11 +63,29 @@ def test_path_longer_than_the_limit_is_none():
         (_CHAIN[:2] + [("s2", "s1")], {"s0", "s1", "s2"}, (["s0", "s1", "s2"], 1)),
         # s1 comes first but is not allowed; s2 loops on itself (index 1).
         ([("s0", "s1"), ("s0", "s2"), ("s2", "s2")], {"s0", "s2"}, (["s0", "s2"], 1)),
+        # s1 comes first but is a dead end; s2 loops on itself (index 1).
+        ([("s0", "s1"), ("s0", "s2"), ("s2", "s2")], _ALL, (["s0", "s2"], 1)),
+        # The cycle s1 s2 s3 is entered at s1, which s3 steps back to (index 1).
+        (_CHAIN + [("s3", "s1")], _ALL, (["s0", "s1", "s2", "s3"], 1)),
+        # s121 is the cycle state nearest to s0, and it loops on itself (index 1).
+        (
+            _LONG_FIRST_BRANCH,
+            {f"s{i}" for i in range(122)},
+            (["s0", "s121"], 1),
+        ),
         # s1 has no successor among the allowed states.
         (_CHAIN, {"s0", "s1"}, None),
         ([("s0", "s0")], {"s1"}, None),
     ],
-    ids=["loop_after_a_prefix", "self_loop", "stuck", "start_not_allowed"],
+    ids=[
+        "loop_after_a_prefix",
+        "self_loop",
+        "first_successor_is_a_dead_end",
+        "cycle_entered_in_the_middle",
+        "long_first_branch",
+        "stuck",
+        "start_not_allowed",
+    ],
 )
 def test_lasso_stays_inside_the_allowed_states(edges, allowed, lasso):
     """The lasso lists each state once, with the index its last state steps back to."""
