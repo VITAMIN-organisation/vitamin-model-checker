@@ -95,6 +95,11 @@ make test
 
 See `docker/README.md` for the Docker workflow.
 
+## AI usage
+
+AI tools helped write code, tests and docs; the maintainer reviewed all of it.
+Details are in [AIUSE.md](AIUSE.md).
+
 ## License
 
 Distributed under the SOURCE-AVAILABLE NON-COMMERCIAL LICENSE. See LICENSE for
