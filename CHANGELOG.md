@@ -260,6 +260,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - ATL* read `always` as a proposition name, so `<<1>> always p` was a syntax
   error and `<<1>> F always` parsed. `always` is the word for `G`, as in the
   other logics, and a reserved word.
+- ATL, ATLF, CTL, LTL, ICTL, IATL, CapATL, COTL, OATL, OL, RBATL, RABATL,
+  NatATL, NatATL_Recall and NatATLF accepted a reserved word written in another
+  letter case as a proposition name when its upper case is an operator name
+  (`<1>F Globally`, `AF NOT`, `AF Forall`). Reserved words are case-insensitive as
+  names, so these formulas are rejected. The same holds for a CapATL capacity name
+  (`K1(1 is Next)`), as it already did in lowercase.
 
 ### Removed
 

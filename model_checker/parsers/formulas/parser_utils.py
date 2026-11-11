@@ -409,30 +409,38 @@ def run_common_prechecks(
 
 
 def validate_ast(
-    result, valid_operators, coalition_pattern=None, extra_atom_patterns=()
+    result,
+    valid_operators,
+    coalition_pattern=None,
+    operator_patterns=(),
+    leaf_patterns=(),
 ):
-    """Walk the parse tree and ensure every leaf is a known operator, coalition, or proposition."""
+    """Walk a tuple parse tree `(operator, *operands)`: each operator is a known
+    operator, a coalition or an `operator_patterns` match, and each other leaf a
+    constant, a `leaf_patterns` match or a valid proposition name."""
 
-    def _is_valid_atom(node_str):
-        if node_str in BOOLEAN_CONSTANTS:
-            return True
+    def _is_operator(node_str):
+        # The lexer leaves word connectives as typed (`and`, `is`); the sets are upper.
         if node_str in valid_operators or node_str.upper() in valid_operators:
             return True
         if coalition_pattern and coalition_pattern.match(node_str):
             return True
-        for pat in extra_atom_patterns:
-            if pat.match(node_str):
-                return True
-        return False
+        return any(pat.match(node_str) for pat in operator_patterns)
+
+    def _is_leaf(node_str):
+        # An operator name such as GLOBALLY is never a leaf, so `F Globally` fails.
+        if node_str in BOOLEAN_CONSTANTS:
+            return True
+        if any(pat.match(node_str) for pat in leaf_patterns):
+            return True
+        valid, _ = validate_proposition_identifier(node_str)
+        return valid
 
     def _walk(node):
         if isinstance(node, str):
-            if _is_valid_atom(node):
-                return True
-            valid, _ = validate_proposition_identifier(node)
-            return valid
-        if isinstance(node, tuple):
-            return all(_walk(child) for child in node)
+            return _is_leaf(node)
+        if isinstance(node, tuple) and node and isinstance(node[0], str):
+            return _is_operator(node[0]) and all(_walk(child) for child in node[1:])
         return False
 
     return _walk(result)

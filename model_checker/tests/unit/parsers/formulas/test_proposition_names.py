@@ -65,6 +65,24 @@ def test_reserved_word_is_not_a_proposition(logic, word):
     assert parse(logic, f"{prefix}{op} {word}") is None
 
 
+# TCTL and TOL check no name in a formula yet (B54).
+_RESERVED_IN_OTHER_CASE = sorted(
+    (logic, spelling)
+    for logic, word in _RESERVED_CASES
+    if logic not in {"TCTL", "TOL"}
+    for spelling in (word.capitalize(), word.upper())
+)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(("logic", "word"), _RESERVED_IN_OTHER_CASE)
+def test_reserved_word_in_another_letter_case_is_not_a_proposition(logic, word):
+    """`F Globally` is an error: reserved words are case-insensitive as names
+    (docs/logic_knowledge_base.md, "Reserved keywords (case-insensitive)")."""
+    prefix, op = OPERATOR_FORMS[logic]
+    assert parse(logic, f"{prefix}{op} {word}") is None
+
+
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", sorted(OPERATOR_FORMS))
 @pytest.mark.parametrize(

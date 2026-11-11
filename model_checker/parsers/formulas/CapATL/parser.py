@@ -234,5 +234,6 @@ class CapATLParser(BaseLogicParser):
             result,
             _CAPATL_VALID_OPERATORS,
             coalition_pattern=_COALITION_OPERATOR_PATTERN,
-            extra_atom_patterns=(KCAP_OPERATOR_PATTERN, _AGENT_PATTERN),
+            operator_patterns=(KCAP_OPERATOR_PATTERN,),
+            leaf_patterns=(_AGENT_PATTERN,),
         )

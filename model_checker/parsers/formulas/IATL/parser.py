@@ -144,5 +144,5 @@ class IATLParser(BaseLogicParser):
             result,
             _IATL_VALID_OPERATORS,
             coalition_pattern=_COALITION_EXIST_PATTERN,
-            extra_atom_patterns=(_COALITION_UNIVERSAL_PATTERN,),
+            operator_patterns=(_COALITION_UNIVERSAL_PATTERN,),
         )
