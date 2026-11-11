@@ -12,12 +12,10 @@ and many extensions.
 pip install vitamin-model-checker
 ```
 
-Development install from a checkout:
+Development install from a checkout, with [`uv`](https://docs.astral.sh/uv/):
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev,docs]"
+uv sync --extra dev --extra docs
 ```
 
 ATL* and the automata library need Spot. On Linux, `spottl` is installed
@@ -74,14 +72,11 @@ Links:
 ## Run tests
 
 ```bash
-pytest model_checker/tests/unit/
-pytest model_checker/tests/integration/
-pytest model_checker/tests/
-
-make test          # unit + integration style suite, excluding slow tests
+uv run pytest model_checker/tests/
 ```
 
-Test-suite details live in `model_checker/tests/README.md`.
+The checks to run before a PR are in [CONTRIBUTING.md](CONTRIBUTING.md);
+test-suite details live in `model_checker/tests/README.md`.
 
 ## Docker
 
@@ -95,10 +90,11 @@ make test
 
 See `docker/README.md` for the Docker workflow.
 
-## AI usage
+## Contributing and AI usage
 
-AI tools helped write code, tests and docs; the maintainer reviewed all of it.
-Details are in [AIUSE.md](AIUSE.md).
+How to set up, test and open a PR, including the rules for using AI tools, is
+in [CONTRIBUTING.md](CONTRIBUTING.md). How the maintainer used AI tools is in
+[AIUSE.md](AIUSE.md).
 
 ## License
 
