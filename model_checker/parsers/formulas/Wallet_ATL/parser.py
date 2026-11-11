@@ -250,6 +250,7 @@ class Wallet_ATLParser(BaseLogicParser):
 
     def p_expression_prop(self, p):
         """expression : PROP"""
+        self._check_proposition_name(p[1])
         p[0] = {
             "type": "proposition",
             "proposition": p[1],

@@ -157,6 +157,7 @@ class CapATLParser(BaseLogicParser):
     def p_capformula_is(self, p):
         """capformula : AGENT IS PROP"""
         self._check_agent(p[1], f"{p[1]} is {p[3]}")
+        self._check_proposition_name(p[3], kind="Capacity")
         p[0] = ("is", p[1], p[3])
 
     def p_capformula_kcap(self, p):

@@ -20,6 +20,7 @@ from .parser_utils import (
     OpenPrefix,
     ambiguous_prefix_error,
     run_common_prechecks,
+    validate_proposition_identifier,
 )
 
 
@@ -185,7 +186,17 @@ class BaseLogicParser:
 
     def p_expression_prop(self, p):
         """expression : PROP"""
+        self._check_proposition_name(p[1])
         p[0] = p[1]
+
+    def _check_proposition_name(
+        self, name: str, kind: str = "Atomic proposition"
+    ) -> None:
+        """Log why `name` cannot be a proposition (a reserved word in any letter
+        case), so `parse` returns None with that reason."""
+        _, err = validate_proposition_identifier(name, kind=kind)
+        if err is not None:
+            self._log_error(err)
 
     def p_error(self, p):
         """Syntax error handler."""

@@ -14,6 +14,8 @@ from model_checker.tests.helpers.formula_cases import (
     binary,
     holds_word,
     parse,
+    parse_errors,
+    unary,
 )
 
 # docs/logic_knowledge_base.md, "Reserved keywords (case-insensitive)"
@@ -39,9 +41,7 @@ _CONSTANTS = {"true", "false"}
 
 # Parsers that still read these reserved words as names (a known bug, not the rule).
 _STILL_ACCEPTED = {
-    "TCTL": {"release"},
     "ATL_STAR": {"exist", "forall", "release"},
-    "TOL": {"exist", "forall", "release"},
 }
 
 _RESERVED_CASES = sorted(
@@ -65,11 +65,9 @@ def test_reserved_word_is_not_a_proposition(logic, word):
     assert parse(logic, f"{prefix}{op} {word}") is None
 
 
-# TCTL and TOL check no name in a formula yet (B54).
 _RESERVED_IN_OTHER_CASE = sorted(
     (logic, spelling)
     for logic, word in _RESERVED_CASES
-    if logic not in {"TCTL", "TOL"}
     for spelling in (word.capitalize(), word.upper())
 )
 
@@ -81,6 +79,27 @@ def test_reserved_word_in_another_letter_case_is_not_a_proposition(logic, word):
     (docs/logic_knowledge_base.md, "Reserved keywords (case-insensitive)")."""
     prefix, op = OPERATOR_FORMS[logic]
     assert parse(logic, f"{prefix}{op} {word}") is None
+
+
+# The PLY parsers; ATL_STAR and NatSL report errors by raising ValueError.
+_PLY_LOGICS = sorted(set(OPERATOR_FORMS) - {"ATL_STAR", "NatSL"})
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("logic", _PLY_LOGICS)
+def test_refused_name_is_named_in_the_errors(logic):
+    """`F Globally` is refused with a reason that names `Globally`, not an empty list."""
+    # `globally` is reserved in any letter case (KB "Reserved keywords").
+    errors = parse_errors(logic, unary(logic, "Globally"))
+    assert any("'Globally'" in error for error in errors), errors
+
+
+@pytest.mark.unit
+def test_capacity_name_follows_the_name_rule():
+    """`K1(1 is Next)` is refused with a reason that names `Next`."""
+    # `next` is reserved in any letter case (KB "Reserved keywords").
+    errors = parse_errors("CapATL", "K1(1 is Next)")
+    assert any("Capacity 'Next'" in error for error in errors), errors
 
 
 @pytest.mark.unit
@@ -107,12 +126,8 @@ def test_reserved_constant_is_accepted_as_a_constant_in_a_formula(logic, constan
 
 
 @pytest.mark.unit
-# Wallet_ATL rejects the constants altogether; TCTL and TOL do not refuse reserved
-# words as names in a formula (see _STILL_ACCEPTED). The solver then reports the name as
-# undeclared, since a model cannot declare it.
-@pytest.mark.parametrize(
-    "logic", sorted(set(OPERATOR_FORMS) - {"Wallet_ATL", "TCTL", "TOL"})
-)
+# Wallet_ATL rejects the constants altogether.
+@pytest.mark.parametrize("logic", sorted(set(OPERATOR_FORMS) - {"Wallet_ATL"}))
 def test_constant_in_another_letter_case_is_never_a_proposition(logic):
     """`True` is refused as a name; ATL_STAR's lexer reads it as the constant instead."""
     prefix, op = OPERATOR_FORMS[logic]

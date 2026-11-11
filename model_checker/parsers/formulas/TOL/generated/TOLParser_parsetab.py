@@ -27,7 +27,7 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',123),
+  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',124),
   ('expression -> expression AND expression','expression',3,'p_expression_binary','parser.py',195),
   ('expression -> expression OR expression','expression',3,'p_expression_binary','parser.py',196),
   ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','parser.py',197),

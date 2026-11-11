@@ -266,6 +266,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (`<1>F Globally`, `AF NOT`, `AF Forall`). Reserved words are case-insensitive as
   names, so these formulas are rejected. The same holds for a CapATL capacity name
   (`K1(1 is Next)`), as it already did in lowercase.
+- TCTL and TOL accepted a reserved word as a proposition name in a formula
+  (`AF Always`, `AF True`, `AF release`, `{J1}F forall`), unless their lexer
+  read it as an operator (`AF until`). These formulas are rejected, as in the
+  logics of the entry above.
+- The logics of the entry above refused a reserved word as a proposition or
+  capacity name with an empty error list. The parse now fails with
+  `Atomic proposition 'Globally' clashes with reserved keyword.`
+  (`Capacity 'Next' ...` for a CapATL capacity).
 
 ### Removed
 

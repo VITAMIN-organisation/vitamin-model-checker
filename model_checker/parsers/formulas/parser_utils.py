@@ -112,20 +112,23 @@ def validate_proposition_identifier(
     name: str,
     *,
     reserved_words: frozenset[str] = FORMULA_RESERVED_WORDS,
+    kind: str = "Atomic proposition",
 ) -> tuple[bool, str | None]:
     """Return (True, None) when name is a valid atomic proposition identifier.
 
     Applies the shared model/formula alphabet and rejects reserved keywords.
+    `kind` names what the identifier is in the message (a CapATL capacity
+    follows the same rule).
     """
     if not PROPOSITION_FULL_RE.match(name):
         return (
             False,
-            f"Atomic proposition {name!r} is invalid: {_INVALID_PROPOSITION_MSG}.",
+            f"{kind} {name!r} is invalid: {_INVALID_PROPOSITION_MSG}.",
         )
     if name.lower() in reserved_words:
         return (
             False,
-            f"Atomic proposition {name!r} clashes with reserved keyword.",
+            f"{kind} {name!r} clashes with reserved keyword.",
         )
     return True, None
 
