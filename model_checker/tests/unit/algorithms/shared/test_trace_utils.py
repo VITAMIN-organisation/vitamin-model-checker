@@ -22,6 +22,16 @@ _LONG_FIRST_BRANCH = [(f"s{i}", f"s{i + 1}") for i in range(120)] + [
 ]
 
 
+def _ring_beside_a_self_loop(ring_size: int) -> list[tuple[str, str]]:
+    """Edges s0 -> c0 on a ring of ring_size states, and s0 -> a -> b -> b."""
+    ring = [(f"c{i}", f"c{(i + 1) % ring_size}") for i in range(ring_size)]
+    return [("s0", "c0"), ("s0", "a"), ("a", "b"), ("b", "b")] + ring
+
+
+def _states_of(edges: list[tuple[str, str]]) -> set[str]:
+    return {state for edge in edges for state in edge}
+
+
 @pytest.mark.unit
 @pytest.mark.parametrize(
     ("edges", "trace"),
@@ -73,6 +83,18 @@ def test_path_longer_than_the_limit_is_none():
             {f"s{i}" for i in range(122)},
             (["s0", "s121"], 1),
         ),
+        # Via c0: 1 + 150 = 151 states, over the limit. Via b: s0 a b.
+        (
+            _ring_beside_a_self_loop(150),
+            _states_of(_ring_beside_a_self_loop(150)),
+            (["s0", "a", "b"], 2),
+        ),
+        # Via c0: 1 + 10 = 11 states. Via b: 3, the shorter.
+        (
+            _ring_beside_a_self_loop(10),
+            _states_of(_ring_beside_a_self_loop(10)),
+            (["s0", "a", "b"], 2),
+        ),
         # s1 has no successor among the allowed states.
         (_CHAIN, {"s0", "s1"}, None),
         ([("s0", "s0")], {"s1"}, None),
@@ -83,6 +105,8 @@ def test_path_longer_than_the_limit_is_none():
         "first_successor_is_a_dead_end",
         "cycle_entered_in_the_middle",
         "long_first_branch",
+        "nearest_cycle_too_long",
+        "shorter_lasso_through_a_farther_cycle",
         "stuck",
         "start_not_allowed",
     ],

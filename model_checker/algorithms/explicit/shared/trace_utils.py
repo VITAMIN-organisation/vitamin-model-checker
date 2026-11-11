@@ -95,35 +95,69 @@ def _states_on_a_cycle(adjacency: dict[str, list[str]], start: str) -> set[str]:
     return cyclic
 
 
+def _breadth_first(
+    adjacency: dict[str, list[str]], root: str, max_depth: int
+) -> dict[str, tuple[int, str | None]]:
+    """Map each state within max_depth steps of root to its depth and parent."""
+    tree: dict[str, tuple[int, str | None]] = {root: (0, None)}
+    queue = deque([root])
+    while queue:
+        state = queue.popleft()
+        depth = tree[state][0]
+        if depth == max_depth:
+            continue
+        for successor in adjacency.get(state, []):
+            if successor not in tree:
+                tree[successor] = (depth + 1, state)
+                queue.append(successor)
+    return tree
+
+
+def _tree_path(tree: dict[str, tuple[int, str | None]], state: str) -> list[str]:
+    """Return the tree path from the root to state."""
+    path: list[str] = []
+    current: str | None = state
+    while current is not None:
+        path.append(current)
+        current = tree[current][1]
+    return path[::-1]
+
+
 def find_lasso(
     edges: list[tuple[str, str]],
     start: str,
     allowed: set[str],
 ) -> tuple[list[str], int] | None:
-    """A lasso from start inside allowed: its states, each once, and the index the last one steps back to.
+    """Return the shortest lasso from start inside allowed, or None.
 
-    The prefix is a shortest path to the nearest state that lies on a cycle
-    inside allowed, and the loop is a shortest cycle through that state. None
-    when start is outside allowed, when no such cycle is reachable inside
-    allowed, or when the lasso has more than MAX_TRACE_LENGTH states.
+    The lasso is its states, each once, and the index its last state steps back
+    to. None when no lasso has at most MAX_TRACE_LENGTH states.
     """
     if start not in allowed:
         return None
 
     inside = [(s, t) for s, t in edges if s in allowed and t in allowed]
-    prefix = reconstruct_trace_bfs(
-        inside, start, _states_on_a_cycle(_build_adjacency(inside), start)
-    )
-    if prefix is None:
-        return None
-
-    entry = prefix[-1]
-    # A path from entry to a state that steps back to entry is itself a cycle.
-    steps_back = {s for s, t in inside if t == entry}
-    loop = reconstruct_trace_bfs(inside, entry, steps_back)
-    if loop is None or len(prefix) + len(loop) - 1 > MAX_TRACE_LENGTH:
-        return None
-    return prefix + loop[1:], len(prefix) - 1
+    adjacency = _build_adjacency(inside)
+    predecessors: dict[str, set[str]] = {}
+    for source, target in inside:
+        predecessors.setdefault(target, set()).add(source)
+    on_a_cycle = _states_on_a_cycle(adjacency, start)
+    from_start = _breadth_first(adjacency, start, MAX_TRACE_LENGTH - 1)
+    best: tuple[list[str], int] | None = None
+    best_size = MAX_TRACE_LENGTH + 1
+    # Entries come in depth order and a cycle adds at least one state.
+    for entry, (depth, _) in from_start.items():
+        if depth + 1 >= best_size:
+            break
+        if entry not in on_a_cycle:
+            continue
+        from_entry = _breadth_first(adjacency, entry, best_size - depth - 2)
+        steps_back = next((s for s in from_entry if s in predecessors[entry]), None)
+        if steps_back is not None:
+            loop = _tree_path(from_entry, steps_back)
+            best = (_tree_path(from_start, entry) + loop[1:], depth)
+            best_size = len(best[0])
+    return best
 
 
 def reverse_adjacency(graph: dict, nodes: set | None = None) -> dict:
