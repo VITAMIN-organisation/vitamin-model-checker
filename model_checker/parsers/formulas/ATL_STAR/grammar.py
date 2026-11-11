@@ -13,8 +13,11 @@ Grammar, lowest to highest precedence:
     atom        := PROP | 'true' | 'false' | '(' formula ')'
     agents      := INT (',' INT)*
 
-- Word forms (`not`, `and`, `until`, ...) work in any case. `X`, `F`, `G`, `U` are
+- Word forms (`not`, `and`, `until`, ...) are lowercase only. `X`, `F`, `G`, `U` are
   uppercase only, so lowercase one-letter propositions stay free.
+- A name follows the rule of every logic (`validate_proposition_identifier`): it
+  starts with a letter and is no reserved word in any case, so `Always`, `True`
+  and `exist` are errors.
 - `<<1>> p U q` is `<<1>>(p U q)`, as in ATL (JACM 2002, p. 689).
 - `F`, `G`, `||` and `->` become the seven constructors of formula.py, so the
   verifier handles only those.
@@ -25,7 +28,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from ..parser_utils import ambiguous_prefix_message
+from ..parser_utils import (
+    ambiguous_prefix_message,
+    validate_proposition_identifier,
+)
 from .formula import And, Coalition, Formula, Next, Not, Prop, True_, Until
 
 _CONNECTIVES = frozenset({"AND", "OR", "IMPLIES"})
@@ -53,15 +59,16 @@ _KEYWORDS = {
     "false": "FALSE",
 }
 
+# Uppercase only, so one-letter props like `p` stay free.
 _SINGLE_LETTER_KEYWORDS = {
     "X": "NEXT",
     "F": "EVENTUALLY",
     "G": "GLOBALLY",
     "U": "UNTIL",
 }
-# Uppercase only, so one-letter props like `p` stay free; the words in _KEYWORDS
-# match in any case.
 
+# IDENT takes a leading `_` so that `_goal` fails with the name rule's message
+# rather than "Unexpected character".
 _TOKEN_RE = re.compile(
     r"""
       (?P<WS>\s+)
@@ -101,9 +108,12 @@ def _tokenize(text: str) -> list[_Token]:
             if kind == "IDENT":
                 if value in _SINGLE_LETTER_KEYWORDS:
                     kind = _SINGLE_LETTER_KEYWORDS[value]
-                elif value.lower() in _KEYWORDS:
-                    kind = _KEYWORDS[value.lower()]
+                elif value in _KEYWORDS:
+                    kind = _KEYWORDS[value]
                 else:
+                    _, err = validate_proposition_identifier(value)
+                    if err is not None:
+                        raise ATLStarParseError(err, pos)
                     kind = "PROP"
             tokens.append(_Token(kind, value, pos))
         pos = match.end()

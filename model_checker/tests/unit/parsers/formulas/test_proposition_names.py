@@ -39,15 +39,10 @@ _DOCUMENTED_RESERVED = {
 # Reserved as names, but in a formula they are valid constants.
 _CONSTANTS = {"true", "false"}
 
-# Parsers that still read these reserved words as names (a known bug, not the rule).
-_STILL_ACCEPTED = {
-    "ATL_STAR": {"exist", "forall", "release"},
-}
-
 _RESERVED_CASES = sorted(
     (logic, word)
     for logic in OPERATOR_FORMS
-    for word in _DOCUMENTED_RESERVED - _CONSTANTS - _STILL_ACCEPTED.get(logic, set())
+    for word in _DOCUMENTED_RESERVED - _CONSTANTS
 )
 
 
@@ -65,9 +60,11 @@ def test_reserved_word_is_not_a_proposition(logic, word):
     assert parse(logic, f"{prefix}{op} {word}") is None
 
 
+# The constants are included: `True` is neither a name nor the constant `true`.
 _RESERVED_IN_OTHER_CASE = sorted(
     (logic, spelling)
-    for logic, word in _RESERVED_CASES
+    for logic in OPERATOR_FORMS
+    for word in _DOCUMENTED_RESERVED
     for spelling in (word.capitalize(), word.upper())
 )
 
@@ -81,12 +78,9 @@ def test_reserved_word_in_another_letter_case_is_not_a_proposition(logic, word):
     assert parse(logic, f"{prefix}{op} {word}") is None
 
 
-# The PLY parsers; ATL_STAR and NatSL report errors by raising ValueError.
-_PLY_LOGICS = sorted(set(OPERATOR_FORMS) - {"ATL_STAR", "NatSL"})
-
-
 @pytest.mark.unit
-@pytest.mark.parametrize("logic", _PLY_LOGICS)
+# NatSL reports errors by raising ValueError.
+@pytest.mark.parametrize("logic", sorted(set(OPERATOR_FORMS) - {"NatSL"}))
 def test_refused_name_is_named_in_the_errors(logic):
     """`F Globally` is refused with a reason that names `Globally`, not an empty list."""
     # `globally` is reserved in any letter case (KB "Reserved keywords").
@@ -126,26 +120,8 @@ def test_reserved_constant_is_accepted_as_a_constant_in_a_formula(logic, constan
 
 
 @pytest.mark.unit
-# Wallet_ATL rejects the constants altogether.
-@pytest.mark.parametrize("logic", sorted(set(OPERATOR_FORMS) - {"Wallet_ATL"}))
-def test_constant_in_another_letter_case_is_never_a_proposition(logic):
-    """`True` is refused as a name; ATL_STAR's lexer reads it as the constant instead."""
-    prefix, op = OPERATOR_FORMS[logic]
-    result = parse(logic, f"{prefix}{op} True")
-    assert result is None or not holds_word(result, "True"), result
-
-
-@pytest.mark.unit
-# ATL_STAR still reads `_goal` as a name (a known bug, not the rule).
-@pytest.mark.parametrize(
-    ("logic", "name"),
-    [
-        (logic, name)
-        for logic in sorted(OPERATOR_FORMS)
-        for name in ["1goal", "_goal"]
-        if (logic, name) != ("ATL_STAR", "_goal")
-    ],
-)
+@pytest.mark.parametrize("logic", sorted(OPERATOR_FORMS))
+@pytest.mark.parametrize("name", ["1goal", "_goal"])
 def test_name_not_starting_with_a_letter_is_rejected(logic, name):
     """`1goal` and `_goal` are not identifiers: a name starts with a letter."""
     prefix, op = OPERATOR_FORMS[logic]

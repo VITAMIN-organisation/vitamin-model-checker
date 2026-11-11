@@ -855,13 +855,13 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 
 **Standard alphabet (models and most logics):**
 - Pattern: `[a-zA-Z][a-zA-Z0-9_]*` (`PROPOSITION_TOKEN` in `syntax_patterns.py`)
-- Logics: CTL, LTL, ATL, NatATL, NatSL, OATL, OL, RBATL, CapATL, COTL, ICTL,
+- Logics: CTL, LTL, ATL, ATL*, NatATL, NatSL, OATL, OL, RBATL, CapATL, COTL, ICTL,
   Wallet_ATL
 - Examples: `p`, `Goal`, `safe_1`
 - Validation: `validate_proposition_identifier()` in
   `model_checker/parsers/formulas/parser_utils.py`. It checks the propositions of
-  CGS models and, in every logic except ATL*, the propositions of a formula and the
-  capacity names of a CapATL formula.
+  CGS models and, in every logic, the propositions of a formula and the capacity
+  names of a CapATL formula.
 
 **Reserved keywords (case-insensitive):** `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`, `true`, `false`
 

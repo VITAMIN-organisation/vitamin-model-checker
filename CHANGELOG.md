@@ -79,6 +79,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   parentheses. Before, `<<1>> p U q` parsed as `(<<1>> p) U q` and failed with "a
   bare Until is not a state formula", and the other forms followed the LTL
   precedence of the Spot library. See `docs/ATL_STAR/algorithm.md`.
+- Breaking: ATL* reads the word operators in lowercase only, as the other logics
+  do, and checks names by the same rule. `NOT p`, `p Until q`, `<<1>> Always p`
+  and `<<1>> F True` are errors such as `Atomic proposition 'Until' clashes with
+  reserved keyword.`; before, words matched in any case. `exist`, `forall`,
+  `release` and `_goal` are no longer proposition names.
 - Breaking: NatATL, NatATL_Recall and NatATLF reject a bound `k` below 1, such as
   `<{1}, 0>F p`, with "Invalid bound 0: must be at least 1". Before, `k = 0` parsed
   and the solver returned false for every formula.
