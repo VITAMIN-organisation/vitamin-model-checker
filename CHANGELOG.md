@@ -137,10 +137,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   an error that names the state.
 - WalletCGS: an income action no longer needs funds in the last agent's wallet;
   the paper allows income and neutral actions always.
-- WalletCGS with one agent: `get_next_states` treated the only agent as the contract agent
-  and skipped its wallet check, so an action it could not pay for (`D6` with 5 in the
-  wallet) still led to a next state. `get_valid_actions` and `get_next_states` now share
-  one rule: the last agent is the contract only when there is more than one agent.
 - ICTL, IATL and ATLF: `true` and `false` were rejected with "does not evaluate the
   constant". They now mean all states and no state (in ATLF the value 1 and 0 everywhere).
 - `true` and `false` are reserved words, so a model that declares a proposition with
@@ -223,6 +219,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The PyPI package includes `model_checker/knowledge/knowledge_bundle.json.gz`,
   rebuilt from the current docs and source. Earlier releases left it out, so an
   installed package had no documentation bundle.
+
+### Removed
+
+- Breaking: WalletCGS `get_valid_actions`, `get_next_states` and
+  `simulate_transition`. Wallet_ATL never called them. With more than one agent
+  they treated the last agent as the contract and skipped its wallet check,
+  which the Wallet ATL paper (AAMAS 2026, Def. 4.1) does not do.
+  `simulate_transition` also moved each amount to or from that agent; the
+  paper's section 3.2 does this and its Def. 4.4 does not. For wallet
+  feasibility use `check_action_feasibility` and `is_profile_feasible`. Nothing
+  replaces the next-state and balance-update helpers: balances are not updated
+  along transitions (see `docs/Wallet_ATL/algorithm.md`).
 
 ## [1.7.0] - 2026-11-05
 
