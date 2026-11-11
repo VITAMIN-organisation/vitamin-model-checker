@@ -47,6 +47,7 @@ _KEYWORDS = {
     "next": "NEXT",
     "eventually": "EVENTUALLY",
     "globally": "GLOBALLY",
+    "always": "GLOBALLY",
     "until": "UNTIL",
     "true": "TRUE",
     "false": "FALSE",
@@ -58,8 +59,8 @@ _SINGLE_LETTER_KEYWORDS = {
     "G": "GLOBALLY",
     "U": "UNTIL",
 }
-# Uppercase only, so one-letter props like `p` stay free; the word keywords below
-# match in any case, since a proposition named `until` is unlikely.
+# Uppercase only, so one-letter props like `p` stay free; the words in _KEYWORDS
+# match in any case.
 
 _TOKEN_RE = re.compile(
     r"""

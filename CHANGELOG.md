@@ -257,6 +257,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - COTL's legion errors use the same wording as the other logics, with `demon`
   for the repeat: `Duplicate demon 2 in coalition` and `Invalid coalition value
   3: must be between 1 and 2`.
+- ATL* read `always` as a proposition name, so `<<1>> always p` was a syntax
+  error and `<<1>> F always` parsed. `always` is the word for `G`, as in the
+  other logics, and a reserved word.
 
 ### Removed
 

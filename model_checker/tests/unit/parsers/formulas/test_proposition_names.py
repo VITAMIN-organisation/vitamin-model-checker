@@ -40,7 +40,7 @@ _CONSTANTS = {"true", "false"}
 # Parsers that still read these reserved words as names (a known bug, not the rule).
 _STILL_ACCEPTED = {
     "TCTL": {"release"},
-    "ATL_STAR": {"always", "exist", "forall", "release"},
+    "ATL_STAR": {"exist", "forall", "release"},
     "TOL": {"exist", "forall", "release"},
 }
 
@@ -119,7 +119,7 @@ def test_name_not_starting_with_a_letter_is_rejected(logic, name):
     assert parse(logic, f"{prefix}{op} {name}") is None
 
 
-# NatSL goals take F, G and X only. TCTL has no next; ATL* has no `always` (known bug).
+# NatSL goals take F, G and X only. TCTL has no next.
 _WORD_OPERATOR_CASES = sorted(
     (logic, word, symbol)
     for logic in OPERATOR_FORMS
@@ -131,7 +131,6 @@ _WORD_OPERATOR_CASES = sorted(
         ("next", "X"),
     ]
     if not (logic == "TCTL" and word == "next")
-    and not (logic == "ATL_STAR" and word == "always")
 )
 
 
