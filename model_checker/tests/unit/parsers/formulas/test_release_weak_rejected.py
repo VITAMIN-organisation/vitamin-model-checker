@@ -19,8 +19,10 @@ def test_release_and_weak_until_are_rejected_with_a_message(logic, formula):
 
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", ["RBATL", "RABATL"])
-@pytest.mark.parametrize("name", ["r", "w"])
-def test_lowercase_r_and_w_are_names(logic, name):
-    """The R/W check matches the uppercase operators only."""
+@pytest.mark.parametrize(
+    "name", ["r", "w", "isweak", "p_weak", "myrelease", "p_release"]
+)
+def test_names_are_not_mistaken_for_r_or_w(logic, name):
+    """The check matches uppercase R and W and the whole words release and weak."""
     parser = FormulaParserFactory.get_parser_instance(logic)
     assert parser.parse(f"<1><2>F {name}", n_agent=3) == ("<1><2>F", name)

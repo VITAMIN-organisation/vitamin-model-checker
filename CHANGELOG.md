@@ -240,6 +240,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - CTL with `generate_trace=True` printed `res` as an unordered set
   (`Result: {'s3', 's0'}`). It is now the sorted tuple that the result without a
   trace prints (`Result: ('s0', 's3')`).
+- RBATL and RABATL rejected a proposition whose name ends in `weak` or
+  `release` (`<1><5>F p_weak`, `<1><5>F isweak`) as an unsupported Release or
+  Weak Until operator. Only `R`, `W` and the whole words `release` and `weak`
+  are rejected now.
 
 ### Removed
 

@@ -146,21 +146,12 @@ def validate_natsl_temporal_atom(atom: str) -> tuple[bool, str | None]:
 def validate_release_weak_rejected(
     formula: str, logic_name: str
 ) -> tuple[bool, str | None]:
-    """Reject R and W, glued (`<1><5>R p`) or infix (`<1><5> p R q`), for a logic
-    whose solver lacks them; a proposition named ``r`` stays valid."""
-    # After a coalition/bound prefix: standalone R/W (uppercase) or release/weak words.
-    if re.search(
-        rf"(?:{COALITION_ATL_TOKEN})+.*?(?:(?<![A-Za-z0-9_])[RW](?![A-Za-z0-9_])|(?i:release\b|weak\b))",
-        formula,
-    ):
-        return (
-            False,
-            f"{logic_name} does not support Release (R) or Weak Until (W) operators",
-        )
-    if re.search(
-        rf"{NATATL_COALITION_TOKEN}.*?(?:(?<![A-Za-z0-9_])[RW](?![A-Za-z0-9_])|(?i:release\b|weak\b))",
-        formula,
-    ):
+    """Reject R and W (or the words release and weak), glued (`<1><5>R p`) or infix
+    (`<1><5> p R q`), for a logic whose solver lacks them; propositions such as
+    ``r`` or ``p_weak`` stay valid."""
+    operator = _MODAL_TOKEN_PREFIX + r"(?:[RW]|(?i:release|weak))" + _MODAL_TOKEN_SUFFIX
+    prefix = rf"(?:{COALITION_ATL_TOKEN}|{NATATL_COALITION_TOKEN})"
+    if re.search(rf"{prefix}.*?{operator}", formula):
         return (
             False,
             f"{logic_name} does not support Release (R) or Weak Until (W) operators",
