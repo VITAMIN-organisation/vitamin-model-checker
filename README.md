@@ -75,8 +75,7 @@ Links:
 uv run pytest model_checker/tests/
 ```
 
-The checks to run before a PR are in [CONTRIBUTING.md](CONTRIBUTING.md);
-test-suite details live in `model_checker/tests/README.md`.
+Test-suite details live in `model_checker/tests/README.md`.
 
 ## Docker
 
@@ -92,8 +91,8 @@ See `docker/README.md` for the Docker workflow.
 
 ## Contributing and AI usage
 
-How to set up, test and open a PR, including the rules for using AI tools, is
-in [CONTRIBUTING.md](CONTRIBUTING.md). How the maintainer used AI tools is in
+The rules for using AI tools in a contribution are in
+[CONTRIBUTING.md](CONTRIBUTING.md). How the maintainer used AI tools is in
 [AIUSE.md](AIUSE.md).
 
 ## License

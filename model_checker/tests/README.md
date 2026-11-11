@@ -1,6 +1,6 @@
 # Model checker tests
 
-This folder holds the tests of the model checker: unit tests of parsers and algorithm helpers, integration tests that run each logic on model files, and time-bound performance checks. The commands and the rules for a test that earns its place are below. See also [contributing](../../docs/contributing.md).
+This folder holds the tests of the model checker: unit tests of parsers and algorithm helpers, integration tests that run each logic on model files, and time-bound performance checks. The commands and the rules for a test that earns its place are below. See also [Run tests](../../README.md#run-tests) in the README.
 
 ## Layout
 
@@ -17,12 +17,12 @@ Synthetic models come from `helpers/synthetic_models.py`; use them when the size
 
 ## Running
 
-From the repository root, after `source .venv/bin/activate`:
+From the repository root:
 
 ```bash
-python -m pytest model_checker/tests/unit model_checker/tests/integration -q
-python -m pytest model_checker/tests/performance -q
-make test
+uv run pytest model_checker/tests/unit model_checker/tests/integration -q
+uv run pytest model_checker/tests/performance -q
+uv run make test
 ```
 
 CI runs unit and integration only. `make test` runs all three folders.
