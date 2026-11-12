@@ -1,6 +1,6 @@
 # MODEL: Minimal one-agent timedCGS for TCTL and TOL smoke tests
 
-# PURPOSE: Two states, one clock, self-loop and edge to s1.
+# PURPOSE: Two states, one clock, a self-loop at each state guarded by x<=1.
 
 # LOGIC: TCTL, TOL
 
@@ -22,7 +22,7 @@ Clocks
 x
 Clock_constraints
 x<=1 0
-x<=1 0
+0 x<=1
 Invariants
 x<=2
 x<=2
