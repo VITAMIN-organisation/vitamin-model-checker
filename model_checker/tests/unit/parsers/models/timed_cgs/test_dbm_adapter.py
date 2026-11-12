@@ -59,7 +59,7 @@ def test_state_names_come_from_name_state(tmp_path):
     content = (
         "Transition\n* 0\n0 *\nName_State\nlocA locB\nInitial_State\nlocA\n"
         "Atomic_propositions\np\nLabelling\n1\n0\nNumber_of_agents\n1\n"
-        "Clocks\nx\nClock_constraints\nx<=1\nx<=1\nInvariants\nx<=2\nx<=2\n"
+        "Clocks\nx\nClock_constraints\nx<=1 0\nx<=1 0\nInvariants\nx<=2\nx<=2\n"
     )
     path = tmp_path / "named.txt"
     path.write_text(content)

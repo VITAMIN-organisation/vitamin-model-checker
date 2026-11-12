@@ -43,6 +43,7 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
 
     current_section = None
     row_index = 0
+    constraint_rows: int | None = None
 
     for line in lines:
         stripped = line.strip()
@@ -52,6 +53,8 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
         if stripped in TIMED_SECTION_HEADERS:
             current_section = stripped
             row_index = 0
+            if stripped == "Clock_constraints":
+                constraint_rows = 0
             continue
 
         if stripped in _NON_TIMED_SECTION_HEADERS:
@@ -69,6 +72,7 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
                 )
             _parse_clock_constraints_row(instance, stripped, row_index)
             row_index += 1
+            constraint_rows = row_index
         elif current_section == "Invariants":
             if row_index >= state_count:
                 raise ValueError(
@@ -77,6 +81,26 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
                 )
             _parse_invariants_row(instance, stripped, row_index)
             row_index += 1
+
+    if constraint_rows is not None and constraint_rows != state_count:
+        raise ValueError(
+            f"Clock_constraints has {constraint_rows} rows, expected {state_count} "
+            "(one row per state)."
+        )
+    _check_constraint_clocks(instance)
+
+
+def _check_constraint_clocks(instance: Any) -> None:
+    """Every clock in a guard or reset must be in Clocks (declared before or after)."""
+    for row, cells in enumerate(instance.clock_constraint_struct):
+        for col, cell in enumerate(cells):
+            for part in filter(None, cell.split(",")):
+                clock = CELL_CONSTRAINT_RE.match(part).group(1)  # type: ignore[union-attr]
+                if clock not in instance.clocks_dict:
+                    raise ValueError(
+                        f"Clock_constraints uses undeclared clock '{clock}' "
+                        f"in row {row}, column {col}: '{cell}'."
+                    )
 
 
 def _parse_clocks(instance: Any, line: str) -> None:
@@ -91,7 +115,14 @@ def _parse_clocks(instance: Any, line: str) -> None:
 
 
 def _parse_clock_constraints_row(instance: Any, line: str, row: int) -> None:
-    for col, token in enumerate(line.split()):
+    tokens = line.split()
+    state_count = len(instance.clock_constraint_struct)
+    if len(tokens) != state_count:
+        raise ValueError(
+            f"Clock_constraints row {row} has {len(tokens)} cells, expected "
+            f"{state_count} (one per state): '{line}'."
+        )
+    for col, token in enumerate(tokens):
         for part in token.split(","):
             part = part.strip()
             if not part or part in NO_CONSTRAINT_TOKENS:

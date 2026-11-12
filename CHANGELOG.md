@@ -159,6 +159,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- timedCGS: `Clock_constraints` needs one row per state with one cell per state, and
+  a guard or reset on a clock not in `Clocks` is an error naming the clock, row and
+  column. Before, a short row or a missing row left cells empty, a long row failed
+  with `IndexError`, and an unknown clock was kept. A model written with one cell
+  per row for two states (`x<=1`) now needs `x<=1 0`.
 - timedCGS: `Clocks` may span several lines (before, each line replaced the
   clocks of the one above), and a clock declared twice is an error naming it.
 - WalletCGS: a `Wallets` row for an undeclared state, a repeated row, or a balance

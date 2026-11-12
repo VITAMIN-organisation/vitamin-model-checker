@@ -149,3 +149,26 @@ def test_duplicate_clock_is_refused(rows):
     """A clock declared twice, on one line or two, is an error naming it."""
     with pytest.raises(ValueError, match="Clock 'x' is declared twice"):
         _sections("Clocks", *rows)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("row", ["x<=1", "x<=1 0 0"])
+def test_clock_constraints_row_needs_one_cell_per_state(row):
+    """Two states mean two cells per row; the error names the row and both counts."""
+    with pytest.raises(ValueError, match=r"row 0 has \d cells, expected 2"):
+        _sections("Clocks", "x", "Clock_constraints", row, "0 0")
+
+
+@pytest.mark.unit
+def test_clock_constraints_needs_a_row_for_every_state():
+    """Two states and one row: the second state's outgoing guards are not silently empty."""
+    with pytest.raises(ValueError, match="has 1 rows, expected 2"):
+        _sections("Clocks", "x", "Clock_constraints", "x<=1 0")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("cell", ["y<=1", "x<=1,y=0"])
+def test_clock_constraints_clock_must_be_declared(cell):
+    """A guard or reset on `y` needs `y` in Clocks, wherever the section stands."""
+    with pytest.raises(ValueError, match="undeclared clock 'y' in row 0, column 1"):
+        _sections("Clock_constraints", f"0 {cell}", "0 0", "Clocks", "x")

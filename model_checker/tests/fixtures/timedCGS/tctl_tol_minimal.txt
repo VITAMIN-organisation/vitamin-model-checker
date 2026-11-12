@@ -21,8 +21,8 @@ Number_of_agents
 Clocks
 x
 Clock_constraints
-x<=1
-x<=1
+x<=1 0
+x<=1 0
 Invariants
 x<=2
 x<=2

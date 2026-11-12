@@ -23,8 +23,8 @@ Number_of_agents
 Clocks
 x
 Clock_constraints
-x<=10
-x<=10
+x<=10 0
+x<=10 0
 Invariants
 x<=10
 x<=10
