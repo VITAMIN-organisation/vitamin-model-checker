@@ -124,7 +124,8 @@ COALITION_BOUND_TOKEN = rf"<{AGENT_LIST}><{AGENT_LIST}>"
 COALITION_BOUND_INNER_RE = re.compile(rf"<({AGENT_LIST})><({AGENT_LIST})>")
 
 TRAILING_COALITION_COMMA_RE = re.compile(r"<\d+,>")
-NEGATIVE_AGENT_IN_COALITION_RE = re.compile(r"<-\d+>")
+# Not after `<1>`: `<1><-5>` is a negative bound, reported by `coalition_bound_error`.
+NEGATIVE_AGENT_IN_COALITION_RE = re.compile(r"(?<!\d>)<-\d+>")
 
 # OL demonic cost prefix: <Jk> (e.g. <J5>); ECAI 2023 takes k in N0, so <J0> is valid.
 OL_DEMONIC_TOKEN = rf"<J{NON_NEGATIVE_INT}>"

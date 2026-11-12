@@ -147,6 +147,21 @@ def test_coalition_without_bound_is_named_for_every_spelling(logic, formula):
 
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", sorted(_BOUND_MESSAGE))
+@pytest.mark.parametrize(
+    ("formula", "message"),
+    [
+        ("<1><-5>F p", "Bound must not be negative"),
+        ("<-1>F p", "Negative agent indices"),
+    ],
+)
+def test_negative_bound_is_not_called_an_agent(logic, formula, message):
+    """A negative bound says so; a negative agent keeps the agent message."""
+    errors = parse_errors(logic, formula, n_agent=3)
+    assert message in errors[0], errors
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("logic", sorted(_BOUND_MESSAGE))
 @pytest.mark.parametrize("formula", ["<1> <5>F p", "(<1><5>F p) && (<2>  <3> G q)"])
 def test_space_between_coalition_and_bound_is_named(logic, formula):
     """`<1> <5>F p` is an error that says the bound follows with no space."""

@@ -193,6 +193,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- OATL, RBATL and RABATL: `<1><-5>F p` said "Negative agent indices are not
+  allowed"; it now says "Bound must not be negative". `<-1>F p` keeps the agent
+  message.
 - ATL*: a formula nested about 140 levels deep (for example 2000 nested `<<1>> F`
   or 2000 parentheses) raised `RecursionError` out of the parser. It now gives
   the error "Formula is nested too deeply to parse". The depth limit stays, set
