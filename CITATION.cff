@@ -1,0 +1,307 @@
+cff-version: 1.2.0
+message: "If you use the VITAMIN model checker, please cite it as below, together with the papers of the logics you use."
+title: "VITAMIN model checker"
+type: software
+version: "1.7.0"
+repository-code: "https://github.com/VITAMIN-organisation/vitamin-model-checker"
+authors:
+  - name: "VITAMIN Team"
+keywords:
+  - model checking
+  - multi-agent systems
+  - temporal logic
+  - strategic reasoning
+
+# Papers the checker implements or relies on.
+references:
+  # VITAMIN tool papers
+  - type: conference-paper # ICAART25.pdf
+    title: "VITAMIN: A Compositional Framework for Model Checking of Multi-Agent Systems"
+    authors:
+      - {family-names: Ferrando, given-names: Angelo}
+      - {family-names: Malvone, given-names: Vadim}
+    conference: {name: "ICAART 2025"}
+    year: 2025
+  - type: conference-paper # AAMAS25c.pdf
+    title: "VITAMIN: VerIficaTion of A MultI ageNt system"
+    authors:
+      - {family-names: Ferrando, given-names: Angelo}
+      - {family-names: Malvone, given-names: Vadim}
+    conference: {name: "24th International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2025)"}
+    year: 2025
+  - type: conference-paper # PAAMS25b.pdf
+    title: "On the Usability and Extensibility of VITAMIN"
+    authors:
+      - {family-names: Ferrando, given-names: Angelo}
+      - {family-names: Malvone, given-names: Vadim}
+    conference: {name: "PAAMS 2025"}
+    year: 2025
+  - type: conference-paper # SPIRIT24a.pdf
+    title: "Towards a Compositional and User-friendly tool for Multi-Agent Systems Verification"
+    authors:
+      - {family-names: Ferrando, given-names: Angelo}
+      - {family-names: Malvone, given-names: Vadim}
+    conference: {name: "SPIRIT Workshop 2024, Bolzano"}
+    year: 2024
+  - type: conference-paper # WOA24.pdf
+    title: "Hands-on VITAMIN: A Compositional Tool for Model Checking of Multi-Agent Systems"
+    authors:
+      - {family-names: Ferrando, given-names: Angelo}
+      - {family-names: Malvone, given-names: Vadim}
+    conference: {name: "WOA 2024: 25th Workshop From Objects to Agents"}
+    year: 2024
+  - type: conference-paper # iFM25b.pdf
+    title: "Auto-Generating Visual Editors for Formal Logics with Blockly"
+    authors:
+      - {family-names: Ferrando, given-names: Angelo}
+      - {family-names: Lu, given-names: Peng}
+      - {family-names: Malvone, given-names: Vadim}
+    conference: {name: "iFM 2025"}
+    year: 2025
+
+  # CTL, ATL, LTL
+  - type: article # CES86.pdf
+    title: "Automatic Verification of Finite-State Concurrent Systems Using Temporal Logic Specifications"
+    authors:
+      - {family-names: Clarke, given-names: "E. M."}
+      - {family-names: Emerson, given-names: "E. A."}
+      - {family-names: Sistla, given-names: "A. P."}
+    journal: "ACM Transactions on Programming Languages and Systems"
+    volume: 8
+    issue: 2
+    start: 244
+    end: 263
+    year: 1986
+  - type: article # Jacm02.pdf
+    title: "Alternating-Time Temporal Logic"
+    authors:
+      - {family-names: Alur, given-names: Rajeev}
+      - {family-names: Henzinger, given-names: "Thomas A."}
+      - {family-names: Kupferman, given-names: Orna}
+    journal: "Journal of the ACM"
+    year: 2002
+  - type: manual # Spot-tl.pdf
+    title: "Spot's Temporal Logic Formulas"
+    authors:
+      - {family-names: Duret-Lutz, given-names: Alexandre}
+    notes: "Compiled for Spot 2.16.2"
+    url: "https://spot.lre.epita.fr/tl.pdf"
+  - type: book
+    title: "Principles of Model Checking"
+    authors:
+      - {family-names: Baier, given-names: Christel}
+      - {family-names: Katoen, given-names: Joost-Pieter}
+    publisher: {name: "MIT Press"}
+    year: 2008
+
+  # Natural strategies: NatATL, NatATLF, NatSL
+  - type: conference-paper # AAMAS17b.pdf
+    title: "Reasoning about Natural Strategic Ability"
+    authors:
+      - {family-names: Jamroga, given-names: Wojciech}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "16th International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2017)"}
+    year: 2017
+  - type: conference-paper # AAMAS19a.pdf
+    title: "Natural Strategic Ability under Imperfect Information"
+    authors:
+      - {family-names: Jamroga, given-names: Wojciech}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "18th International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2019)"}
+    year: 2019
+  - type: article # AIJ19.pdf
+    title: "Natural Strategic Ability"
+    authors:
+      - {family-names: Jamroga, given-names: Wojciech}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    journal: "Artificial Intelligence"
+    year: 2019
+  - type: conference-paper # AAMAS22.pdf
+    title: "Reasoning about Human-Friendly Strategies in Repeated Keyword Auctions"
+    authors:
+      - {family-names: Belardinelli, given-names: Francesco}
+      - {family-names: Jamroga, given-names: Wojciech}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Mittelmann, given-names: Munyque}
+      - {family-names: Murano, given-names: Aniello}
+      - {family-names: Perrussel, given-names: Laurent}
+    conference: {name: "21st International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2022)"}
+    year: 2022
+  - type: conference-paper # SPIRIT24b.pdf
+    title: "Development of Natural Strategies in Strategic Logics"
+    authors:
+      - {family-names: Aruta, given-names: Marco}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "SPIRIT Workshop 2024, Bolzano"}
+    year: 2024
+  - type: conference-paper # PAAMS25.pdf
+    title: "Theory and Practice of Natural Strategy Checking in Concurrent Games with Imperfect Information"
+    authors:
+      - {family-names: Aruta, given-names: Marco}
+      - {family-names: Improta, given-names: Francesco}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "PAAMS 2025"}
+    year: 2025
+  - type: conference-paper # AAAI26.pdf
+    title: "When Natural Strategies Meet Fuzziness and Resource-Bounded Actions"
+    authors:
+      - {family-names: Aruta, given-names: Marco}
+      - {family-names: Improta, given-names: Francesco}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "AAAI 2026"}
+    year: 2026
+
+  # Costs, resources and capacities: RBATL, RABATL, CapATL, quantitative ATL, Wallet_ATL
+  - type: conference-paper # PRIMA24a.pdf
+    title: "Resource Action-based Bounded ATL: a New Logic for MAS to Express a Cost Over the Actions"
+    authors:
+      - {family-names: Catta, given-names: Davide}
+      - {family-names: Ferrando, given-names: Angelo}
+      - {family-names: Malvone, given-names: Vadim}
+    conference: {name: "PRIMA 2024"}
+    year: 2024
+  - type: conference-paper # PRIMA24b.pdf
+    title: "Theory and Practice of Quantitative ATL"
+    authors:
+      - {family-names: Ferrando, given-names: Angelo}
+      - {family-names: Luongo, given-names: Giulia}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "PRIMA 2024"}
+    year: 2024
+  - type: conference-paper # AAMAS24a.pdf
+    title: "Strategic Reasoning under Capacity-constrained Agents"
+    authors:
+      - {family-names: Ballot, given-names: Gabriel}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Leneutre, given-names: Jean}
+      - {family-names: Laarouchi, given-names: Youssef}
+    conference: {name: "23rd International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2024)"}
+    year: 2024
+  - type: conference-paper # ECAI25b.pdf
+    title: "Strategic Reasoning with Capacity-Constrained Agents and Imperfect Information"
+    authors:
+      - {family-names: Ballot, given-names: Gabriel}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Leneutre, given-names: Jean}
+      - {family-names: Ma, given-names: Jingxuan}
+    conference: {name: "ECAI 2025"}
+    start: 1599
+    doi: "10.3233/FAIA250985"
+    year: 2025
+  - type: conference-paper # AAMAS26b.pdf
+    title: "Wallet ATL: Towards Reliable Smart Contract Verification"
+    authors:
+      - {family-names: Ferrando, given-names: Angelo}
+      - {family-names: Kana Zanlefack, given-names: Blondelle}
+      - {family-names: Malvone, given-names: Vadim}
+    conference: {name: "25th International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2026)"}
+    year: 2026
+
+  # Obstruction logics: OL, OATL, COTL, TOL
+  - type: conference-paper # ECAI23.pdf
+    title: "Obstruction Logic: a Strategic Temporal Logic to Reason about Dynamic Game Models"
+    authors:
+      - {family-names: Catta, given-names: Davide}
+      - {family-names: Leneutre, given-names: Jean}
+      - {family-names: Malvone, given-names: Vadim}
+    conference: {name: "ECAI 2023"}
+    year: 2023
+  - type: conference-paper # AAMAS24b.pdf
+    title: "Obstruction Alternating-time Temporal Logic: a Strategic Logic to Reason about Dynamic Models"
+    authors:
+      - {family-names: Catta, given-names: Davide}
+      - {family-names: Leneutre, given-names: Jean}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "23rd International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2024)"}
+    year: 2024
+  - type: conference-paper # IJCAI25.pdf
+    title: "Coalition Obstruction Temporal Logic: A New Obstruction Logic to Reason about Demon Coalitions"
+    authors:
+      - {family-names: Catta, given-names: Davide}
+      - {family-names: Leneutre, given-names: Jean}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Ortiz, given-names: James}
+    conference: {name: "IJCAI 2025"}
+    year: 2025
+  - type: conference-paper # AAMAS25b.pdf
+    title: "Timed Obstruction Logic: A Timed Approach to Dynamic Game Reasoning"
+    authors:
+      - {family-names: Leneutre, given-names: Jean}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Ortiz, given-names: James}
+    conference: {name: "24th International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2025)"}
+    year: 2025
+  - type: conference-paper # AAMAS26a.pdf
+    title: "A Verification Framework for Obstruction, Probability, and Time"
+    authors:
+      - {family-names: Dahani, given-names: Wissal}
+      - {family-names: Leneutre, given-names: Jean}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Ortiz, given-names: James}
+      - {family-names: Oscar, given-names: Axel}
+    conference: {name: "25th International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2026)"}
+    year: 2026
+
+  # Intuitionistic logics: ICTL, IATL
+  - type: conference-paper # AREA23b.pdf
+    title: "Reasoning about Intuitionistic Computation Tree Logic"
+    authors:
+      - {family-names: Catta, given-names: Davide}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "Third Workshop on Agents and Robots for reliable Engineered Autonomy (AREA 2023)"}
+    collection-title: "EPTCS 391"
+    start: 42
+    end: 48
+    doi: "10.4204/EPTCS.391.6"
+    year: 2023
+  - type: conference-paper # EUMAS25b.pdf
+    title: "An Intuitionistic Version of Computation Tree Logic"
+    authors:
+      - {family-names: Bozzelli, given-names: Laura}
+      - {family-names: Capone, given-names: Andrea}
+      - {family-names: Catta, given-names: Davide}
+      - {family-names: Malvone, given-names: Vadim}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "EUMAS 2025"}
+    year: 2025
+  - type: conference-paper # KR25-IATL.pdf
+    title: "An Intuitionistic Version of Alternating-Time Temporal Logic"
+    authors:
+      - {family-names: Bozzelli, given-names: Laura}
+      - {family-names: Capone, given-names: Andrea}
+      - {family-names: Catta, given-names: Davide}
+      - {family-names: Murano, given-names: Aniello}
+    conference: {name: "22nd International Conference on Principles of Knowledge Representation and Reasoning (KR 2025)"}
+    year: 2025
+
+  # Real time: TCTL
+  - type:  article
+    title: "Model-checking in dense real-time"
+    authors:
+      - {family-names: Alur, given-names: Rajeev}
+      - {family-names: Courcoubetis, given-names: Costas}
+      - {family-names: Dill, given-names: David}
+    journal: "Information and Computation"
+    year: 1993
+  - type: thesis # Alur-thesis.pdf
+    title: "Techniques for Automatic Verification of Real-Time Systems"
+    authors:
+      - {family-names: Alur, given-names: Rajeev}
+    institution: {name: "Stanford University"}
+    thesis-type: "PhD thesis"
+    year: 1991
+  - type: book-chapter # TCTL-Anderson-Thiagarajan-ch6.pdf
+    title: "Model checking and timed CTL"
+    authors:
+      - {family-names: Anderson, given-names: Hugh}
+      - {family-names: Thiagarajan, given-names: "P. S."}
+    collection-title: "Verification of Real-time Systems (NUS CS5270 lecture notes), Chapter 6"
