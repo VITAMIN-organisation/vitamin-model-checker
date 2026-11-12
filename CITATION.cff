@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use the VITAMIN model checker, please cite it as below, together with the papers of the logics you use."
 title: "VITAMIN model checker"
 type: software
-version: "1.7.0"
+version: "2.0.0"
 repository-code: "https://github.com/VITAMIN-organisation/vitamin-model-checker"
 authors:
   - name: "VITAMIN Team"

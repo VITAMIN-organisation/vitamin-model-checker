@@ -5,7 +5,7 @@ try:
 
     __version__ = version("vitamin-model-checker")
 except PackageNotFoundError:
-    __version__ = "1.6.0"
+    __version__ = "2.0.0"
 
 from model_checker.api import (
     CGS,

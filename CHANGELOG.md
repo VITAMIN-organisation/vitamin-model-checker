@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-12
+
+A major release: formulas and model files follow stricter rules (names start with
+a lowercase letter, reserved words, one action per agent in a joint action, a
+`Wallets` row and a `Clock_constraints` row for every state), and OL, LTL and
+Wallet_ATL follow their papers. Read the "Breaking" entries before upgrading.
+
 ### Added
 
 - ICTL accepts `A(p U q)`, `A[p U q]` and the Release forms, as the ICTL papers
