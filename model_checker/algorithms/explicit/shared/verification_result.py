@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
+from model_checker.utils.literals import state_set_literal
+
 
 class TraceType(StrEnum):
     WITNESS = "witness"
@@ -105,7 +107,7 @@ class VerificationResult:
 
     def _res_line(self) -> str:
         """The states as a sorted tuple, the form the CTL result without a trace prints."""
-        return f"Result: {tuple(sorted(self.states))}"
+        return f"Result: {state_set_literal(self.states)}"
 
     def __str__(self) -> str:
         """Format result for human-readable output."""

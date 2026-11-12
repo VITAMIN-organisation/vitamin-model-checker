@@ -9,7 +9,7 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
 from model_checker.algorithms.explicit.shared.state_utils import (
     state_names_to_indices,
 )
-from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
 
 from .preimage import (
     apply_wallet_constraints,
@@ -45,7 +45,7 @@ def _until(cgs, step, keep, goal):
 
 
 def _store(node, states):
-    node.value = str(tuple(sorted({str(s) for s in states})))
+    node.value = state_set_literal(states)
 
 
 def handle_wallet_coalition_globally(cgs, node, transition_cache):

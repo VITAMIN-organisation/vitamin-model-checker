@@ -14,7 +14,7 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
     least_fixpoint,
 )
-from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.cgs.cgs import CGS
@@ -27,17 +27,17 @@ def handle_ex(cgs: "CGS", node: Any) -> None:
         cgs.get_reverse_index() if hasattr(cgs, "get_reverse_index") else None
     )
     edges = cgs.get_edges()
-    result = {
-        str(s) for s in pre_image_exist(edges, states, reverse_index=reverse_index)
-    }
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(
+        pre_image_exist(edges, states, reverse_index=reverse_index)
+    )
 
 
 def handle_ax(cgs: "CGS", node: Any) -> None:
     """Handle AX operator: all next states satisfy phi."""
     states = parse_state_set_literal(node.left.value)
-    result = {str(s) for s in pre_image_all(cgs.get_edges(), cgs.states, states)}
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(
+        pre_image_all(cgs.get_edges(), cgs.all_states_set, states)
+    )
 
 
 def handle_ef(cgs: "CGS", node: Any) -> None:
@@ -52,7 +52,7 @@ def handle_ef(cgs: "CGS", node: Any) -> None:
         return T.union(pre_image_exist(edges, T, reverse_index=reverse_index))
 
     result = least_fixpoint(target, update)
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)
 
 
 def handle_af(cgs: "CGS", node: Any) -> None:
@@ -70,7 +70,7 @@ def handle_af(cgs: "CGS", node: Any) -> None:
         )
 
     eg_not_phi = greatest_fixpoint(all_states.copy(), update)
-    node.value = str(tuple(sorted({str(s) for s in all_states - eg_not_phi})))
+    node.value = state_set_literal(all_states - eg_not_phi)
 
 
 def handle_eg(cgs: "CGS", node: Any) -> None:
@@ -88,7 +88,7 @@ def handle_eg(cgs: "CGS", node: Any) -> None:
         )
 
     result = greatest_fixpoint(all_states.copy(), update)
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)
 
 
 def handle_ag(cgs: "CGS", node: Any) -> None:
@@ -101,7 +101,7 @@ def handle_ag(cgs: "CGS", node: Any) -> None:
         return T.union(pre_image_exist(edges, T))
 
     ef_not_phi = least_fixpoint(not_phi, update)
-    node.value = str(tuple(sorted({str(s) for s in all_states - ef_not_phi})))
+    node.value = state_set_literal(all_states - ef_not_phi)
 
 
 def handle_eu(cgs: "CGS", node: Any) -> None:
@@ -121,7 +121,7 @@ def handle_eu(cgs: "CGS", node: Any) -> None:
         )
 
     result = least_fixpoint(psi_states, update)
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)
 
 
 def handle_au(cgs: "CGS", node: Any) -> None:
@@ -135,4 +135,4 @@ def handle_au(cgs: "CGS", node: Any) -> None:
         return T.union(phi_states.intersection(pre_image_all(edges, all_states, T)))
 
     result = least_fixpoint(psi_states, update)
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)

@@ -17,6 +17,7 @@ from model_checker.algorithms.explicit.shared.atom_utils import boolean_constant
 from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.utils.formula_tree import FormulaTreeNode, build_formula_tree
+from model_checker.utils.literals import state_set_literal
 
 
 class IATLModelChecker:
@@ -82,7 +83,7 @@ class IATLModelChecker:
         def resolve_atom(atom) -> str | None:
             constant = boolean_constant(atom)
             if constant is not None:
-                return str(self.states_set if constant else set())
+                return state_set_literal(self.states_set if constant else set())
             prop_idx = proposition_index(self.model.atomic_propositions, str(atom))
             if prop_idx is None:
                 return None
@@ -90,6 +91,6 @@ class IATLModelChecker:
                 np.where(self.model.matrix_prop[:, int(prop_idx)] == 1)[0]
             )
             states = self.model.states
-            return str({str(states[idx]) for idx in state_indices})
+            return state_set_literal(states[idx] for idx in state_indices)
 
         return build_formula_tree(parsed_formula, resolve_atom)

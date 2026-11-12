@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from typing import Any
 
+from model_checker.utils.literals import state_set_literal
+
 
 class FormulaTreeNode:
     """Binary tree node with a value and optional left/right children."""
@@ -32,7 +34,7 @@ def build_formula_tree(tpl: Any, atom_resolver: Callable[[Any], str | None]):
         if leaf_value is None:
             return None
         if isinstance(leaf_value, set):
-            leaf_value = str(tuple(sorted(leaf_value)))
+            leaf_value = state_set_literal(leaf_value)
         root = FormulaTreeNode(leaf_value)
 
     return root

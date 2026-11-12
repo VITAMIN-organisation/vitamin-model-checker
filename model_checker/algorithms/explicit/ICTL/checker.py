@@ -7,6 +7,7 @@ from model_checker.algorithms.explicit.shared.atom_utils import boolean_constant
 from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 from model_checker.utils.formula_tree import FormulaTreeNode, build_formula_tree
+from model_checker.utils.literals import state_set_literal
 
 
 def states_where_prop_holds(prop: str, prop_matrix, propositions) -> set[int] | None:
@@ -49,13 +50,12 @@ class ICTLModelChecker:
         def resolve_atom(atom) -> str | None:
             constant = boolean_constant(atom)
             if constant is not None:
-                return str(self.states_set if constant else set())
+                return state_set_literal(self.states_set if constant else set())
             indices = states_where_prop_holds(
                 str(atom), self.model.matrix_prop, self.model.atomic_propositions
             )
             if indices is None:
                 return None
-            states = {str(self.model.states[idx]) for idx in indices}
-            return str(states)
+            return state_set_literal(self.model.states[idx] for idx in indices)
 
         return build_formula_tree(parsed_formula, resolve_atom)

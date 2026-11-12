@@ -5,7 +5,7 @@ from typing import Any
 from model_checker.algorithms.explicit.shared.verification_result import (
     VerificationResult,
 )
-from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
 
 _TAGGED_TYPES = frozenset({"semantic", "syntax", "model"})
 
@@ -46,11 +46,12 @@ def format_model_checking_result(
     initial_state: str,
     is_satisfied: bool,
 ) -> dict[str, Any]:
-    """Standard res / initial_state dict."""
-    if isinstance(result_states, set):
-        result_states = str({str(s) for s in result_states})
+    """Standard res / initial_state dict; the states print as a sorted tuple."""
+    if isinstance(result_states, str):
+        result_states = parse_state_set_literal(result_states)
+    states = state_set_literal(result_states)
     return {
-        "res": f"Result: {result_states}",
+        "res": f"Result: {states}",
         "initial_state": f"Initial state {initial_state}: {is_satisfied}",
     }
 
@@ -68,7 +69,7 @@ def format_verification_result(
         return result.to_dict()
 
     return {
-        "res": f"Result: {result.states}",
+        "res": f"Result: {state_set_literal(result.states)}",
         "initial_state": f"Initial state {result.initial_state}: {result.satisfied}",
         "satisfied": result.satisfied,
         "states": sorted(result.states),

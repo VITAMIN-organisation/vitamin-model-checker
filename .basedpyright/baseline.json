@@ -96,16 +96,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/CTL/operators.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 61,
-                    "endColumn": 71,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/algorithms/explicit/CapATL/solver.py": [
             {
                 "code": "reportAttributeAccessIssue",

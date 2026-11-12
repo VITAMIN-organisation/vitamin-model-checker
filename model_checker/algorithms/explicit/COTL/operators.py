@@ -14,7 +14,7 @@ from model_checker.algorithms.explicit.shared.state_utils import (
     state_names_to_indices,
 )
 from model_checker.parsers.formulas.COTL.parser import parse_legion_budget
-from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
 
 
 def _states(model, node_value: str) -> set[int]:
@@ -22,7 +22,7 @@ def _states(model, node_value: str) -> set[int]:
 
 
 def _store(model, node, states: set[int]) -> None:
-    node.value = str(tuple(sorted(state_indices_to_names(model, states))))
+    node.value = state_set_literal(state_indices_to_names(model, states))
 
 
 def _steps(node, steps: LegionSteps):

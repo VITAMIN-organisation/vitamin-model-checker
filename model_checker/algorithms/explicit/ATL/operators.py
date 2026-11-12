@@ -8,7 +8,7 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
 from model_checker.algorithms.explicit.shared.state_utils import (
     state_names_to_indices,
 )
-from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
 
 
 def handle_coalition_globally(cgs, node, transition_cache):
@@ -20,16 +20,14 @@ def handle_coalition_globally(cgs, node, transition_cache):
         return pre(cgs, coalition, p, transition_cache) & states
 
     result = greatest_fixpoint(cgs.all_states_set.copy(), update)
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)
 
 
 def handle_coalition_next(cgs, node, transition_cache):
     """Handle <A>X operator: coalition can force next state to satisfy phi."""
     coalition = node.value[1:-2]
     states = parse_state_set_literal(node.left.value)
-    node.value = str(
-        tuple(sorted({str(s) for s in pre(cgs, coalition, states, transition_cache)}))
-    )
+    node.value = state_set_literal(pre(cgs, coalition, states, transition_cache))
 
 
 def handle_coalition_eventually(cgs, node, transition_cache):
@@ -42,7 +40,7 @@ def handle_coalition_eventually(cgs, node, transition_cache):
         return p | pre(cgs, coalition, p, transition_cache, early_stop=p_indices)
 
     result = least_fixpoint(states, update_with_skip)
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)
 
 
 def handle_coalition_until(cgs, node, transition_cache):
@@ -58,4 +56,4 @@ def handle_coalition_until(cgs, node, transition_cache):
         )
 
     result = least_fixpoint(states2, update_with_skip)
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)

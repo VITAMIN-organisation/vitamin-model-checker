@@ -12,7 +12,7 @@ from model_checker.algorithms.explicit.shared.state_utils import (
     state_indices_to_names,
     state_names_to_indices,
 )
-from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
 
 # Turns an operator token such as `<1,2><3>F` into its coalition and Demon budget.
 PrefixReader = Callable[[str], tuple[str, int]]
@@ -41,7 +41,7 @@ def _solve(
                 f"[MODEL] The truth of '{node.value}' at states {names} depends on "
                 f"joint actions with no cost in the model: {pre.uncosted}"
             )
-    node.value = str(tuple(sorted(state_indices_to_names(cgs, result))))
+    node.value = state_set_literal(state_indices_to_names(cgs, result))
 
 
 def handle_next(cgs, node, pre: DemonicPreimage, read_prefix: PrefixReader) -> None:

@@ -7,11 +7,11 @@ from model_checker.algorithms.explicit.shared.boolean_semantics import (
     compute_boolean_result,
 )
 from model_checker.parsers.game_structures.cgs import CGSProtocol
-from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
 
 
 def _set_node_state_set(node: Any, state_set) -> None:
-    node.value = str(tuple(sorted({str(s) for s in state_set})))
+    node.value = state_set_literal(state_set)
 
 
 def _binary_state_set(

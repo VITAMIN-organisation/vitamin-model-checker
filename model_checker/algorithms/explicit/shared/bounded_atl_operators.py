@@ -14,7 +14,7 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
     least_fixpoint,
 )
-from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
 
 
 def _evaluate_bounded_coalition_operator(
@@ -66,7 +66,7 @@ def handle_coalition_globally(cgs, node, cost_filter: CostFilter) -> None:
         cgs.all_states_set.copy(),
         target_states,
     )
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)
 
 
 def handle_coalition_next(cgs, node, cost_filter: CostFilter) -> None:
@@ -82,7 +82,7 @@ def handle_coalition_next(cgs, node, cost_filter: CostFilter) -> None:
         trans_cache,
         cost_filter,
     )
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)
 
 
 def handle_coalition_eventually(cgs, node, cost_filter: CostFilter) -> None:
@@ -100,7 +100,7 @@ def handle_coalition_eventually(cgs, node, cost_filter: CostFilter) -> None:
         target_states,
         cgs.all_states_set,
     )
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)
 
 
 def handle_coalition_until(cgs, node, cost_filter: CostFilter) -> None:
@@ -119,4 +119,4 @@ def handle_coalition_until(cgs, node, cost_filter: CostFilter) -> None:
         psi_states,
         phi_states,
     )
-    node.value = str(tuple(sorted({str(s) for s in result})))
+    node.value = state_set_literal(result)
