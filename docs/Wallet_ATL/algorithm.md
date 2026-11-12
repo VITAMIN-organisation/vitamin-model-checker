@@ -128,7 +128,7 @@ answer named in each item:
   its first update, so it skips the loop and returns all states, guard or not.
   The code applies `wPre` in every round, as in the other cases.
 - Balance updates: the paper's Def. 4.4 changes only the acting agent's wallet,
-  while its Example 3.3 also moves the amount to or from the
+  while the paper's Example 3.3 also moves the amount to or from the
   contract. The code applies neither rule (see
   [Semantic denotations](#semantic-denotations)).
 - A consumption letter with no amount (`D`): the paper's Def. 3.1 takes amounts

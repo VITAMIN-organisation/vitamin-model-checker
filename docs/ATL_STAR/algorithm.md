@@ -43,10 +43,10 @@ Table 1 lists the written forms of an Until under a coalition:
 | `(<<A>> x) U y` | The coalition covers only the left operand; it is a path formula, so it is checkable only inside another coalition, as in `<<B>> ((<<A>> x) U y)` |
 
 The reading of `<<A>> x U y` comes from the paper that defines ATL (Alur,
-Henzinger, Kupferman, JACM 49(5), 2002). It writes the ATL formula
+Henzinger, Kupferman, JACM 49(5), 2002). The paper writes the ATL formula
 `<<A>>phi1 U phi2` for the coalition over the Until, and defines ATL as the
 fragment of ATL* in which every temporal operator is immediately preceded by a path
-quantifier, so the ATL formula keeps its meaning in ATL*. It also says ATL*
+quantifier, so the ATL formula keeps its meaning in ATL*. The paper also says ATL*
 formulas are the state formulas, and `(<<A>> x) U y` is only a path formula.
 
 Each operand of that `U` is one unary formula, so `<<1>> X p U q` is
@@ -54,7 +54,7 @@ Each operand of that `U` is one unary formula, so `<<1>> X p U q` is
 
 ### Precedence and ambiguity
 
-`!`, `X`, `F` and `G` bind tighter than the connectives, as the paper reads the
+`!`, `X`, `F` and `G` bind tighter than the connectives, as the ATL paper reads the
 winning condition $\Box\Diamond \mathit{done} \to \psi$:
 `<<1>> (F p && G q)` is `<<1>> ((F p) && (G q))`.
 

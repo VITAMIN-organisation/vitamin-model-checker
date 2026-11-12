@@ -848,8 +848,9 @@ j.{J5}(j<=7 U goal)
 
 The temporal operators are `F`, `G`, `U`, `R`, `W` (paper) and `X` (VITAMIN extension).
 
-The cost `k` is the total cost of outgoing transitions the Demon may
-deactivate at each step; it is not summed along the path. OL (`<Jk>`) reads its budget the
+The budget `k` is spent anew at each step: the Demon may deactivate
+transitions whose costs add up to at most `k`, and the budget does not carry over
+along the path. OL (`<Jk>`) reads its budget the
 same way.
 
 The freeze `j.phi` resets formula clock `j` to `0` at the current state.

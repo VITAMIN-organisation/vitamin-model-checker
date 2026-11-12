@@ -89,8 +89,8 @@ disable all their edges to states outside $Y$ for a total cost of at most $k$
 
 OATL has the same Demon, but there a coalition of agents also picks its part of
 each joint action. With the coalition of all agents, the agents pick the whole
-joint action, which is the Traveler's single move in OL. AAMAS 2024
-states this for a formula without nested
+joint action, which is the Traveler's single move in OL. The OATL
+paper (AAMAS 2024, see [OATL](../OATL/algorithm.md)) states this for a formula without nested
 strategic operators: $\mathfrak{M}, s \models_{OL} \langle\langle n\rangle\rangle\psi$
 iff $\mathfrak{M}, s \models [\![Ag]\!]^n\psi$, where $[\![Ag]\!]^n$ is the OATL
 operator for the coalition $Ag$ of all agents with budget $n$. The paper adds

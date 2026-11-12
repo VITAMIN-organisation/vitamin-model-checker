@@ -279,7 +279,7 @@ Implementation techniques (P-upset precompute): [algorithm_design.md](../algorit
 
 ## Model-checking pipeline
 
-The checker reads the model, parses the formula, builds the formula tree and solves it; evaluation is bottom-up on that tree:
+The checker reads the model, parses the formula, builds the formula tree and solves it:
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1f5f99", "primaryTextColor": "#ffffff", "primaryBorderColor": "#4a90d9", "lineColor": "#75808f", "tertiaryTextColor": "#75808f", "titleColor": "#75808f", "clusterBkg": "transparent", "clusterBorder": "#75808f", "edgeLabelBackground": "transparent"}}}%%
@@ -292,6 +292,8 @@ flowchart LR
 
     load --> parse --> tree --> solve --> result
 ```
+
+Evaluation is bottom-up on the formula parse tree.
 
 ### Entry points (`ICTL.py`)
 
