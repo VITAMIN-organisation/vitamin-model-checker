@@ -65,7 +65,7 @@ if s <=_P s' and s' -R-> t', then exists t with s -R-> t and t <=_P t'
 - reflexive, transitive, antisymmetric `P` (cells `P` or `P,R`)
 - monotone labelling along `P`
 
-Negative cases live in `tests/unit/algorithms/ictl/test_validation_negative.py`.
+Negative cases live in `tests/unit/algorithms/ictl/test_frame_validation.py`.
 
 ### Matrix file format
 
@@ -114,7 +114,7 @@ The PLY parser is `parsers/formulas/ICTL/parser.py` (`ICTLParser`).
 ### Core grammar
 
 ```text
-phi ::= p | phi /\ phi | phi \/ phi | phi -> phi | not phi
+phi ::= p | phi && phi | phi || phi | phi -> phi | not phi
       | E X phi | E(phi U psi) | E(phi R psi)
       | A X phi | A(phi U psi) | A(phi R psi)
 ```
@@ -190,8 +190,8 @@ X^up = { s in S | s^up subseteq X }
 | Formula | Denotation `[[.]]` |
 |---------|-------------------|
 | atom `p` | `{ s \| p in V(s) }` |
-| `phi /\ psi` | `[[phi]] intersect [[psi]]` |
-| `phi \/ psi` | `[[phi]] union [[psi]]` |
+| `phi && psi` | `[[phi]] intersect [[psi]]` |
+| `phi \|\| psi` | `[[phi]] union [[psi]]` |
 | `phi -> psi` | `([[phi]]^c union [[psi]])^up` |
 | `not phi` | `([[phi]]^c)^up` (intuitionistic negation) |
 
@@ -288,7 +288,7 @@ in `operators.py`.
 | Operator | Module | Function |
 |----------|--------|----------|
 | `not`, `->` | `operators.py` | `handle_not`, `handle_implies` |
-| `/\`, `\/` | `operators.py` | `handle_and`, `handle_or` |
+| `&&`, `\|\|` | `operators.py` | `handle_and`, `handle_or` |
 | `EX`, `AX` | `operators.py` | `handle_ex`, `handle_ax` |
 | `EU`, `AU` | `operators.py` | `handle_eu`, `handle_au` |
 | `ER`, `AR` | `operators.py` | `handle_er`, `handle_ar` |
@@ -331,5 +331,5 @@ countermodel in the same test module and must itself pass C1/C2.
 | Path | Coverage |
 |------|----------|
 | `tests/integration/algorithms/ictl/test_correctness.py` | `^up`, `AX` = `Pre_forall`, sugar encodings, Figure 5, fixture semantics |
-| `tests/unit/algorithms/ictl/test_validation_negative.py` | Reject non-well-behaved frames (C1/C2, seriality, preorder) |
+| `tests/unit/algorithms/ictl/test_frame_validation.py` | Reject non-well-behaved frames (C1/C2, seriality, preorder) |
 | `tests/unit/parsers/formulas/` (ICTL cases) | Parser surface syntax |

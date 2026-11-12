@@ -2,13 +2,21 @@
 
 ## Overview
 
-This is the **cross-logic theory and syntax map** for VITAMIN. For each logic it
-covers:
+This is the cross-logic theory and syntax map for VITAMIN. It holds:
 
-1. **Theoretical background** - standard syntax and semantics from the literature.
-2. **Current implementation** - surface grammar, model type, and how theory maps to code.
-3. **Comparison** - short theory vs implementation table.
-4. **Shared policies** - empty coalitions, names and keywords, and model formats.
+- The syntax every logic shares: [connectives](#boolean-logic-shared-syntax),
+  [Until after a prefix](#until-after-a-prefix),
+  [a prefix before a connective](#prefix-before-a-connective) and
+  [operators and names](#operators-and-names).
+- One section for each of CTL, NatSL, OATL, OL, RBATL and RABATL, CapATL, COTL,
+  Wallet_ATL, ICTL, IATL, TCTL and TOL: the syntax and semantics from the literature,
+  the grammar and model type the code accepts, and for most of them a table that
+  sets theory beside implementation. LTL, ATL, ATLF, ATL_STAR, NatATL (with
+  NatATL_Recall) and NatATLF have no section of their own; their algorithm pages
+  below hold that material.
+- The shared policies: empty and repeated coalitions, names and keywords, the
+  syntax cards (one table row per logic with its prefix, operators, model type and
+  an example), a summary table, and a list of model types.
 
 For denotations, fixpoints, validation proofs, and pipeline details, use the
 per-logic `docs/<Logic>/algorithm.md` pages (for example
@@ -17,8 +25,7 @@ per-logic `docs/<Logic>/algorithm.md` pages (for example
 
 ## Per-logic algorithm pages
 
-The algorithm pages are now split by logic so implementation details are easy
-to locate:
+Each logic has its own algorithm page:
 
 - [CTL](CTL/algorithm.md)
 - [LTL](LTL/algorithm.md)
@@ -40,17 +47,15 @@ to locate:
 - [TCTL](TCTL/algorithm.md)
 - [TOL](TOL/algorithm.md)
 
-**Logic names:** Full names are used for logics defined in the VITAMIN paper and standard references (CTL, LTL, ATL), and for OATL and COTL, whose sections cite their defining papers. Other implemented logics (OL, etc.) are listed by acronym only; their expansions are not fixed in the project literature.
-
 ---
 
 ## Table of Contents
 
 1.  [Boolean Logic (Shared Syntax)](#boolean-logic-shared-syntax)
 2.  [CTL - Computation Tree Logic](#ctl---computation-tree-logic)
-3.  [LTL - Linear Temporal Logic](LTL/algorithm.md)
-4.  [ATL / ATLF - Alternating-time Temporal Logic](ATL/algorithm.md)
-5.  [NatATL / NatATLF](NatATL/algorithm.md)
+3.  [LTL - Linear Temporal Logic](LTL/algorithm.md) (algorithm page)
+4.  [ATL / ATLF - Alternating-time Temporal Logic](ATL/algorithm.md) (algorithm page)
+5.  [NatATL / NatATLF](NatATL/algorithm.md) (algorithm page)
 6.  [NatSL](#natsl---natural-strategy-logic)
 7.  [OATL](#oatl)
 8.  [OL](#ol)
@@ -65,7 +70,9 @@ to locate:
 17. [Empty and Repeated Coalition Policy](#empty-coalition-policy)
 18. [Names and keywords](#names-and-keywords)
 19. [Syntax cards](#syntax-cards)
-20. [Model Syntax](#model-syntax)
+20. [Summary: Logic Comparison Matrix](#summary-logic-comparison-matrix)
+21. [Model Syntax](#model-syntax)
+22. [Technical References](#technical-references)
 
 ---
 
@@ -108,7 +115,8 @@ everything else with parentheses (Clarke, Emerson, Sistla, ACM TOPLAS 1986,
 p. 246). ICTL writes them once, around a Release (EUMAS 2025, p. 10), and ICTL
 also takes them around an Until because its grammar treats U and R alike (see
 [the ICTL reference](ICTL/algorithm.md)). `[p] && q` and `AF [p]` are syntax
-errors, and so is `[...]` in every other logic.
+errors, and so is `[...]` as grouping in every other logic (IATL writes `[1,2]` as a
+coalition, see [IATL](#iatl---intuitionistic-atl)).
 
 ### Until after a prefix
 
@@ -131,7 +139,7 @@ When no parenthesis closes a prefix, a connective after it has two readings:
 `<1>F p && q` is `(<1>F p) && q` or `<1>F (p && q)`, and `<1> p U q && r` is
 `(<1> (p U q)) && r` or `<1> (p U (q && r))`. No defining paper states which, so in
 every logic with a prefix this is a syntax error that gives the position and both
-readings, for `&&`, `||` and `->` in any spelling (`and`, `&`, `implies`):
+readings, for `&&`, `||` and `->` in any spelling (`and`, `or`, `implies`):
 
 ```text
 '<1>F ... && ...' is ambiguous: write <1>F (... && ...) for <1>F over both sides,
@@ -164,7 +172,7 @@ An operator written with no space before a name, such as `Fp`, is never read as 
 
 Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py` checks it for each registered logic.
 
-A name the model does not declare is an error in every logic, wherever it sits in the formula: under `!`, inside an Until or a conjunction. The error type is `semantic` (NatSL reports `validation`), so a typo never reads as a proposition that is false everywhere, which would make `AG !typo` true. The message names it: "Proposition(s) 'zz' not among the model's declared propositions [...]". `model_checker/tests/integration/algorithms/test_error_contract.py` checks this for each registered logic.
+A name the model does not declare is an error in every logic, wherever it sits in the formula: under `!`, inside an Until or a conjunction. The error type is `semantic` (NatSL reports `validation`), so a typo never reads as a proposition that is false everywhere, which would make `AG !typo` true. The message names it: "Proposition(s) 'zz' not among the model's declared propositions [...]"; NatSL words it "Unknown proposition 'zz'; model propositions are [...]". `model_checker/tests/integration/algorithms/test_error_contract.py` checks this for each registered logic.
 
 
 **Truth Table:**
@@ -251,8 +259,12 @@ E{2}controller A{1}opponent: (controller, 1)(opponent, 2) F goal
 **Algorithm:** `model_checker/algorithms/explicit/NatSL/core.py`
 
 **Implemented Logic Support:**
-- Ordered prefixes of the form `E* A*`, including purely existential prefixes.
-- Multi-character strategy variables and explicit agent bindings.
+- Ordered prefixes of the form `E* A*`, including purely existential prefixes. The
+  parser also accepts other orders (`A{1}x E{1}y:`); `model_checking` then returns
+  a validation error that asks for an `E* A*` prefix.
+- Multi-character strategy variables and explicit agent bindings. The bindings cover
+  every agent of the model exactly once, so `E{1}x: (x, 1) F goal` checks only on a
+  1-agent model.
 - A goal is an operator, a space and a proposition (`F goal`); see [operators and names](#operators-and-names).
 - Exact action pruning (no idle-action fallback).
 - Direct evaluation of mixed bounded prefixes (no NatATL decomposition).
@@ -264,7 +276,7 @@ Both schedules share the same acceptance semantics:
 1. `mode="space"`: space-oriented lazy search.
 2. `mode="time"`: time-oriented materialized search.
 
-See [NatSL algorithm](NatSL/algorithm.md) and [NatSL semantics](NatSL/semantics.md).
+`model_checking` uses `space` when no mode is given. See [NatSL algorithm](NatSL/algorithm.md) and [NatSL semantics](NatSL/semantics.md).
 
 ---
 
@@ -292,7 +304,7 @@ erase transitions. Erasing joint action `a` at state `s` costs `$(s, a)`.
   The agents outside `A` resolve the remaining choices in the Demon's favour.
 - The budget applies to each step separately; it is not a sum along the path.
 - Example: on the Figure 1 model of the paper
-  (`tests/fixtures/costCGS/OATL/oatl_3agents_medium_6states_costs.txt`),
+  (`model_checker/tests/fixtures/costCGS/OATL/oatl_3agents_medium_6states_costs.txt`),
   `<1,2><2> G !(r && s && g)` is false at `s0` and `<1,2><3> G !(r && s && g)`
   is true: the least budget that stops the attack is 3, as the paper states.
 
@@ -401,10 +413,10 @@ RBATL and RABATL extend ATL with vector cost bounds on coalition strategies over
 3.  **Multi-resource bounds**: comma-separated inside the second angle-bracket group.
 
 **Cost models:**
-- **RBATL** uses flat `Costs_for_actions` entries (`agent$cost:cost`).
+- **RBATL** uses flat `Costs_for_actions` entries (one line per joint action, `action state$cost[:cost...]`, see [costCGS sections](file_formats.md#costcgs-sections)).
 - **RABATL** uses `Costs_for_actions_split` and sums coalition members' cost components when checking a joint action.
 
-**Semantics (both):** On each coalition-controlled transition, resource `i` consumed must satisfy `cost_i <= b_i` (per-step affordability, not cumulative path totals).
+**Semantics (both):** On each coalition-controlled transition, resource `i` consumed must satisfy `cost_i <= b_i` for each bound `b_i` given (per-step affordability, not cumulative path totals).
 
 **Formula Examples:**
 ```text
@@ -431,7 +443,8 @@ RBATL and RABATL extend ATL with vector cost bounds on coalition strategies over
 
 **Validation Rules:**
 - **Comma separation**: resource vectors use commas, not colons.
-- **Resource count**: bound vector length should match the cost dimension in the model.
+- **Bound range**: each bound value is between 1 and 1000000; `<1><0,5>F p` is an error, "Invalid bound value 0: must be between 1 and 1000000".
+- **Resource count**: the length of the bound vector is not checked against the model. Bound `i` limits cost value `i`; cost values beyond the last bound are not limited, and bounds beyond the last cost value are ignored (`RBATL/preimage.py`, `RABATL/preimage.py`).
 
 ---
 
@@ -482,7 +495,7 @@ CapATL is designed for models with explicit capacity constraints (`capCGS`), oft
 | :--- | :--- | :--- |
 | **Coalition** | ⟨A⟩ / `<{A}>` | `<{A}>` (braces required; no formula `k`) |
 | **Capacities** | Model / knowledge | `capCGS` sections + Pre over capacity knowledge |
-| **Knowledge** | K^a_cap(phi) | Parsed as `Ka(...)`; model checking returns a validation error that names the operator |
+| **Knowledge** | K^a_cap(phi) | Parsed as `K1(...)`, the digit being the agent number; model checking returns a validation error that names the operator |
 | **Temporal** | X, U, R (F/G sugar) | `X, F, G, U, R` (`W` unsupported) |
 
 
@@ -511,7 +524,7 @@ each step, picks one action per member of total cost at most `n`, such that
 every path left by the disabled edges satisfies `theta`, whatever the other
 demons do. A path may stop when every edge out of its last state is disabled.
 Example: on the case-study attack graph of the paper
-(`tests/fixtures/ObstructionModel/COTL/cotl_attack_graph_3demons_6states.txt`),
+(`model_checker/tests/fixtures/ObstructionModel/COTL/cotl_attack_graph_3demons_6states.txt`),
 `<1,3><1> G !q` holds at `s0` and `<1,2><1> G !q` does not, as Sec. 5 states.
 
 ### Current Implementation
@@ -727,7 +740,7 @@ section. Metadata: `model_type: "BCGS"`.
 ```text
 <1>G a
 [1,2]F goal
-<1,2>U safe
+<1,2> p U safe
 <1>X p
 [1]X p
 !p
@@ -773,7 +786,7 @@ and the `rsat` regional labelling algorithm.
 AG a
 EF crossing
 EF (p : x<=1)
-j.(j<=7 U goal)
+j.A(j<=7 U goal)
 ```
 
 **Model type:** `timedCGS` (`TimedCGS.read_file`).
@@ -796,7 +809,7 @@ whose total cost is at most `k`; the Adversary chooses a remaining edge.
 {J5}F a
 {J10}G safe
 {J3}(p U q)
-j.(j<=7 U goal)
+j.{J5}(j<=7 U goal)
 ```
 
 **Temporal operators:** `F`, `G`, `U`, `R`, `W` (paper); `X` (VITAMIN extension).
@@ -816,9 +829,9 @@ same way.
 <a id="empty-coalition-policy"></a>
 ## Empty and Repeated Coalition Policy
 
-VITAMIN does **not** support an empty strategic coalition written as `<>`. In ATL literature an empty coalition can be related to opponent-only or path-level reasoning; in this implementation that overlaps CTL existential quantification (`E`, `EF`, ...) without making the logic explicit.
+Outside COTL, VITAMIN does **not** support an empty strategic coalition written as `<>`. In ATL literature an empty coalition can be related to opponent-only or path-level reasoning; in this implementation that overlaps CTL existential quantification (`E`, `EF`, ...) without making the logic explicit.
 
-**Policy:** reject `<> ...` in every logic. Use the correct surface for the property:
+**Policy:** reject `<> ...` in every logic except COTL, whose legion of demons may be empty (`<><0>`, see the table below). Use the correct surface for the property:
 
 | Intent | Use | Do not use |
 | :--- | :--- | :--- |
@@ -830,7 +843,8 @@ VITAMIN does **not** support an empty strategic coalition written as `<>`. In AT
 | Capacity coalition (CapATL) | `<{1}> F p` | `<> F p` |
 | IATL universal coalition | `[1] G p` | `[] G p` (empty `[]` rejected) |
 
-**Where rejection is enforced:**
+**Where rejection is enforced** (the logics whose coalition form differs; ATL_STAR,
+NatATL_Recall, NatATLF, TCTL and TOL are not listed):
 
 | Logic | Coalition form | Empty coalition |
 | :--- | :--- | :--- |
@@ -999,7 +1013,8 @@ The table gives, for each logic, the prefix that scopes a formula, its temporal
 operators as symbols, the model type it reads and one formula that parses. Word
 forms are in [word operators](#word-operators), and the connectives and constants
 in [Boolean Logic](#boolean-logic-shared-syntax). The per-logic sections and
-algorithm pages give the semantics.
+algorithm pages give the semantics. Each example parses; the NatSL one also checks
+only on a 1-agent model, because its bindings must cover every agent.
 
 | Logic | Prefix | Operators | Model | Example |
 | :--- | :--- | :--- | :--- | :--- |
@@ -1029,27 +1044,31 @@ algorithm pages give the semantics.
 <a id="summary-logic-comparison-matrix"></a>
 ## Summary: Logic Comparison Matrix
 
-| Logic | Path Type | Key Operators | Coalitions / Bounds | Model Type |
-| :--- | :--- | :--- | :--- | :--- |
-| **CTL** | Branching | `AX`, `EF`, `AG`, `E(p U q)` | `A`, `E` (Quantifiers) | CGS |
-| **LTL** | Linear (sure-win) | `X`, `F`, `G`, `U` | None | CGS |
-| **ATL** | Branching | `<A>X`, `<A>F`, `<A>G`, `<A>U` | `<1,2>` | CGS |
-| **ATLF** | Branching | `<A>X`, `<A>F`, `<A>G`, `<A>U` | `<1,2>` | CGS (Fixed-point) |
-| **ATL_STAR** | Branching | `<<A>>` over nested path formulas (`X`/`F`/`G`/`U`, nested coalitions) | `<<1,2>>` (not Wallet_ATL's wallet guards) | CGS |
-| **NatATL (ML)** | Branching | `<A,k>X`, `<A,k>F`, `<A,k>G`, `<A,k>U` | `<{1,2}, k>` (k = strategy complexity) | CGS |
-| **NatATL (Rec)** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` (k = strategy complexity) | CGS |
-| **NatATLF** | Branching | `<A,k>X`, `<A,k>F`, etc. | `<{1,2}, k>` | CGS (delegates to memoryless) |
-| **NatSL** | Branching | `E{k}x`, `A{k}y`, `F`/`G`/`X` | `E{k}x A{m}y: (x, 1)(y, 2) F goal`; schedule `space`/`time` | CGS |
-| **OATL** | Branching | `<A><k>X`, `F`, `G`, `U`, `R`, `W` | `<1,2><5>` (Demon budget per step) | costCGS |
-| **OL** | Linear | `<Jk>X`, `F`, `G`, `U`, `R`, `W` | `<J5>` (Demonic) | costCGS |
-| **RBATL** | Branching | `<A><b1,b2>X`, `F`, `G`, `U` | `<1><10,5>` (Vectors) | costCGS |
-| **CapATL** | Branching | `<{A}>X`, `F`, `G`, `U`, `R`, `Ka(a is c)` | `<{1,2}>` | capCGS |
-| **COTL** | Branching | `<G><n>X`, `WX`, `F`, `G`, `U`, `R`, `W` | `<1,3><1>`, `<><0>` (legion of demons, budget per step) | ObstructionModel |
-| **Wallet_ATL** | Branching | `<<A>>X`, `F`, `G`, `U` | `<<1,2:wallet(...)>>` | WalletCGS |
-| **ICTL** | Branching | `EX`, `AX`, `EF`, `AF`, `EG`, `AG`, `EU`, `AU`, `ER`, `AR` | `E`, `A`; `->` / `not` intuitionistic | BirelationalMatrix |
-| **IATL** | Branching | `<A>X`, `<A>F/G/U/R`, `[A]X`, `[A]F/G/U/R` | `<1>` exist, `[1]` forall; `->` / `!` intuitionistic | BCGS |
-| **TCTL** | Branching | `EF`, `AG`, clock bounds | `A`, `E` + clocks | timedCGS |
-| **TOL** | Linear | `{Jk}X`, `F`, `G`, `U`, `R`, `W` | `{J5}` per-step obstruction | timedCGS |
+The prefix, operators and model type of each logic are in the
+[syntax cards](#syntax-cards); this table adds what the cards leave out.
+
+| Logic | Path Type | Notes |
+| :--- | :--- | :--- |
+| **CTL** | Branching | Path quantifiers `A`, `E` |
+| **LTL** | Linear (sure-win) | No prefix |
+| **ATL** | Branching | Coalition `<A>` with no bound |
+| **ATLF** | Branching | Per-state values, not a set of states ([ATLF](ATLF/algorithm.md)) |
+| **ATL_STAR** | Branching | Nested path formulas and coalitions inside `<<A>>`; no wallet guards |
+| **NatATL** | Branching | Memoryless strategies; `k` is the strategy complexity |
+| **NatATL_Recall** | Branching | As NatATL, with recall strategies |
+| **NatATLF** | Branching | Delegates to the memoryless NatATL solver |
+| **NatSL** | Branching | Schedule `space` (default) or `time` |
+| **OATL** | Branching | Demon budget per step |
+| **OL** | Linear | Demonic bound `<Jk>` |
+| **RBATL** | Branching | Resource vector bound, flat action costs |
+| **RABATL** | Branching | Resource vector bound, coalition-sum costs |
+| **CapATL** | Branching | Knowledge operator `K1(...)` (the digit is the agent) |
+| **COTL** | Branching | Legion of demons, budget per step |
+| **Wallet_ATL** | Branching | Wallet guards in the coalition |
+| **ICTL** | Branching | Intuitionistic `->` and `not` |
+| **IATL** | Branching | Intuitionistic `->` and `!`; `[A]` is the universal coalition |
+| **TCTL** | Branching | Clock constraints and freeze |
+| **TOL** | Linear | Per-step obstruction, clock constraints and freeze |
 
 
 ---
@@ -1057,73 +1076,20 @@ algorithm pages give the semantics.
 <a id="model-syntax"></a>
 ## Model Syntax
 
-VITAMIN supports several model formats. Content-based detection (for generic
-loaders) and logic metadata (for `create_model_parser_for_logic`) both matter;
-canonical authoring details are in [file_formats.md](file_formats.md).
+Each logic reads one model type, given in its [syntax card](#syntax-cards). The
+sections of every model type, how a loader detects the type, and examples are in
+[file_formats.md](file_formats.md#supported-model-types):
 
-### CGS (Concurrent Game Structure)
-The base model for CTL, LTL, ATL, NatATL, NatSL, and related CGS logics.
-
-**File Sections:**
-1.  **Transition**: Matrix (States x States) of joint action profiles. Each non-zero cell lists one or more joints separated by commas. A joint is either compact (`AC` = agent 1 plays `A`, agent 2 plays `C`) or explicit (`A|C`, `IDLE|MOVE`). Both forms are the same per-agent move vector; checkers normalize them to `|`-separated profiles. Use `*` for a full-agent wildcard and `0` for no transition. Every state must have at least one successor (total relation); use a `*` self-loop on terminal states. Cost table keys are normalized to the same pipe form at load time.
-
-    > **Why total transitions?** CTL/ATL (and related) semantics are defined on infinite paths (Baier/Katoen). A state with no successor makes `X` undefined and can make universal next operators hold vacuously. A self-loop means "stay here forever," not that the system has no end state in the modeled domain.
-2.  **Unknown_Transition_by**: Typically zeroed matrix for experimental uncertainty.
-3.  **Name_State**: Space-separated list of state names.
-4.  **Initial_State**: The starting state identifier.
-5.  **Atomic_propositions**: Space-separated list of available propositions.
-6.  **Labelling**: Binary labelling matrix (States x Propositions).
-7.  **Number_of_agents**: Total count of agents in the system.
-8.  **Agent_labels** (optional): Whitespace-separated display names for agents
-    1..n. Formulas use `<1>`, `<2>`, ...; labels are metadata only.
-
-**Example Action Format:**
-For 2 agents, `AC` and `A|C` both mean Agent 1 performs `A` and Agent 2 performs `C`. Prefer compact single-character names in examples; use `|` when an action name has more than one character.
-
-### BirelationalMatrix (ICTL)
-Used for ICTL. Loader:
-`model_checker/parsers/game_structures/birelational_matrix/`.
-Same sectioned layout as CGS, but `Transition` cells are relation labels
-`0` / `R` / `P` / `P,R` (not joint actions). Metadata forces this type for ICTL;
-generic content detection alone still sees an ordinary CGS-shaped file. See
-[ICTL/algorithm.md](ICTL/algorithm.md).
-
-### BCGS (Birelational Concurrent Game Structure)
-Used for IATL. Loader: `model_checker/parsers/game_structures/bcgs/`.
-CGS-style joint-action `Transition` matrix plus a boolean `Preorder` section
-(`0`/`1`). Detected when a `Preorder` header is present. Metadata:
-`model_type: "BCGS"`. See [IATL/algorithm.md](IATL/algorithm.md).
-
-### costCGS (CGS with Costs)
-Used for OATL, OL, RBATL and RABATL.
-- **Section**: `Transition_With_Costs`
-- **Format**: Same dimensions as the transition matrix. Cells contain cost vectors separated by colons (e.g., `1:2:0` for 3 agents).
-
-### capCGS (CGS with Capacities)
-Used for CapATL.
-- **Section**: `Capacities` (list of capacity names).
-- **Section**: `Capacities_assignment` (mapping matrix: Agents x Capacities).
-- **Section**: `Actions_for_capacities` (maps resources directly to actions that consume/replenish them).
-
-### WalletCGS (CGS with Wallets)
-Used for Wallet_ATL.
-- **Section**: `Wallets` - one line per state, `state: balance1 balance2 ...`. Every state needs a row; see [WalletCGS Sections](file_formats.md#walletcgs-sections).
-- Extends standard CGS sections. Actions can encode wallet operations (for example `D20`, `B50`).
-
-### timedCGS (Timed costCGS)
-Used for TOL and TCTL. Includes all costCGS sections plus:
-- **Section**: `Clocks` - clock variable names.
-- **Section**: `Clock_constraints` - bounds and resets on transitions.
-- **Section**: `Invariants` - clock invariants per state, with `<=` or `<` (a strict `x<3` excludes `x=3`; see [file_formats.md](file_formats.md)).
-
-### ObstructionModel (COTL)
-Used for COTL. Loader:
-`model_checker/parsers/game_structures/obstruction_model/`. No agents: a 0/1
-`Transition` matrix of edges (a state may have no successor), `Number_of_demons`,
-`Demon_actions` (`demon state action cost`, idle `*` implicit at cost 0) and
-`Curses` (`state a1,...,ak successor...`: the edges a joint demon action
-disables). Detected when `Number_of_demons` is present. Format:
-[file_formats.md](file_formats.md#obstructionmodel-sections-cotl).
+- [CGS](file_formats.md#cgs-sections): the base concurrent game structure.
+- [costCGS](file_formats.md#costcgs-sections): CGS with action or edge costs.
+- [capCGS](file_formats.md#capcgs-sections): CGS with capacities.
+- [WalletCGS](file_formats.md#walletcgs-sections): CGS with one wallet per agent.
+- [BirelationalMatrix](file_formats.md#birelationalmatrix-sections-ictl): ICTL's
+  relation matrix.
+- [BCGS](file_formats.md#bcgs-sections-iatl): CGS with a `Preorder` matrix.
+- [timedCGS](file_formats.md#timedcgs-sections): costCGS with clocks.
+- [ObstructionModel](file_formats.md#obstructionmodel-sections-cotl): COTL's graph
+  with demons.
 
 ---
 

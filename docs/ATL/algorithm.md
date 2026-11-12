@@ -13,8 +13,13 @@ Parser: `parsers/formulas/ATL/parser.py`
 
 ```text
 phi ::= p | !phi | phi && psi | phi || psi | phi -> psi
-      | <A> X phi | <A> F phi | <A> G phi | <A>(phi U psi)
+      | <A> X phi | <A> F phi | <A> G phi | <A>(phi U psi) | <A> phi U psi
 ```
+
+`<A>(phi U psi)` and `<A> phi U psi` build the same tree (see
+[until after a prefix](../logic_knowledge_base.md#until-after-a-prefix)); a connective
+after the unparenthesised form is a syntax error (see
+[prefix before a connective](../logic_knowledge_base.md#prefix-before-a-connective)).
 
 Coalition form: `<1>`, `<1,2>`. Empty `<>` is rejected. Agent ids must be in `1..n`.
 
@@ -43,7 +48,7 @@ performance tests): [algorithm_design.md](../algorithm_design.md).
 ## Model-checking pipeline
 
 ```text
-CGS.read_file -> ATLParser.parse -> build_tree -> build_transition_cache
+CGS.read_file -> ATLParser.parse -> build_resolved_formula_tree -> build_transition_cache
   -> solve_tree -> format_model_checking_result
 ```
 

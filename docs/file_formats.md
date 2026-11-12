@@ -38,7 +38,8 @@ cotl_model.txt
 A basic CGS model usually contains these sections:
 
 1. `Transition`
-2. `Unknown_Transition_by` (optional, for partial models)
+2. `Unknown_Transition_by` (optional; the loader reads it into
+   `unknown_transition_matrix`, and no checker uses it)
 3. `Name_State`
 4. `Initial_State`
 5. `Atomic_propositions`
@@ -101,7 +102,9 @@ Accepted cell values:
 | Compact | `AC` | Agent 1 plays `A`, agent 2 plays `C` (one character per agent). |
 | Explicit | `A\|C` or `IDLE\|MOVE` | Same per-agent vector; use `\|` when action names are longer than one character. |
 
-Algorithms normalize every profile to the explicit `|`-separated form before coalition masking and strategy pruning. Compact and explicit cells therefore have the same verification semantics. Joint profiles must match `Number_of_agents`.
+Algorithms normalize every profile to the explicit `|`-separated form before coalition masking and strategy pruning. Compact and explicit cells therefore have the same verification semantics. A joint profile needs at least `Number_of_agents` actions. Actions after the first `Number_of_agents` are ignored with no warning (`parse_joint_action_cell` in `cgs_actions.py`).
+
+A shorter profile still loads. It fails when a checker reads the actions: with 2 agents and the cell `A`, ATL reports "Action joint 'A' in cell 'A' has length 1; expected at least 2 character(s) (one per agent)". CTL does not read actions, and on that file it returned a result.
 
 The cell wildcard `*` is treated as a profile with `*` in every agent position.
 
@@ -123,11 +126,21 @@ universal next can hold vacuously. A self-loop models a terminal situation as
 
 ## costCGS Sections
 
-`costCGS` extends CGS for cost-aware logics. It can include:
+`costCGS` extends CGS for cost-aware logics. A file is read as costCGS when it has
+any of these three sections:
 
-- `Costs_for_actions`: action costs by state,
-- `Costs_for_actions_split`: vector costs for multi-resource logics,
-- `Transition_With_Costs`: transition matrix where cells carry cost data.
+- `Costs_for_actions`: one line per joint action, `action state$cost[:cost...]`.
+  Several states share a line, joined by `;`: `AA s0$1:1;s2$1:1`. The values after
+  `$`, separated by `:`, form the cost vector: value `i` is the cost in resource
+  `i`, and RBATL compares it with bound `i` of the formula.
+- `Costs_for_actions_split`: the same line, with each `:`-separated group split
+  again by `,` into one cost per agent: in `AA s0$1,2:3,4`, agents 1 and 2 pay 1 and
+  2 of resource 1, and 3 and 4 of resource 2. RABATL adds the costs of the coalition's
+  agents for each resource.
+- `Transition_With_Costs`: replaces `Transition`; a square matrix whose cells are
+  edge costs, `0` for no edge. It gives no actions, so OATL accepts it only for a
+  coalition of all agents and otherwise reports "a Transition_With_Costs model gives
+  only edge costs; use Transition with Costs_for_actions" (`OATL/preimage.py`).
 
 Examples:
 
@@ -139,6 +152,12 @@ AA s0$1:5
 ```text
 Costs_for_actions_split
 AA s0$1,2:3,4
+```
+
+```text
+Transition_With_Costs
+0 3
+4 0
 ```
 
 ## capCGS Sections
@@ -165,24 +184,27 @@ cop B
 - `Capacities_assignment` - `agents x capacities` matrix of `0`/`1` values.
   Row `i` is agent `i`; column `j` is capacity `j` (same order as `Capacities`).
 - `Actions_for_capacities` - one line per capacity: `capacity_name action1 action2 ...`
-  listing actions associated with that capacity.
+  listing the actions that capacity enables (`CapATL/combinatorics.py`).
 
 Use this format for CapATL-style capability reasoning.
 
 ## WalletCGS Sections
 
 `WalletCGS` extends CGS with a `Wallets` section. Each line maps a state to
-one balance per agent. Every state needs a row; a state without one is a load
-error that names it. Example:
+one balance per agent: the state, then each balance after its own `:`
+(`s0: 100 : 50`). A balance written after a space instead is dropped, and the line
+then fails with "expected 2 wallets, found 0". Every state needs a row; a state without one is a load error that names
+it. Example for 2 agents:
 
 ```text
 Wallets
-s0: 100 50
-s1: 80 60
+s0: 100 : 50
+s1: 80 : 60
 ```
 
 Use this format for Wallet_ATL models. Action strings can include wallet-aware
-codes such as `D20` (deposit) or `B50` (bid). They are longer than one character,
+codes such as `D20` (deposit) or `B50` (bid); the full list of codes is in
+[Wallet_ATL](Wallet_ATL/algorithm.md#semantic-denotations). They are longer than one character,
 so write the joint profile in the explicit form with `|` (see the cell formats in
 [CGS Sections](#cgs-sections)): `D20|0` means agent 1 deposits 20 and agent 2 plays
 the neutral action `0`. Which moves are available depends on the wallets; see
@@ -202,8 +224,9 @@ actions:
 | `P` | knowledge preorder only |
 | `P,R` | both (typical diagonal) |
 
-Prefer `P` or `P,R` on the diagonal. Bare `*` is a CGS idle convention and is
-not a valid ICTL preorder marker. Full validation (C1/C2 and frame rules):
+Every diagonal cell must be `P` or `P,R`, because the preorder `P` is reflexive;
+otherwise ICTL reports "The graph is not reflective." (reflexive) Bare `*` is a CGS idle
+convention and is not a valid ICTL preorder marker. Full validation (C1/C2 and frame rules):
 [ICTL/algorithm.md](ICTL/algorithm.md).
 
 ## BCGS Sections (IATL)
@@ -220,17 +243,33 @@ Preorder
 ```
 
 `Transition` cells use ordinary joint-action strings. `Preorder` entries are
-`0` or `1`. Detected when a `Preorder` header is present. Details:
+`0` or `1`. Detected when a `Preorder` header is present. Each diagonal
+`Transition` cell must hold the idle self-loop (`II,II` for 2 agents); otherwise
+IATL reports "There's no Idle from some states and some agents". Details:
 [IATL/algorithm.md](IATL/algorithm.md).
 
 ## timedCGS Sections
 
 `timedCGS` extends costCGS with three timed sections:
 
-- `Clocks` - clock names used in the model, which follow the
+- `Clocks` - the clock names on one line, separated by spaces, which follow the
   [name rule](logic_knowledge_base.md#names-and-keywords),
 - `Clock_constraints` - per-transition clock resets and bounds,
 - `Invariants` - clock invariants per state.
+
+`Clock_constraints` is a states x states matrix like `Transition`: the cell in row `s`,
+column `t` constrains the transition from `s` to `t`. Cells are separated by spaces.
+A cell holds `<clock><op><integer>` tokens separated by commas, with
+`<op>` one of `>=`, `<=`, `==`, `>`, `<` for a bound, or `=` for a reset (`x=0`).
+`0`, `-` and `*` mean no constraint. Example for 2 states and clock `x`:
+
+```text
+Clocks
+x
+Clock_constraints
+x<=1 x>=2,x=0
+0 x<=1
+```
 
 An invariant is `<clock><op><integer>` with `<op>` either `<=` or `<`, and several
 can share a cell, separated by commas (`x<=5,y<3`). Time can pass in a state only while
@@ -241,8 +280,7 @@ Use `>=` guards in `Clock_constraints`, not in `Invariants`.
 
 Comment lines (`#` or `//`) are allowed in these sections, as in the others.
 
-TOL and TCTL share this model type. Integrate TOL before TCTL if both land in
-the same branch, so `timed_cgs` is present once.
+TOL and TCTL share this model type.
 
 ## ObstructionModel Sections (COTL)
 
@@ -288,6 +326,10 @@ disabled edge that is not in `Transition` are rejected with the line number.
 Semantics: [COTL/algorithm.md](COTL/algorithm.md).
 
 ## Formula Files
+
+This package reads one formula string per call and does not read formula files;
+the VITAMIN Workbench reads them (`vitamin_api/features/model_checking/services/processing/formula_parser.py`
+in the vitamin-workbench repository). The rules below are the Workbench's.
 
 Formula files usually sit next to their model file and use the
 `_formula.txt` suffix:

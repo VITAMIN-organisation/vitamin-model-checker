@@ -27,10 +27,16 @@ Variants:
 |---|---|---|
 | Memoryless | `NatATL/Memoryless/` | Strategies depend on current state |
 | Recall | `NatATL/Recall/` | History-dependent strategies |
-| Recall Filter | Recall path | Same recall check; ATL conversion may run for diagnostics |
 
-Return contract: boolean `Satisfiability` plus `res` / `initial_state` (not a
-full CTL-style winning-set report).
+The logic name `NatATL` selects the memoryless solver and `NatATL_Recall` the recall
+solver (`NatATL/Recall/natatl_recall.py`). NatATLF has its own page,
+[NatATLF](../NatATLF/algorithm.md).
+
+Return contract: a dict with boolean `Satisfiability`, `Complexity Bound` (the
+smallest bound at which a strategy was found, or the formula's bound `k` when none
+was), `Winning Strategy per agent` (only
+when satisfied), and the text fields `res` and `initial_state`. There is no
+CTL-style winning-set report.
 
 Implementation techniques (strategy pruning, condition cache): [algorithm_design.md](../algorithm_design.md).
 
@@ -56,6 +62,7 @@ CGS.read_file -> NatATLParser.parse -> strategy synthesis / pruning
 | `NatATL/Memoryless/` | Memoryless solver |
 | `NatATL/Recall/` | Recall solver and tree helpers |
 | `NatATL/natatl_ast.py` | Shared AST helpers |
+| `NatATL/NatATLtoCTL.py` | Formula to CTL text and coalition extraction |
 
 ## Tests
 

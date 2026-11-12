@@ -114,7 +114,7 @@ searches short: the work is one search per cycle state within 100 steps of
 ## Model-checking pipeline
 
 ```text
-CGS.read_file -> CTLParser.parse -> build_tree -> solve_tree
+CGS.read_file -> CTLParser.parse -> build_resolved_formula_tree -> solve_tree
   -> VerificationResult.to_compact_dict
   (generate_trace=True: build_trace -> VerificationResult.to_dict)
 ```

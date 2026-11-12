@@ -283,4 +283,4 @@ Parser metadata: `model_type: "BCGS"`.
 |------|----------|
 | `tests/integration/algorithms/iatl/test_correctness.py` | Pinned fixture, `Pre_d`/`Pre_f`, `[A]X` = `Pre_f`, `F`/`G` encodings, excluded-middle countermodel, `^up` on `!` |
 | `tests/fixtures/CGS/IATL/iatl_2agents_2states_minimal.txt` | Minimal 2-agent BCGS |
-| `tests/fixtures/CGS/IATL/iatl_figure2_proposition1.txt` | IATL allows `!<A>X p && !<A>X !p` where ATL cannot (undetermined `p`) |
+| `tests/fixtures/CGS/IATL/iatl_figure2_proposition1.txt` | IATL allows `(!<A>X p) && (!<A>X !p)` where ATL cannot (undetermined `p`) |

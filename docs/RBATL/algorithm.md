@@ -6,7 +6,9 @@ Scope: denotations and code path for RBATL in
 ## Model
 
 - Type: `costCGS`
-- Flat action costs: `Costs_for_actions` (`agent$cost:cost` style entries).
+- Flat action costs: `Costs_for_actions`, one line per joint action as
+  `action state$cost[:cost...]`, several states joined by `;` (see
+  [costCGS sections](../file_formats.md#costcgs-sections)).
 
 ## Formula language
 
@@ -16,7 +18,9 @@ Parser: `parsers/formulas/RBATL/parser.py`
 phi ::= ... | <A><b1,b2,...> X phi | <A><b1,...> F phi | ...
 ```
 
-Vector bounds are comma-separated. `R` / `W` rejected at parse time.
+Vector bounds are comma-separated. `R` / `W` rejected at parse time. Each bound value
+is between 1 and 1000000; the rules are in
+[the knowledge base](../logic_knowledge_base.md#rbatl--rabatl).
 
 `<A><b> phi U psi` and `<A><b> (phi U psi)` build the same tree (see
 [the knowledge base](../logic_knowledge_base.md#until-after-a-prefix)), and

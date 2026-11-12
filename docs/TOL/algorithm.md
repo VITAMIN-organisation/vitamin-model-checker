@@ -39,7 +39,7 @@ beyond the obstruction game (WTA semantics, Definition 5).
 
 ## Formula language
 
-Parser: `parsers/formulas/TOL/tol_ply_parser.py`.
+Parser: `parsers/formulas/TOL/parser.py`.
 
 ### Propositional and clocks
 

@@ -19,6 +19,9 @@ Same surface as RBATL:
 <1,2><10,5> F goal
 ```
 
+Each bound value is between 1 and 1000000; the rules are in
+[the knowledge base](../logic_knowledge_base.md#rbatl--rabatl).
+
 ## Semantic denotations
 
 Same per-step vector affordability check as RBATL, with different cost

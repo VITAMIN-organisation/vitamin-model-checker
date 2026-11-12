@@ -101,7 +101,7 @@ the states and actions, as in [OATL](../OATL/algorithm.md#model).
 ## Model-checking pipeline
 
 ```text
-costCGS.read_file -> OLParser.parse -> build_tree -> solve_tree -> result
+costCGS.read_file -> OLParser.parse -> build_resolved_formula_tree -> solve_tree -> result
 ```
 
 Entry: `OL/OL.py`.

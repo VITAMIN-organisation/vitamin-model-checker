@@ -146,7 +146,8 @@ Implementation techniques (transition cache, early-stop): [algorithm_design.md](
 ## Model-checking pipeline
 
 ```text
-WalletCGS.read_file -> Wallet_ATLParser.parse -> build_tree
+WalletCGS.read_file -> Wallet_ATLParser.parse -> _convert_wallet_ast
+  -> build_resolved_formula_tree -> build_feasible_transition_cache
   -> solve_tree -> result
 ```
 

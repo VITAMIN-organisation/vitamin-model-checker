@@ -22,7 +22,9 @@ User formulas must not contain `E` / `A` or coalitions. `R` / `W` are not in the
 surface syntax.
 
 An operator is followed by a space, `(` or `!`: `X p`, `F G p`. `Xp` and `FGp` are
-names, and so is `pUq`: write `p U q`. A name that is not among the model's
+syntax errors: a name starts with a lowercase letter, so `Xp` is neither a name nor
+`X` applied to `p`. `pUq` is read as one name; write `p U q` for the Until (see
+[operators glued to a name](../logic_knowledge_base.md#operators-glued-to-a-name)). A name that is not among the model's
 declared propositions is an error that names it, so see
 [operators and names](../logic_knowledge_base.md#operators-and-names) when a name you
 did not mean to declare appears in the message.

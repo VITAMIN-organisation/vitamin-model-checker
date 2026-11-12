@@ -59,9 +59,11 @@ Current built-in model types include:
 - `capCGS` - CGS with agent capacities
 - `WalletCGS` - CGS with per-agent wallet balances (Wallet_ATL)
 - `timedCGS` - costCGS extended with clocks and zone constraints (TOL, TCTL)
+- `ObstructionModel` - a graph whose edges demons disable (COTL)
 
-The checker currently ships 18 logics. Recent additions integrated via VMI: `Wallet_ATL`,
-`TOL`, `TCTL`, `ICTL`, and `IATL`. See
+The checker registers 20 logic names in the `vitamin.parsers` entry points: 19 logics
+plus `NatATL_Recall`, the recall variant of NatATL. `Wallet_ATL`, `TOL`, `TCTL`, `ICTL`
+and `IATL` were integrated via VMI. See
 [Logic Knowledge Base](logic_knowledge_base.md) for syntax details and
 [File Formats](file_formats.md) for model file layout.
 

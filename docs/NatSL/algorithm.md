@@ -12,7 +12,14 @@ The executable quantifier prefix has the form:
 E* A*
 ```
 
-including purely existential prefixes.
+including purely existential prefixes. The parser also accepts other orders such as
+`A{1}x E{1}y:`; `model_checking` then returns a validation error, "This restricted
+NatSL[1G] prototype accepts only a two-block E* A* prefix; universal-then-existential
+or repeated alternation is unsupported" (`NatSL/core.py`).
+
+The bindings must cover every agent of the model exactly once. On a 2-agent model,
+`E{1}x: (x, 1) F goal` fails with "The executable fragment requires a closed binding
+prefix covering every model agent exactly once; expected [1, 2], got [1]".
 
 Example:
 
@@ -79,7 +86,7 @@ If the selected action is unavailable in a covered state, the strategy profile i
 
 The public entry point is `NatSL/core.py` `model_checking(..., mode=)`:
 
-- `mode="space"`: space-oriented lazy search.
+- `mode="space"` (the default): space-oriented lazy search.
 - `mode="time"`: time-oriented materialized search.
 
 Both modes are required to agree on satisfiability.
@@ -88,7 +95,8 @@ Both modes are required to agree on satisfiability.
 
 - `NatSL/core.py`: shared bounded-strategy model-checking core.
 - `parsers/formulas/NatSL/parser.py`: NatSL parser.
-- `tests/unit/algorithms/natsl/`: semantic regression tests.
+- `tests/integration/algorithms/natsl/`: semantic regression tests.
+- `tests/unit/parsers/formulas/test_natsl_parser.py`: parser tests.
 - `tests/fixtures/CGS/NatSL/`: NatSL CGS fixtures.
 - `experiments/natsl/`: reproducible scalability experiments.
 
