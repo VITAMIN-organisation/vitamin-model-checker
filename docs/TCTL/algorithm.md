@@ -20,17 +20,12 @@ involved:
 | Piece | Role |
 | :--- | :--- |
 | timedCGS | Locations, transitions, automaton clocks `X`, guards, resets, invariants |
-| Formula clocks `Y` | Collected from the AST; disjoint from `X`; extend the zone graph |
+| Formula clocks `J` | Collected from the AST; disjoint from `X`; extend the zone graph |
 | Zone graph | Symbolic regions `(location, zone)` with delay and discrete edges |
 | `rsat` labelling | Bottom-up evaluation into `satisfying_regions` per subformula |
 
 Path quantifiers are `E` and `A`. Temporal operators are `F`, `G`, and `U`. There is
-no `X` operator, as in the three TCTL sources in `docs/papers/`. Alur, Courcoubetis
-and Dill (`IC93.pdf`, Information and Computation 1993, p. 10) write "TCTL has no
-next-time operator [...] because if time is dense then, by definition, there is no
-unique next time". The Alur thesis grammar (`Alur-thesis.pdf`, Definition 5.1,
-p. 144) has none, and Anderson and Thiagarajan
-(`TCTL-Anderson-Thiagarajan-ch6.pdf`, p. 87) write "there is no EX or AX".
+no `X` operator, because time is dense and so there is no unique next time.
 
 `X p`, `AX p`, `EX p` and `A next p` are rejected with a message that quotes the
 operator, such as "TCTL has no next operator ('AX' at position 1): time is dense,
@@ -46,11 +41,12 @@ initial location is satisfying.
 Clock sets:
 
 - `X`: automaton clocks from the model `Clocks` section,
-- `Y`: formula clocks from FREEZE and guards in the property.
+- `J`: formula clocks from freeze and guards in the property. A formula clock is
+  a name like a proposition (lowercase first letter), such as `j`.
 
 ```text
 phi ::= p | gamma | !phi | phi && psi | phi || psi
-      | y.reset(phi)                    (freeze; VITAMIN writes y.phi)
+      | j.reset(phi)                    (freeze; VITAMIN writes j.phi)
       | A[phi U psi]_gamma | E[phi U psi]_gamma
 ```
 
@@ -66,36 +62,34 @@ phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
       | E phi U psi   | A phi U psi     (same AST as parenthesized form)
 ```
 
-Sugar: `F` / `G` / `U` / `until` / `eventually` / `globally`.
+The words `until`, `eventually` and `globally` stand for `U`, `F` and `G`.
 
 A connective after a prefix that no parenthesis closes (`AF p && q`,
 `A p U q && r`, freeze `j. p && q`, clock constraint `AF p : x<5 && q`) is a
-syntax error that gives the position and both readings, as in every logic with a
-prefix; `AF p`, `AG AF p` and `AG (p -> EF q)` parse (see
-[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)). The
-TCTL sources state no precedence rule and write a compound body in parentheses:
-IC93 p. 10 defines $\exists\Diamond_{\sim c}\varphi$ as
-$\exists(true\ U_{\sim c}\ \varphi)$, and Alur's thesis (p. 147) writes
-$\forall\Box x.[p \to \forall\Diamond y.(q \land y < x+5)]$.
+syntax error, as in every logic with a prefix (see
+[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective));
+`AF p`, `AG AF p` and `AG (p -> EF q)` parse.
 
-Standard reductions:
+Standard reductions (`~` means "is defined as"):
 
-- `EF phi`  ~ `E[true U phi]`
-- `AF phi`  ~ `A[true U phi]`
-- `EG phi`  ~ `!A[!phi U true]`
-- `AG phi`  ~ `!E[!phi U true]`
+- `EF phi` ~ `E[true U phi]`
+- `AF phi` ~ `A[true U phi]`
+- `EG phi` ~ `!A[!phi U true]`
+- `AG phi` ~ `!E[!phi U true]`
 
-Bounded until (paper encoding via FREEZE):
+Bounded until (paper encoding via freeze):
 
 ```text
-A[phi U psi]_<=c  ~  y.reset(phi && A[true U (y<=c && psi)])   with fresh y in Y
+A[phi U psi]_<=c  ~  j.reset(phi && A[true U (j<=c && psi)])   with fresh j in J
 ```
 
 ## Satisfaction and `rsat`
 
+The `rsat` labelling treats each kind of node as follows:
+
 - Atoms label all regions at locations where the proposition holds.
 - Clock constraints label regions whose zones satisfy the guard (with invariants).
-- FREEZE `y.phi`: region `r` satisfies `y.phi` when `r` with formula clock `y`
+- Freeze `j.phi`: region `r` satisfies `j.phi` when `r` with formula clock `j`
   reset to `0` satisfies `phi`.
 - Until uses region-level fixpoints with timed backward steps. Because
   formulas are evaluated on each zone-graph node, prefix obligations correspond to
@@ -120,7 +114,7 @@ Invariants
 Base sections (`Transition`, `Name_State`, `Initial_State`, `Atomic_propositions`,
 `Labelling`, `Number_of_agents`) match costCGS/CGS.
 
-Implementation techniques (zone graph): [algorithm_design.md](../algorithm_design.md).
+The implementation techniques for the zone graph are in [algorithm_design.md](../algorithm_design.md).
 
 ## Model-checking pipeline
 
@@ -129,7 +123,7 @@ zone graph before solving:
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1f5f99", "primaryTextColor": "#ffffff", "primaryBorderColor": "#4a90d9", "lineColor": "#75808f", "tertiaryTextColor": "#75808f", "titleColor": "#75808f", "clusterBkg": "transparent", "clusterBorder": "#75808f", "edgeLabelBackground": "transparent"}}}%%
-flowchart TB
+flowchart LR
     parse["TCTLParser.parse"]
     load["TimedCGS.read_file"]
     clocks["collect_formula_clocks<br/>+ extend_timed_cgs_clocks"]
@@ -176,10 +170,10 @@ Table 3 gives the role of each file the TCTL checker uses:
 | :--- | :--- |
 | `TCTL/TCTL.py` | Entry: parse, extend clocks, zone graph, solve, project |
 | `TCTL/solver.py` | AST traversal and handler dispatch |
-| `TCTL/evaluators.py` | Leaf, boolean, FREEZE, and clock-guard handlers |
+| `TCTL/evaluators.py` | Leaf, boolean, freeze, and clock-guard handlers |
 | `TCTL/operators.py` | Temporal fixpoints on regions |
 | `timed_cgs/regions.py` | Region sets, `timed_predecessors`, projection |
-| `timed_cgs/formula_clocks.py` | Collect `Y` from AST; extend `TimedCGS` |
+| `timed_cgs/formula_clocks.py` | Collect `J` from AST; extend `TimedCGS` |
 | `timed_cgs/zone_graph.py` | Zone graph construction |
 | `parsers/formulas/TCTL/` | Parser and AST types |
 
@@ -191,6 +185,6 @@ Table 4 lists the TCTL tests and fixtures and what each covers:
 
 | Path | Coverage |
 | :--- | :--- |
-| `tests/integration/algorithms/tctl/test_correctness.py` | Temporal ops, guards, FREEZE |
+| `tests/integration/algorithms/tctl/test_correctness.py` | Temporal ops, guards, freeze |
 | `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared timedCGS with TOL |
 | `tests/unit/parsers/models/timed_cgs/test_zone_graph.py` | Zone graph paths and guards |

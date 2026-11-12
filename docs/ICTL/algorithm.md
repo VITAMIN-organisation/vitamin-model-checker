@@ -55,7 +55,7 @@ satisfy valuation monotonicity:
 if s <=_P s' then V(s) subseteq V(s')
 ```
 
-### Well-behavedness (EUMAS Def. 1)
+### Well-behavedness (EUMAS25b Def. 1)
 
 Validated models must satisfy confluence between `P` and `R`. EUMAS25b Definition 1
 uses exactly two conditions; Theorem 1 proves they are necessary and sufficient for

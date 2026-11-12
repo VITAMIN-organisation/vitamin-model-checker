@@ -13,9 +13,6 @@ author `.txt` models.
 - [Per-logic algorithm pages](#per-logic-algorithm-pages)
 - [Boolean logic (shared syntax)](#boolean-logic-shared-syntax)
 - [CTL (Computation Tree Logic)](#ctl---computation-tree-logic)
-- [LTL (Linear Temporal Logic)](LTL/algorithm.md) (algorithm page)
-- [ATL / ATLF (Alternating-time Temporal Logic)](ATL/algorithm.md) (algorithm page)
-- [NatATL / NatATLF](NatATL/algorithm.md) (algorithm page)
 - [NatSL](#natsl---natural-strategy-logic)
 - [OATL](#oatl)
 - [OL](#ol)
@@ -45,7 +42,7 @@ The knowledge base holds:
 - One section for each of CTL, NatSL, OATL, OL, RBATL and RABATL, CapATL, COTL,
   Wallet_ATL, ICTL, IATL, TCTL and TOL: the syntax and semantics from the literature,
   the grammar and model type the code accepts, and for most of them a table that
-  sets theory beside implementation. LTL, ATL, ATLF, ATL_STAR, NatATL (with
+  sets theory beside implementation. LTL, ATL, ATLF, ATL*, NatATL (with
   NatATL_Recall) and NatATLF have no section of their own; their algorithm pages
   below hold that material.
 - The shared policies: [empty and repeated coalitions](#empty-coalition-policy),
@@ -62,7 +59,7 @@ Each logic has its own algorithm page:
 - [LTL](LTL/algorithm.md)
 - [ATL](ATL/algorithm.md)
 - [ATLF](ATLF/algorithm.md)
-- [ATL_STAR](ATL_STAR/algorithm.md)
+- [ATL*](ATL_STAR/algorithm.md)
 - [NatATL](NatATL/algorithm.md)
 - [NatATLF](NatATLF/algorithm.md)
 - [NatSL](NatSL/algorithm.md)
@@ -116,7 +113,7 @@ Table 2 lists the brackets that group a formula and the logics that take them:
 
 CTL writes square brackets only around an Until, `A[f1 U f2]`, and groups
 everything else with parentheses (Clarke, Emerson, Sistla, ACM TOPLAS 1986,
-p. 246). ICTL writes them once, around a Release (EUMAS 2025, p. 10), and ICTL
+p. 246). ICTL writes them once, around a Release (EUMAS25b, Bozzelli et al., EUMAS 2025, p. 10), and ICTL
 also takes them around an Until because its grammar treats U and R alike (see
 [the ICTL reference](ICTL/algorithm.md)). `[p] && q` and `AF [p]` are syntax
 errors, and so is `[...]` as grouping in every other logic (IATL writes `[1,2]` as a
@@ -170,13 +167,18 @@ without offering two readings; see [the NatSL reference](NatSL/algorithm.md#supp
 
 ### Operators and names
 
-Temporal operators (`X`, `F`, `G`, `U`, and in CTL and ICTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`; TCTL has no `X`, see [the TCTL reference](TCTL/algorithm.md)) are words of their own. Follow one with a space, `(` or `!`: `F p`, `F (p && q)`, `F !p`.
+Temporal operators (`X`, `F`, `G`, `U`, and in CTL and ICTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`) are words of their own. TCTL has no `X` (see [the TCTL reference](TCTL/algorithm.md)).
+Follow one with a space, `(` or `!`: `F p`, `F (p && q)`, `F !p`.
 
-An operator written with no space before a name, such as `Fp`, is never read as the operator applied to the name (`F p`). A name starts with a lowercase letter ([names and keywords](#names-and-keywords)), so the glued form is an error; the three ways it fails are in [operators glued to a name](#operators-glued-to-a-name). A binary operator follows the same rule: `pUq` starts lowercase, so it is one name like any other and must be declared in the model; `p U q` is the Until.
+A name starts with a lowercase letter ([names and keywords](#names-and-keywords)), so an operator glued to a name, such as `Fp`, is an error; the three ways it fails are in [operators glued to a name](#operators-glued-to-a-name).
+A binary operator follows the same rule: `pUq` starts lowercase, so it is one name like any other and must be declared in the model; `p U q` is the Until.
 
 Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py` checks it for each registered logic.
 
-A name the model does not declare is an error in every logic, wherever it sits in the formula: under `!`, inside an Until or a conjunction. The error type is `semantic` (NatSL reports `validation`), so a typo never reads as a proposition that is false everywhere, which would make `AG !typo` true. The message names it: "Proposition(s) 'zz' not among the model's declared propositions [...]"; NatSL words it "Unknown proposition 'zz'; model propositions are [...]". `model_checker/tests/integration/algorithms/test_error_contract.py` checks this for each registered logic.
+A name the model does not declare is an error in every logic, wherever it sits in the formula: under `!`, inside an Until or a conjunction.
+The error type is `semantic` (NatSL reports `validation`), so a typo never reads as a proposition that is false everywhere, which would make `AG !typo` true.
+The message names it: "Proposition(s) 'zz' not among the model's declared propositions [...]"; NatSL words it "Unknown proposition 'zz'; model propositions are [...]".
+`model_checker/tests/integration/algorithms/test_error_contract.py` checks this for each registered logic.
 
 The truth table of the boolean operators:
 
@@ -361,7 +363,9 @@ Table 3 sets the paper beside the code:
 
 ### Theoretical background
 
-OL (Obstruction Logic, ECAI 2023) is a game against a Demon on `costCGS` models: `<Jk> phi` holds when the Demon, with a budget of `k` at each step, can disable edges so that every remaining path satisfies `phi`. It is OATL with the coalition of all agents. The [OL algorithm reference](OL/algorithm.md) gives the rules and the sources.
+OL (Obstruction Logic, ECAI 2023) is a game against a Demon on `costCGS` models: `<Jk> phi` holds when the Demon, with a budget of `k` at each step, can disable edges so that every remaining path satisfies `phi`.
+It is OATL with the coalition of all agents.
+The [OL algorithm reference](OL/algorithm.md) gives the rules and the sources.
 
 The standard syntax is the cost prefix `<Jk> phi`, where `k` is a natural number, 0 included.
 
@@ -461,7 +465,8 @@ Table 5 sets the paper beside the code:
 | RBATL costs | Flat action costs | `Costs_for_actions` |
 | RABATL costs | Split / coalition-sum | `Costs_for_actions_split` |
 
-RABATL is not a separate recursive-modality engine in VITAMIN. It shares `bounded_atl_solver` with RBATL and differs only in how action costs are derived from the model file. Winning sets can differ from RBATL on the same formula when coalition-sum costs disagree with flat costs.
+RABATL is not a separate recursive-modality engine in VITAMIN. It shares `bounded_atl_solver` with RBATL and differs only in how action costs are derived from the model file.
+Winning sets can differ from RBATL on the same formula when coalition-sum costs disagree with flat costs.
 
 Release (`R`) and Weak Until (`W`) are rejected at parse time for RBATL/RABATL.
 
@@ -495,10 +500,10 @@ The parser is `model_checker/parsers/formulas/CapATL/parser.py`.
 
 #### Validation rules
 
-Weak Until (`W`) is not part of CapATL path syntax and remains unsupported. Release (`R`) is accepted as a binary operator (`<{A}> phi R psi`) and evaluated by the CapATL solver (greatest fixpoint).
-
 - Model requirement: can only be verified against `capCGS` models.
 - Formula bound: `<{A}, k>` is rejected (no numeric `k` in CapATL).
+- Weak Until: `W` is not part of CapATL path syntax and is unsupported.
+- Release: `R` is accepted as a binary operator (`<{A}> phi R psi`) and evaluated by the CapATL solver (greatest fixpoint).
 
 #### Formula examples
 
@@ -594,7 +599,9 @@ other demons and the path, on an `ObstructionModel`.
 
 ATL with wallet-aware coalitions over [`WalletCGS`](file_formats.md#walletcgs-sections) models.
 
-The coalition syntax is `<<agents[:wallet constraints]>>` followed by a temporal formula. The `<<>>` prefix is mandatory before `X`, `F`, `G`, or `U`; bare temporal operators without a coalition are rejected. Each wallet guard names a coalition agent, and every guard must hold; see [Wallet_ATL formula language](Wallet_ATL/algorithm.md#formula-language).
+The coalition syntax is `<<agents[:wallet constraints]>>` followed by a temporal formula.
+The `<<>>` prefix is mandatory before `X`, `F`, `G`, or `U`; bare temporal operators without a coalition are rejected.
+Each wallet guard names a coalition agent, and every guard must hold; see [Wallet_ATL formula language](Wallet_ATL/algorithm.md#formula-language).
 
 Wallet_ATL uses a `<<...>>` prefix instead of `<1>` because plain ATL uses `<1>` for
 coalitions only, while Wallet_ATL embeds optional balance guards (`:wallet(agent, op value)`)
@@ -628,7 +635,7 @@ A joint move is available only when every agent can pay for its part, so a
 ### Theoretical background
 
 ICTL (Intuitionistic CTL) extends CTL with intuitionistic propositional
-connectives over [birelational models](file_formats.md#birelationalmatrix-sections-ictl) (EUMAS 2025, Bozzelli et al.). Each
+connectives over [birelational models](file_formats.md#birelationalmatrix-sections-ictl) (EUMAS25b). Each
 model has two relations on the same finite state set:
 
 - `P` (`<=_P`): information preorder; truth is monotone as knowledge grows.
@@ -639,7 +646,7 @@ implication and negation are intuitionistic: `phi -> psi` is checked at all
 `P`-refinements of the current state.
 
 The paper's well-behaved frames satisfy the confluence constraints C1 and C2
-between `P` and `R` (EUMAS Def. 1). See [ICTL/algorithm.md](ICTL/algorithm.md).
+between `P` and `R` (EUMAS25b Def. 1). See [ICTL/algorithm.md](ICTL/algorithm.md).
 
 #### Standard syntax (state formulas)
 
@@ -708,7 +715,7 @@ Table 8 sets the paper beside the code:
 | Aspect | Theory (EUMAS25b) | Implementation |
 | :--- | :--- | :--- |
 | Model | Birelational frame + monotone valuation | `BirelationalMatrix` + `check_conditions_hold` |
-| Frame constraints | C1, C2 (well-behaved) | C1, C2 (EUMAS Def. 1); no paper C3 |
+| Frame constraints | C1, C2 (well-behaved) | C1, C2 (EUMAS25b Def. 1); no paper C3 |
 | `->`, `not` | Intuitionistic (`^up`) | `handle_implies`, `handle_not` with `^up` |
 | `AX` | `Pre_forall([[phi]])` | `handle_ax` = `Pre_forall` (no `^up`) |
 | `AF` / `AG` | `A(T U phi)` / `A(bottom R phi)` | `handle_af` / `handle_ag` (direct fixpoints) |
@@ -853,7 +860,8 @@ The model type is `timedCGS`, and TOL shares the `timed_cgs` parser with TCTL. T
 <a id="empty-coalition-policy"></a>
 ## Empty and repeated coalition policy
 
-Outside COTL, VITAMIN does not support an empty strategic coalition written as `<>`. In ATL literature an empty coalition can be related to opponent-only or path-level reasoning; in this implementation that overlaps CTL existential quantification (`E`, `EF`, ...) without making the logic explicit.
+Outside COTL, VITAMIN does not support an empty strategic coalition written as `<>`.
+In ATL literature an empty coalition can be related to opponent-only or path-level reasoning; in this implementation that overlaps CTL existential quantification (`E`, `EF`, ...) without making the logic explicit.
 
 The policy is to reject `<> ...` in every logic except COTL, whose legion of demons may be empty (`<><0>`). Table 10 gives the correct surface for each property:
 
@@ -870,7 +878,7 @@ The policy is to reject `<> ...` in every logic except COTL, whose legion of dem
 | IATL universal coalition | `[1] G p` | `[] G p` (empty `[]` rejected) |
 
 Table 11 lists where the rejection is enforced, for the logics whose coalition form
-differs; ATL_STAR, NatATL_Recall, NatATLF, TCTL and TOL are not listed:
+differs; ATL*, NatATL_Recall, NatATLF, TCTL and TOL are not listed:
 
 **Table 11: Where an empty coalition is rejected.**
 
@@ -887,7 +895,9 @@ differs; ATL_STAR, NatATL_Recall, NatATLF, TCTL and TOL are not listed:
 | Wallet_ATL | `<<1>>` | `<<>>` invalid (lexer) |
 | CTL / LTL | `E` / `A` or none | `<> ` invalid syntax |
 
-VITAMIN also rejects a coalition that lists an agent twice, because a coalition is a set of agents (ATL, JACM 2002 p. 685, rule S3: A "is a set of players"). This holds in every logic whose coalition lists agents, including IATL's `[A]` and COTL's list of demons (its legion). For example, `<1,1> F p` in ATL and `<{2,1,2}> F p` in CapATL are errors that name the repeated agent.
+VITAMIN also rejects a coalition that lists an agent twice, because a coalition is a set of agents (ATL, JACM 2002 p. 685, rule S3: A "is a set of players").
+This holds in every logic whose coalition lists agents, including IATL's `[A]` and COTL's list of demons (its legion).
+For example, `<1,1> F p` in ATL and `<{2,1,2}> F p` in CapATL are errors that name the repeated agent.
 
 <a id="names-and-keywords"></a>
 ## Names and keywords
@@ -971,7 +981,7 @@ logics that read it. The words are `OPERATOR_WORDS` in `syntax_patterns.py`, whi
 feeds every parser except NatSL's (its goal pattern reads `not` only), so a word is
 spelled the same in every logic that has it. In a logic that does not read a word,
 or in another letter case ([rule 3](#names-and-keywords)), the word is an error. `p Until q` gives
-"Syntax error near token 'Until'" in every logic except two: ATL_STAR gives the
+"Syntax error near token 'Until'" in every logic except two: ATL* gives the
 reserved-word message and NatSL "Unsupported goal". CapATL's `kcap1(...)` is not in
 the table, because the word carries the agent number; see `kcap` under
 [reserved words](#reserved-words).
@@ -998,8 +1008,8 @@ the table, because the word carries the agent number; see `kcap` under
 
 NatSL reads `not` before its goal (`E{1}x: (x, 1) not F p`) and takes no other
 word, because its goal is one operator and one proposition
-([the NatSL reference](NatSL/algorithm.md)). TCTL has no next operator, since time
-is dense, and writes its clock constraint with `:` only. CapATL reads `is` only
+([the NatSL reference](NatSL/algorithm.md)). TCTL writes its clock
+constraint with `:` only. CapATL reads `is` only
 inside its knowledge operator, `K1(1 is c)`, and it has no symbol besides the word.
 
 ### Operators glued to a name
@@ -1009,7 +1019,7 @@ An operator written with no space before a name, such as `Fp`, is one word that
 
 - Every logic except NatSL reads `Fp` as one word and refuses it by name, with `Atomic proposition 'Fp' is invalid`.
 - IATL, TCTL and TOL give `Invalid character 'F'` for a word that starts with two capitals, such as `FFuel`, then refuse the rest (`Atomic proposition 'Fuel' is invalid`), because their lexer reads only a capital followed by a lowercase letter as the start of a word.
-- NatSL rejects it with "Unsupported goal": `Fgoal` is an error. A lowercase operator (`f goal`) is also an error ([rule 5](#names-and-keywords)).
+- NatSL rejects it with "Unsupported goal", so `Fgoal` is an error. A lowercase operator (`f goal`) is also an error ([rule 5](#names-and-keywords)).
 
 ### Lexer word patterns
 
@@ -1018,10 +1028,10 @@ wider than the name rule, so that `Goal` or `Fp` is read as one word and refused
 name, instead of `Fp` being read as `F p`. Most patterns are constants in
 `syntax_patterns.py`:
 
-- Every logic except IATL, TCTL, TOL, ATL_STAR and NatSL, ICTL included:
+- Every logic except IATL, TCTL, TOL, ATL* and NatSL, ICTL included:
   `PROPOSITION_TOKEN` = `[a-zA-Z][a-zA-Z0-9_]*` (Wallet_ATL writes the same pattern
   in its parser). `_goal` is therefore an `Invalid character '_'` error.
-- ATL_STAR: its grammar's own `IDENT` = `[a-zA-Z_][a-zA-Z0-9_]*`, so `_goal` is
+- ATL*: its grammar's own `IDENT` = `[a-zA-Z_][a-zA-Z0-9_]*`, so `_goal` is
   read as one word and refused by name.
 - IATL, TCTL and TOL: `ICTL_PROPOSITION_TOKEN` (also named
   `TCTL_TOL_PROPOSITION_TOKEN`) = `[a-z][a-zA-Z0-9_]*` or
@@ -1040,7 +1050,7 @@ operators as symbols, the model type it reads and one formula that parses. Word
 forms are in [word operators](#word-operators), and the connectives and constants
 in [Boolean logic](#boolean-logic-shared-syntax). The per-logic sections and
 algorithm pages give the semantics. Each example parses; the NatSL one also checks
-only on a 1-agent model, because its bindings must cover every agent.
+only on a 1-agent model (see [NatSL](#natsl---natural-strategy-logic)).
 
 **Table 13: Syntax card of each logic.**
 
@@ -1118,7 +1128,7 @@ sections of every model type, how a loader detects the type, and examples are in
 
 ## Technical references
 
-The VITAMIN platform incorporates theoretical foundations from the following textbooks:
+The theory in this page draws on these textbooks:
 
 - Baier, C. & Katoen, J. P. (2008). _Principles of Model Checking_. MIT Press.
   It covers the theoretical foundations for CTL and LTL, state-space exploration,

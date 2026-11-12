@@ -62,8 +62,9 @@ phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
   `Invalid character` error (see the
   [names and keywords](../logic_knowledge_base.md#names-and-keywords)).
   Single-letter uppercase tokens (`F`, `G`, `X`, `U`, `R`, `W`) remain temporal
-  operators. Clock names in a formula (`x<=3`, `x.phi`) and in the `Clocks`
-  section of a TimedCGS model follow the same rule.
+  operators.
+- Clock names: in a formula (`x<=3`, `x.phi`) and in the `Clocks` section of a
+  TimedCGS model they follow the same rule as atoms.
 - Automaton clocks: `X` in the paper, from the `Clocks` section of the model.
 - Formula clocks: `J` in the paper, disjoint from automaton clocks; they appear in
   freeze and guards, and are collected from the AST and added when building
@@ -96,7 +97,7 @@ phi ::= {Jk} F phi | {Jk} G phi
 - Sugar (paper): `{Jk} F phi := {Jk} (true U phi)`, `{Jk} G phi := {Jk} (false R phi)`,
   `{Jk} (phi W psi) := {Jk} (psi R (phi || psi))`.
 
-### VITAMIN extensions (not in the paper)
+### Surface syntax and VITAMIN extensions
 
 Table 2 lists what the surface syntax adds to or restates from the paper:
 
@@ -132,14 +133,13 @@ Implementation (`preimage.py`):
   `triangle_down(n, Z)` on location names: discrete or timed `Pred(Z)`, then filter
   by `triangle`.
 
-The cost budget `k` is a per-position demonic budget (fresh at each step of the
-obstruction game), not cumulative path cost. This matches the paper, and OL in
-VITAMIN reads its budget the same way.
+The cost budget `k` is a per-step budget; see
+[the knowledge base](../logic_knowledge_base.md#tol---timed-obstruction-logic).
 
 Delay transitions (`d` in `Sigma_delta`) have cost `0` in the matrix; timed
 pre-images use the zone graph.
 
-Implementation techniques (zone graph, obstruction `triangle`): [algorithm_design.md](../algorithm_design.md).
+The implementation techniques for the zone graph and obstruction `triangle` are in [algorithm_design.md](../algorithm_design.md).
 
 ## Model-checking pipeline
 
@@ -148,7 +148,7 @@ zone graph before solving:
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1f5f99", "primaryTextColor": "#ffffff", "primaryBorderColor": "#4a90d9", "lineColor": "#75808f", "tertiaryTextColor": "#75808f", "titleColor": "#75808f", "clusterBkg": "transparent", "clusterBorder": "#75808f", "edgeLabelBackground": "transparent"}}}%%
-flowchart TB
+flowchart LR
     load["TimedCGS.read_file"]
     parse["TOLParser.parse"]
     clocks["collect formula<br/>clocks J from AST"]
@@ -178,10 +178,9 @@ Table 3 gives the computation behind each operator:
 | `{Jk} X phi` | `triangle_down(k, Sat(phi))` (extension) |
 | `j . phi` | `Sat(phi)` with formula clock `j` in `ZG(A, phi)`; reset at entry (Algorithm 1) |
 
-AST node types: `AtomicProp`, `Unary`, `Binary`, `DemonicOp`, `DemonicBinary`,
-`FreezeExpr`, `ClockExpr`, `SimpleTimeExpr`.
-
-Shared timed helpers: `parsers/game_structures/timed_cgs/semantics.py`.
+The AST node types are `AtomicProp`, `Unary`, `Binary`, `DemonicOp`,
+`DemonicBinary`, `FreezeExpr`, `ClockExpr` and `SimpleTimeExpr`. The shared timed
+helpers are in `parsers/game_structures/timed_cgs/semantics.py`.
 
 ## Code map
 
