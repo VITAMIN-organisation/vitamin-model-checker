@@ -121,12 +121,13 @@ phi ::= p | phi /\ phi | phi \/ phi | phi -> phi | not phi
 
 - Atoms: identifiers matching `[a-z][a-zA-Z0-9_]*` (for example `e`, `goal`);
   `Goal` is an error (see the
-  [Atomic Proposition Policy](../logic_knowledge_base.md#atomic-proposition-policy)).
+  [names and keywords](../logic_knowledge_base.md#names-and-keywords)).
   Path quantifiers and temporal tokens (`E`/`A`/`X`/`F`/`G`/`U`/`R`, and keywords)
   are lexed separately so forms such as `EX` / `AG` are operators, not atoms.
 - Negation: `not phi` or `! phi`.
-- Implication: `->`, `>`, or `implies`.
-- Conjunction / disjunction: `&&`, `&`, `and` / `||`, `|`, `or`.
+- Implication: `->` or `implies`.
+- Conjunction / disjunction: `&&`, `and` / `||`, `or`. A single `&` or `|`, and
+  `>` as implication, are errors, as in every logic.
 - Path quantifiers: `E` / `exist`, `A` / `forall`.
 - Temporal: `X` / `next`, `U` / `until`, `R` / `release`.
 

@@ -22,6 +22,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `test_connective_spelling.py`), and one that pins NatSL's "Unsupported goal"
   error for a connective in a goal such as `E{1}x:(x,1) F p && q`, as before
   (`test_natsl_spacing.py`).
+- Docs: "Names and keywords" in `docs/logic_knowledge_base.md` replaces
+  "Atomic Proposition Policy" as the one source for the name rule, the reserved
+  words and the word operators, with the logics that read each word. A new
+  "Syntax cards" section gives each logic's prefix, operators, model type and an
+  example. `test_names_doc.py` checks the reserved words and the word table against
+  `FORMULA_RESERVED_WORDS`, `OPERATOR_WORDS` and the parsers, and each syntax
+  card's example and model type against the parser and the model-type registry.
+- Docs fixes: `docs/file_formats.md` no longer lists `F`, `G` and `exists` as
+  reserved words or gives the examples `EF [p]` (CTL) and `Ex : (x, 1) F goal`
+  (NatSL), which are syntax errors; `docs/ICTL/algorithm.md` no longer lists `>`,
+  `&` and `|` as ICTL connectives.
 
 ### Changed
 

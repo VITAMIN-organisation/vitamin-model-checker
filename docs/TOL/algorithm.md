@@ -53,7 +53,7 @@ phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
 - Atoms: identifiers that start with a lowercase letter (`p`, `safe_1`, `goalA`);
   `Goal` is refused by name and an all-capital word such as `GOAL` is an
   `Invalid character` error (see the
-  [Atomic Proposition Policy](../logic_knowledge_base.md#atomic-proposition-policy)).
+  [names and keywords](../logic_knowledge_base.md#names-and-keywords)).
   Single-letter uppercase tokens (`F`, `G`, `X`, `U`, `R`, `W`) remain temporal
   operators. Clock names in a formula (`x<=3`, `x.phi`) and in the `Clocks`
   section of a TimedCGS model follow the same rule.

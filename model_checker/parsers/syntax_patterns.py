@@ -48,7 +48,7 @@ class OperatorSpelling(NamedTuple):
 
 # The one list of word spellings, by token name. Words are lowercase only. A logic
 # lexes only the tokens it declares, but every word here is reserved in all logics
-# (KB "Atomic Proposition Policy").
+# (KB "Names and keywords", whose word table a test checks against this one).
 OPERATOR_WORDS: dict[str, OperatorSpelling] = {
     "AND": OperatorSpelling("&&", ("and",)),
     "OR": OperatorSpelling("||", ("or",)),

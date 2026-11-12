@@ -1,58 +1,31 @@
 """Which words are proposition names, in every logic.
 
 A name starts with a lowercase letter (`goal`, `gOAL`); `Goal` and `P` are errors.
-The reserved words of docs/logic_knowledge_base.md ("Reserved keywords") are never
-names, and the word forms of the operators (`eventually`, `until`) are operators.
+The reserved words (docs/logic_knowledge_base.md, "Names and keywords", checked
+against `FORMULA_RESERVED_WORDS` by test_names_doc.py) are never names, and the word
+forms of the operators (`eventually`, `until`) are operators.
 """
 
 import pytest
 
-from model_checker.parsers.syntax_patterns import FORMULA_RESERVED_WORDS
+from model_checker.parsers.syntax_patterns import (
+    BOOLEAN_CONSTANTS,
+    FORMULA_RESERVED_WORDS,
+)
 from model_checker.tests.helpers.formula_cases import (
-    BINARY_OPERATORS,
     OPERATOR_FORMS,
-    binary,
     holds_word,
     parse,
     parse_errors,
     unary,
 )
 
-# docs/logic_knowledge_base.md, "Reserved keywords (case-insensitive)"
-_DOCUMENTED_RESERVED = {
-    "and",
-    "or",
-    "not",
-    "implies",
-    "until",
-    "release",
-    "globally",
-    "next",
-    "eventually",
-    "always",
-    "forall",
-    "exist",
-    "weak",
-    "with",
-    "is",
-    "true",
-    "false",
-}
-
-# Reserved as names, but in a formula they are valid constants.
-_CONSTANTS = {"true", "false"}
-
+# The constants are reserved as names, but in a formula they are valid constants.
 _RESERVED_CASES = sorted(
     (logic, word)
     for logic in OPERATOR_FORMS
-    for word in _DOCUMENTED_RESERVED - _CONSTANTS
+    for word in FORMULA_RESERVED_WORDS - BOOLEAN_CONSTANTS
 )
-
-
-@pytest.mark.unit
-def test_reserved_words_match_the_docs():
-    """The parser's list and the documented list are the same words."""
-    assert FORMULA_RESERVED_WORDS == _DOCUMENTED_RESERVED
 
 
 @pytest.mark.unit
@@ -67,7 +40,7 @@ def test_reserved_word_is_not_a_proposition(logic, word):
 _RESERVED_IN_OTHER_CASE = sorted(
     (logic, spelling)
     for logic in OPERATOR_FORMS
-    for word in _DOCUMENTED_RESERVED
+    for word in FORMULA_RESERVED_WORDS
     for spelling in (word.capitalize(), word.upper())
 )
 
@@ -76,7 +49,7 @@ _RESERVED_IN_OTHER_CASE = sorted(
 @pytest.mark.parametrize(("logic", "word"), _RESERVED_IN_OTHER_CASE)
 def test_reserved_word_in_another_letter_case_is_not_a_proposition(logic, word):
     """`F Globally` is an error: reserved words are case-insensitive as names
-    (docs/logic_knowledge_base.md, "Reserved keywords (case-insensitive)")."""
+    (docs/logic_knowledge_base.md, "Names and keywords", rule 2)."""
     prefix, op = OPERATOR_FORMS[logic]
     assert parse(logic, f"{prefix}{op} {word}") is None
 
@@ -86,13 +59,13 @@ def test_reserved_word_in_another_letter_case_is_not_a_proposition(logic, word):
 @pytest.mark.parametrize("logic", sorted(set(OPERATOR_FORMS) - {"NatSL"}))
 def test_refused_name_is_named_in_the_errors(logic):
     """`F Globally` is refused with a reason that names `Globally`, not an empty list."""
-    # `globally` is reserved in any letter case (KB "Reserved keywords").
+    # `globally` is reserved in any letter case (KB "Names and keywords").
     errors = parse_errors(logic, unary(logic, "Globally"))
     assert any("'Globally'" in error for error in errors), errors
 
 
 @pytest.mark.unit
-# `Next` is reserved in any letter case (KB "Reserved keywords"); `Goal` starts
+# `Next` is reserved in any letter case (KB "Names and keywords"); `Goal` starts
 # with a capital.
 @pytest.mark.parametrize("name", ["Next", "Goal"])
 @pytest.mark.parametrize(
@@ -155,7 +128,7 @@ def test_refused_uppercase_name_is_named_in_the_errors(logic, name):
 
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", sorted(OPERATOR_FORMS))
-@pytest.mark.parametrize("constant", sorted(_CONSTANTS))
+@pytest.mark.parametrize("constant", sorted(BOOLEAN_CONSTANTS))
 def test_reserved_constant_is_accepted_as_a_constant_in_a_formula(logic, constant):
     """`F true` parses: `true` and `false` are reserved as names but are valid constants."""
     prefix, op = OPERATOR_FORMS[logic]
@@ -171,54 +144,8 @@ def test_name_not_starting_with_a_letter_is_rejected(logic, name):
     assert parse(logic, f"{prefix}{op} {name}") is None
 
 
-# NatSL goals take F, G and X only. TCTL has no next.
-_WORD_OPERATOR_CASES = sorted(
-    (logic, word, symbol)
-    for logic in OPERATOR_FORMS
-    if logic != "NatSL"
-    for word, symbol in [
-        ("eventually", "F"),
-        ("globally", "G"),
-        ("always", "G"),
-        ("next", "X"),
-    ]
-    if not (logic == "TCTL" and word == "next")
-)
-
-
-def _quantified(logic: str, op: str) -> str:
-    """The prefix for a unary operator: the CTL family writes `A F p` as `A` and `F`."""
-    prefix, default = OPERATOR_FORMS[logic]
-    if default == "AF":
-        return f"A {op}"
-    return f"{prefix}{op}"
-
-
-@pytest.mark.unit
-@pytest.mark.parametrize(("logic", "word", "symbol"), _WORD_OPERATOR_CASES)
-def test_word_operator_builds_the_symbol_tree(logic, word, symbol):
-    """`eventually p` is `F p`."""
-    # repr, because the TCTL and TOL nodes do not define equality.
-    spelled = parse(logic, f"{_quantified(logic, word)} p")
-    assert spelled is not None, f"{logic} rejected '{word}'"
-    assert repr(spelled) == repr(parse(logic, f"{_quantified(logic, symbol)} p"))
-
-
-_BINARY_WORD_CASES = sorted(
-    (logic, word, symbol)
-    for logic, ops in BINARY_OPERATORS.items()
-    for word, symbol in [("until", "U"), ("release", "R"), ("weak", "W")]
-    if symbol in ops
-)
-
-
-@pytest.mark.unit
-@pytest.mark.parametrize(("logic", "word", "symbol"), _BINARY_WORD_CASES)
-def test_binary_word_operator_builds_the_symbol_tree(logic, word, symbol):
-    """`p until q` is `p U q`, `p release q` is `p R q`, `p weak q` is `p W q`."""
-    spelled = parse(logic, binary(logic, f"p {word} q"))
-    assert spelled is not None, f"{logic} rejected '{word}'"
-    assert repr(spelled) == repr(parse(logic, binary(logic, f"p {symbol} q")))
+# Which logic reads which word, and that a word builds its symbol's tree, is
+# checked against the KB word table in test_names_doc.py.
 
 
 @pytest.mark.unit

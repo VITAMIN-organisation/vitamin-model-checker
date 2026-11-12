@@ -65,6 +65,24 @@ def unary(logic: str, operand: str) -> str:
     return f"{prefix}{op} {operand}"
 
 
+def quantified(logic: str, op: str, operand: str) -> str:
+    """`operand` under the logic's prefix and the unary operator `op` (`F` or
+    `eventually`); the CTL family writes `A F p`, so a word can follow `A`."""
+    prefix, default = OPERATOR_FORMS[logic]
+    if default == "AF":
+        prefix = "A "
+    return f"{prefix}{op} {operand}"
+
+
+def negated(logic: str, negation: str) -> str:
+    """`!` or `not` before the logic's unary formula on `p`: NatSL negates its one
+    goal after the prefix (`... not F p`), the others negate the operand."""
+    prefix, op = OPERATOR_FORMS[logic]
+    if logic == "NatSL":
+        return f"{prefix}{negation} {op} p"
+    return unary(logic, f"{negation} p")
+
+
 def binary(logic: str, body: str) -> str:
     """Put a binary body such as `p U q` after the logic's prefix, or inside its brackets."""
     if logic in _BINARY_WRAP:

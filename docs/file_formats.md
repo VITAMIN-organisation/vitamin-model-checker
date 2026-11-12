@@ -159,8 +159,9 @@ cop B
 ```
 
 - `Capacities` - space-separated capacity/resource names. A name follows the
-  proposition rule: `[a-z][a-zA-Z0-9_]*` and not a reserved word
-  ([Atomic Proposition Policy](logic_knowledge_base.md#atomic-proposition-policy)).
+  [name rule](logic_knowledge_base.md#names-and-keywords): `[a-z][a-zA-Z0-9_]*`,
+  not a reserved word, and not `kcap` or `kcap` with digits (`kcap1`), which CapATL
+  reads as its knowledge operator.
 - `Capacities_assignment` - `agents x capacities` matrix of `0`/`1` values.
   Row `i` is agent `i`; column `j` is capacity `j` (same order as `Capacities`).
 - `Actions_for_capacities` - one line per capacity: `capacity_name action1 action2 ...`
@@ -226,8 +227,8 @@ Preorder
 
 `timedCGS` extends costCGS with three timed sections:
 
-- `Clocks` - clock names used in the model, which follow the proposition rule
-  ([Atomic Proposition Policy](logic_knowledge_base.md#atomic-proposition-policy)),
+- `Clocks` - clock names used in the model, which follow the
+  [name rule](logic_knowledge_base.md#names-and-keywords),
 - `Clock_constraints` - per-transition clock resets and bounds,
 - `Invariants` - clock invariants per state.
 
@@ -312,41 +313,19 @@ The first formula is treated as the primary formula by tools that need one.
 
 ## Formula Syntax Overview
 
-| Logic | Example | Model type |
-|---|---|---|
-| ATL | `<1,2> F p` | CGS |
-| CTL | `AG p` or `EF [p]` | CGS |
-| LTL | `G (p -> F q)` | CGS |
-| NatATL | `<{1,2}, 5> F p` | CGS |
-| NatSL | `Ex : (x, 1) F goal` | CGS |
-| OATL | `<1,2><10> (p W q)` | costCGS |
-| OL | `<J10> G p` | costCGS |
-| RBATL | `<1><10,5> F p` | costCGS |
-| RABATL | `<1><2,2> F p` | costCGS |
-| COTL | `<1,3><1> G !q` or `<><0> X p` | ObstructionModel |
-| CapATL | `<{1}> F g` | capCGS |
-| Wallet_ATL | `<<1>>X auction_active` | WalletCGS |
-| ICTL | `EX e` or `AG (p -> EF q)` | BirelationalMatrix |
-| IATL | `<1>G a` or `[1,2]F goal` | BCGS |
-| TCTL | `AG a` or `EF crossing` | timedCGS |
-| TOL | `{J5}F a` | timedCGS |
-
-Common boolean operators:
-
-- `!` for not,
-- `&&` for and,
-- `||` for or,
-- `->` for implication,
-- `true` and `false` constants.
+The prefix, operators, model type and one example formula of each logic are in the
+[syntax cards](logic_knowledge_base.md#syntax-cards). The connectives (`!`, `&&`,
+`||`, `->`) and the constants `true` and `false` are in
+[Boolean Logic](logic_knowledge_base.md#boolean-logic-shared-syntax).
 
 ## Practical Rules
 
 - End every formula with `;`.
-- Start proposition, clock and capacity names in a formula with a lowercase
-  letter, for example `ready` or `goal_reached`; capitals may follow (`goalA`).
-  `Goal` is an error (see the
-  [Atomic Proposition Policy](logic_knowledge_base.md#atomic-proposition-policy)).
-- Avoid reserved words such as `and`, `or`, `F`, `G`, and `exists`.
+- Proposition, clock and capacity names, in models and formulas, start with a
+  lowercase letter (`ready`, `goal_reached`, `goalA`; `Goal` is an error), and the
+  reserved words (`until`, `exist`, `true`, ...) are never names, in any letter
+  case. This is the name rule; the full rules and list are in
+  [names and keywords](logic_knowledge_base.md#names-and-keywords).
 - Comments are allowed with `#` or `//`.
 - Multi-line formulas are fine as long as the final formula has a semicolon.
 

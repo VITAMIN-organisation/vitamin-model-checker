@@ -8,7 +8,7 @@ covers:
 1. **Theoretical background** - standard syntax and semantics from the literature.
 2. **Current implementation** - surface grammar, model type, and how theory maps to code.
 3. **Comparison** - short theory vs implementation table.
-4. **Shared policies** - empty coalitions, proposition tokens, and model formats.
+4. **Shared policies** - empty coalitions, names and keywords, and model formats.
 
 For denotations, fixpoints, validation proofs, and pipeline details, use the
 per-logic `docs/<Logic>/algorithm.md` pages (for example
@@ -63,8 +63,9 @@ to locate:
 15. [TCTL](#tctl---timed-ctl)
 16. [TOL](#tol---timed-obstruction-logic)
 17. [Empty and Repeated Coalition Policy](#empty-coalition-policy)
-18. [Atomic Proposition Policy](#atomic-proposition-policy)
-19. [Model Syntax](#model-syntax)
+18. [Names and keywords](#names-and-keywords)
+19. [Syntax cards](#syntax-cards)
+20. [Model Syntax](#model-syntax)
 
 ---
 
@@ -79,15 +80,19 @@ All logics in VITAMIN share a common set of boolean operators and constants.
 
 **Boolean Operators (Ordered by Precedence):**
 
-| Operator | Syntax | Keyword | Description |
-| :--- | :--- | :--- | :--- |
-| **Negation** | `!` | `not` | Logical NOT |
-| **Conjunction** | `&&` | `and` | Logical AND |
-| **Disjunction** | `\|\|` | `or` | Logical OR |
-| **Implication** | `->` | `implies` | Logical implication (p -> q) |
+| Operator | Syntax | Description |
+| :--- | :--- | :--- |
+| **Negation** | `!` | Logical NOT |
+| **Conjunction** | `&&` | Logical AND |
+| **Disjunction** | `\|\|` | Logical OR |
+| **Implication** | `->` | Logical implication (p -> q) |
+
+The word forms `not`, `and`, `or` and `implies`, and the logics that read them, are
+in [word operators](#word-operators).
 
 Every logic spells the connectives this way. A single `&` or `|`, and `>` as
-implication, are rejected in all of them (`test_connective_spelling.py`), so a
+implication, are rejected in all of them
+(`model_checker/tests/unit/parsers/formulas/test_connective_spelling.py`), so a
 formula is never valid in one logic and invalid in another. NatSL goals take no
 connectives.
 
@@ -155,17 +160,11 @@ without offering two readings; see [the NatSL reference](NatSL/algorithm.md#supp
 
 Temporal operators (`X`, `F`, `G`, `U`, and in CTL and ICTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`; TCTL has no `X`, see [the TCTL reference](TCTL/algorithm.md)) are words of their own. Follow one with a space, `(` or `!`: `F p`, `F (p && q)`, `F !p`.
 
-An operator written with no space before a name, such as `Fp`, is never read as the operator applied to the name (`F p`). A name starts with a lowercase letter ([Atomic Proposition Policy](#atomic-proposition-policy)), so the glued form is an error. A binary operator follows the same rule: `pUq` starts lowercase, so it is one name like any other and must be declared in the model; `p U q` is the Until.
+An operator written with no space before a name, such as `Fp`, is never read as the operator applied to the name (`F p`). A name starts with a lowercase letter ([names and keywords](#names-and-keywords)), so the glued form is an error; the three ways it fails are in [operators glued to a name](#operators-glued-to-a-name). A binary operator follows the same rule: `pUq` starts lowercase, so it is one name like any other and must be declared in the model; `p U q` is the Until.
 
-Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py` checks it for each registered logic. The glued form fails in one of three ways:
-
-- Every logic except NatSL reads `Fp` as one word and refuses it by name, with `Atomic proposition 'Fp' is invalid`.
-- IATL, TCTL and TOL give `Invalid character 'F'` for a word that starts with two capitals, such as `FFuel`, because their lexer reads only a capital followed by a lowercase letter as the start of a word.
-- NatSL rejects it as an unsupported goal: `Fgoal` is an error. A lowercase operator (`f goal`) is also an error, because operators are uppercase.
+Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py` checks it for each registered logic.
 
 A name the model does not declare is an error in every logic, wherever it sits in the formula: under `!`, inside an Until or a conjunction. The error type is `semantic` (NatSL reports `validation`), so a typo never reads as a proposition that is false everywhere, which would make `AG !typo` true. The message names it: "Proposition(s) 'zz' not among the model's declared propositions [...]". `model_checker/tests/integration/algorithms/test_error_contract.py` checks this for each registered logic.
-
-LTL, NatATL, NatATL_Recall and NatATLF check their goal and strategy conditions as CTL text, where `A` and `E` are path quantifiers. A model proposition named `A`, `E`, `AF` or another name the CTL parser reads as an operator is therefore refused by these four logics with a semantic error that names it; rename it in the model. The other logics accept such names.
 
 
 **Truth Table:**
@@ -305,7 +304,7 @@ erase transitions. Erasing joint action `a` at state `s` costs `$(s, a)`.
 1.  **Format**: `<coalition><budget>` (e.g., `<1,2><10>`), with no space between
     the two parts (`<1> <5>` is an error).
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W` (and their keywords).
-3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [Atomic Proposition Policy](#atomic-proposition-policy)).
+3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [names and keywords](#names-and-keywords)).
 4.  **Boolean Constants**: Supports `true` and `false`.
 
 **Validation Rules:**
@@ -355,7 +354,7 @@ OL (Obstruction Logic, ECAI 2023) is a game against a Demon on `costCGS` models:
 **Supported Syntax:**
 1.  **Format**: `<Jk>` (e.g., `<J5>`). The letter `J` is mandatory inside the angle brackets.
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W`.
-3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [Atomic Proposition Policy](#atomic-proposition-policy)).
+3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [names and keywords](#names-and-keywords)).
 
 **Validation Rules:**
 - **Mandatory `J`**: OL prefixes must use `<Jk>`, not bare `<k>`.
@@ -522,7 +521,7 @@ Example: on the case-study attack graph of the paper
 **Supported Syntax:**
 1.  **Format**: `<legion><budget>` (e.g., `<1,3><1>`, `<><0>`). Demon indices go from 1 to `Number_of_demons`.
 2.  **Temporal Operators**: `X`, `WX` (weak next), `F`, `G`, `U`, `R`, `W`. Binary operators may be written `<G><n> (phi U psi)` or without parentheses.
-3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [Atomic Proposition Policy](#atomic-proposition-policy)).
+3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [names and keywords](#names-and-keywords)).
 
 **Formula Examples:**
 ```text
@@ -634,7 +633,7 @@ Diagonal cells should be `P` or `P,R` so reflexivity of `P` holds. Metadata:
 1. **Quantifiers:** `E` / `exist`, `A` / `forall`.
 2. **Temporal:** `X`, `U`, `R`; sugar `F` / `G` (also `eventually`, `globally`, etc.).
 3. **Boolean:** `&&`, `||`, `!` / `not`, `->` / `implies`.
-4. **Propositions:** standard alphabet `[a-z][a-zA-Z0-9_]*`. Path/temporal
+4. **Propositions:** `[a-z][a-zA-Z0-9_]*` ([names and keywords](#names-and-keywords)). Path/temporal
    tokens (`E`, `A`, `X`, `F`, `G`, `U`, `R`, keywords) are lexed separately so
    forms such as `EX` / `AG` are operators, not atoms.
 
@@ -850,64 +849,180 @@ VITAMIN also rejects a coalition that lists an agent twice, because a coalition 
 
 ---
 
-<a id="atomic-proposition-policy"></a>
-## Atomic Proposition Policy
+<a id="names-and-keywords"></a>
+## Names and keywords
 
-Proposition, clock and capacity names, in a model and in a formula, follow one alphabet and must not clash with reserved syntax keywords. CGS action names (`A`, `block_a1`) are not names in this sense and may start with a capital.
+This section is the one source for how names, reserved words and operator words
+are written, in models and in formulas of every logic. Other docs link here.
+Five rules cover it:
 
-**Standard alphabet (models and every logic):**
-- Pattern: `[a-z][a-zA-Z0-9_]*` (`NAME_RE` in `syntax_patterns.py`): a lowercase
+1. A name (proposition, clock, capacity) is `[a-z][a-zA-Z0-9_]*`, the same in
+   models and formulas: `goal` and `goalA` are names, `P`, `Goal` and `GOAL` are
+   errors (IATL, TCTL and TOL report `P` and `GOAL` as `Invalid character`).
+2. The 17 [reserved words](#reserved-words) are never names, in any letter case.
+3. A word operator such as `until` is an operator only in lowercase, and only in a
+   logic that has the operator ([word operators](#word-operators)).
+4. `true` and `false` are constants in lowercase only, in every logic.
+5. Operator symbols (`F`, `U`, `AG`, and CapATL's knowledge operator `K1`, whose
+   word form is `kcap1`) are uppercase only. With rule 1, a word that starts with an uppercase letter is
+   never a name.
+
+So each word has one reading. `p until q` is an Until. `p Until q` is an error,
+because the parser meets `Until` where an operator must stand. `F Until` is an
+error from the [reserved-word](#reserved-words) check, because `Until` stands where
+a name must stand. `F Goal` gives "Atomic proposition 'Goal' is invalid", never a
+proposition that is false everywhere.
+
+### Names
+
+Proposition, clock and capacity names follow rule 1 in a model and in a formula.
+CGS action names (`A`, `block_a1`) and agent labels are not names in this sense and
+may start with a capital.
+
+- Pattern: `NAME_RE` in `model_checker/parsers/syntax_patterns.py`, a lowercase
   letter, then letters, digits or `_`.
-- Examples: `p`, `goal`, `safe_1`, `goalA`. `P`, `Goal` and `GOAL` are errors
-  (IATL, TCTL and TOL report `P` and `GOAL` as an invalid character, see below):
+- Formulas: `validate_proposition_identifier()` in
+  `model_checker/parsers/formulas/parser_utils.py` checks, in every logic, the
+  propositions of a formula, the capacity names of a CapATL formula and the clock
+  names of a TCTL or TOL formula (in a freeze `x.phi` and a comparison `x<=2`).
+- Models: `validate_model_name()` in
+  `model_checker/parsers/game_structures/cgs/cgs_utils.py` applies the same check
+  to the propositions of a CGS model, the `Clocks` section of a timedCGS model and
+  the `Capacities` section of a capCGS model. So a model cannot declare a clock or
+  capacity such as `Next` that no formula can name.
 
-  ```text
-  Atomic proposition 'Goal' is invalid: a name starts with a lowercase letter, then letters, digits or _ ([a-z][a-zA-Z0-9_]*).
-  ```
-- Validation: `validate_proposition_identifier()` in
-  `model_checker/parsers/formulas/parser_utils.py`. It checks the propositions of
-  CGS models, the `Clocks` section of a TimedCGS model, the `Capacities` section
-  of a CapCGS model and, in every logic, the propositions of a formula, the
-  capacity names of a CapATL formula and the clock names of a TCTL or TOL formula
-  (in a freeze `x.phi` and a comparison `x<=2`). So a model cannot declare a clock
-  or capacity such as `Next` that no formula can name; the message starts
-  `Clock 'Next'` or `Capacity 'Next'`.
+The message starts with the kind of name (`Atomic proposition`, `Clock` or
+`Capacity`) and the word:
 
-**Reserved keywords (case-insensitive):** `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`, `weak`, `with`, `is`, `true`, `false`
+```text
+Atomic proposition 'Goal' is invalid: a name starts with a lowercase letter, then letters, digits or _ ([a-z][a-zA-Z0-9_]*).
+Atomic proposition 'Until' clashes with reserved keyword.
+```
 
-`weak`, `with` and `is` are reserved in every logic, although only OATL, COTL, OL and
-TOL read `weak`, TOL reads `with` and CapATL reads `is` as an operator word; a name
-therefore means the same in every logic, apart from `kcap` below.
+IATL, TCTL and TOL report an all-capital word such as `P` or `GOAL` as
+`Invalid character` instead (see [lexer word patterns](#lexer-word-patterns)).
+
+### Reserved words
+
+Reserved words (any letter case): `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`, `weak`, `with`, `is`, `true`, `false`.
+
+The list is `FORMULA_RESERVED_WORDS` in `syntax_patterns.py`: every operator word of
+the [word operators](#word-operators) table plus the two constants. A word is
+reserved in every logic, even where the logic has no such operator (`weak` in ATL,
+`with` outside TOL), so a name means the same in every logic, apart from `kcap` below.
 
 `kcap` (in any letter case) is reserved in CapATL only: in its formulas and in a
-CapCGS model, as a proposition or a capacity name. CapATL writes its knowledge
+capCGS model (the only model type CapATL reads), as a proposition or a capacity name. CapATL writes its knowledge
 operator `K1(...)` or `kcap1(...)`, and its parser reads `kcap` followed by digits
-as that operator, so the bare word is the only spelling left to reserve. A CapCGS
+as that operator, so the bare word is the only spelling left to reserve. A capCGS
 model also refuses names of `kcap` and digits (`kcap1`, `kcap42`), since no CapATL
 formula could name them; `kcap1x` is an ordinary name. In the other logics and
 plain CGS models `kcap` and `kcap1` stay valid names.
 
 `true` and `false` are the boolean constants, so a model that declares a proposition, clock or
-capacity with either name (`true`, `True`, `FALSE`, ...) is rejected when it is read. The constants
-themselves are written in lowercase in a formula.
+capacity with either name (`true`, `True`, `FALSE`, ...) is rejected when it is read. In a
+formula they are constants in lowercase, and `True` is a reserved-word error.
 
-**Lexer word patterns:** each parser's lexer reads a word (a run of letters,
-digits and `_`) with a pattern wider than the name rule, so that `Goal` or `Fp`
-is read as one word and refused by name, instead of `Fp` being read as `F p`. The
-patterns are constants in `syntax_patterns.py`:
-- Every logic except IATL, TCTL and TOL, ICTL included: `PROPOSITION_TOKEN` =
-  `[a-zA-Z][a-zA-Z0-9_]*`.
+### Word operators
+
+Most operators have a word form beside the symbol: `p until q` is `p U q`, with the
+same precedence. The table below lists every word, the symbol it stands for and the
+logics that read it. The words are `OPERATOR_WORDS` in `syntax_patterns.py`, which
+feeds every parser except NatSL's (its goal pattern reads `not` only), so a word is
+spelled the same in every logic that has it. In a logic that does not read a word,
+or in another letter case (rule 3), the word is an error. `p Until q` gives
+"Syntax error near token 'Until'" in every logic except two: ATL_STAR gives the
+reserved-word message and NatSL "Unsupported goal". CapATL's `kcap1(...)` is not in
+the table, because the word carries the agent number; see `kcap` under
+[reserved words](#reserved-words).
+
+| Word | Symbol | Read by |
+| :--- | :--- | :--- |
+| `not` | `!` | every logic |
+| `and` | `&&` | every logic except NatSL |
+| `or` | `\|\|` | every logic except NatSL |
+| `implies` | `->` | every logic except NatSL |
+| `next` | `X` | every logic except NatSL, TCTL |
+| `eventually` | `F` | every logic except NatSL |
+| `globally` | `G` | every logic except NatSL |
+| `always` | `G` | every logic except NatSL |
+| `until` | `U` | every logic except NatSL |
+| `release` | `R` | CapATL, COTL, IATL, ICTL, OATL, OL, TOL |
+| `weak` | `W` | COTL, OATL, OL, TOL |
+| `forall` | `A` | CTL, ICTL, TCTL |
+| `exist` | `E` | CTL, ICTL, TCTL |
+| `with` | `:` | TOL |
+| `is` | `is` | CapATL |
+
+NatSL reads `not` before its goal (`E{1}x: (x, 1) not F p`) and takes no other
+word, because its goal is one operator and one proposition
+([the NatSL reference](NatSL/algorithm.md)). TCTL has no next operator, since time
+is dense, and writes its clock constraint with `:` only. CapATL reads `is` only
+inside its knowledge operator, `K1(1 is c)`, and it has no symbol besides the word.
+
+### Operators glued to a name
+
+An operator written with no space before a name, such as `Fp`, is one word that
+rule 1 refuses, never the operator applied to the name. It fails in one of three ways:
+
+- Every logic except NatSL reads `Fp` as one word and refuses it by name, with `Atomic proposition 'Fp' is invalid`.
+- IATL, TCTL and TOL give `Invalid character 'F'` for a word that starts with two capitals, such as `FFuel`, then refuse the rest (`Atomic proposition 'Fuel' is invalid`), because their lexer reads only a capital followed by a lowercase letter as the start of a word.
+- NatSL rejects it with "Unsupported goal": `Fgoal` is an error. A lowercase operator (`f goal`) is also an error (rule 5).
+
+### Lexer word patterns
+
+Each parser's lexer reads a word (a run of letters, digits and `_`) with a pattern
+wider than the name rule, so that `Goal` or `Fp` is read as one word and refused by
+name, instead of `Fp` being read as `F p`. Most patterns are constants in
+`syntax_patterns.py`:
+
+- Every logic except IATL, TCTL, TOL, ATL_STAR and NatSL, ICTL included:
+  `PROPOSITION_TOKEN` = `[a-zA-Z][a-zA-Z0-9_]*` (Wallet_ATL writes the same pattern
+  in its parser). `_goal` is therefore an `Invalid character '_'` error.
+- ATL_STAR: its grammar's own `IDENT` = `[a-zA-Z_][a-zA-Z0-9_]*`, so `_goal` is
+  read as one word and refused by name.
 - IATL, TCTL and TOL: `ICTL_PROPOSITION_TOKEN` (also named
   `TCTL_TOL_PROPOSITION_TOKEN`) = `[a-z][a-zA-Z0-9_]*` or
   `[A-Z][a-z][a-zA-Z0-9_]*`, so that `AF` and `EX` stay operators. `Goal` is
   refused by name; an all-capital word such as `P` or `GOAL` is an
   `Invalid character` error.
-- NatSL temporal atoms: the standard alphabet and the reserved-word rule; `true`
-  and `false` are accepted as constants.
+- NatSL temporal atoms: read with `[A-Za-z_][A-Za-z0-9_.]*` in its goal pattern
+  (`NatSL/parser.py`), then checked with the name rule and the reserved-word rule; `true` and
+  `false` are accepted as constants.
 
-No name can be an uppercase operator token such as `F`, `E` or `EX`, since names
-start lowercase; the lowercase operator words (`until`, `forall`) are reserved
-keywords.
+---
+
+<a id="syntax-cards"></a>
+## Syntax cards
+
+The table gives, for each logic, the prefix that scopes a formula, its temporal
+operators as symbols, the model type it reads and one formula that parses. Word
+forms are in [word operators](#word-operators), and the connectives and constants
+in [Boolean Logic](#boolean-logic-shared-syntax). The per-logic sections and
+algorithm pages give the semantics.
+
+| Logic | Prefix | Operators | Model | Example |
+| :--- | :--- | :--- | :--- | :--- |
+| LTL | none | `X`, `F`, `G`, `U` | CGS | `G (p -> F q)` |
+| CTL | `A`, `E` | `AX`, `AF`, `AG`, `EX`, `EF`, `EG`, `A[p U q]`, `E[p U q]` | CGS | `AG (p -> EF q)` |
+| ICTL | `A`, `E` | as CTL, plus `R` in `A[p R q]`, `E[p R q]` | BirelationalMatrix | `E[p R q]` |
+| TCTL | `A`, `E`; clock constraint `phi : x<5`; freeze `x.phi` | `AF`, `AG`, `EF`, `EG`, `A(p U q)`, `E(p U q)` (no brackets) | timedCGS | `AF p : x<5` |
+| ATL | `<1,2>` | `X`, `F`, `G`, `U` | CGS | `<1,2>F p` |
+| ATLF | `<1,2>` | `X`, `F`, `G`, `U` | CGS | `<1>(p U q)` |
+| IATL | `<1,2>` exists, `[1,2]` for all | `X`, `F`, `G`, `U`, `R` | BCGS | `[1,2]F goal` |
+| ATL_STAR | `<<1,2>>` | `X`, `F`, `G`, `U`, nested path formulas | CGS | `<<1>> (F p && G q)` |
+| Wallet_ATL | `<<1>>`, `<<1:wallet(1,>=10)>>` | `X`, `F`, `G`, `U` | WalletCGS | `<<1:wallet(1,>=10)>>F p` |
+| OATL | `<1,2><10>` | `X`, `F`, `G`, `U`, `R`, `W` | costCGS | `<1,2><10> (p W q)` |
+| COTL | `<1,2><1>`, `<><0>` | `X`, `WX`, `F`, `G`, `U`, `R`, `W` | ObstructionModel | `<1,2><1> G !q` |
+| RBATL | `<1><10,5>` | `X`, `F`, `G`, `U` | costCGS | `<1><10,5>F p` |
+| RABATL | `<1><2,2>` | `X`, `F`, `G`, `U` | costCGS | `<1><2,2>F p` |
+| NatATL | `<{1,2}, 5>` | `X`, `F`, `G`, `U` | CGS | `<{1,2}, 5>F p` |
+| NatATL_Recall | `<{1,2}, 5>` | `X`, `F`, `G`, `U` | CGS | `<{1}, 3>G p` |
+| NatATLF | `<{1,2}, 5>` | `X`, `F`, `G`, `U` | CGS | `<{1,2}, 5>F p` |
+| CapATL | `<{1,2}>`; knowledge `K1(...)` | `X`, `F`, `G`, `U`, `R` | capCGS | `<{1}>F (g && K1(1 is c))` |
+| OL | `<J5>` | `X`, `F`, `G`, `U`, `R`, `W` | costCGS | `<J5> (p R q)` |
+| TOL | `{J5}`; clock constraint `phi : x<5`; freeze `x.phi` | `X`, `F`, `G`, `U`, `R`, `W` | timedCGS | `{J5}F x.(p : x<5)` |
+| NatSL | `E{1}x A{1}y: (x, 1)(y, 2)` | one goal: `F`, `G` or `X` | CGS | `E{1}x: (x, 1) F goal` |
 
 ---
 

@@ -41,7 +41,7 @@ agent 3 does not have capacity `c` and agent 1 has `cop`.
   followed by `x`, and refused as names because they start with a capital
   ("Atomic proposition 'K1x' is invalid: ..."). The bare word `kcap` is reserved
   in CapATL (see
-  [Atomic Proposition Policy](../logic_knowledge_base.md#atomic-proposition-policy)).
+  [names and keywords](../logic_knowledge_base.md#names-and-keywords)).
 - Precedence: the paper states none inside `cap`; the parser uses the one of the
   other connectives (`!`, then `&&`, then `||`, then `->`).
 
