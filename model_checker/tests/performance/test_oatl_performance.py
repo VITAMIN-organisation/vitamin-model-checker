@@ -10,7 +10,7 @@ from model_checker.tests.helpers.model_helpers import (
     load_costcgs_from_content,
 )
 from model_checker.tests.performance.performance_helpers import (
-    run_model_checking_with_timeout,
+    run_model_checking_timed,
 )
 
 OATL_PERFORMANCE_CASES = [
@@ -45,7 +45,7 @@ class TestOATLPerformanceLargeModels:
         """OATL operators complete within time bound on linear chain."""
         model_content = generate_cost_cgs_linear_chain_content(num_states, num_agents)
         parser = load_costcgs_from_content(temp_file, model_content)
-        states, _ = run_model_checking_with_timeout(
+        states, _ = run_model_checking_timed(
             parser, _core_oatl_checking, formula, max_time
         )
         assert states is not None
@@ -60,7 +60,7 @@ class TestOATLPerformanceLargeModels:
         num_states, num_agents = 100, 2
         model_content = generate_cost_cgs_linear_chain_content(num_states, num_agents)
         parser = load_costcgs_from_content(temp_file, model_content)
-        states, _ = run_model_checking_with_timeout(
+        states, _ = run_model_checking_timed(
             parser, _core_oatl_checking, f"<1><{cost_bound}>F p", max_time
         )
         assert states is not None

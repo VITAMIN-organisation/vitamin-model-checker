@@ -127,6 +127,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   no next operator ('AX' at position 1): time is dense, so there is no unique next
   state" (Alur, Courcoubetis, Dill 1993, p. 10). Before, "Syntax error near token
   'X'". Names such as `xray` still parse.
+- Tests: a performance case with a `max_time` is stopped by pytest-timeout at 3x
+  that time, set in the performance `conftest.py`. Before, the thread-based
+  timeout waited for the hung call to finish, so a hang blocked the run, and the
+  CapATL and NatATL cases had no timeout. The `performance` marker now applies
+  (`pytestmark` in a conftest had no effect).
 - Tests: the `e2e/` folder is removed (its three tests repeated integration tests),
   and so are markers no test used (`slow`, `e2e` and others), so `make test` no
   longer filters with `-m "not slow"`. The test `README.md` states what a test must
@@ -159,6 +164,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Every logic that answers with a state set prints `res` as a tuple in natural
+  order, numbers inside a name compared as numbers: `Result: ('s1', 's2', 's10')`.
+  Before, TOL, TCTL, CapATL, ATL*, IATL and ICTL printed a set whose order could
+  change between runs (`Result: {'s2', 's0'}`), and the other logics sorted by text
+  (`s10` before `s2`).
 - timedCGS: `Clock_constraints` needs one row per state with one cell per state, and
   a guard or reset on a clock not in `Clocks` is an error naming the clock, row and
   column. Before, a short row or a missing row left cells empty, a long row failed

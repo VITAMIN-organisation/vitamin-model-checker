@@ -15,7 +15,7 @@ from model_checker.tests.helpers.model_helpers import (
 )
 from model_checker.tests.performance.performance_helpers import (
     check_parser_performance,
-    run_model_checking_with_timeout,
+    run_model_checking_timed,
 )
 
 
@@ -37,9 +37,9 @@ PARSER_PERFORMANCE_CASES = [
 ]
 
 CTL_EF_SCALABILITY_CASES = [
-    (500, 30.0, 2.0),
-    (1000, 60.0, 3.0),
-    (2000, 120.0, 3.0),
+    (500, 30.0),
+    (1000, 60.0),
+    (2000, 120.0),
 ]
 
 
@@ -58,21 +58,20 @@ class TestScalabilityAnalysis:
         check_parser_performance(temp_file, generate_linear_chain, num_states, max_time)
 
     @pytest.mark.parametrize(
-        "num_states,max_time,timeout_multiplier",
+        "num_states,max_time",
         CTL_EF_SCALABILITY_CASES,
         ids=["ctl_ef_500", "ctl_ef_1000", "ctl_ef_2000"],
     )
-    def test_ctl_ef_scales(self, temp_file, num_states, max_time, timeout_multiplier):
+    def test_ctl_ef_scales(self, temp_file, num_states, max_time):
         """CTL EF operator completes within time bound."""
         num_agents = 2
         model_content = generate_linear_chain(num_states, num_agents)
         parser = load_cgs_from_content(temp_file, model_content)
-        states, _ = run_model_checking_with_timeout(
+        states, _ = run_model_checking_timed(
             parser,
             _run_ctl_model_checking,
             "EF p",
             max_time,
-            timeout_multiplier=timeout_multiplier,
             model_content=model_content,
             temp_file=temp_file,
         )
@@ -107,9 +106,9 @@ class TestScalabilityAnalysis:
             times.append((num_states, elapsed_time))
         ratio_200_100 = times[1][1] / times[0][1] if times[0][1] > 0 else float("inf")
         ratio_500_200 = times[2][1] / times[1][1] if times[1][1] > 0 else float("inf")
-        assert ratio_200_100 < 15.0, (
-            f"Scaling ratio {ratio_200_100:.2f}x suggests poor complexity"
-        )
-        assert ratio_500_200 < 20.0, (
-            f"Scaling ratio {ratio_500_200:.2f}x suggests poor complexity"
-        )
+        assert (
+            ratio_200_100 < 15.0
+        ), f"Scaling ratio {ratio_200_100:.2f}x suggests poor complexity"
+        assert (
+            ratio_500_200 < 20.0
+        ), f"Scaling ratio {ratio_500_200:.2f}x suggests poor complexity"

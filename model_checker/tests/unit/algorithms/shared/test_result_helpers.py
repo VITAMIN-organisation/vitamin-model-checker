@@ -23,7 +23,7 @@ from model_checker.utils.error_handler import (
     unresolved_leaves_error,
     value_error_to_response,
 )
-from model_checker.utils.literals import parse_state_set_literal
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
 
 
 @pytest.fixture
@@ -187,3 +187,9 @@ def test_malformed_state_set_is_an_error_naming_it(text):
     """An unparsable string or a non-container is not read as the empty set."""
     with pytest.raises(ValueError, match=re.escape(text)):
         parse_state_set_literal(text)
+
+
+@pytest.mark.unit
+def test_state_set_prints_in_natural_order():
+    """Numbers inside a name compare as numbers, so s2 comes before s10."""
+    assert state_set_literal({"s10", "s2", "s1", "q0"}) == "('q0', 's1', 's2', 's10')"

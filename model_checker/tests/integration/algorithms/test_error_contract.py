@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from model_checker.utils.literals import parse_state_set_literal, state_set_literal
+
 _HERE = Path(__file__).resolve().parent
 _F = f"{_HERE.parents[1] / 'fixtures'}/"
 _ICTL = str(_HERE / "ictl" / "fixtures" / "experiment_2x3.txt")
@@ -215,3 +217,38 @@ def test_undeclared_proposition_under_negation_is_an_error(logic):
 def test_agent_outside_the_model_is_a_syntax_error(logic):
     """Coalitions are checked against the model's agent count before solving."""
     assert _check(logic, 3)["error"]["type"] == "syntax"
+
+
+# logics that answer with a state set -> (model, formula holding in 2+ states)
+_SET_RESULTS = {
+    logic: (_CASES[logic][0], "true")
+    for logic in (
+        "ATL",
+        "ATL_STAR",
+        "CTL",
+        "COTL",
+        "IATL",
+        "ICTL",
+        "OATL",
+        "OL",
+        "RABATL",
+        "RBATL",
+        "TOL",
+        "Wallet_ATL",
+    )
+} | {
+    "CapATL": _CASES["CapATL"][:2],  # needs a modality, so its row's formula
+    "TCTL": (_F + "timedCGS/tctl_af_regression.txt", "true"),
+}
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("logic", sorted(_SET_RESULTS))
+def test_result_states_print_as_a_sorted_tuple(logic):
+    """Every state-set result prints through state_set_literal, so the order is
+    stable across runs (the order itself is pinned in test_result_helpers.py)."""
+    model, formula = _SET_RESULTS[logic]
+    res = _CHECKERS[logic].load()(formula, model)["res"]
+    states = parse_state_set_literal(res.removeprefix("Result: "))
+    assert len(states) >= 2, "one state cannot show the order"
+    assert res == f"Result: {state_set_literal(states)}"

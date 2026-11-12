@@ -14,7 +14,7 @@ from model_checker.tests.helpers.model_helpers import (
     load_cgs_from_content,
 )
 from model_checker.tests.performance.performance_helpers import (
-    run_model_checking_with_timeout,
+    run_model_checking_timed,
 )
 
 
@@ -118,15 +118,15 @@ class TestATLPerformanceLargeModels:
             temp_file,
             _model_content_for_layout(layout, num_states, num_agents, **kwargs),
         )
-        states, _ = run_model_checking_with_timeout(
+        states, _ = run_model_checking_timed(
             parser, _core_atl_checking, formula, max_time
         )
         if exact_all:
             assert len(states) == num_states
         else:
-            assert len(states) >= min_states, (
-                f"{formula} should hold in at least {min_states} states"
-            )
+            assert (
+                len(states) >= min_states
+            ), f"{formula} should hold in at least {min_states} states"
 
     @pytest.mark.parametrize(
         "layout,num_states,coalition,operator,target_kind",
@@ -159,9 +159,9 @@ class TestATLPerformanceLargeModels:
             _, iterations = compute_atl_fixpoint_iterations(
                 parser, target_states, "1", op
             )
-            assert iterations <= num_states, (
-                f"<1>{op} fixpoint got {iterations} iterations"
-            )
+            assert (
+                iterations <= num_states
+            ), f"<1>{op} fixpoint got {iterations} iterations"
 
     def test_atl_pre_image_scalability(self, temp_file):
         """Pre-image computation scales with state space."""

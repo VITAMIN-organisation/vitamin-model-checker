@@ -13,7 +13,7 @@ from model_checker.tests.helpers.model_helpers import (
     load_cgs_from_content,
 )
 from model_checker.tests.performance.performance_helpers import (
-    run_model_checking_with_timeout,
+    run_model_checking_timed,
 )
 
 
@@ -144,12 +144,12 @@ class TestCTLPerformanceLargeModels:
         parser = load_cgs_from_content(
             temp_file, _model_content_for_ctl(layout, num_states)
         )
-        states, _ = run_model_checking_with_timeout(
+        states, _ = run_model_checking_timed(
             parser, _core_ctl_checking, formula, max_time
         )
-        assert states == _expected_states(expected, num_states), (
-            f"{formula} expected {_expected_states(expected, num_states)}, got {states}"
-        )
+        assert states == _expected_states(
+            expected, num_states
+        ), f"{formula} expected {_expected_states(expected, num_states)}, got {states}"
         if fixpoint_op is not None:
             _, iterations = compute_fixpoint_iterations(
                 parser, _fixpoint_targets(target_kind, num_states), fixpoint_op
@@ -159,13 +159,14 @@ class TestCTLPerformanceLargeModels:
                 f"{num_states} iterations, got {iterations}"
             )
 
+    @pytest.mark.timeout(120)  # six formulas, each allowed 10 s, times two
     def test_sparse_graph_150_states(self, temp_file):
         """Multiple operators complete on a sparse 150-state graph."""
         parser = load_cgs_from_content(
             temp_file, generate_sparse_graph_model(150, connectivity=0.2)
         )
         for formula in ("EF p", "EG p", "AF p", "AG p", "EX p", "AX p"):
-            run_model_checking_with_timeout(parser, _core_ctl_checking, formula, 10.0)
+            run_model_checking_timed(parser, _core_ctl_checking, formula, 10.0)
 
     def test_fixpoint_convergence_guarantee(self, temp_file):
         """Fixpoints converge in at most |S| iterations on a linear chain."""

@@ -1,6 +1,23 @@
 """Parse literal values embedded in formula trees and checker results."""
 
 import ast
+import re
+from collections.abc import Iterable
+from typing import Any
+
+_DIGITS = re.compile(r"(\d+)")
+
+
+def _natural_key(name: str) -> list[str | int]:
+    # re.split with a group puts text at even and numbers at odd positions, so
+    # two keys always compare text with text and number with number.
+    return [int(part) if i % 2 else part for i, part in enumerate(_DIGITS.split(name))]
+
+
+def state_set_literal(states: Iterable[Any]) -> str:
+    """A state set as the tuple every result prints, in natural order
+    ("('s1', 's2', 's10')"); `parse_state_set_literal` reads it back."""
+    return str(tuple(sorted({str(s) for s in states}, key=_natural_key)))
 
 
 def parse_state_set_literal(value: str | set[str] | None) -> set[str]:
