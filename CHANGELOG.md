@@ -193,6 +193,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- `parse_state_set_literal` read an unparsable string (such as `{'s0', 's1'`) or
+  a literal that is not a set, list or tuple (such as `42`) as the empty set. It
+  now raises `ValueError` naming the value.
 - State helpers: `state_names_to_indices` and `state_indices_to_names` skipped an
   unknown state name or index, and `BitVectorStateSet` (its constructor and `add`)
   skipped an index outside `0..n-1`. All now raise `IndexError` naming the value.

@@ -4,24 +4,25 @@ import ast
 
 
 def parse_state_set_literal(value: str | set[str] | None) -> set[str]:
-    """Parse a state set from a set, tuple string, or tree node value."""
+    """Parse a state set from a set, tuple string, or tree node value.
+
+    Raises ValueError for a string that is not a set, list or tuple literal.
+    """
     if value is None or value == "":
         return set()
     if isinstance(value, set):
         return {str(s) for s in value}
-    if value in ("set()", "{}"):
+    # `{}` reads as a dict, but a result prints the empty set that way.
+    if value == "{}":
         return set()
 
     try:
         parsed = ast.literal_eval(value)
-        if isinstance(parsed, set):
-            return {str(item).strip("'\"") for item in parsed}
-        if isinstance(parsed, (list, tuple)):
-            return {str(item).strip("'\"") for item in parsed}
-    except (ValueError, SyntaxError, TypeError):
-        pass
-
-    return set()
+    except (ValueError, SyntaxError, TypeError) as e:
+        raise ValueError(f"Not a state set literal: {value!r}") from e
+    if not isinstance(parsed, (set, list, tuple)):
+        raise ValueError(f"Not a state set literal: {value!r}")
+    return {str(item).strip("'\"") for item in parsed}
 
 
 def parse_tuple_list_literal(value: str) -> list[tuple[str, float]]:

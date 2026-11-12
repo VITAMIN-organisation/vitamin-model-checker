@@ -1,5 +1,7 @@
 """Shared helpers every solver uses to turn state sets into results."""
 
+import re
+
 import pytest
 
 from model_checker.algorithms.explicit.shared.result_formatters import (
@@ -177,3 +179,11 @@ def test_compact_result_has_the_states_and_the_initial_verdict(
 def test_initial_state_is_matched_as_a_whole_name(initial, result, holds):
     """`s1` is not in `('s10',)`: the result is parsed, not searched as text."""
     assert verify_initial_state(initial, result) is holds
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("text", ["{'s0', 's1'", "42"])
+def test_malformed_state_set_is_an_error_naming_it(text):
+    """An unparsable string or a non-container is not read as the empty set."""
+    with pytest.raises(ValueError, match=re.escape(text)):
+        parse_state_set_literal(text)
