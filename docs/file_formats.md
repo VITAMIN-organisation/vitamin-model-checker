@@ -156,7 +156,8 @@ any of these three sections:
 - `Costs_for_actions`: one line per joint action, `action state$cost[:cost...]`.
   Several states share a line, joined by `;`: `AA s0$1:1;s2$1:1`. The values after
   `$`, separated by `:`, form the cost vector: value `i` is the cost in resource
-  `i`, and RBATL compares it with bound `i` of the formula.
+  `i`, and RBATL compares it with bound `i` of the formula. A line with a third
+  token or a negative cost is an error.
 - `Costs_for_actions_split`: the same line, with each `:`-separated group split
   again by `,` into one cost per agent: in `AA s0$1,2:3,4`, agents 1 and 2 pay 1 and
   2 of resource 1, and 3 and 4 of resource 2. RABATL adds the costs of the coalition's

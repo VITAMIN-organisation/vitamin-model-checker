@@ -44,12 +44,24 @@ def parse_cost_sections(lines: list[str], instance: Any) -> None:
             section_processors[current_section](line)
 
 
+def _parse_cost(text: str) -> int:
+    cost = int(text)
+    if cost < 0:
+        raise ValueError(f"Negative cost {cost}")
+    return cost
+
+
 def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None:
     """One Costs_for_actions line."""
     values = line.strip().split()
     if len(values) < 2:
         raise ValueError(
             f"Malformed cost line '{line}'. Expected 'action state$cost[:cost...]'."
+        )
+    if len(values) > 2:
+        raise ValueError(
+            f"Unexpected token '{values[2]}' in cost line '{line}'. "
+            "Expected 'action state$cost[:cost...]'."
         )
 
     action_name = values[0]
@@ -71,10 +83,12 @@ def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None
 
         try:
             if parse_split:
-                costs_res = cost_string.split(":")
-                costs = [[int(cc) for cc in c.split(",")] for c in costs_res]
+                costs = [
+                    [_parse_cost(cc) for cc in c.split(",")]
+                    for c in cost_string.split(":")
+                ]
             else:
-                costs = [int(c) for c in cost_string.split(":")]
+                costs = [_parse_cost(c) for c in cost_string.split(":")]
         except ValueError as exc:
             raise ValueError(f"Invalid cost value in line '{line}': {exc}") from exc
 

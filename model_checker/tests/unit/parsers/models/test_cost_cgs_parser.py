@@ -1,5 +1,7 @@
 """costCGS cost lines: `<joint> <state>$<costs>` gives each agent's cost of a joint action at a state."""
 
+import re
+
 import pytest
 
 from model_checker.parsers.game_structures.cost_cgs import cost_cgs_parser
@@ -19,6 +21,24 @@ from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
 def test_malformed_cost_line_is_refused(line, split, message):
     """No state, no cost after `$`, or a cost that is not a number."""
     with pytest.raises(ValueError, match=message):
+        cost_cgs_parser.parse_cost_line(line, CostCGS(), parse_split=split)
+
+
+@pytest.mark.unit
+def test_extra_token_on_cost_line_is_refused():
+    """`I* s0$1 s1$2` has a third token (a missing `;`); it must not be dropped."""
+    with pytest.raises(ValueError, match=r"Unexpected token 's1\$2'.*I\* s0\$1 s1\$2"):
+        cost_cgs_parser.parse_cost_line("I* s0$1 s1$2", CostCGS(), parse_split=False)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("line", "split", "value"),
+    [("I* s0$1:-2", False, "-2"), ("I* s0$1,-3:4,5", True, "-3")],
+)
+def test_negative_cost_is_refused(line, split, value):
+    """A cost is a non-negative amount of resource; the error names the value and the line."""
+    with pytest.raises(ValueError, match=f"{re.escape(line)}.*Negative cost {value}"):
         cost_cgs_parser.parse_cost_line(line, CostCGS(), parse_split=split)
 
 

@@ -193,6 +193,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- costCGS cost lines: a third token (such as a second state after a space instead of
+  `;`) and a negative cost are errors that name the value and the line. Before, the
+  extra token was dropped and a negative cost was kept.
 - Joint actions: a profile with more actions than `Number_of_agents` (such as `AC`
   with 1 agent) is an error that names the cell, in every checker that reads
   actions (CTL does not). Before, it was cut to its first actions with no warning.
