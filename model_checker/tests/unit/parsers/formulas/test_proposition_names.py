@@ -153,9 +153,8 @@ def test_refused_uppercase_name_is_named_in_the_errors(logic, name):
     assert any(f"'{name}' is invalid" in error for error in errors), errors
 
 
-# Wallet_ATL still rejects `true` and `false` in a formula (not yet decided).
 @pytest.mark.unit
-@pytest.mark.parametrize("logic", sorted(set(OPERATOR_FORMS) - {"Wallet_ATL"}))
+@pytest.mark.parametrize("logic", sorted(OPERATOR_FORMS))
 @pytest.mark.parametrize("constant", sorted(_CONSTANTS))
 def test_reserved_constant_is_accepted_as_a_constant_in_a_formula(logic, constant):
     """`F true` parses: `true` and `false` are reserved as names but are valid constants."""

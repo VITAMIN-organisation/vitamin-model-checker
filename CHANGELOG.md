@@ -150,6 +150,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Wallet_ATL accepts the constants `true` and `false`, as every other logic does:
+  `<<1>>F true` holds in every state and `<<1>>F false` in none. Before, any
+  formula with `true` or `false` got only "Syntax error in formula", because a
+  Wallet_ATL check after parsing accepted no constant; that check repeated what
+  the grammar already ensures and is removed. `True` and `FALSE` stay errors
+  (reserved words).
 - TOL reads the words `release` and `weak` as `R` and `W`, as OL does:
   `{J1} p release q` and `{J1} (p weak q)` build the same tree as `{J1} p R q` and
   `{J1} (p W q)`. Before, both were syntax errors because the name rule ran first.

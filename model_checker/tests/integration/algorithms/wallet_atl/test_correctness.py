@@ -55,6 +55,8 @@ class TestWalletATLSemantics:
             ("<<1>>X p", {"s0"}, True),
             ("<<1>>X q", {"s0", "s1"}, True),
             ("<<1>>G p", {"s0"}, True),
+            ("<<1>>F true", {"s0", "s1"}, True),
+            ("<<1>>F false", set(), False),
         ],
     )
     def test_exact_state_sets(
@@ -66,6 +68,17 @@ class TestWalletATLSemantics:
         assert states == expected_states
         init = str(result.get("initial_state", ""))
         assert (": True" in init) is initial_expected
+
+    @pytest.mark.parametrize("goal", ["p", "q"])
+    def test_eventually_equals_true_until(self, wallet_atl_model, goal):
+        """`<<A:C>>F psi` equals `<<A:C>>true U psi` (docs/Wallet_ATL/algorithm.md)."""
+        coalition = "<<1:wallet(1, >= 10)>>"
+        eventually = _core_walletatl_checking(wallet_atl_model, f"{coalition}F {goal}")
+        until = _core_walletatl_checking(wallet_atl_model, f"{coalition} true U {goal}")
+        assert "error" not in until, until
+        assert extract_states_from_result(until) == extract_states_from_result(
+            eventually
+        )
 
     def test_wallet_guard_filters_states_by_balance(self, wallet_atl_model):
         """Both states hold 5 and q holds only at s1.

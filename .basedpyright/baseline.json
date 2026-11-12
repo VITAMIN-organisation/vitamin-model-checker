@@ -866,16 +866,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/Wallet_ATL/Wallet_ATL.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 8,
-                    "endColumn": 44,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/algorithms/explicit/shared/atom_utils.py": [
             {
                 "code": "reportArgumentType",

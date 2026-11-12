@@ -14,7 +14,8 @@ Scope: denotations and code path for Wallet_ATL in
 Parser: `parsers/formulas/Wallet_ATL/parser.py`
 
 ```text
-phi ::= <<A>> X phi | <<A>> F phi | <<A>> G phi | <<A>> phi U psi | <<A>> (phi U psi)
+phi ::= p | true | false | !phi | phi && psi | phi || psi | phi -> psi | (phi)
+      | <<A>> X phi | <<A>> F phi | <<A>> G phi | <<A>> phi U psi | <<A>> (phi U psi)
       | <<A:guard && guard && ...>> ...
 guard ::= wallet(agent, op value)
 ```

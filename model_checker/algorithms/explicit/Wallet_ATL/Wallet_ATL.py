@@ -1,12 +1,13 @@
 """Wallet_ATL model checker, built like ATL: `FormulaParserFactory`, then
-`build_formula_tree`, its own solver and operators, and the shared entry wrapper."""
+`build_resolved_formula_tree`, its own solver and operators, and the shared
+entry wrapper."""
 
 import re
 from typing import Any
 
 from model_checker.algorithms.explicit.shared import (
+    build_resolved_formula_tree,
     format_model_checking_result,
-    resolve_atom,
     verify_initial_state,
 )
 from model_checker.algorithms.explicit.shared.atom_utils import formula_leaves
@@ -16,7 +17,6 @@ from model_checker.utils.error_handler import (
     create_error_response,
     unresolved_leaves_error,
 )
-from model_checker.utils.formula_tree import build_formula_tree
 
 from .preimage import build_feasible_transition_cache
 from .solver import solve_tree
@@ -163,10 +163,7 @@ def _core_walletatl_checking(cgs, formula: str) -> dict[str, Any]:
     except ValueError as exc:
         return create_error_response("syntax", str(exc))
 
-    root = build_formula_tree(
-        normalized_ast,
-        lambda atom: resolve_atom(cgs, atom),
-    )
+    root = build_resolved_formula_tree(cgs, normalized_ast, parser)
     if root is None:
         return unresolved_leaves_error(
             formula_leaves(normalized_ast), cgs.atomic_propositions
