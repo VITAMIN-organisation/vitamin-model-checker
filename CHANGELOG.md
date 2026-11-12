@@ -33,6 +33,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (`a U p`); both ended in a syntax error before. The word spellings of the
   operators are read from one table (`OPERATOR_WORDS` in `syntax_patterns.py`)
   by every parser, the prechecks and the reserved-word check.
+- Breaking: in CapATL, `kcap` is a reserved word in any letter case. CapATL reads
+  `kcap1(...)` as its knowledge operator, so the bare `kcap` is reserved there.
+  `<{1}> F kcap` gets "Atomic proposition 'kcap' clashes with reserved keyword.",
+  `K1(1 is kcap)` gets "Capacity 'kcap' clashes with reserved keyword.", and a
+  CapCGS model file that declares `kcap` as a proposition or capacity is refused
+  when the file is read. Other logics and plain CGS models keep `kcap` as a name. No model
+  file in this repository or in the Workbench declares it.
+- OATL, RBATL and RABATL name a missing bound for any coalition without one, such
+  as `<1> eventually p` or `(<1><5>F p) && (<2> F q)`: OATL gives "Temporal
+  operators require a bound ...", RBATL and RABATL give "RBATL requires a resource
+  bound ...". Before, only a symbol operator right after the coalition (`<1> F p`)
+  got that message; the rest got "Invalid character" errors for `<`. OATL also
+  names a leading-zero bound before a word operator and in any coalition of the
+  formula (`<1><05> eventually p`).
 - Breaking: a WalletCGS file needs a `Wallets` row for every state. Before, a state
   with no row loaded and was read as holding 0 for every agent; loading now fails
   with `Wallets has no row for state(s) s1; ...`, since the Wallet ATL paper
@@ -158,6 +172,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- NatATL (memoryless and recall) and NatATLF check a connective between
+  coalition formulas, such as `(<{1},1>F p) && (<{2},3>G q)` or
+  `p and <{2},3>F q`. Before, a coalition formula left of a connective failed:
+  the translation to CTL wrote `(A F p && A G q)`, which the CTL parser refuses as
+  ambiguous. The words `and`, `or` and `implies` failed in any position ("Invalid
+  NatATL AST structure for CTL conversion"). The translation puts each
+  coalition operand in parentheses (`((A F p) && (A G q))`).
 - Wallet_ATL accepts the constants `true` and `false`, as every other logic does:
   `<<1>>F true` holds in every state and `<<1>>F false` in none. Before, any
   formula with `true` or `false` got only "Syntax error in formula", because a

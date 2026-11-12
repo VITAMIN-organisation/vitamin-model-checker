@@ -875,7 +875,13 @@ Proposition, clock and capacity names, in a model and in a formula, follow one a
 
 `weak`, `with` and `is` are reserved in every logic, although only OATL, COTL, OL and
 TOL read `weak`, TOL reads `with` and CapATL reads `is` as an operator word; a name
-therefore means the same in every logic.
+therefore means the same in every logic, apart from `kcap` below.
+
+`kcap` (in any letter case) is reserved in CapATL only: in its formulas and in a
+CapCGS model, as a proposition or a capacity name. CapATL writes its knowledge
+operator `K1(...)` or `kcap1(...)`, and its parser reads `kcap` followed by digits
+as that operator, so the bare word is the only spelling left to reserve. In the
+other logics `kcap` and `kcap1` stay valid names.
 
 `true` and `false` are the boolean constants, so a model that declares a proposition, clock or
 capacity with either name (`true`, `True`, `FALSE`, ...) is rejected when it is read. The constants

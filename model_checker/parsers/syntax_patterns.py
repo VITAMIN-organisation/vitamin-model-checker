@@ -97,6 +97,12 @@ FORMULA_RESERVED_WORDS = (
     | BOOLEAN_CONSTANTS
 )
 
+# CapATL's knowledge operator is `K1(...)` or `kcap1(...)`. The lexer reads `kcap`
+# with digits as the operator, so in CapATL only the bare `kcap` needs reserving;
+# the other logics have no such operator and keep `kcap` as a name.
+CAPATL_KNOWLEDGE_WORD = "kcap"
+CAPATL_RESERVED_WORDS = FORMULA_RESERVED_WORDS | {CAPATL_KNOWLEDGE_WORD}
+
 # NatATL capacity coalitions: <{1,2}, 5>.
 NATATL_CAPACITY_RE = re.compile(rf"<{{({AGENT_LIST})}},\s*(\d+)>")
 NATATL_COALITION_TOKEN = rf"<{{{AGENT_LIST}}},\s*\d+>"

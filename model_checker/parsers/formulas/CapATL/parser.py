@@ -16,10 +16,15 @@ from model_checker.parsers.formulas.shared_parser import (
     BaseLogicParser,
     word_rule,
 )
-from model_checker.parsers.syntax_patterns import AGENT_LIST, CAPATL_COALITION_TOKEN
+from model_checker.parsers.syntax_patterns import (
+    AGENT_LIST,
+    CAPATL_COALITION_TOKEN,
+    CAPATL_KNOWLEDGE_WORD,
+    CAPATL_RESERVED_WORDS,
+)
 
-# K^a_cap of the paper, typed as `K1` or `kcap1`; `K1x` stays a proposition name.
-_KCAP_TOKEN = r"(?:K|kcap)(\d+)(?![a-zA-Z0-9_])"
+# K^a_cap of the paper, typed as `K1` or `kcap1`; `K1x` is one word, not `K1` and `x`.
+_KCAP_TOKEN = rf"(?:K|{CAPATL_KNOWLEDGE_WORD})(\d+)(?![a-zA-Z0-9_])"
 # Group 2 is empty when the operator has no parenthesis after it.
 _KCAP_IN_FORMULA = re.compile(rf"(?<![a-zA-Z0-9_]){_KCAP_TOKEN}(\s*\()?")
 # AST value of the knowledge operator after the lexer normalizes `kcap1` to `K1`.
@@ -30,6 +35,8 @@ _FORMULA_BOUND_PATTERN = re.compile(rf"<{{{AGENT_LIST}}},\s*-?\d+>")
 
 class CapATLParser(BaseLogicParser):
     """`parse` returns an AST tuple, or None with the reason in `errors`."""
+
+    RESERVED_WORDS = CAPATL_RESERVED_WORDS
 
     def __init__(self):
         """Initialize the CapATL lexer and parser (PLY)."""

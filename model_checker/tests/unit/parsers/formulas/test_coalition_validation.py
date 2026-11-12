@@ -124,3 +124,29 @@ def test_atl_star_checks_agents_inside_nested_coalitions():
     """An out-of-range agent is found under X, && and U, not only at the top."""
     for formula in ["<<1>>X <<5>>p", "<<1>>(p && <<5>>q)", "<<1>>(p U <<5>>q)"]:
         assert parse("ATL_STAR", formula) is None, formula
+
+
+_BOUND_MESSAGE = {
+    "OATL": "require a bound",
+    "RBATL": "requires a resource bound",
+    "RABATL": "requires a resource bound",
+}
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("logic", sorted(_BOUND_MESSAGE))
+@pytest.mark.parametrize(
+    "formula",
+    ["<1> eventually p", "<1> p until q", "<1> p U q", "(<1><5>F p) && (<2> F q)"],
+)
+def test_coalition_without_bound_is_named_for_every_spelling(logic, formula):
+    """`<1> eventually p` gets the missing-bound message, as `<1> F p` does."""
+    errors = parse_errors(logic, formula)
+    assert any(_BOUND_MESSAGE[logic] in error for error in errors), errors
+
+
+@pytest.mark.unit
+def test_oatl_leading_zero_bound_is_named_before_a_word_operator():
+    """`<1><05> eventually p` gets the leading-zero message, as `<1><05>F p` does."""
+    errors = parse_errors("OATL", "<1><05> eventually p")
+    assert any("leading zeros" in error for error in errors), errors

@@ -12,10 +12,15 @@ from model_checker.parsers.game_structures.cgs import (
     cgs_utils,
     cgs_validation,
 )
+from model_checker.parsers.syntax_patterns import FORMULA_RESERVED_WORDS
 
 
 class CGS:
     """A CGS model, loaded with `read_file(path)` or `read_from_model_object(model)`."""
+
+    # Words a name in the model file may not be; a model type read by one logic
+    # only uses that logic's words (CapCGS: CapATL).
+    RESERVED_WORDS = FORMULA_RESERVED_WORDS
 
     # --- Initialization and File Reading ---
 

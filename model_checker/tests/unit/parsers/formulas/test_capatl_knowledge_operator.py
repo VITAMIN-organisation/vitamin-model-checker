@@ -64,6 +64,23 @@ def test_forms_outside_the_paper_are_rejected_with_a_message(formula, message):
     assert any(message in error for error in errors), errors
 
 
+@pytest.mark.parametrize(
+    ("formula", "kind"),
+    [("<{1}> F kcap", "Atomic proposition"), ("K1(1 is kcap)", "Capacity")],
+)
+def test_kcap_is_reserved_in_capatl(formula, kind):
+    """`kcap` spells the knowledge operator, so CapATL refuses it as a name."""
+    result, errors = _parse(formula)
+    assert result is None
+    assert any(f"{kind} 'kcap' clashes" in error for error in errors), errors
+
+
+def test_kcap_stays_a_name_outside_capatl():
+    """Only CapATL has the knowledge operator; LTL reads `kcap` as a name."""
+    parser = FormulaParserFactory.get_parser_instance("LTL")
+    assert parser.parse("F kcap") == ("F", "kcap"), parser.errors
+
+
 @pytest.mark.parametrize("name", ["K1x", "K12x", "Knowledge"])
 def test_k_followed_by_letters_is_a_refused_name(name):
     """`K1x` and `Knowledge` are one word, not K (K needs digits then a

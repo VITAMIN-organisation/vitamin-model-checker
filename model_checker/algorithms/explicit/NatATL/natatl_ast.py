@@ -4,21 +4,19 @@ import re
 from typing import Any
 
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.parsers.syntax_patterns import OPERATOR_WORDS, spelling_to_symbol
 
-_COALITION_MODAL_RE = re.compile(
-    r"^<\{(?P<agents>[\d,]+)\},\s*(?P<k>\d+)>(?P<op>[A-Za-z]+)$",
-    re.IGNORECASE,
+# The parser keeps a connective as written (`and` or `&&`); temporal operators
+# reach the AST as their symbol (`eventually` is `F`), which CTL takes as is.
+_CTL_BINARY_OPS = spelling_to_symbol("AND", "OR", "IMPLIES")
+_CTL_UNARY_NOT = frozenset(spelling_to_symbol("NOT"))
+_TEMPORAL_SYMBOLS = "".join(
+    OPERATOR_WORDS[token].symbol
+    for token in ("NEXT", "EVENTUALLY", "GLOBALLY", "UNTIL")
 )
-_CTL_BINARY_OPS = {
-    "&&": "&&",
-    "AND": "&&",
-    "||": "||",
-    "OR": "||",
-    "->": "->",
-    "IMPLIES": "->",
-    ">": "->",
-}
-_CTL_UNARY_NOT = frozenset({"!", "NOT", "not"})
+_COALITION_MODAL_RE = re.compile(
+    rf"^<\{{(?P<agents>[\d,]+)\}},\s*(?P<k>\d+)>(?P<op>[{_TEMPORAL_SYMBOLS}])$"
+)
 
 
 def parse_natatl_formula(formula: str, n_agent: int) -> Any:
@@ -73,17 +71,13 @@ def get_k_value_from_ast(ast: Any) -> int:
     raise ValueError("NatATL formula must use <{agents}, k> syntax")
 
 
-def _ctl_temporal_letter(op_suffix: str) -> str:
-    op = op_suffix.upper()
-    if op in {"F", "EVENTUALLY"}:
-        return "F"
-    if op in {"G", "GLOBALLY", "ALWAYS"}:
-        return "G"
-    if op in {"X", "NEXT"}:
-        return "X"
-    if op in {"U", "UNTIL"}:
-        return "U"
-    raise ValueError(f"Unsupported NatATL temporal operator: {op_suffix}")
+def _ctl_operand(ast: Any) -> str:
+    """An operand, in parentheses when it is a coalition formula: CTL refuses
+    `A F p && q` as ambiguous, so `(A F p) && q` must be written out. Connectives
+    and negations bring their own parentheses."""
+    text = natatl_ast_to_ctl(ast)
+    is_modal = isinstance(ast, tuple) and _COALITION_MODAL_RE.match(str(ast[0]))
+    return f"({text})" if is_modal else text
 
 
 def natatl_ast_to_ctl(ast: Any) -> str:
@@ -101,21 +95,17 @@ def natatl_ast_to_ctl(ast: Any) -> str:
 
     if head in _CTL_BINARY_OPS and len(ast) == 3:
         op = _CTL_BINARY_OPS[head]
-        left = natatl_ast_to_ctl(ast[1])
-        right = natatl_ast_to_ctl(ast[2])
-        return f"({left} {op} {right})"
+        return f"({_ctl_operand(ast[1])} {op} {_ctl_operand(ast[2])})"
 
     if isinstance(head, str):
         match = _COALITION_MODAL_RE.match(head)
         if match:
-            op_letter = _ctl_temporal_letter(match.group("op"))
+            op_letter = match.group("op")
             if len(ast) == 2:
                 child = natatl_ast_to_ctl(ast[1])
                 return f"A {op_letter} {child}"
             if len(ast) == 3 and op_letter == "U":
-                left = natatl_ast_to_ctl(ast[1])
-                right = natatl_ast_to_ctl(ast[2])
-                return f"A ({left} U {right})"
+                return f"A ({_ctl_operand(ast[1])} U {_ctl_operand(ast[2])})"
 
     raise ValueError("Invalid NatATL AST structure for CTL conversion")
 

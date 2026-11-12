@@ -5,6 +5,7 @@ import re
 import numpy as np
 
 from model_checker.parsers.formulas.parser_utils import validate_proposition_identifier
+from model_checker.parsers.syntax_patterns import FORMULA_RESERVED_WORDS
 
 
 def proposition_index(atomic_propositions, element) -> int | None:
@@ -15,9 +16,14 @@ def proposition_index(atomic_propositions, element) -> int | None:
         return None
 
 
-def validate_model_name(name: str, *, kind: str) -> None:
-    """Reject a proposition, clock or capacity name that no formula could reference."""
-    valid, err = validate_proposition_identifier(str(name), kind=kind)
+def validate_model_name(
+    name: str, *, kind: str, reserved_words: frozenset[str] = FORMULA_RESERVED_WORDS
+) -> None:
+    """Reject a proposition, clock or capacity name that no formula could reference;
+    a model read by one logic only passes that logic's `reserved_words`."""
+    valid, err = validate_proposition_identifier(
+        str(name), reserved_words=reserved_words, kind=kind
+    )
     if not valid:
         raise ValueError(err)
 

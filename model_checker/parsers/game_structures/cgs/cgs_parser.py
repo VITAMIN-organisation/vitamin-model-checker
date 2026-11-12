@@ -320,7 +320,9 @@ def _apply_atomic_propositions(instance, atomic_propositions_list):
     seen = set()
     unique = []
     for prop in atomic_propositions_list:
-        validate_model_name(prop, kind="Atomic proposition")
+        validate_model_name(
+            prop, kind="Atomic proposition", reserved_words=instance.RESERVED_WORDS
+        )
         if prop not in seen:
             seen.add(prop)
             unique.append(prop)

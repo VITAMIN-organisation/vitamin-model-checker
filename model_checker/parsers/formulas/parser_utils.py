@@ -154,6 +154,17 @@ def validate_natsl_temporal_atom(atom: str) -> tuple[bool, str | None]:
     return validate_proposition_identifier(atom)
 
 
+_COALITION_RE = re.compile(COALITION_ATL_TOKEN)
+_COALITION_AND_BOUND_RE = re.compile(rf"{COALITION_ATL_TOKEN}\s*{COALITION_ATL_TOKEN}")
+
+
+def has_coalition_without_bound(formula: str) -> bool:
+    """True when a coalition has no bound after it (`<1> F p`, `<1> p until q`),
+    whatever operator follows. `<1> <5>` has its bound, only spaced off, so it is
+    left to the lexer."""
+    return bool(_COALITION_RE.search(_COALITION_AND_BOUND_RE.sub(" ", formula)))
+
+
 def validate_release_weak_rejected(
     formula: str, logic_name: str
 ) -> tuple[bool, str | None]:

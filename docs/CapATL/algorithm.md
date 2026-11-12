@@ -37,8 +37,11 @@ agent 3 does not have capacity `c` and agent 1 has `cop`.
   only `a -> c`, negation and conjunction (p. 126 adds disjunction, implication,
   true and false as sugar). So `K1 1 is c`, `K1(K2(1 is c))` and `K1(p)` are
   errors with a message that names the part, and so is an agent out of range.
-- Names: `K1` followed by a letter, digit or `_` (`K1x`, `K12x`) is a
-  proposition name.
+- Names: `K1x` and `K12x` are each read as one word, not as the operator `K1`
+  followed by `x`, and refused as names because they start with a capital
+  ("Atomic proposition 'K1x' is invalid: ..."). The bare word `kcap` is reserved
+  in CapATL (see
+  [Atomic Proposition Policy](../logic_knowledge_base.md#atomic-proposition-policy)).
 - Precedence: the paper states none inside `cap`; the parser uses the one of the
   other connectives (`!`, then `&&`, then `||`, then `->`).
 

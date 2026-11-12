@@ -3,12 +3,11 @@
 R and W are rejected because the solver does not evaluate them.
 """
 
-import re
-
-from model_checker.parsers.syntax_patterns import AGENT_LIST, COALITION_BOUND_TOKEN
+from model_checker.parsers.syntax_patterns import COALITION_BOUND_TOKEN
 
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
+    has_coalition_without_bound,
     run_common_prechecks,
     until_operands,
     validate_coalition_bound_token,
@@ -17,8 +16,6 @@ from ..parser_utils import (
 from ..shared_parser import BaseLogicParser
 
 _DEFAULT_BOUND_LIMIT = 1_000_000
-_MISSING_BOUND_TEMPORAL_RE = re.compile(rf"<{AGENT_LIST}>\s*[FGXURW]")
-_RBATL_BOUND_PRESENT_RE = re.compile(COALITION_BOUND_TOKEN)
 
 
 class RBATLParser(BaseLogicParser):
@@ -87,9 +84,7 @@ class RBATLParser(BaseLogicParser):
         if not valid:
             return False, err
 
-        if _MISSING_BOUND_TEMPORAL_RE.search(
-            formula
-        ) and not _RBATL_BOUND_PRESENT_RE.search(formula):
+        if has_coalition_without_bound(formula):
             return (
                 False,
                 "RBATL requires a resource bound (e.g., <1><5>) for temporal operators",

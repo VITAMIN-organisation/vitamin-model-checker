@@ -116,6 +116,7 @@ def test_bad_value_is_refused_by_name(lines, message):
         ("Goal", "Capacity 'Goal' is invalid"),
         ("Next", "Capacity 'Next' clashes with reserved keyword"),
         ("with", "Capacity 'with' clashes with reserved keyword"),
+        ("kcap", "Capacity 'kcap' clashes with reserved keyword"),
     ],
 )
 def test_capacity_name_follows_the_name_rule(name, message):
@@ -123,6 +124,17 @@ def test_capacity_name_follows_the_name_rule(name, message):
     lines = _lines(extra=["Capacities", f"c {name}"])
     with pytest.raises(ValueError, match=message):
         CapCGS()._parse_lines(lines)
+
+
+@pytest.mark.unit
+def test_capcgs_proposition_kcap_is_refused():
+    """A CapCGS model is read by CapATL, which reserves `kcap`; a plain CGS keeps it."""
+    lines = _lines(props="kcap", extra=["Capacities", "c"])
+    with pytest.raises(ValueError, match="Atomic proposition 'kcap' clashes"):
+        CapCGS()._parse_lines(lines)
+    cgs = CGS()
+    cgs_parser.parse_cgs_file(lines, cgs)
+    assert list(cgs.atomic_propositions) == ["kcap"]
 
 
 @pytest.mark.unit

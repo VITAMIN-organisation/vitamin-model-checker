@@ -1,7 +1,7 @@
 """Capability-based Concurrent Game Structure (CapCGS) parser.
 
-Extends CGS with capacity assignments and action capacities; used by CapATL
-and other capacity-based logics.
+Extends CGS with capacity assignments and action capacities; read by CapATL
+only, so its names follow CapATL's reserved words.
 """
 
 import numpy as np
@@ -9,11 +9,14 @@ import numpy as np
 from model_checker.parsers.game_structures.cgs import cgs_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cgs.cgs_utils import validate_model_name
+from model_checker.parsers.syntax_patterns import CAPATL_RESERVED_WORDS
 
 
 class CapCGS(CGS):
     """A CapCGS model: a CGS plus the Capacities, Capacities_assignment and
     Actions_for_capacities sections."""
+
+    RESERVED_WORDS = CAPATL_RESERVED_WORDS
 
     def __init__(self):
         """Initialize an empty CapCGS; load data with read_file or read_from_model_object."""
@@ -52,7 +55,9 @@ class CapCGS(CGS):
         def process_capacities(line):
             values = line.split()
             for value in values:
-                validate_model_name(value, kind="Capacity")
+                validate_model_name(
+                    value, kind="Capacity", reserved_words=self.RESERVED_WORDS
+                )
             capacities_list.extend(values)
 
         def process_capacities_assignment(line):

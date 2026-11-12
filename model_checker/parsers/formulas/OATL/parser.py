@@ -12,17 +12,14 @@ from model_checker.parsers.syntax_patterns import (
 
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
+    has_coalition_without_bound,
     run_common_prechecks,
     until_operands,
     validate_coalition_bound_token,
 )
 from ..shared_parser import BaseLogicParser, word_rule
 
-_MISSING_BOUND_TEMPORAL_RE = re.compile(rf"<{AGENT_LIST}>\s*[FGXURW]")
-_COALITION_BOUND_PROBE_RE = re.compile(
-    rf"<{AGENT_LIST}><(?P<bound>\d+)>\s*(?P<op>[FGXURW])"
-)
-_BOUND_PRESENT_RE = re.compile(rf"<{AGENT_LIST}><\d+>")
+_LEADING_ZERO_BOUND_RE = re.compile(rf"<{AGENT_LIST}><0\d")
 
 
 class OATLParser(BaseLogicParser):
@@ -51,7 +48,6 @@ class OATLParser(BaseLogicParser):
     t_COALITION_DEMONIC = OATL_COALITION_BUDGET_TOKEN
     # Budget 0 is valid: the Demon can then erase only zero-cost actions.
     _bound_pattern = NON_NEGATIVE_INT
-    _min_bound = 0
 
     t_RELEASE = word_rule("RELEASE")
     t_WEAK = word_rule("WEAK")
@@ -87,26 +83,16 @@ class OATLParser(BaseLogicParser):
         return super().parse(formula, **kwargs)
 
     def _coalition_bound_pre_validation(self, formula) -> tuple[bool, str | None]:
-        coalition_temporal_match = _COALITION_BOUND_PROBE_RE.search(formula)
-        if coalition_temporal_match:
-            bound_raw = coalition_temporal_match.group("bound")
-            if int(bound_raw) < self._min_bound:
-                return (
-                    False,
-                    f"Bound must be an integer >= {self._min_bound} for temporal operators",
-                )
-            if len(bound_raw) > 1 and bound_raw.startswith("0"):
-                return (
-                    False,
-                    "Bound cannot have leading zeros (e.g., use <1><5>, not <1><05>)",
-                )
-
-        if _MISSING_BOUND_TEMPORAL_RE.search(formula) and not _BOUND_PRESENT_RE.search(
-            formula
-        ):
+        if _LEADING_ZERO_BOUND_RE.search(formula):
             return (
                 False,
-                f"Temporal operators require a bound in the form <coalition><k> with k>={self._min_bound} (e.g., <1><5>F p)",
+                "Bound cannot have leading zeros (e.g., use <1><5>, not <1><05>)",
+            )
+
+        if has_coalition_without_bound(formula):
+            return (
+                False,
+                "Temporal operators require a bound in the form <coalition><k> with k>=0 (e.g., <1><5>F p)",
             )
         return True, None
 

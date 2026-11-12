@@ -15,6 +15,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 
 from model_checker.parsers.syntax_patterns import (
+    FORMULA_RESERVED_WORDS,
     OPERATOR_WORDS,
     operator_regex,
     spelling_regex,
@@ -67,6 +68,9 @@ def quantifier_rules(operator_letters: str):
 class BaseLogicParser:
     """Base of the PLY formula parsers: subclasses add tokens and grammar rules, then
     call `build()`."""
+
+    # The words that are never names in this logic's formulas; CapATL adds `kcap`.
+    RESERVED_WORDS = FORMULA_RESERVED_WORDS
 
     def __init__(self):
         """Initialize logger, token list, and lexer/parser placeholders."""
@@ -211,7 +215,9 @@ class BaseLogicParser:
     ) -> None:
         """Log why `name` cannot be a proposition, clock or capacity (a reserved
         word in any letter case), so `parse` returns None with that reason."""
-        _, err = validate_proposition_identifier(name, kind=kind)
+        _, err = validate_proposition_identifier(
+            name, reserved_words=self.RESERVED_WORDS, kind=kind
+        )
         if err is not None:
             self._log_error(err)
 

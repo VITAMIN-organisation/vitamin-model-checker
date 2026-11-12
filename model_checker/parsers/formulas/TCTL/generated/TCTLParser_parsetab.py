@@ -27,7 +27,7 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> expression","S'",1,None,None,None),
-  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',137),
+  ('expression -> LPAREN expression RPAREN','expression',3,'p_expression_group','shared_parser.py',141),
   ('expression -> expression AND expression','expression',3,'p_expression_binary','parser.py',166),
   ('expression -> expression OR expression','expression',3,'p_expression_binary','parser.py',167),
   ('expression -> expression IMPLIES expression','expression',3,'p_expression_binary','parser.py',168),
@@ -43,7 +43,7 @@ _lr_productions = [
   ('expression -> FALSE','expression',1,'p_expression_boolean','parser.py',195),
   ('expression -> TRUE','expression',1,'p_expression_boolean','parser.py',196),
   ('expression -> PROP DOT expression','expression',3,'p_expression_freeze','parser.py',200),
-  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',201),
+  ('expression -> PROP','expression',1,'p_expression_prop','shared_parser.py',205),
   ('expression -> expression TIME_SEP expression','expression',3,'p_expression_clock_constraint_on_expr','parser.py',206),
   ('expression -> PROP LEQ CONST','expression',3,'p_expression_time','parser.py',214),
   ('expression -> PROP LESS CONST','expression',3,'p_expression_time','parser.py',215),
