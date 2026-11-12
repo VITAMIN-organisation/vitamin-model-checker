@@ -63,11 +63,8 @@ def build_action_list(action_string: str, num_agents: int) -> list[str]:
 
 def parse_joint_action_cell(cell: str, num_agents: int) -> list[list[str]]:
     """The joint actions of one transition cell, separated by ",": ``AC`` (one
-    character per agent) or ``IDLE|MOVE``. Only the first `num_agents` tokens
-    count, and ``I`` means ``IDLE``."""
-    if not isinstance(cell, str):
-        return []
-
+    character per agent) or ``IDLE|MOVE``. Each joint action has exactly
+    `num_agents` tokens, else ValueError; ``I`` means ``IDLE``."""
     raw = cell.strip()
     if not raw or raw == "*":
         return []
@@ -78,58 +75,37 @@ def parse_joint_action_cell(cell: str, num_agents: int) -> list[list[str]]:
     joint_actions: list[list[str]] = []
 
     for joint in joint_strings:
-        if AGENT_ACTION_SEPARATOR in joint:
-            # Explicit token format: a|b|c
-            tokens = [
-                normalize_action_token(t) for t in joint.split(AGENT_ACTION_SEPARATOR)
-            ]
-            if len(tokens) < num_agents:
-                raise ValueError(
-                    f"Action joint '{joint}' in cell '{cell}' has {len(tokens)} token(s); "
-                    f"expected at least {num_agents} token(s) (one per agent)."
-                )
-        else:
-            # Compact character format: treat as sequence of characters
-            chars = [normalize_action_token(ch) for ch in joint]
-            if len(chars) < num_agents:
-                raise ValueError(
-                    f"Action joint '{joint}' in cell '{cell}' has length {len(chars)}; "
-                    f"expected at least {num_agents} character(s) (one per agent)."
-                )
-            tokens = chars
-
-        # Use only the first num_agents tokens for per-agent actions
-        tokens = tokens[:num_agents]
+        parts = (
+            joint.split(AGENT_ACTION_SEPARATOR)
+            if AGENT_ACTION_SEPARATOR in joint
+            else joint
+        )
+        tokens = [normalize_action_token(t) for t in parts]
+        if len(tokens) != num_agents:
+            raise ValueError(
+                f"Action joint '{joint}' in cell '{cell}' has {len(tokens)} action(s); "
+                f"expected {num_agents} (one per agent)."
+            )
         joint_actions.append(tokens)
 
     return joint_actions
 
 
 def extract_actions_for_agents(
-    graph: list[list], agents: list[int]
+    graph: list[list], agents: list[int], num_agents: int
 ) -> dict[str, list[str]]:
-    """The actions each of `agents` plays in `graph`, keyed ``agent{n}``; call
-    ``validate_agent_numbers`` first."""
-    agent_indices = {agent: agent - 1 for agent in agents}
+    """The actions each of `agents` plays in `graph`, a model of `num_agents`
+    agents, keyed ``agent{n}``; call ``validate_agent_numbers`` first."""
     actions_per_agent = {f"agent{agent}": set() for agent in agents}
 
     valid_elements = (
         str(elem) for row in graph for elem in row if elem != 0 and elem != "*"
     )
 
-    # Number of agents: the largest requested agent index, plus one.
-    num_agents = max(agent_indices.values()) + 1 if agent_indices else 0
-
     for elem_str in valid_elements:
-        if not num_agents:
-            continue
-
-        joint_actions = parse_joint_action_cell(elem_str, num_agents)
-        for joint in joint_actions:
-            for agent, agent_index in agent_indices.items():
-                if 0 <= agent_index < len(joint):
-                    token = joint[agent_index]
-                    actions_per_agent[f"agent{agent}"].add(token)
+        for joint in parse_joint_action_cell(elem_str, num_agents):
+            for agent in agents:
+                actions_per_agent[f"agent{agent}"].add(joint[agent - 1])
 
     return {
         agent_key: list(actions) for agent_key, actions in actions_per_agent.items()

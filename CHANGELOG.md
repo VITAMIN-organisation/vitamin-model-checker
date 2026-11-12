@@ -193,6 +193,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Joint actions: a profile with more actions than `Number_of_agents` (such as `AC`
+  with 1 agent) is an error that names the cell, in every checker that reads
+  actions (CTL does not). Before, it was cut to its first actions with no warning.
+  NatATL and LTL queries on a coalition smaller than all agents, such as agent 1
+  alone in a 2-agent model, give the same results as before.
 - Model files: a file that declares propositions in `Atomic_propositions` but has
   no `Labelling` section loaded with every proposition false. It is now a structure
   error that names the propositions, in every model type.

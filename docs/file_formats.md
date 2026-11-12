@@ -126,9 +126,9 @@ move per agent, in agent order 1..n.
 | Compact | `AC` | Agent 1 plays `A`, agent 2 plays `C` (one character per agent). |
 | Explicit | `A\|C` or `IDLE\|MOVE` | Same per-agent vector; use `\|` when action names are longer than one character. |
 
-Algorithms normalize every profile to the explicit `|`-separated form before coalition masking and strategy pruning. Compact and explicit cells therefore have the same verification semantics. A joint profile needs at least `Number_of_agents` actions. Actions after the first `Number_of_agents` are ignored with no warning (`parse_joint_action_cell` in `cgs_actions.py`).
+Algorithms normalize every profile to the explicit `|`-separated form before coalition masking and strategy pruning. Compact and explicit cells therefore have the same verification semantics. A joint profile has exactly `Number_of_agents` actions (`parse_joint_action_cell` in `cgs_actions.py`), because a missing or extra action would move every later action to the wrong agent.
 
-A shorter profile still loads. It fails when a checker reads the actions: with 2 agents and the cell `A`, ATL reports "Action joint 'A' in cell 'A' has length 1; expected at least 2 character(s) (one per agent)". CTL does not read actions, and on that file it returned a result.
+A profile with too few or too many actions still loads. It fails when a checker reads the actions. For example, with 2 agents and the too-short cell `A`, ATL reports "Action joint 'A' in cell 'A' has 1 action(s); expected 2 (one per agent)". CTL does not read actions, so on such a file it returns a result.
 
 The cell wildcard `*` is treated as a profile with `*` in every agent position.
 

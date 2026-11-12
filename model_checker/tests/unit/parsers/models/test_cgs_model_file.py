@@ -296,7 +296,7 @@ def test_number_of_agents_accessor_fails_when_unset():
 @pytest.mark.unit
 def test_cost_lines_do_not_overwrite_the_initial_state(temp_file):
     """Cost lines name states too; they must not be read as the Initial_State section."""
-    content = _two_state(costs_for_actions={"I*": "s0$0:0", "**": "s1$0:0"})
+    content = _two_state(costs_for_actions={"I": "s0$0:0", "*": "s1$0:0"})
     cost_cgs = load_costcgs_from_content(temp_file, content)
     assert cost_cgs.initial_state == "s0"
 

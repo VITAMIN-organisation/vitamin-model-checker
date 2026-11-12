@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from model_checker.algorithms.explicit.ATL_STAR.cgs_adapter import _joint_action, adapt
+from model_checker.algorithms.explicit.ATL_STAR.cgs_adapter import _joint_actions, adapt
 from model_checker.tests.unit.algorithms.atl_star.toy_cgs import (
     AllWildcardToyCGS,
     BadInitialStateToyCGS,
@@ -81,13 +81,13 @@ def test_compact_cells_of_a_real_model():
 )
 def test_joint_action_reads_compact_piped_and_idle_forms(cell, joint):
     """One letter per agent, or `|` between tokens; `I` is the idle action."""
-    assert _joint_action(cell, 2) == joint
+    assert _joint_actions(cell, 2) == [joint]
 
 
 @pytest.mark.parametrize(
     ("make", "name"),
     [
-        (lambda: _joint_action("r", 2), "'r'"),
+        (lambda: _joint_actions("r", 2), "'r'"),
         (lambda: adapt(MalformedToyCGS()), "'r'"),
         (lambda: adapt(BadInitialStateToyCGS()), "s99"),
     ],

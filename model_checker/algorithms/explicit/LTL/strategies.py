@@ -127,8 +127,11 @@ def initialize(
 
     logger.debug("Complexity Bound: %d", k)
 
-    cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
-    actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
+    num_agents = cgs.get_number_of_agents()
+    cgs_actions.validate_agent_numbers(agents, num_agents)
+    actions_per_agent = cgs_actions.extract_actions_for_agents(
+        cgs.graph, agents, num_agents
+    )
     logger.debug("Actions picked by each agent: %s", actions_per_agent)
     agent_actions = {}
     for i, key in enumerate(actions_per_agent.keys()):

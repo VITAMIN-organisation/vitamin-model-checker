@@ -28,7 +28,7 @@ def _filter_joint_cell(
     """Keep matching joint profiles in one cell; return 0 when none match."""
     kept = []
     for tokens in parse_joint_action_cell(elem, agent_count):
-        if tuple_idx < len(tokens) and tokens[tuple_idx] in allowed_tokens:
+        if tokens[tuple_idx] in allowed_tokens:
             kept.append(AGENT_ACTION_SEPARATOR.join(tokens))
     return JOINT_CHOICE_SEPARATOR.join(kept) if kept else 0
 
@@ -39,7 +39,7 @@ def modify_matrix(
     action: str,
     agent_index: int,
     agents: list[int],
-    num_agents: int | None = None,
+    num_agents: int,
     *,
     state_to_index: dict[str, int],
     in_place: bool = False,
@@ -55,7 +55,6 @@ def modify_matrix(
     tuple_idx = agents[agent_index - 1] - 1
     required_token = normalize_action_token(action)
     allowed_tokens = {CANONICAL_IDLE_TOKEN, required_token}
-    agent_count = num_agents if num_agents is not None else max(agents, default=0)
 
     target_graph = graph if in_place else list(graph)
     for i in rows_to_update:
@@ -67,7 +66,7 @@ def modify_matrix(
                 elem,
                 tuple_idx=tuple_idx,
                 allowed_tokens=allowed_tokens,
-                agent_count=agent_count,
+                agent_count=num_agents,
             )
 
         if not in_place:

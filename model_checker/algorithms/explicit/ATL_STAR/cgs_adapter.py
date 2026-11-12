@@ -1,8 +1,8 @@
 """Turn a VITAMIN CGS into an `automata.TransitionSystem`.
 
 - Joint actions: `|`-separated or one character per agent, as in
-  `cgs_actions.parse_joint_action_cell`. Extra tokens are dropped, and `I` and
-  `IDLE` are the same idle action.
+  `cgs_actions.parse_joint_action_cell`, which requires one token per agent. `I`
+  and `IDLE` are the same idle action.
 - Wildcard `*`: a self-loop for every action the CGS uses elsewhere, except the
   actions the state already has. A CGS with only `*` cells gets one all-`*` action.
 - Edges come from `get_edges()` instead of a full matrix scan. Its self-edges can
@@ -16,12 +16,10 @@ from dataclasses import dataclass
 from typing import cast
 
 from model_checker.automata import TransitionSystem
+from model_checker.parsers.game_structures.cgs import cgs_actions
 from model_checker.parsers.game_structures.cgs.protocols import CGSProtocol
 
-AGENT_ACTION_SEPARATOR = "|"
 WILDCARD = "*"
-IDLE_TOKENS = {"I", "IDLE"}
-CANONICAL_IDLE_TOKEN = "IDLE"
 
 JointAction = frozenset[tuple[int, str]]
 
@@ -69,8 +67,7 @@ def adapt(cgs: CGSProtocol) -> AdaptedCGS:
         if mask == WILDCARD:
             wildcard_sources.append(source)
             return
-        for profile in cgs.build_action_list(mask):
-            action = _joint_action(profile, num_agents)
+        for action in _joint_actions(mask, num_agents):
             known_actions.add(action)
             explicit_actions_by_source.setdefault(source, set()).add(action)
             ts.add_transition(source, action, target)
@@ -113,27 +110,13 @@ def adapt(cgs: CGSProtocol) -> AdaptedCGS:
     )
 
 
-def _joint_action(profile: str, num_agents: int) -> JointAction:
-    if AGENT_ACTION_SEPARATOR in profile:
-        tokens = [
-            _normalize_action_token(t) for t in profile.split(AGENT_ACTION_SEPARATOR)
-        ]
-    else:
-        tokens = [_normalize_action_token(c) for c in profile]
-    if len(tokens) < num_agents:
-        raise ValueError(
-            f"Joint action profile {profile!r} has {len(tokens)} token(s)/character(s); "
-            f"expected at least {num_agents} (one per agent, {AGENT_ACTION_SEPARATOR}-separated "
-            "or one character each)."
-        )
-    return frozenset(
-        (agent, token) for agent, token in enumerate(tokens[:num_agents], start=1)
-    )
-
-
-def _normalize_action_token(token: str) -> str:
-    stripped = str(token).strip()
-    return CANONICAL_IDLE_TOKEN if stripped in IDLE_TOKENS else stripped
+def _joint_actions(mask: object, num_agents: int) -> list[JointAction]:
+    # The raw cell is parsed once: re-reading a normalized profile such as `IDLE`
+    # for one agent would split it into characters.
+    return [
+        frozenset(enumerate(tokens, start=1))
+        for tokens in cgs_actions.parse_joint_action_cell(str(mask), num_agents)
+    ]
 
 
 def _labels_of(props: list[object], row: Iterable[object]) -> frozenset[str]:

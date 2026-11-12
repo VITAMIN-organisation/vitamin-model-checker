@@ -63,9 +63,10 @@ def initialize(
     logger.debug("Proposition matrix: %s", model_parser.matrix_prop)
     logger.debug("Involved agents: %s", agents)
 
-    cgs_actions.validate_agent_numbers(agents, model_parser.get_number_of_agents())
+    num_agents = model_parser.get_number_of_agents()
+    cgs_actions.validate_agent_numbers(agents, num_agents)
     actions_per_agent = cgs_actions.extract_actions_for_agents(
-        model_parser.graph, agents
+        model_parser.graph, agents, num_agents
     )
     logger.debug("Actions per agent: %s", actions_per_agent)
 

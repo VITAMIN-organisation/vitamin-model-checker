@@ -25,9 +25,12 @@ def test_cell_expands_to_pipe_profiles(cell, num_agents, profiles):
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize(("cell", "num_agents"), [("A", 2), ("A|B", 3), ("I", 2)])
-def test_profile_with_too_few_tokens_is_refused(cell, num_agents):
-    """A profile must give every agent an action; the message names the cell."""
+@pytest.mark.parametrize(
+    ("cell", "num_agents"), [("A", 2), ("A|B", 3), ("I", 2), ("AC", 1)]
+)
+def test_profile_with_the_wrong_token_count_is_refused(cell, num_agents):
+    """A profile gives each agent exactly one action; an extra one is not dropped.
+    The message names the cell."""
     with pytest.raises(ValueError, match=f"in cell '{cell}'"):
         cgs_actions.build_action_list(cell, num_agents)
 
@@ -36,7 +39,7 @@ def test_profile_with_too_few_tokens_is_refused(cell, num_agents):
 def test_actions_per_agent_come_from_every_cell():
     """Agent 1 plays the first letters, agent 2 the second; `*` cells add nothing."""
     graph = [["AC", "*"], [0, "BD"]]
-    actions = cgs_actions.extract_actions_for_agents(graph, [1, 2])
+    actions = cgs_actions.extract_actions_for_agents(graph, [1, 2], 2)
     assert {agent: sorted(acts) for agent, acts in actions.items()} == {
         "agent1": ["A", "B"],
         "agent2": ["C", "D"],
@@ -45,10 +48,10 @@ def test_actions_per_agent_come_from_every_cell():
 
 @pytest.mark.unit
 def test_actions_of_one_agent_only():
-    """Asking for agent 2 alone still reads its token from 2-agent profiles."""
-    actions = cgs_actions.extract_actions_for_agents([["AC", 0], [0, "BD"]], [2])
-    assert sorted(actions["agent2"]) == ["C", "D"]
-    assert list(actions) == ["agent2"]
+    """Asking for agent 1 alone still reads 2-agent profiles as 2 tokens."""
+    actions = cgs_actions.extract_actions_for_agents([["AC", 0], [0, "BD"]], [1], 2)
+    assert sorted(actions["agent1"]) == ["A", "B"]
+    assert list(actions) == ["agent1"]
 
 
 @pytest.mark.unit
