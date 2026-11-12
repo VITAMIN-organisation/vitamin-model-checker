@@ -36,3 +36,18 @@ def test_names_are_not_mistaken_for_r_or_w(logic, name):
     """The check matches uppercase R and W and the whole words release and weak."""
     parser = FormulaParserFactory.get_parser_instance(logic)
     assert parser.parse(f"<1><2>F {name}", n_agent=3) == ("<1><2>F", name)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("logic", ["RBATL", "RABATL"])
+@pytest.mark.parametrize(
+    ("formula", "message"),
+    [
+        ("<1><5>R p", "does not support Release"),
+        ("<1> F p", "requires a resource bound"),
+    ],
+)
+def test_error_names_the_logic_that_was_parsed(logic, formula, message):
+    """RABATL shares the RBATL parser, but its errors must say RABATL."""
+    errors = parse_errors(logic, formula, n_agent=3)
+    assert errors[0].startswith(f"{logic} {message}"), errors

@@ -19,7 +19,11 @@ _DEFAULT_BOUND_LIMIT = 1_000_000
 
 
 class RBATLParser(BaseLogicParser):
-    """`parse` returns an AST tuple, or None with the reason in `errors`."""
+    """`parse` returns an AST tuple, or None with the reason in `errors`.
+
+    `_LOGIC_NAME` is the logic named in error messages; RABATL overrides it."""
+
+    _LOGIC_NAME = "RBATL"
 
     def __init__(self):
         """Initialize the RBATL lexer and parser (PLY)."""
@@ -80,12 +84,12 @@ class RBATLParser(BaseLogicParser):
         if not valid:
             return False, err
 
-        valid, err = validate_release_weak_rejected(formula, "RBATL")
+        valid, err = validate_release_weak_rejected(formula, self._LOGIC_NAME)
         if not valid:
             return False, err
 
         err = coalition_bound_error(
             formula,
-            "RBATL requires a resource bound (e.g., <1><5>) for temporal operators",
+            f"{self._LOGIC_NAME} requires a resource bound (e.g., <1><5>) for temporal operators",
         )
         return err is None, err

@@ -193,6 +193,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- RABATL error messages (Release or Weak Until rejected, missing resource bound)
+  said "RBATL"; they now name RABATL.
 - LTL: `F false`, `F (p && !p)` and `F (p && q)` on a model where the operand holds
   in no state gave `Result: True`. A rule whose condition holds in no state became
   "idle everywhere", which removed every transition of a model with no idle action,

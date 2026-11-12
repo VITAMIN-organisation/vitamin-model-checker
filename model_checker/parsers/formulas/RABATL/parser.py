@@ -9,4 +9,4 @@ from ..RBATL.parser import RBATLParser
 class RABATLParser(RBATLParser):
     """Parser for RABATL formulas; same tokens and grammar as RBATL."""
 
-    pass
+    _LOGIC_NAME = "RABATL"

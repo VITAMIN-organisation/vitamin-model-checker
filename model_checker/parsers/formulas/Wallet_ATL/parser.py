@@ -3,6 +3,7 @@
 import re
 
 from model_checker.parsers.formulas.parser_utils import (
+    PROPOSITION_TOKEN_PATTERN,
     normalize_formula_text,
     run_common_prechecks,
     validate_agents,
@@ -70,7 +71,7 @@ class Wallet_ATLParser(BaseLogicParser):
     # --- Specific Tokens ---
     # A string rule, so PLY tries it after every function rule (the word
     # operators) whatever the line numbers across files.
-    t_PROP = r"[a-zA-Z][a-zA-Z0-9_]*"
+    t_PROP = PROPOSITION_TOKEN_PATTERN
 
     def t_COALITION(self, t):
         t.value = _parse_coalition_logic(t.value)
