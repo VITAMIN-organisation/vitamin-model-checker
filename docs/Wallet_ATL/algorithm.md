@@ -1,8 +1,11 @@
-# Wallet_ATL - Algorithm Reference
+# Wallet_ATL algorithm reference
 
-Scope: denotations and code path for Wallet_ATL in
-`model_checker/algorithms/explicit/Wallet_ATL/`. Modeling examples:
-[usage.md](usage.md).
+This page gives the denotations and code path of Wallet_ATL in
+`model_checker/algorithms/explicit/Wallet_ATL/`, for developers reading or
+changing the checker; the syntax is in the
+[knowledge base](../logic_knowledge_base.md#wallet_atl), the model format in
+[WalletCGS sections](../file_formats.md#walletcgs-sections) and modeling
+examples in [usage.md](usage.md).
 
 ## Model
 
@@ -136,8 +139,12 @@ Implementation techniques (transition cache, early-stop): [algorithm_design.md](
 
 ## Theory vs implementation
 
+Table 2 sets the paper next to what the code does:
+
+**Table 2: Wallet_ATL theory and implementation.**
+
 | Aspect | Theory | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Coalition syntax | Wallet-aware | Dedicated `<<...>>` (avoids clash with `<A><k>`) |
 | Wallet dynamics | Balances change along transitions (Def. 4.4) | Balances read from `Wallets`; moves checked against them; not updated along transitions |
 | Temporal ops | X, U, G | X, U, G, and F as `true U` (see [Operators](#operators)) |
@@ -155,8 +162,13 @@ Entry: `Wallet_ATL/Wallet_ATL.py`.
 
 ## Code map
 
+Table 3 lists the files of the checker; paths are relative to
+`model_checker/algorithms/explicit/`.
+
+**Table 3: Wallet_ATL code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `Wallet_ATL/Wallet_ATL.py` | Entry |
 | `Wallet_ATL/solver.py` | Dispatch |
 | `Wallet_ATL/operators.py` | Operators |

@@ -1,19 +1,24 @@
-# TCTL - Implementation Reference
+# TCTL algorithm reference
 
-This document is the **algorithm correctness reference** for TCTL: zone-graph RTS,
-`rsat` labelling, freeze/guards, and the code path in
-`model_checker/algorithms/explicit/TCTL/`. It follows Hugh Anderson and
+This page is the algorithm correctness reference for TCTL, for a developer reading
+or changing its checker: zone-graph RTS, `rsat` labelling, freeze/guards, and the
+code path in `model_checker/algorithms/explicit/TCTL/`. The logic is introduced in
+[TCTL in the knowledge base](../logic_knowledge_base.md#tctl---timed-ctl) and the
+model file in [timedCGS sections](../file_formats.md#timedcgs-sections). It follows Hugh Anderson and
 P.S. Thiagarajan, _Verification of Real-time Systems_, Chapter 6, "Model
 checking and timed CTL" (NUS CS5270 lecture notes; TIGER notes): regional
 transition system, TCTL-minus fragment, and the `rsat` labelling algorithm.
 
 ## Overview
 
-TCTL is checked over **timedCGS** models using a **zone graph** as a symbolic
-representation of the regional transition system (RTS).
+TCTL is checked over timedCGS models using a zone graph as a symbolic
+representation of the regional transition system (RTS). Table 1 lists the pieces
+involved:
+
+**Table 1: Pieces of the TCTL checker.**
 
 | Piece | Role |
-|-------|------|
+| :--- | :--- |
 | timedCGS | Locations, transitions, automaton clocks `X`, guards, resets, invariants |
 | Formula clocks `Y` | Collected from the AST; disjoint from `X`; extend the zone graph |
 | Zone graph | Symbolic regions `(location, zone)` with delay and discrete edges |
@@ -32,7 +37,7 @@ operator, such as "TCTL has no next operator ('AX' at position 1): time is dense
 so there is no unique next state". Names such as `xray` and `nextstate` are
 propositions.
 
-API results project regions to **location names** where at least one region
+API results project regions to location names where at least one region
 satisfies the formula. Initial-state satisfaction holds when any region at the
 initial location is satisfying.
 
@@ -90,9 +95,9 @@ A[phi U psi]_<=c  ~  y.reset(phi && A[true U (y<=c && psi)])   with fresh y in Y
 
 - Atoms label all regions at locations where the proposition holds.
 - Clock constraints label regions whose zones satisfy the guard (with invariants).
-- **FREEZE** `y.phi`: region `r` satisfies `y.phi` when `r` with formula clock `y`
+- FREEZE `y.phi`: region `r` satisfies `y.phi` when `r` with formula clock `y`
   reset to `0` satisfies `phi`.
-- **Until** uses region-level fixpoints with timed backward steps. Because
+- Until uses region-level fixpoints with timed backward steps. Because
   formula are evaluated on each zone-graph node, prefix obligations correspond to
   the paper's `phi@i` requirement along delay and discrete edges.
 - Boolean connectives are union, intersection, and complement over all regions in
@@ -120,7 +125,8 @@ Implementation techniques (zone graph): [algorithm_design.md](../algorithm_desig
 ## Model-checking pipeline
 
 ```mermaid
-flowchart TD
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1f5f99", "primaryTextColor": "#ffffff", "primaryBorderColor": "#4a90d9", "lineColor": "#75808f", "tertiaryTextColor": "#75808f", "titleColor": "#75808f", "clusterBkg": "transparent", "clusterBorder": "#75808f", "edgeLabelBackground": "transparent"}}}%%
+flowchart TB
     parse["TCTLParser.parse"]
     load["TimedCGS.read_file"]
     clocks["collect_formula_clocks + extend_timed_cgs_clocks"]

@@ -1,10 +1,13 @@
-# NatSL - Algorithm Reference
+# NatSL algorithm reference
 
-NatSL is implemented under `model_checker/algorithms/explicit/NatSL/`.
+This page explains how NatSL is checked, for developers reading or changing the
+checker in `model_checker/algorithms/explicit/NatSL/`; the syntax is in the
+[knowledge base](../logic_knowledge_base.md#natsl---natural-strategy-logic) and the
+model format in [CGS sections](../file_formats.md#cgs-sections).
 
 ## Supported fragment
 
-The current checker implements a restricted one-goal fragment with bounded natural strategies.
+The checker implements a restricted one-goal fragment with bounded natural strategies.
 
 The executable quantifier prefix has the form:
 

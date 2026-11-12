@@ -1,10 +1,12 @@
-# OATL - Algorithm Reference
+# OATL algorithm reference
 
-For developers who need to know how OATL is checked in this project. Code is in
+This page explains how OATL is checked in this project, for developers reading
+or changing the checker. Code is in
 `model_checker/algorithms/explicit/OATL/`; the method follows D. Catta, J.
 Leneutre, V. Malvone, A. Murano, "Obstruction Alternating-time Temporal Logic:
 a Strategic Logic to Reason about Dynamic Models", AAMAS 2024. Syntax and
-examples are in the [knowledge base](../logic_knowledge_base.md#oatl).
+examples are in the [knowledge base](../logic_knowledge_base.md#oatl), and the
+model format in [costCGS sections](../file_formats.md#costcgs-sections).
 
 ## Idea
 
@@ -78,7 +80,10 @@ transition is never in `Pre_n`.
 
 Temporal operators are fixpoints of `Pre_n`, where `T` ranges over sets of
 states and `|`, `&` are union and intersection. Least fixpoints iterate up from
-the starting set, greatest ones down from it.
+the starting set, greatest ones down from it. Table 1 gives the fixpoint of each
+operator:
+
+**Table 1: OATL temporal operators as fixpoints of `Pre_n`.**
 
 | Formula | Fixpoint |
 | :--- | :--- |
@@ -90,7 +95,7 @@ the starting set, greatest ones down from it.
 | `<A><n> phi W psi` | greatest `T = (phi \| psi) & (psi \| Pre_n(A, T))` |
 
 `F`, `G` and `W` are implemented directly. They give the same states as
-`true U phi`, `false R phi` and `psi R (phi | psi)`.
+`true U phi`, `false R phi` and `psi R (phi || psi)`.
 
 `DemonicPreimage` expands every transition once per check and groups the joint
 actions of each state by the coalition's part. Each `Pre_n` call is one pass
@@ -113,7 +118,10 @@ CostCGS.read_file -> OATLParser.parse -> build_resolved_formula_tree
   -> solve_tree (DemonicPreimage + fixpoints) -> result
 ```
 
-Paths below are relative to `model_checker/algorithms/explicit/`.
+Table 2 lists the files of the checker; paths are relative to
+`model_checker/algorithms/explicit/`.
+
+**Table 2: OATL code map.**
 
 | Path | Role |
 | :--- | :--- |

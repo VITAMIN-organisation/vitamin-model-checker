@@ -1,10 +1,26 @@
-# File Formats
+# File formats
 
-This page describes the **model and formula file conventions** used by
+This page describes the model and formula file conventions used by
 `vitamin-model-checker`. It is for people creating examples, fixtures, or VMI
 bundles. It does not define operator denotations; those live in
 [logic_knowledge_base.md](logic_knowledge_base.md) and per-logic
 `docs/<Logic>/algorithm.md` pages.
+
+## Contents
+
+- [Model files](#model-files)
+- [Supported model types](#supported-model-types)
+- [CGS sections](#cgs-sections)
+- [costCGS sections](#costcgs-sections)
+- [capCGS sections](#capcgs-sections)
+- [WalletCGS sections](#walletcgs-sections)
+- [BirelationalMatrix sections (ICTL)](#birelationalmatrix-sections-ictl)
+- [BCGS sections (IATL)](#bcgs-sections-iatl)
+- [timedCGS sections](#timedcgs-sections)
+- [ObstructionModel sections (COTL)](#obstructionmodel-sections-cotl)
+- [Formula files](#formula-files)
+- [Formula syntax overview](#formula-syntax-overview)
+- [Practical rules](#practical-rules)
 
 ## Model Files
 
@@ -22,8 +38,13 @@ cotl_model.txt
 
 ## Supported Model Types
 
+Table 1 lists each model type, the logics that use it, what it adds and how the
+loader detects it:
+
+**Table 1: Supported model types.**
+
 | Model type | Used by | What it adds / how detected |
-|---|---|---|
+| :--- | :--- | :--- |
 | `CGS` | ATL, CTL, LTL, NatATL, NatSL, ... | Standard concurrent game structure (default when no extension headers). |
 | `BirelationalMatrix` | ICTL | Same sections as CGS; `Transition` cells are `0`/`R`/`P`/`P,R`. Detected when Transition rows use only those cells and include `P` or `P,R`; ICTL metadata also forces this type. |
 | `BCGS` | IATL | CGS transitions plus boolean `Preorder` section (detected when `Preorder` is present). |
@@ -95,10 +116,13 @@ Accepted cell values:
 - a comma-separated list of joint profiles such as `AC,AD` or `A|C,A|D`,
 - `*`: wildcard, meaning any joint action allows the transition.
 
-**Joint action formats** (equivalent; both encode one move per agent, in agent order 1..n):
+Table 2 shows the two joint action formats. They are equivalent: both encode one
+move per agent, in agent order 1..n.
+
+**Table 2: Joint action formats.**
 
 | Form | Example (2 agents) | Meaning |
-|---|---|---|
+| :--- | :--- | :--- |
 | Compact | `AC` | Agent 1 plays `A`, agent 2 plays `C` (one character per agent). |
 | Explicit | `A\|C` or `IDLE\|MOVE` | Same per-agent vector; use `\|` when action names are longer than one character. |
 
@@ -177,13 +201,13 @@ cap A
 cop B
 ```
 
-- `Capacities` - space-separated capacity/resource names. A name follows the
-  [name rule](logic_knowledge_base.md#names-and-keywords): `[a-z][a-zA-Z0-9_]*`,
-  not a reserved word, and not `kcap` or `kcap` with digits (`kcap1`), which CapATL
-  reads as its knowledge operator.
-- `Capacities_assignment` - `agents x capacities` matrix of `0`/`1` values.
+- `Capacities`: space-separated capacity/resource names. A name follows the
+  [name rule](logic_knowledge_base.md#names-and-keywords) (`[a-z][a-zA-Z0-9_]*`,
+  not a reserved word), and is not `kcap` or `kcap` with digits (`kcap1`), which
+  CapATL reads as its knowledge operator.
+- `Capacities_assignment`: `agents x capacities` matrix of `0`/`1` values.
   Row `i` is agent `i`; column `j` is capacity `j` (same order as `Capacities`).
-- `Actions_for_capacities` - one line per capacity: `capacity_name action1 action2 ...`
+- `Actions_for_capacities`: one line per capacity, `capacity_name action1 action2 ...`,
   listing the actions that capacity enables (`CapATL/combinatorics.py`).
 
 Use this format for CapATL-style capability reasoning.
@@ -215,10 +239,12 @@ the neutral action `0`. Which moves are available depends on the wallets; see
 ICTL reuses the CGS section layout (`Transition`, `Name_State`,
 `Initial_State`, `Atomic_propositions`, `Labelling`; `Number_of_agents` optional
 and defaults to `1`). Cells in `Transition` are relation labels, not joint
-actions:
+actions; Table 3 lists them:
+
+**Table 3: ICTL `Transition` cells.**
 
 | Cell | Meaning |
-|---|---|
+| :--- | :--- |
 | `0` | no relation |
 | `R` | transition only |
 | `P` | knowledge preorder only |
@@ -252,10 +278,10 @@ IATL reports "There's no Idle from some states and some agents". Details:
 
 `timedCGS` extends costCGS with three timed sections:
 
-- `Clocks` - the clock names on one line, separated by spaces, which follow the
-  [name rule](logic_knowledge_base.md#names-and-keywords),
-- `Clock_constraints` - per-transition clock resets and bounds,
-- `Invariants` - clock invariants per state.
+- `Clocks`: the clock names on one line, separated by spaces, which follow the
+  [name rule](logic_knowledge_base.md#names-and-keywords).
+- `Clock_constraints`: per-transition clock resets and bounds.
+- `Invariants`: clock invariants per state.
 
 `Clock_constraints` is a states x states matrix like `Transition`: the cell in row `s`,
 column `t` constrains the transition from `s` to `t`. Cells are separated by spaces.
@@ -314,8 +340,12 @@ s0 *,cut_good s1
 s0 cut_bad,cut_good s1 s2
 ```
 
+Table 4 gives the line format and rules of each section:
+
+**Table 4: ObstructionModel sections.**
+
 | Section | Line format | Rules |
-|---|---|---|
+| :--- | :--- | :--- |
 | `Transition` | `0`/`1` per cell | Row `i` marks the successors of state `i`. A state may have no successor. |
 | `Number_of_demons` | `k` | One integer `>= 1`. |
 | `Demon_actions` | `demon state action cost` | One line per action other than idle; `cost >= 1`. The idle action `*` is available to every demon at every state at cost 0 and is not listed. |

@@ -1,7 +1,10 @@
-# CTL - Algorithm Reference
+# CTL algorithm reference
 
-Scope: denotations and code path for CTL in
-`model_checker/algorithms/explicit/CTL/`. 
+This page covers the denotations, traces and code path of the CTL checker in
+`model_checker/algorithms/explicit/CTL/`, for a developer reading or changing it;
+the logic is described in the
+[knowledge base](../logic_knowledge_base.md#ctl---computation-tree-logic) and the
+model file format in [CGS sections](../file_formats.md#cgs-sections).
 
 ## Model
 
@@ -31,10 +34,12 @@ source). A connective after a prefix that no parenthesis closes, as in
 ## Semantic denotations
 
 Bottom-up labelling of `[[phi]] subseteq S` using R-predecessors on the CGS
-transition graph.
+transition graph. Table 1 gives the denotation of each operator.
+
+**Table 1: CTL operator denotations.**
 
 | Operator | Shape |
-|---|---|
+| :--- | :--- |
 | `EX phi` | `Pre_exists([[phi]])` |
 | `AX phi` | `Pre_forall([[phi]])` |
 | `EF phi` | least fixpoint under `Pre_exists` from `[[phi]]` |
@@ -55,10 +60,13 @@ its path formula holds on that path. A lasso is a path that ends in a loop.
 E. M. Clarke, E. A. Emerson and A. P. Sistla describe the same counterexample
 for `AG f`, a path to a state where `f` fails ("Automatic Verification of
 Finite-State Concurrent Systems Using Temporal Logic Specifications", ACM TOPLAS
-8(2), 1986, `docs/papers/CES86.pdf`, p. 256).
+8(2), 1986, `docs/papers/CES86.pdf`, p. 256). Table 2 lists the trace for each
+root operator.
+
+**Table 2: CTL trace per root operator.**
 
 | Root operator | At `s0` | Trace |
-|---|---|---|
+| :--- | :--- | :--- |
 | `EX phi` | true | witness: `s0` and a successor in `[[phi]]` |
 | `EF phi` | true | witness: a shortest path that ends in `[[phi]]` (`s0` alone when `s0` is in `[[phi]]`) |
 | `E[phi U psi]` | true | witness: a shortest path that ends in `[[psi]]`, with every earlier state in `[[phi]]` |
@@ -105,8 +113,12 @@ searches short: the work is one search per cycle state within 100 steps of
 
 ## Theory vs implementation
 
+Table 3 sets the usual theory beside this implementation.
+
+**Table 3: CTL theory and implementation.**
+
 | Aspect | Theory | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Release operator (`A(p R q)`) | In many textbook CTL definitions | Not in the grammar; `A(p R q)` is a syntax error |
 | Traces | Path witness / counterexample | For the root operator only; see [Traces](#traces) |
 | Model | Kripke / transition system | CGS used as transition system |
@@ -123,8 +135,12 @@ Entry: `CTL/CTL.py` (`model_checking`).
 
 ## Code map
 
+Table 4 lists the files of the checker and their role.
+
+**Table 4: CTL code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `CTL/CTL.py` | Entry, result / trace |
 | `CTL/solver.py` | Dispatch |
 | `CTL/operators.py` | Denotations |

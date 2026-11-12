@@ -1,7 +1,10 @@
-# ATL* - Algorithm Reference
+# ATL* algorithm reference
 
-Scope: denotations and code path for ATL* in
-`model_checker/algorithms/explicit/ATL_STAR/`.
+This page covers the semantics, strategy synthesis and code path of the ATL*
+checker in `model_checker/algorithms/explicit/ATL_STAR/`, for a developer reading
+or changing it; the syntax is in the
+[syntax cards](../logic_knowledge_base.md#syntax-cards) and the model file format
+in [CGS sections](../file_formats.md#cgs-sections).
 
 ## Model
 
@@ -21,7 +24,9 @@ psi ::= phi | !psi | psi && psi | X psi | psi U psi | F psi | G psi | <<A>> psi
 Coalition form: `<<1,2>>`. Agent ids must be in `1..n`. Unlike ATL, `<<A>>`
 may appear anywhere inside a path formula, not just at the root.
 
-Written forms of an Until under a coalition:
+Table 1 lists the written forms of an Until under a coalition.
+
+**Table 1: Until under an ATL* coalition.**
 
 | Form | Reading |
 | :--- | :--- |
@@ -66,13 +71,15 @@ formula: the same brackets, a different operator.
 ## Semantic approach
 
 Not a coalition pre-image fixpoint (unlike every other logic here),
-reduced to a 2-player parity game:
+reduced to a 2-player parity game in the steps of Table 2.
+
+**Table 2: ATL* reduction to a parity game.**
 
 | Step | What |
-|---|---|
+| :---: | :--- |
 | 1 | Eliminate nested `<<A'>> psi'` bottom-up into fresh propositions |
 | 2 | Translate the remaining pure-LTL `psi` to a deterministic parity automaton |
-| 3 | Product with the CGS, unfold into a turn-based arena, solve as parity/Büchi/co-Büchi |
+| 3 | Product with the CGS, unfold into a turn-based arena, solve as parity/Buchi/co-Buchi |
 | 4 | `<<A>> psi`'s truth set = player 0's winning region |
 
 Needs `model_checker/automata/` (vendored, wraps Spot); no other logic
@@ -80,8 +87,12 @@ here depends on it.
 
 ## Theory vs implementation
 
+Table 3 sets the usual theory beside this implementation.
+
+**Table 3: ATL* theory and implementation.**
+
 | Aspect | Theory | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Empty coalition | Literature may allow | Rejected (parse error) |
 | Unknown atom | Semantics typically leaves undefined | Rejected (semantic error), never silently false |
 | Strategy synthesis | Part of ATL*'s semantics | Separate `synthesize_strategy` entry point, not in `model_checking`'s result dict; only a single, non-nested coalition formula |
@@ -168,8 +179,12 @@ the nested part yet.
 
 ## Code map
 
+Table 4 lists the files of the checker and their role.
+
+**Table 4: ATL* code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `ATL_STAR/ATL_STAR.py` | Entry |
 | `ATL_STAR/verifier.py` | Bottom-up elimination, LTL rendering, game construction/solving, formula-shape validation |
 | `ATL_STAR/cgs_adapter.py` | CGS to `TransitionSystem` adapter |

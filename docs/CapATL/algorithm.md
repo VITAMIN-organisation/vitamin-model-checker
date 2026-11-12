@@ -1,7 +1,10 @@
-# CapATL - Algorithm Reference
+# CapATL algorithm reference
 
-Scope: denotations and code path for CapATL in
-`model_checker/algorithms/explicit/CapATL/`. 
+This page covers the denotations and code path of the CapATL checker in
+`model_checker/algorithms/explicit/CapATL/`, for a developer reading or changing
+it; the logic is described in the
+[knowledge base](../logic_knowledge_base.md#capatl) and the model file format in
+[capCGS sections](../file_formats.md#capcgs-sections).
 
 ## Model
 
@@ -67,8 +70,12 @@ Implementation techniques (lru caches + clear, state index cache): [algorithm_de
 
 ## Theory vs implementation
 
+Table 1 sets the theory beside this implementation.
+
+**Table 1: CapATL theory and implementation.**
+
 | Aspect | Theory | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Coalition | `<{A}>` | Braces required; no formula `k` |
 | `Ka(cap)` | Knowledge over capacity assignments | Parsed; model checking returns an error |
 | Capacities | Model constraints | `capCGS` sections + Pre over capacity knowledge |
@@ -83,8 +90,12 @@ Entry: `CapATL/CapATL.py`.
 
 ## Code map
 
+Table 2 lists the files of the checker and their role.
+
+**Table 2: CapATL code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `CapATL/CapATL.py` | Entry |
 | `CapATL/solver.py` | Dispatch |
 | `CapATL/operators.py` | Operators |

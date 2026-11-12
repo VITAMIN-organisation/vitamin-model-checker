@@ -1,6 +1,7 @@
-# COTL - Algorithm Reference
+# COTL algorithm reference
 
-For developers who need to know how COTL is checked in this project. Code is in
+This page covers how COTL is checked in this project, for a developer reading or
+changing the checker. Code is in
 `model_checker/algorithms/explicit/COTL/`; the method follows D. Catta, J.
 Leneutre, V. Malvone, A. Murano, "Coalition Obstruction Temporal Logic: A New
 Obstruction Logic to Reason About Demon Coalitions", IJCAI 2025. Syntax and
@@ -65,7 +66,9 @@ The formula holds in the model when the initial state is in the final set.
 
 One step has two operators in `COTL/preimage.py`, for a set of states `S`. A
 state is in the operator when some action `f` of `L` with cost `<= n` makes, for
-every curse `c` extending `f`:
+every curse `c` extending `f`, the condition of Table 1 hold.
+
+**Table 1: COTL one-step operators.**
 
 | Operator | Condition on `post(c, s)` | Used by |
 | :--- | :--- | :--- |
@@ -76,7 +79,9 @@ every curse `c` extending `f`:
 
 Temporal operators are fixpoints, where `T` ranges over sets of states and `|`,
 `&` are union and intersection. Least fixpoints iterate up from the starting
-set, greatest ones down from it.
+set, greatest ones down from it. Table 2 gives the fixpoint of each operator.
+
+**Table 2: COTL temporal operators as fixpoints.**
 
 | Formula | Fixpoint |
 | :--- | :--- |
@@ -89,7 +94,7 @@ set, greatest ones down from it.
 | `<L><n> (phi W psi)` | greatest `T = (phi \| psi) & (psi \| next_in_or_stop(T))` |
 
 `F`, `G` and `W` are implemented directly. They give the same states as
-`true U phi`, `false R phi` and `psi R (phi | psi)`.
+`true U phi`, `false R phi` and `psi R (phi || psi)`.
 
 `LegionSteps` (in `COTL/preimage.py`) builds, once per legion, the choices at
 each state: every action of `L` that some listed curse extends, with its cost
@@ -125,8 +130,10 @@ ObstructionModel.read_file -> COTLParser.parse -> build_resolved_formula_tree
   -> solve_tree (LegionSteps + fixpoints) -> result
 ```
 
-The parser takes the number of demons as `n_agent`. Paths below are relative to
-`model_checker/`.
+The parser takes the number of demons as `n_agent`. Table 3 lists the files and
+their role; paths are relative to `model_checker/`.
+
+**Table 3: COTL code map.**
 
 | Path | Role |
 | :--- | :--- |

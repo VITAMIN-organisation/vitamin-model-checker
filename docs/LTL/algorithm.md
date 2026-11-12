@@ -1,7 +1,9 @@
-# LTL - Algorithm Reference
+# LTL algorithm reference
 
-Scope: denotations and code path for LTL in
-`model_checker/algorithms/explicit/LTL/`.
+This page covers the denotations and code path of the LTL checker in
+`model_checker/algorithms/explicit/LTL/`, for a developer reading or changing it;
+the syntax is in the [syntax cards](../logic_knowledge_base.md#syntax-cards) and
+the model file format in [CGS sections](../file_formats.md#cgs-sections).
 
 ## Model
 
@@ -45,8 +47,12 @@ Implementation techniques (strategy pruning, condition cache): [algorithm_design
 
 ## Theory vs implementation
 
+Table 1 sets classical path-LTL beside this implementation.
+
+**Table 1: LTL theory and implementation.**
+
 | Aspect | Classical path-LTL | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Semantics | Paths of the Kripke structure | Sure-win / strategy over CGS |
 | Quantifiers | None | Injected `A` after rewrite |
 | Operators | X, F, G, U, R, W | `X`, `F`, `G`, `U` only |
@@ -63,8 +69,12 @@ Entry: `LTL/LTL.py`.
 
 ## Code map
 
+Table 2 lists the files of the checker and their role.
+
+**Table 2: LTL code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `LTL/LTL.py` | Entry |
 | `LTL/strategies.py` | Strategy enumeration |
 | `LTL/pruning.py` | CGS pruning under strategies |

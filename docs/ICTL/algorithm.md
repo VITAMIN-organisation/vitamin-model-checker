@@ -1,17 +1,32 @@
-# ICTL - Implementation Reference
+# ICTL algorithm reference
 
-This document is the **algorithm correctness reference** for ICTL: denotations,
-well-behavedness checks, fixpoint shapes, and the code path that implements them
-in `model_checker/algorithms/explicit/ICTL/`.
+This page is the algorithm correctness reference for ICTL, for a developer reading
+or changing its checker: denotations, well-behavedness checks, fixpoint shapes, and
+the code path that implements them in `model_checker/algorithms/explicit/ICTL/`.
+The logic is introduced in [ICTL in the knowledge base](../logic_knowledge_base.md#ictl---intuitionistic-ctl)
+and the model file in [BirelationalMatrix sections](../file_formats.md#birelationalmatrix-sections-ictl).
+
+## Contents
+
+- [Overview](#overview)
+- [Birelational models](#birelational-models)
+- [Formula language](#formula-language)
+- [Semantic denotations](#semantic-denotations)
+- [Model-checking pipeline](#model-checking-pipeline)
+- [Code map](#code-map)
+- [Canonical fixture](#canonical-fixture)
+- [Tests](#tests)
 
 ## Overview
 
 ICTL extends branching-time temporal reasoning with intuitionistic propositional
-connectives. The implementation uses **birelational models**: two relations on the
-same finite state set `S`.
+connectives. The implementation uses birelational models: two relations on the
+same finite state set `S`, listed in Table 1.
+
+**Table 1: The two relations of a birelational model.**
 
 | Relation | Role |
-|----------|------|
+| :--- | :--- |
 | `P` (`<=_P`) | Knowledge preorder: information may grow; intuitionistic truth is monotone along `P` |
 | `R` | Transition relation: serial evolution; path quantifiers range over infinite `R`-paths |
 
@@ -28,13 +43,13 @@ A frame is `F = <S, P, R>` where:
 - `P` is a partial order on `S` in validated models (reflexive, transitive, antisymmetric).
 - `R` is serial: every state has at least one `R`-successor.
 
-An **R-path** from `s` is an infinite sequence `s0, s1, s2, ...` with `s0 = s` and
+An R-path from `s` is an infinite sequence `s0, s1, s2, ...` with `s0 = s` and
 `s_i R s_(i+1)` for all `i >= 0`.
 
 ### Model
 
 A model is `M = <S, P, R, V>` with valuation `V : S -> 2^AP`. Validated models
-satisfy **valuation monotonicity**:
+satisfy valuation monotonicity:
 
 ```text
 if s <=_P s' then V(s) subseteq V(s')
@@ -46,13 +61,13 @@ Validated models must satisfy confluence between `P` and `R`. EUMAS25b Definitio
 uses exactly two conditions; Theorem 1 proves they are necessary and sufficient for
 ICTL monotonicity. There is no third confluence axiom in the paper.
 
-**C1** (forward simulation along `P`):
+C1, forward simulation along `P`:
 
 ```text
 if s <=_P s' and s -R-> t, then exists t' with s' -R-> t' and t <=_P t'
 ```
 
-**C2** (backward simulation along `P`):
+C2, backward simulation along `P`:
 
 ```text
 if s <=_P s' and s' -R-> t', then exists t with s -R-> t and t <=_P t'
@@ -74,10 +89,12 @@ ICTL models use the sectioned text format shared with CGS, loaded by
 (`BirelationalMatrix`, a `CGS` subclass). After ordinary CGS parsing,
 `validate_model_structure` calls `check_conditions_hold`.
 
-Each cell `(i, j)` is one of:
+Each cell `(i, j)` holds one of the values in Table 2:
+
+**Table 2: Matrix cell values.**
 
 | Cell | Meaning |
-|------|---------|
+| :--- | :--- |
 | `0` | no relation |
 | `R` | transition only |
 | `P` | preorder only |
@@ -152,10 +169,13 @@ There are no coalition quantifiers. Parser metadata declares
 
 ### Sugar (`F` / `G`)
 
-The parser accepts `F` / `eventually` and `G` / `globally` after `E` or `A`:
+The parser accepts `F` / `eventually` and `G` / `globally` after `E` or `A`.
+Table 3 gives the paper encoding and handler of each form:
+
+**Table 3: F and G sugar.**
 
 | Surface syntax | Paper encoding | Handler |
-|----------------|----------------|---------|
+| :--- | :--- | :--- |
 | `EF phi` | `E(T U phi)` | `handle_ef` |
 | `EG phi` | `E(bottom R phi)` | `handle_eg` |
 | `AF phi` | `A(T U phi)` | `handle_af` |
@@ -167,11 +187,11 @@ handler for each sugar operator.
 ## Semantic denotations
 
 Model checking computes `[[phi]] subseteq S` for each subformula. Write `Pre_exists`
-and `Pre_forall` for pre-images along **R-edges only** (`preimage.py`).
+and `Pre_forall` for pre-images along R-edges only (`preimage.py`).
 
 ### Preorder upset and upward closure
 
-For each state `s`, the checker precomputes the **P-upset** (transitive closure of
+For each state `s`, the checker precomputes the P-upset (transitive closure of
 direct `P` edges from the matrix):
 
 ```text
@@ -187,8 +207,12 @@ X^up = { s in S | s^up subseteq X }
 
 ### Propositional and intuitionistic connectives
 
+Table 4 gives the denotation of each connective:
+
+**Table 4: Denotations of propositional and intuitionistic connectives.**
+
 | Formula | Denotation `[[.]]` |
-|---------|-------------------|
+| :--- | :--- |
 | atom `p` | `{ s \| p in V(s) }` |
 | `phi && psi` | `[[phi]] intersect [[psi]]` |
 | `phi \|\| psi` | `[[phi]] union [[psi]]` |
@@ -197,8 +221,12 @@ X^up = { s in S | s^up subseteq X }
 
 ### Next and pre-images
 
+Table 5 gives the denotation of the two next operators:
+
+**Table 5: Denotations of next operators.**
+
 | Formula | Denotation |
-|---------|------------|
+| :--- | :--- |
 | `E X phi` | `Pre_exists([[phi]])` |
 | `A X phi` | `Pre_forall([[phi]])` |
 
@@ -234,11 +262,14 @@ Handlers: `handle_er` / `handle_ar` / `handle_ag` use
 ### Eventually and globally
 
 `EF` / `EG` / `AF` / `AG` follow the paper encodings above. Classical CTL
-complement dualities (for example `AF phi` as `S \\ EG(~phi)`) are **not** used;
-they are invalid in ICTL (EUMAS25b Proposition 3).
+complement dualities (for example `AF phi` as `S \\ EG(~phi)`) are not used;
+they are invalid in ICTL (EUMAS25b Proposition 3). Table 6 gives the fixpoint
+shape of each operator:
+
+**Table 6: Fixpoint shapes of EF, EG, AF and AG.**
 
 | Operator | Fixpoint shape |
-|----------|----------------|
+| :--- | :--- |
 | `EF phi` | least: grow from `[[phi]]` under `Pre_exists` |
 | `EG phi` | greatest: shrink under `Pre_exists` intersect `[[phi]]` |
 | `AF phi` | least: grow from `[[phi]]` under `Pre_forall` |
@@ -251,7 +282,8 @@ Implementation techniques (P-upset precompute): [algorithm_design.md](../algorit
 Evaluation is bottom-up on the formula parse tree.
 
 ```mermaid
-flowchart TD
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1f5f99", "primaryTextColor": "#ffffff", "primaryBorderColor": "#4a90d9", "lineColor": "#75808f", "tertiaryTextColor": "#75808f", "titleColor": "#75808f", "clusterBkg": "transparent", "clusterBorder": "#75808f", "edgeLabelBackground": "transparent"}}}%%
+flowchart TB
     load["BirelationalMatrix.read_file + check_conditions_hold"]
     parse["ICTLParser.parse"]
     tree["ICTLModelChecker.build_tree"]
@@ -263,8 +295,12 @@ flowchart TD
 
 ### Entry points (`ICTL.py`)
 
+Table 7 lists the two entry points:
+
+**Table 7: Entry points in ICTL.py.**
+
 | Function | Purpose |
-|----------|---------|
+| :--- | :--- |
 | `model_checking(formula, filename)` | Public entry (`vitamin.benchmarks` / VMI) |
 | `_core_ictl_checking(model, formula)` | Evaluate on an already-loaded `BirelationalMatrix` |
 
@@ -272,8 +308,8 @@ flowchart TD
 
 On construction, `ICTLModelChecker`:
 
-1. Extracts **R-edges** from cells other than `0` / `P`.
-2. Extracts **P-edges** from cells `P` / `P,R`.
+1. Extracts R-edges from cells other than `0` / `P`.
+2. Extracts P-edges from cells `P` / `P,R`.
 3. Builds `upward_closure` via transitive closure of `P`.
 
 `build_tree` resolves atoms to state sets using the labelling matrix.
@@ -285,8 +321,12 @@ in `operators.py`.
 
 ### Operator summary
 
+Table 8 maps each operator to its module and handler function:
+
+**Table 8: Operator handlers.**
+
 | Operator | Module | Function |
-|----------|--------|----------|
+| :--- | :--- | :--- |
 | `not`, `->` | `operators.py` | `handle_not`, `handle_implies` |
 | `&&`, `\|\|` | `operators.py` | `handle_and`, `handle_or` |
 | `EX`, `AX` | `operators.py` | `handle_ex`, `handle_ax` |
@@ -302,8 +342,12 @@ and formula.
 
 ## Code map
 
+Table 9 gives the role of each file the ICTL checker uses:
+
+**Table 9: ICTL code map.**
+
 | Path | Role |
-|------|------|
+| :--- | :--- |
 | `ICTL/ICTL.py` | Entry points and result formatting |
 | `ICTL/checker.py` | `ICTLModelChecker`, atom resolution, `^up` helper |
 | `ICTL/solver.py` | `solve_tree` dispatch |
@@ -328,8 +372,12 @@ countermodel in the same test module and must itself pass C1/C2.
 
 ## Tests
 
+Table 10 lists the ICTL tests and what each covers:
+
+**Table 10: ICTL tests.**
+
 | Path | Coverage |
-|------|----------|
+| :--- | :--- |
 | `tests/integration/algorithms/ictl/test_correctness.py` | `^up`, `AX` = `Pre_forall`, sugar encodings, Figure 5, fixture semantics |
 | `tests/unit/algorithms/ictl/test_frame_validation.py` | Reject non-well-behaved frames (C1/C2, seriality, preorder) |
 | `tests/unit/parsers/formulas/` (ICTL cases) | Parser surface syntax |

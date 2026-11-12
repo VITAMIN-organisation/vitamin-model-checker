@@ -1,7 +1,9 @@
-# NatATL - Algorithm Reference
+# NatATL algorithm reference
 
-Scope: denotations and code path for NatATL in
-`model_checker/algorithms/explicit/NatATL/`.
+This page covers the denotations and code path of the NatATL checker in
+`model_checker/algorithms/explicit/NatATL/`, for a developer reading or changing
+it; the syntax is in the [syntax cards](../logic_knowledge_base.md#syntax-cards)
+and the model file format in [CGS sections](../file_formats.md#cgs-sections).
 
 ## Model
 
@@ -21,10 +23,12 @@ an error that names the value.
 
 ## Semantic denotations
 
-Variants:
+NatATL has two variants, listed in Table 1.
+
+**Table 1: NatATL variants.**
 
 | Variant | Path | Meaning |
-|---|---|---|
+| :--- | :--- | :--- |
 | Memoryless | `NatATL/Memoryless/` | Strategies depend on current state |
 | Recall | `NatATL/Recall/` | History-dependent strategies |
 
@@ -42,8 +46,12 @@ Implementation techniques (strategy pruning, condition cache): [algorithm_design
 
 ## Theory vs implementation
 
+Table 2 sets the usual theory beside this implementation.
+
+**Table 2: NatATL theory and implementation.**
+
 | Aspect | Theory | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Bound `k` | Strategy complexity | Condition-token depth |
 | Memory models | Memoryless / recall | Separate algorithm packages |
 | NatATLF | Related fixed-point flavor | Separate logic package, delegates to memoryless |
@@ -57,8 +65,12 @@ CGS.read_file -> NatATLParser.parse -> strategy synthesis / pruning
 
 ## Code map
 
+Table 3 lists the files of the checker and their role.
+
+**Table 3: NatATL code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `NatATL/Memoryless/` | Memoryless solver |
 | `NatATL/Recall/` | Recall solver and tree helpers |
 | `NatATL/natatl_ast.py` | Shared AST helpers |

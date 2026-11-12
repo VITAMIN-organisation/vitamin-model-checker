@@ -1,7 +1,9 @@
-# ATLF - Algorithm Reference
+# ATLF algorithm reference
 
-Scope: denotations and code path for ATLF in
-`model_checker/algorithms/explicit/ATLF/`.
+This page covers the denotations and code path of the ATLF checker in
+`model_checker/algorithms/explicit/ATLF/`, for a developer reading or changing it;
+the syntax is in the [syntax cards](../logic_knowledge_base.md#syntax-cards) and
+the model file format in [CGS sections](../file_formats.md#cgs-sections).
 
 ## Model
 
@@ -28,10 +30,12 @@ after the unparenthesised form is a syntax error (see
 ATLF gives each state a number, not a yes or no. An atom's value in a state is its
 cell in the labelling matrix, read as a float (`get_tuple_list_prop` in `ATLF/ATLF.py`).
 The connectives combine values state by state (`ATLF/operators.py`,
-`ATLF/real_value_utils.py`):
+`ATLF/real_value_utils.py`), as Table 1 shows.
+
+**Table 1: ATLF connective values.**
 
 | Formula | Value in state `s` |
-|---|---|
+| :--- | :--- |
 | `!phi` | `1 - phi(s)` |
 | `phi && psi` | `min(phi(s), psi(s))` |
 | `phi \|\| psi` | `max(phi(s), psi(s))` |
@@ -44,8 +48,12 @@ Implementation techniques (per-operator transition cache): [algorithm_design.md]
 
 ## Theory vs implementation
 
+Table 2 sets the usual theory beside this implementation.
+
+**Table 2: ATLF theory and implementation.**
+
 | Aspect | Theory | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Valuation | Often real-valued / fixed-point ATL | ATLF engine over CGS |
 | Syntax | ATL-like coalitions | Same surface family as ATL |
 
@@ -59,8 +67,12 @@ Entry: `ATLF/ATLF.py`.
 
 ## Code map
 
+Table 3 lists the files of the checker and their role.
+
+**Table 3: ATLF code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `ATLF/ATLF.py` | Entry |
 | `ATLF/solver.py` | Dispatch |
 | `ATLF/operators.py` | Operators |

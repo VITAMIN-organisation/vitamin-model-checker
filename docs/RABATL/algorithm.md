@@ -1,7 +1,10 @@
-# RABATL - Algorithm Reference
+# RABATL algorithm reference
 
-Scope: denotations and code path for RABATL in
-`model_checker/algorithms/explicit/RABATL/`.
+This page gives the denotations and code path of RABATL in
+`model_checker/algorithms/explicit/RABATL/`, for developers reading or changing
+the checker; the syntax is in the
+[knowledge base](../logic_knowledge_base.md#rbatl--rabatl) and the model format
+in [costCGS sections](../file_formats.md#costcgs-sections).
 
 ## Model
 
@@ -35,8 +38,12 @@ Implementation techniques (shared with RBATL: transition cache, bit-vector, AST 
 
 ## Theory vs implementation
 
+Table 1 sets the theory next to what the code does:
+
+**Table 1: RABATL theory and implementation.**
+
 | Aspect | Theory | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Costs | Split / coalition-sum | `Costs_for_actions_split` |
 | Syntax | Vector bounds | Same as RBATL |
 | Engine | Related resource ATL | Shared bounded ATL solver |
@@ -51,8 +58,13 @@ Entry: `RABATL/RABATL.py`.
 
 ## Code map
 
+Table 2 lists the files RABATL runs; paths are relative to
+`model_checker/algorithms/explicit/`.
+
+**Table 2: RABATL code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `RABATL/RABATL.py` | Entry |
 | `RABATL/preimage.py` | Split-cost pre-image |
 | `shared/bounded_atl_solver.py` | Shared solve path |

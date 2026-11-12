@@ -1,7 +1,9 @@
-# OL - Algorithm Reference
+# OL algorithm reference
 
-Scope: denotations and code path for OL in
-`model_checker/algorithms/explicit/OL/`. The method follows D. Catta, J. Leneutre,
+This page gives the denotations and code path of OL in
+`model_checker/algorithms/explicit/OL/`, for developers reading or changing the
+checker; the syntax is in the [knowledge base](../logic_knowledge_base.md#ol) and
+the model format in [costCGS sections](../file_formats.md#costcgs-sections). The method follows D. Catta, J. Leneutre,
 V. Malvone, "Obstruction Logic: a Strategic Temporal Logic to Reason about
 Dynamic Game Models", ECAI 2023 (`docs/papers/ECAI23.pdf`). OL is the special case
 of [OATL](../OATL/algorithm.md) in which no agent makes a choice of its own, so
@@ -38,7 +40,9 @@ written without a leading zero (`<J01>` is an error): the paper says "n is any
 number in N0" (Definition 1). With `k = 0` the Demon can disable nothing, so
 `<J0> F goal` holds where every path reaches `goal`.
 
-Written forms of `U`, `R` and `W` after the prefix (`U` shown):
+Table 1 lists the written forms of `U`, `R` and `W` after the prefix (`U` shown):
+
+**Table 1: Accepted forms of `U` after the `<Jk>` prefix.**
 
 | Form | Accepted | Where it comes from |
 | :--- | :--- | :--- |
@@ -70,9 +74,9 @@ The checker computes the fixpoints of Theorem 1, where $[\![\varphi]\!]$ is the 
 of states where $\varphi$ holds and $Y$ is the set the iteration has reached so far.
 $\blacktriangledown(k, Y)$ is the set of states that have an edge into $Y$ and can
 disable all their edges to states outside $Y$ for a total cost of at most $k$
-(the definition before Proposition 1). Table 1 lists the fixpoints:
+(the definition before Proposition 1). Table 2 lists the fixpoints:
 
-**Table 1: The OL operators as fixpoints (ECAI 2023, Proposition 1 and Theorem 1).**
+**Table 2: The OL operators as fixpoints (ECAI 2023, Proposition 1 and Theorem 1).**
 
 | Formula | Set of states |
 | :--- | :--- |
@@ -108,8 +112,13 @@ Entry: `OL/OL.py`.
 
 ## Code map
 
+Table 3 lists the files OL runs; paths are relative to
+`model_checker/algorithms/explicit/`.
+
+**Table 3: OL code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `OL/OL.py` | Entry |
 | `OL/solver.py` | Entry to the OATL solver with the coalition of all agents |
 | `OATL/solver.py`, `OATL/operators.py`, `OATL/preimage.py` | Operators and Demon pre-image shared with OATL |
@@ -117,7 +126,7 @@ Entry: `OL/OL.py`.
 ## Tests
 
 `model_checker/tests/integration/algorithms/ol/test_correctness.py` checks state
-sets worked out by hand from Table 1 on the fixtures in
+sets worked out by hand from Table 2 on the fixtures in
 `model_checker/tests/fixtures/costCGS/OL/`. In `ol_demon_1agent_4states.txt` the
 Demon's budget decides the result; in `ol_edge_costs_2agents_3states.txt` the
 costs come from `Transition_With_Costs`.

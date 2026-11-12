@@ -1,6 +1,9 @@
-# ATL - Algorithm Reference
+# ATL algorithm reference
 
-Scope: denotations and code path for ATL in `model_checker/algorithms/explicit/ATL/`.
+This page covers the denotations and code path of the ATL checker in
+`model_checker/algorithms/explicit/ATL/`, for a developer reading or changing it;
+the syntax is in the [syntax cards](../logic_knowledge_base.md#syntax-cards) and
+the model file format in [CGS sections](../file_formats.md#cgs-sections).
 
 ## Model
 
@@ -25,10 +28,13 @@ Coalition form: `<1>`, `<1,2>`. Empty `<>` is rejected. Agent ids must be in `1.
 
 ## Semantic denotations
 
-Coalition pre-image (existential strategy step), then fixpoints:
+Table 1 gives the denotation of each operator: a coalition pre-image (existential
+strategy step), then fixpoints.
+
+**Table 1: ATL operator denotations.**
 
 | Operator | Shape |
-|---|---|
+| :--- | :--- |
 | `<A> X phi` | Coalition exists-move pre-image of `[[phi]]` |
 | `<A> F phi` | least fixpoint: grow from `[[phi]]` under that pre-image |
 | `<A> G phi` | greatest fixpoint: shrink under pre-image intersect `[[phi]]` |
@@ -39,8 +45,12 @@ performance tests): [algorithm_design.md](../algorithm_design.md).
 
 ## Theory vs implementation
 
+Table 2 sets the usual theory beside this implementation.
+
+**Table 2: ATL theory and implementation.**
+
 | Aspect | Theory | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Coalition | Often `<{1,2}>` | `<1,2>` (no braces) |
 | Release / weak | Sometimes present | Not in ATL surface here |
 | Empty coalition | Literature may allow | Rejected |
@@ -56,8 +66,12 @@ Entry: `ATL/ATL.py` via `create_model_checking_entry`.
 
 ## Code map
 
+Table 3 lists the files of the checker and their role.
+
+**Table 3: ATL code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `ATL/ATL.py` | Entry |
 | `ATL/solver.py` | Dispatch |
 | `ATL/operators.py` | Coalition handlers |

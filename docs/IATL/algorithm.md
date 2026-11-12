@@ -1,24 +1,29 @@
-# IATL - Implementation Reference
+# IATL algorithm reference
 
-This document is the **algorithm correctness reference** for IATL: denotations,
-well-behaved BCGS checks, coalition pre-images, fixpoints, and the code path in
-`model_checker/algorithms/explicit/IATL/`.
+This page is the algorithm correctness reference for IATL, for a developer reading
+or changing its checker: denotations, well-behaved BCGS checks, coalition
+pre-images, fixpoints, and the code path in `model_checker/algorithms/explicit/IATL/`.
+The logic is introduced in [IATL in the knowledge base](../logic_knowledge_base.md#iatl---intuitionistic-atl)
+and the model file in [BCGS sections](../file_formats.md#bcgs-sections-iatl).
 
 ## Overview
 
 IATL extends ATL with:
 
-1. **Intuitionistic propositional connectives** (`->`, `not`) evaluated with upward
-   closure along a knowledge preorder `P`.
-2. **Dual coalition modalities** over the same temporal operators:
-   - Existential: `<A>` (coalition `A` can enforce a strategy)
-   - Universal: `[A]` (all strategies of coalition `A` satisfy the property)
+- Intuitionistic propositional connectives (`->`, `not`), evaluated with upward
+  closure along a knowledge preorder `P`.
+- Dual coalition modalities over the same temporal operators:
+  - Existential: `<A>` (coalition `A` can enforce a strategy)
+  - Universal: `[A]` (all strategies of coalition `A` satisfy the property)
 
-Temporal evolution uses the **BCGS** transition matrix (CGS-style joint actions).
-`P` is a separate boolean preorder matrix on the same state set.
+Temporal evolution uses the BCGS transition matrix (CGS-style joint actions).
+`P` is a separate boolean preorder matrix on the same state set. Table 1 lists
+the parts of a model and the two quantifiers:
+
+**Table 1: IATL model parts and coalition quantifiers.**
 
 | Component | Role |
-|-----------|------|
+| :--- | :--- |
 | `P` (`<=_P`) | Knowledge preorder; intuitionistic truth is monotone along `P` |
 | BCGS transitions | Multi-agent move profiles; coalition pre-images group joint actions |
 | `<A>` | Existential coalition quantifier (`Pre_d`) |
@@ -37,7 +42,7 @@ A model is `M = <S, P, G, V, k>` where:
 - `V : S -> 2^AP` is a propositional labelling.
 - `k` is the number of agents (`Number_of_agents` in the file).
 
-Validated models satisfy **valuation monotonicity** along `P`:
+Validated models satisfy valuation monotonicity along `P`:
 
 ```text
 if s <=_P s' then V(s) subseteq V(s')
@@ -46,12 +51,11 @@ if s <=_P s' then V(s) subseteq V(s')
 ### Well-behaved constraints (C1, C2)
 
 For each non-empty coalition and each pair of states related by `P`, the
-implementation checks **contravariant simulation** of coalition moves (Definition 2
+implementation checks contravariant simulation of coalition moves (Definition 2
 style, per coalition):
 
-**C1:** forward simulation of coalition decisions along `P`.
-
-**C2:** backward simulation (dual of C1 with reversed preorder on outcomes).
+- C1: forward simulation of coalition decisions along `P`.
+- C2: backward simulation (dual of C1 with reversed preorder on outcomes).
 
 Checks are in `util/validation.py` (`_check_well_behaved_c1`, `_check_well_behaved_c2`).
 
@@ -118,12 +122,14 @@ Coalition strings are validated against `Number_of_agents` at parse time.
 ## Coalition pre-images
 
 `preimage.py` implements `Pre_d` and `Pre_f` (documented as Bozzelli et al.,
-KR 2025, Proposition 2):
+KR 2025, Proposition 2). Table 2 gives what each one computes:
+
+**Table 2: Coalition pre-images.**
 
 | Operator | Meaning |
-|----------|---------|
-| `Pre_d(A, X)` | States where coalition `A` has a joint move such that **every** opponent response stays in `X` |
-| `Pre_f(A, X)` | States where **every** coalition move has **some** opponent response in `X` |
+| :--- | :--- |
+| `Pre_d(A, X)` | States where coalition `A` has a joint move such that every opponent response stays in `X` |
+| `Pre_f(A, X)` | States where every coalition move has some opponent response in `X` |
 
 Transitions are grouped by coalition move via `group_moves_by_coalition`. Results
 are cached per coalition in `IATLModelChecker.transition_cache_for`.
@@ -137,7 +143,7 @@ Model checking computes `[[phi]] subseteq S` bottom-up on the formula tree.
 
 ### Preorder upset and upward closure
 
-For each state `s`, the checker builds the transitive **P-upset** using shared
+For each state `s`, the checker builds the transitive P-upset using shared
 `get_preorder` from `ICTL/util/graph.py` (boolean preorder matrix entries).
 
 ```text
@@ -149,8 +155,12 @@ X^up = { s in S | s^up subseteq X }
 
 ### Propositional connectives
 
+Table 3 gives the denotation of each connective:
+
+**Table 3: Denotations of propositional connectives.**
+
 | Formula | Denotation |
-|---------|------------|
+| :--- | :--- |
 | atom `p` | `{ s \| p in V(s) }` |
 | `phi && psi` | intersection |
 | `phi \|\| psi` | union |
@@ -159,8 +169,12 @@ X^up = { s in S | s^up subseteq X }
 
 ### Next
 
+Table 4 gives the denotation of the two next operators:
+
+**Table 4: Denotations of next operators.**
+
 | Formula | Denotation |
-|---------|------------|
+| :--- | :--- |
 | `<A> X phi` | `Pre_d(A, [[phi]])` |
 | `[A] X phi` | `Pre_f(A, [[phi]])` |
 
@@ -170,10 +184,13 @@ to `[A] X` (KR 2025 Proposition 2, Figure 4).
 ### Eventually and globally
 
 Surface `F` / `G` abbreviate the paper encodings below. Classical ATL complement
-dualities are **not** used (KR 2025 Proposition 3).
+dualities are not used (KR 2025 Proposition 3). Table 5 gives the encoding and
+denotation of each form:
+
+**Table 5: F and G encodings and denotations.**
 
 | Formula | Paper encoding | Denotation |
-|---------|----------------|------------|
+| :--- | :--- | :--- |
 | `<A> F phi` | `<A>(T U phi)` | least `mu X. [[phi]] union Pre_d(A, X)` |
 | `[A] F phi` | `[A](T U phi)` | least `mu X. [[phi]] union Pre_f(A, X)` |
 | `<A> G phi` | `<A>(bottom R phi)` | greatest `nu X. [[phi]] intersect Pre_d(A, X)` |
@@ -200,7 +217,8 @@ Implementation techniques (P-upset precompute, per-coalition transition cache): 
 ## Model-checking pipeline
 
 ```mermaid
-flowchart TD
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1f5f99", "primaryTextColor": "#ffffff", "primaryBorderColor": "#4a90d9", "lineColor": "#75808f", "tertiaryTextColor": "#75808f", "titleColor": "#75808f", "clusterBkg": "transparent", "clusterBorder": "#75808f", "edgeLabelBackground": "transparent"}}}%%
+flowchart TB
     load["read_file + check_conditions_hold"]
     parse["IATLParser.parse"]
     tree["IATLModelChecker.build_tree"]
@@ -224,10 +242,12 @@ flowchart TD
 ### Solver dispatch (`solver.py`)
 
 `solve_tree` evaluates children first, then dispatches using `FormulaParserFactory`
-token verification:
+token verification. Table 6 maps each parser label to its handler:
+
+**Table 6: Solver dispatch.**
 
 | Parser label | Handler |
-|--------------|---------|
+| :--- | :--- |
 | `NOT` | `handle_not` |
 | `<A>G` | `handle_coalition_globally_exists` |
 | `[A]G` | `handle_coalition_globally_forall` |
@@ -245,8 +265,12 @@ Coalition labels are parsed from node values with `coalition_from_node` in
 
 ### Shared code
 
+Table 7 lists the shared modules IATL uses:
+
+**Table 7: Shared modules used by IATL.**
+
 | Shared module | Use in IATL |
-|-------------|---------------|
+| :--- | :--- |
 | `ICTL/util/graph.get_preorder` | Transitive P-upset |
 | `shared/graph_relations.labeled_pairs` | Preorder edge extraction |
 | `shared/fixpoint_iter` | `F`, `G`, `U`, `R` fixpoints |
@@ -264,8 +288,12 @@ pre-image caching avoids rebuilding coalition move groups on every fixpoint step
 
 ## Code map
 
+Table 8 gives the role of each file the IATL checker uses:
+
+**Table 8: IATL code map.**
+
 | Path | Role |
-|------|------|
+| :--- | :--- |
 | `IATL/IATL.py` | Entry point |
 | `IATL/checker.py` | `IATLModelChecker`, pre-images, `^up` |
 | `IATL/solver.py` | `solve_tree` dispatch |
@@ -279,8 +307,12 @@ Parser metadata: `model_type: "BCGS"`.
 
 ## Tests
 
+Table 9 lists the IATL tests and fixtures and what each covers:
+
+**Table 9: IATL tests and fixtures.**
+
 | Path | Coverage |
-|------|----------|
+| :--- | :--- |
 | `tests/integration/algorithms/iatl/test_correctness.py` | Pinned fixture, `Pre_d`/`Pre_f`, `[A]X` = `Pre_f`, `F`/`G` encodings, excluded-middle countermodel, `^up` on `!` |
 | `tests/fixtures/CGS/IATL/iatl_2agents_2states_minimal.txt` | Minimal 2-agent BCGS |
 | `tests/fixtures/CGS/IATL/iatl_figure2_proposition1.txt` | IATL allows `(!<A>X p) && (!<A>X !p)` where ATL cannot (undetermined `p`) |

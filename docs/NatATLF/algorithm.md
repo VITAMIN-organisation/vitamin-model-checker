@@ -1,7 +1,9 @@
-# NatATLF - Algorithm Reference
+# NatATLF algorithm reference
 
-Scope: denotations and code path for NatATLF in
-`model_checker/algorithms/explicit/NatATLF/`.
+This page covers the denotations and code path of the NatATLF checker in
+`model_checker/algorithms/explicit/NatATLF/`, for a developer reading or changing
+it; the syntax is in the [syntax cards](../logic_knowledge_base.md#syntax-cards)
+and the model file format in [CGS sections](../file_formats.md#cgs-sections).
 
 ## Model
 
@@ -28,8 +30,12 @@ Implementation techniques (delegates to NatATL memoryless design): [algorithm_de
 
 ## Theory vs implementation
 
+Table 1 sets the usual theory beside this implementation.
+
+**Table 1: NatATLF theory and implementation.**
+
 | Aspect | Theory | Implementation |
-|---|---|---|
+| :--- | :--- | :--- |
 | Relation to NatATL | Fixed-point / related flavor | Delegates to memoryless NatATL |
 | Syntax | `<{A}, k>` | Shared with NatATL |
 
@@ -43,8 +49,12 @@ Entry: `NatATLF/NatATL.py`.
 
 ## Code map
 
+Table 2 lists the files of the checker and their role.
+
+**Table 2: NatATLF code map.**
+
 | Path | Role |
-|---|---|
+| :--- | :--- |
 | `NatATLF/NatATL.py` | Entry / delegation |
 
 ## Tests
