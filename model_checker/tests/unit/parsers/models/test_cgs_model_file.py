@@ -209,6 +209,14 @@ def test_matrix_size_or_deadlock_is_refused(temp_file, overrides, message):
 
 
 @pytest.mark.unit
+def test_declared_propositions_need_a_labelling(temp_file):
+    """Without Labelling every proposition would be false everywhere, unnoticed."""
+    content = _two_state().replace("Labelling\n1\n0\n", "")
+    with pytest.raises(ValueError, match="Labelling.*'p'"):
+        load_cgs_from_content(temp_file, content)
+
+
+@pytest.mark.unit
 @pytest.mark.parametrize("value", ["2", "abc"])
 def test_non_binary_label_is_refused_with_its_position(temp_file, value):
     """A label must be 0 or 1; the message gives the value, row and column."""

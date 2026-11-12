@@ -193,6 +193,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Model files: a file that declares propositions in `Atomic_propositions` but has
+  no `Labelling` section loaded with every proposition false. It is now a structure
+  error that names the propositions, in every model type.
 - `parse_state_set_literal` read an unparsable string (such as `{'s0', 's1'`) or
   a literal that is not a set, list or tuple (such as `42`) as the empty set. It
   now raises `ValueError` naming the value.

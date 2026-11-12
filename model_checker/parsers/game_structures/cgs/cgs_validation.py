@@ -3,6 +3,8 @@
 Checks states, agents, transition matrix, labelling matrix, and NatATL/tree rules.
 """
 
+from collections.abc import Collection
+
 from . import cgs_actions
 
 _EMPTY_TRANSITION_CELLS = frozenset({0, "", "0", None})
@@ -46,14 +48,22 @@ def validate_transition_matrix_dimensions(
 
 
 def validate_labelling_matrix_dimensions(
-    matrix_prop: list[list], num_states: int, num_props: int, states
+    matrix_prop: list[list], num_states: int, props: Collection[str], states
 ) -> list[str]:
-    """Check that the labelling matrix has one row per state and one column per proposition.
+    """Check that the labelling matrix has one row per state and one column per
+    proposition in `props`, and that it exists when `props` is not empty.
 
     Returns a list of error messages; empty if valid. Uses states only for clearer error text.
     """
     errors = []
+    num_props = len(props)
     if len(matrix_prop) == 0:
+        if num_props > 0:
+            names = ", ".join(f"'{p}'" for p in props)
+            errors.append(
+                f"Labelling section is missing or empty but Atomic_propositions "
+                f"declares {names}. Give one row per state with one 0/1 per proposition."
+            )
         return errors
 
     if num_states > 0 and num_props > 0:
@@ -179,14 +189,12 @@ def collect_model_structure_errors(cgs) -> list[str]:
     errors.extend(validate_transition_matrix_dimensions(cgs.graph, num_states))
     errors.extend(validate_total_transitions(cgs.graph, cgs.states))
 
-    num_props = (
-        len(cgs.atomic_propositions)
-        if hasattr(cgs, "atomic_propositions") and len(cgs.atomic_propositions) > 0
-        else 0
-    )
     errors.extend(
         validate_labelling_matrix_dimensions(
-            cgs.matrix_prop, num_states, num_props, cgs.states
+            cgs.matrix_prop,
+            num_states,
+            cgs.atomic_propositions,
+            cgs.states,
         )
     )
 

@@ -71,7 +71,7 @@ class ObstructionModel(CGS):
         errors = collect_state_errors(self)
         errors += validate_transition_matrix_dimensions(self.graph, num_states)
         errors += validate_labelling_matrix_dimensions(
-            self.matrix_prop, num_states, len(self.atomic_propositions), self.states
+            self.matrix_prop, num_states, self.atomic_propositions, self.states
         )
         raise_structure_errors(errors)
 
