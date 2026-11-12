@@ -19,12 +19,13 @@ Related pages:
 3. Formula language
 4. Semantic denotations
 5. Theory vs implementation
-6. Model-checking pipeline
-7. Code map
-8. Tests
+6. Code map
+7. Tests
 ```
 
-Keep algorithm pages focused on what the checker computes. Put shared
+Keep algorithm pages focused on what the checker computes and how it differs
+from the paper. The pipeline is the same for every logic and is described once
+under [Runtime shape](#runtime-shape). Put shared
 implementation techniques (caches, bit vectors, zone graphs, cache reset) in
 [algorithm_design.md](algorithm_design.md), not as long repeated blocks in each
 logic page. A one-line pointer from a logic page is enough when that logic uses
