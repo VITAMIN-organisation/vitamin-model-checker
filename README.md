@@ -20,7 +20,7 @@ uv sync --extra dev --extra docs
 
 ATL* and the automata library need Spot. On Linux, `spottl` is installed
 with the package above; on macOS use conda-forge (details in
-`docs/ATL_STAR/algorithm.md`). Other logics do not require Spot.
+`docs/algorithms/atl_star.md`). Other logics do not require Spot.
 
 ## Quick start
 
@@ -60,8 +60,6 @@ structures include CGS, BCGS, CostCGS, CapCGS, WalletCGS, and timedCGS. See
 | `vitamin-benchmark-model-checker` | pyperf benchmark tool for this package. |
 | `vitamin-module-integrator` | Validates logic bundles and applies them to this repo. |
 | `vitamin-workbench` | User-facing web/API application that calls the model checker. |
-
-For the cross-project view, see [docs/vitamin-stack.md](docs/vitamin-stack.md).
 
 Links:
 

@@ -27,40 +27,37 @@ plugins:
             show_source: true
 
 nav:
-  - Home: index.md
-  - VITAMIN Stack: vitamin-stack.md
-  - Deployment Ports: deployment-ports.md
-  - Architecture: architecture.md
-  - File Formats: file_formats.md
-  - Logic Knowledge Base: logic_knowledge_base.md
-  - Algorithm Structure: algorithm_structure.md
-  - Algorithm Design: algorithm_design.md
-  - Logic Algorithms:
-    - CTL: CTL/algorithm.md
-    - LTL: LTL/algorithm.md
-    - ATL: ATL/algorithm.md
-    - ATLF: ATLF/algorithm.md
-    - ATL_STAR: ATL_STAR/algorithm.md
-    - NatATL: NatATL/algorithm.md
-    - NatATLF: NatATLF/algorithm.md
-    - NatSL:
-      - Algorithm: NatSL/algorithm.md
-      - Semantics: NatSL/semantics.md
-      - Experiments: NatSL/experiments.md
-      - Logistics robot: NatSL/logistics_robot.md
-    - OATL: OATL/algorithm.md
-    - OL: OL/algorithm.md
-    - RBATL: RBATL/algorithm.md
-    - RABATL: RABATL/algorithm.md
-    - CapATL: CapATL/algorithm.md
-    - COTL: COTL/algorithm.md
-    - Wallet_ATL: Wallet_ATL/algorithm.md
-    - ICTL: ICTL/algorithm.md
-    - IATL: IATL/algorithm.md
-    - TCTL: TCTL/algorithm.md
-    - TOL: TOL/algorithm.md
-  - Wallet ATL: Wallet_ATL/usage.md
-  - Adding a New Logic: adding_a_new_logic.md
+  - Algorithms:
+    - Algorithm design: algorithms/index.md
+    - CTL: algorithms/ctl.md
+    - LTL: algorithms/ltl.md
+    - ATL: algorithms/atl.md
+    - ATLF: algorithms/atlf.md
+    - ATL_STAR: algorithms/atl_star.md
+    - NatATL: algorithms/natatl.md
+    - NatATLF: algorithms/natatlf.md
+    - NatSL: algorithms/natsl.md
+    - OATL: algorithms/oatl.md
+    - OL: algorithms/ol.md
+    - RBATL: algorithms/rbatl.md
+    - RABATL: algorithms/rabatl.md
+    - CapATL: algorithms/capatl.md
+    - COTL: algorithms/cotl.md
+    - Wallet_ATL: algorithms/wallet_atl.md
+    - ICTL: algorithms/ictl.md
+    - IATL: algorithms/iatl.md
+    - TCTL: algorithms/tctl.md
+    - TOL: algorithms/tol.md
+  - Reference:
+    - Logic knowledge base: reference/logic_knowledge_base.md
+    - File formats: reference/file_formats.md
+  - Guides:
+    - Architecture: guides/architecture.md
+    - Deployment ports: guides/deployment-ports.md
+  - Examples:
+    - NatSL experiments: examples/natsl_experiments.md
+    - NatSL logistics robot: examples/natsl_logistics_robot.md
+    - Wallet ATL usage: examples/wallet_atl_usage.md
   - API Reference:
     - Overview: api/overview.md
     - Root: api/model_checker.md

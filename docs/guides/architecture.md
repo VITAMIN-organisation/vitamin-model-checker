@@ -1,0 +1,207 @@
+# Architecture
+
+This page explains how the `model_checker` package is organized and where to
+make changes safely. It focuses on the library itself; the README lists the
+sibling projects: VMI (`vitamin-module-integrator`, which validates logic
+bundles and integrates them here), Workbench and the benchmarks.
+
+## Runtime Shape
+
+The package separates model parsing, formula parsing, and verification
+algorithms. The engine layer connects them and keeps the public call shape
+consistent.
+
+```mermaid
+flowchart LR
+    caller["Python caller<br/>or host app"]
+    execution["engine/execution.py"]
+    modelFactory["Model parser factory"]
+    formulaFactory["Formula parser factory"]
+    modelParser["Game-structure parser"]
+    formulaParser["Formula parser"]
+    algorithm["Explicit algorithm"]
+    result["Result dict"]
+
+    caller --> execution
+    execution --> modelFactory --> modelParser
+    execution --> formulaFactory --> formulaParser
+    modelParser --> algorithm
+    formulaParser --> algorithm
+    algorithm --> result
+```
+
+The algorithms are explicit-state algorithms. They work over an in-memory model
+and traverse the state space directly. That keeps the implementation readable
+and makes traces easier to build, but large models can use a lot of memory.
+
+## Package Layers
+
+```text
+model_checker/
+├── algorithms/explicit/        # per-logic checking algorithms
+├── engine/                     # shared execution pipeline
+├── parsers/
+│   ├── formulas/               # per-logic formula parsers
+│   └── game_structures/        # CGS, costCGS, capCGS, WalletCGS, timedCGS parsers
+├── shared/                     # trace/result helpers
+├── tests/                      # unit, integration, performance tests
+└── utils/                      # error handling and shared utilities
+```
+
+### Parser Layer
+
+Model parsers read `.txt` model files and build in-memory game structures.
+Current built-in model types include:
+
+- `CGS` - standard concurrent game structures
+- `BirelationalMatrix` - ICTL relation-labelled matrices (`0`/`R`/`P`/`P,R`)
+- `BCGS` - CGS plus boolean `Preorder` (IATL)
+- `costCGS` - CGS with action/transition costs
+- `capCGS` - CGS with agent capacities
+- `WalletCGS` - CGS with per-agent wallet balances (Wallet_ATL)
+- `timedCGS` - costCGS extended with clocks and zone constraints (TOL, TCTL)
+- `ObstructionModel` - a graph whose edges demons disable (COTL)
+
+The checker registers 20 logic names in the `vitamin.parsers` entry points: 19 logics
+plus `NatATL_Recall`, the recall variant of NatATL. `Wallet_ATL`, `TOL`, `TCTL`, `ICTL`
+and `IATL` were integrated via VMI. See
+[Logic Knowledge Base](../reference/logic_knowledge_base.md) for syntax details and
+[File Formats](../reference/file_formats.md) for model file layout.
+
+Formula parsers live under `parsers/formulas/<Logic>/` and parse formulas into
+trees used by the algorithms. Most are built with PLY.
+
+Callers should go through the factories instead of instantiating parsers
+directly:
+
+- `FormulaParserFactory`
+- `create_model_parser_for_logic`
+
+### Engine Layer
+
+`engine/execution.py` handles the common work around each model-checking call:
+
+- validate input,
+- choose the correct model parser,
+- read the model file,
+- call the logic algorithm,
+- normalize errors.
+
+Logic modules expose the public shape:
+
+```python
+model_checking(formula: str, filename: str) -> dict
+```
+
+Inside that function, use `execute_model_checking_with_parser(...)` so the
+shared validation and error handling stay consistent.
+
+### Algorithm Layer
+
+Each logic has a module under `algorithms/explicit/<Logic>/`. Algorithms should
+receive the parsed model object from the engine, parse the formula with the
+right parser, evaluate the formula tree, and return a standard result dict.
+
+Use shared helpers where possible:
+
+- `format_model_checking_result`
+- `verify_initial_state`
+- `model_checker.utils.error_handler`
+- trace helpers under `model_checker/shared/`
+
+## Entry Points
+
+`pyproject.toml` advertises built-in logic components through Python entry
+points:
+
+| Entry-point group | Purpose |
+|---|---|
+| `vitamin.parsers` | Logic name to formula parser class. |
+| `vitamin.models` | Model type to game-structure parser class. |
+| `vitamin.benchmarks` | Logic name to benchmark/model-checking callable. |
+| `vitamin.metadata` | Logic name to metadata exposed by parser packages. |
+
+VMI uses the same pattern when it integrates a logic bundle into this repo, so a
+logic is registered through entry points, never by patching modules at runtime.
+
+```mermaid
+flowchart TB
+    pyproject["pyproject.toml entry points"]
+    parserGroup["vitamin.parsers"]
+    modelGroup["vitamin.models"]
+    benchmarkGroup["vitamin.benchmarks"]
+    metadataGroup["vitamin.metadata"]
+    factory["Factories and registries"]
+    runtime["Runtime model checking"]
+
+    pyproject --> parserGroup --> factory
+    pyproject --> modelGroup --> factory
+    pyproject --> benchmarkGroup
+    pyproject --> metadataGroup
+    factory --> runtime
+```
+
+## Trace Flow
+
+CTL is the only logic with a `generate_trace` option. It returns a witness or a
+counterexample for the outermost operator of the formula, or no trace; see
+[Traces](../reference/logic_knowledge_base.md#traces-optional) and the
+[CTL theory and implementation table](../algorithms/ctl.md#theory-vs-implementation).
+
+```mermaid
+flowchart TD
+    evaluate["Algorithm evaluates formula"]
+    fixpoint["Run fixpoint or search"]
+    satisfied["Check initial state"]
+    witness["Build witness"]
+    counterexample["Build counterexample"]
+    none["No trace"]
+    trace["VerificationResult / trace data"]
+
+    evaluate --> fixpoint --> satisfied
+    satisfied --> witness --> trace
+    satisfied --> counterexample --> trace
+    satisfied --> none --> trace
+```
+
+Path and lasso helpers live in
+`model_checker/algorithms/explicit/shared/trace_utils.py`. Keep trace
+construction in shared helpers when several logics can reuse the same path
+reconstruction behavior.
+
+## Adding Logic
+
+The recommended path for adding a new logic is:
+
+1. Build a VMI bundle.
+2. Validate it with `vitamin-module-integrator`.
+3. Let VMI integrate files and entry points into this repository.
+4. Run this repository's tests and, where relevant, benchmarks from
+   `vitamin-benchmark-model-checker`.
+
+Maintainers can still add or change built-in logic manually; a new logic also
+gets a page in [docs/algorithms/](../algorithms/index.md) with the sections
+Model, Formula language, Semantic denotations, Theory vs implementation, Code
+map and Tests, a section in the
+[knowledge base](../reference/logic_knowledge_base.md) with its theory and
+syntax, and a row in its syntax cards and logic comparison matrix.
+
+## Testing And Performance
+
+Tests live under `model_checker/tests/`:
+
+- `unit/` for small parser/helper/algorithm pieces,
+- `integration/` for real model files and public API behavior,
+- `performance/` for time-bound regression checks.
+
+The `vitamin-benchmark-model-checker` package provides pyperf benchmarks against
+`vitamin.benchmarks` entry points. Use it when an algorithm change may affect
+runtime, not as a replacement for correctness tests.
+
+## Known Limits
+
+- The current algorithms are explicit-state and can be memory-heavy.
+- Symbolic model checking is not part of this package today.
+- Trace support varies by logic.
+- Workbench HTTP behavior lives in the sibling `vitamin-workbench` project, not
+  in this repository.
