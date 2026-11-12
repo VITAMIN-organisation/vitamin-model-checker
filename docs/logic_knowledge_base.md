@@ -814,7 +814,7 @@ The quantifiers are `A` and `E`, with `F`, `G`, `U` (no `X` or release).
 Clocks and clock guards:
 
 - Automaton clocks `X` from the model `Clocks` section.
-- Formula clocks `Y` via freeze `j.phi` (reset `j` to `0`, paper `j.reset(phi)`).
+- Formula clocks `J` via freeze `j.phi` (reset `j` to `0`, written `j.reset(phi)` in the [TCTL reference](TCTL/algorithm.md)).
 - Guards: standalone `x <= 5` or attachment `phi : x <= c` on subformulas.
 
 For example:
@@ -848,7 +848,7 @@ j.{J5}(j<=7 U goal)
 
 The temporal operators are `F`, `G`, `U`, `R`, `W` (paper) and `X` (VITAMIN extension).
 
-The cost `k` is a per-position demonic deactivation budget (paper
+The cost `k` is a per-step demonic deactivation budget (paper
 obstruction game), not cumulative path cost. OL (`<Jk>`) reads its budget the
 same way.
 
@@ -1091,7 +1091,7 @@ The prefix, operators and model type of each logic are in the
 | LTL | Linear (sure-win) | No prefix |
 | ATL | Branching | Coalition `<A>` with no bound |
 | ATLF | Branching | Per-state values, not a set of states ([ATLF](ATLF/algorithm.md)) |
-| ATL_STAR | Branching | Nested path formulas and coalitions inside `<<A>>`; no wallet guards |
+| ATL* | Branching | Nested path formulas and coalitions inside `<<A>>`; no wallet guards |
 | NatATL | Branching | Memoryless strategies; `k` is the strategy complexity |
 | NatATL_Recall | Branching | As NatATL, with recall strategies |
 | NatATLF | Branching | Delegates to the memoryless NatATL solver |

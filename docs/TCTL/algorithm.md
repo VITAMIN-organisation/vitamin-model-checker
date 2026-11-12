@@ -6,7 +6,7 @@ code path in `model_checker/algorithms/explicit/TCTL/`. The logic is introduced 
 [TCTL in the knowledge base](../logic_knowledge_base.md#tctl---timed-ctl) and the
 model file in [timedCGS sections](../file_formats.md#timedcgs-sections). It follows Hugh Anderson and
 P.S. Thiagarajan, _Verification of Real-time Systems_, Chapter 6, "Model
-checking and timed CTL" (NUS CS5270 lecture notes; TIGER notes): regional
+checking and timed CTL" (NUS CS5270 lecture notes; TIGER notes, called "the notes" below): regional
 transition system, TCTL-minus fragment, and the `rsat` labelling algorithm.
 
 ## Overview
@@ -36,11 +36,11 @@ API results project regions to location names where at least one region
 satisfies the formula. Initial-state satisfaction holds when any region at the
 initial location is satisfying.
 
-## TCTL-minus syntax (paper)
+## TCTL-minus syntax (notes)
 
 Clock sets:
 
-- `X`: automaton clocks from the model `Clocks` section,
+- `X`: automaton clocks from the model `Clocks` section.
 - `J`: formula clocks from freeze and guards in the property. A formula clock is
   a name like a proposition (lowercase first letter), such as `j`.
 
@@ -56,7 +56,7 @@ VITAMIN surface syntax:
 phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
       | x <= c | x < c | x >= c | x > c
       | j . phi                         (freeze)
-      | phi : clock_expr                (guard attachment, paper subscript gamma)
+      | phi : clock_expr                (guard attachment, subscript gamma in the notes)
       | E F phi | A F phi | E G phi | A G phi
       | E (phi U psi) | A (phi U psi)
       | E phi U psi   | A phi U psi     (same AST as parenthesized form)
@@ -66,7 +66,7 @@ The words `until`, `eventually` and `globally` stand for `U`, `F` and `G`.
 
 A connective after a prefix that no parenthesis closes (`AF p && q`,
 `A p U q && r`, freeze `j. p && q`, clock constraint `AF p : x<5 && q`) is a
-syntax error, as in every logic with a prefix (see
+syntax error that gives the position and both readings, as in every logic with a prefix (see
 [the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective));
 `AF p`, `AG AF p` and `AG (p -> EF q)` parse.
 
@@ -77,7 +77,7 @@ Standard reductions (`~` means "is defined as"):
 - `EG phi` ~ `!A[!phi U true]`
 - `AG phi` ~ `!E[!phi U true]`
 
-Bounded until (paper encoding via freeze):
+Bounded until (encoding in the notes via freeze):
 
 ```text
 A[phi U psi]_<=c  ~  j.reset(phi && A[true U (j<=c && psi)])   with fresh j in J
@@ -93,7 +93,7 @@ The `rsat` labelling treats each kind of node as follows:
   reset to `0` satisfies `phi`.
 - Until uses region-level fixpoints with timed backward steps. Because
   formulas are evaluated on each zone-graph node, prefix obligations correspond to
-  the paper's `phi@i` requirement along delay and discrete edges.
+  the `phi@i` requirement of the notes along delay and discrete edges.
 - Boolean connectives are union, intersection, and complement over all regions in
   the zone graph.
 

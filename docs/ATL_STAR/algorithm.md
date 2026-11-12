@@ -26,9 +26,9 @@ psi ::= phi | !psi | psi && psi | X psi | psi U psi | F psi | G psi | <<A>> psi
 A coalition is written `<<1,2>>`, and agent ids must be in `1..n`. Unlike ATL,
 `<<A>>` may appear anywhere inside a path formula, not just at the root.
 
-ATL writes a coalition with single angle brackets (`<1,2>`). ATL*'s `<<A>>` scopes
-over a nested path formula: the same brackets as in
-[Wallet_ATL](../logic_knowledge_base.md#wallet_atl), a different operator.
+ATL writes a coalition with single angle brackets (`<1,2>`). ATL* uses `<<A>>`, the
+same brackets as [Wallet_ATL](../logic_knowledge_base.md#wallet_atl), but it scopes
+over a nested path formula.
 
 ### Until under a coalition
 
@@ -105,7 +105,7 @@ flowchart LR
     load --> parse --> adapt --> sat --> result
 ```
 
-## Theory vs implementation
+## Theory and implementation
 
 Table 3 sets the usual theory beside this implementation:
 
@@ -119,10 +119,10 @@ Table 3 sets the usual theory beside this implementation:
 
 ## Cost of model checking
 
-Two separate things grow: formula-to-DPA translation is
-exponential in formula size in the worst case, model-independent. At
-realistic model sizes, the explicit-state product/arena construction here
-(not Spot's own game solver) tends to dominate wall time.
+Translating the formula to a deterministic parity automaton is exponential in
+formula size in the worst case, whatever the model. At realistic model sizes the
+explicit-state product and arena construction here (not Spot's own game solver)
+tends to dominate wall time.
 
 ## Strategy synthesis is a separate entry point
 
