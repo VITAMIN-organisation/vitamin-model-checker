@@ -13,6 +13,7 @@ from model_checker.algorithms.explicit.shared.bit_vector import (
     BitVectorStateSet,
 )
 from model_checker.algorithms.explicit.shared.state_utils import (
+    state_indices_to_names,
     state_names_to_indices,
 )
 from model_checker.parsers.game_structures.cgs import CostCGSProtocol, cgs_actions
@@ -163,4 +164,4 @@ def compute_pre_states(
                 pre_states.add(source_idx)
                 break
 
-    return {cgs.get_state_name_by_index(idx) for idx in pre_states}
+    return state_indices_to_names(cgs, pre_states)

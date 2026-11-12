@@ -20,8 +20,7 @@ class BitVectorStateSet:
         self._bits = np.zeros(num_states, dtype=np.uint8)
         if initial_indices is not None:
             for idx in initial_indices:
-                if 0 <= idx < num_states:
-                    self._bits[idx] = 1
+                self.add(idx)
 
     @classmethod
     def full(cls, num_states: int) -> "BitVectorStateSet":
@@ -34,9 +33,14 @@ class BitVectorStateSet:
         return cls(num_states)
 
     def add(self, state_idx: int) -> None:
-        if 0 <= state_idx < self._num_states:
-            self._bits[state_idx] = 1
+        # An explicit check: numpy would accept -1 and set the last state.
+        if not 0 <= state_idx < self._num_states:
+            raise IndexError(
+                f"State index {state_idx} is outside 0..{self._num_states - 1}"
+            )
+        self._bits[state_idx] = 1
 
+    # remove, discard and `in` stay lenient: like a set, an absent index is simply absent.
     def remove(self, state_idx: int) -> None:
         if 0 <= state_idx < self._num_states:
             self._bits[state_idx] = 0

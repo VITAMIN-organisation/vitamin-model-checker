@@ -193,6 +193,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- State helpers: `state_names_to_indices` and `state_indices_to_names` skipped an
+  unknown state name or index, and `BitVectorStateSet` (its constructor and `add`)
+  skipped an index outside `0..n-1`. All now raise `IndexError` naming the value.
+  `remove`, `discard` and `in` still accept any index, as a set does.
 - Model type detection: a `//` comment line in the `Transition` section of an ICTL
   birelational matrix made the file load as a CGS. It is now skipped like a `#`
   comment, as `docs/file_formats.md` states.

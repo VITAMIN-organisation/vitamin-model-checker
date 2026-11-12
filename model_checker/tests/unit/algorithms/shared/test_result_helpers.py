@@ -24,9 +24,8 @@ from model_checker.utils.error_handler import (
 from model_checker.utils.literals import parse_state_set_literal
 
 
-@pytest.mark.unit
-def test_state_names_and_indices_round_trip(temp_file):
-    """Indices follow Name_State order, so s2 is 2 even when listed first."""
+@pytest.fixture
+def three_state_cgs(temp_file):
     content = build_cgs_model_content(
         transitions=[["I", "0", "0"], ["0", "I", "0"], ["0", "0", "I"]],
         state_names=["s0", "s1", "s2"],
@@ -35,9 +34,25 @@ def test_state_names_and_indices_round_trip(temp_file):
         labelling=[["0"], ["1"], ["0"]],
         num_agents=1,
     )
-    cgs = load_cgs_from_content(temp_file, content)
+    return load_cgs_from_content(temp_file, content)
+
+
+@pytest.mark.unit
+def test_state_names_and_indices_round_trip(three_state_cgs):
+    """Indices follow Name_State order, so s2 is 2 even when listed first."""
+    cgs = three_state_cgs
     assert state_names_to_indices(cgs, ["s2", "s0"]) == {0, 2}
     assert state_indices_to_names(cgs, [2, 0]) == {"s0", "s2"}
+
+
+@pytest.mark.unit
+def test_unknown_state_name_or_index_is_an_error_naming_it(three_state_cgs):
+    """A name or index the model lacks is a bug in the caller, not an empty result."""
+    cgs = three_state_cgs
+    with pytest.raises(IndexError, match="s9"):
+        state_names_to_indices(cgs, ["s0", "s9"])
+    with pytest.raises(IndexError, match="-1"):
+        state_indices_to_names(cgs, [0, -1])
 
 
 @pytest.mark.unit

@@ -78,6 +78,16 @@ def test_full_empty_and_zero_size():
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize("index", [-1, _N])
+def test_index_outside_the_universe_is_an_error(index):
+    """add and the constructor reject an index outside 0..n-1; numpy would read -1 as n-1."""
+    with pytest.raises(IndexError, match=str(index)):
+        BitVectorStateSet(_N, [index])
+    with pytest.raises(IndexError, match=str(index)):
+        BitVectorStateSet(_N).add(index)
+
+
+@pytest.mark.unit
 def test_copy_is_independent():
     """Changing a copy leaves the original alone."""
     original = BitVectorStateSet(_N, [1, 2, 3])
