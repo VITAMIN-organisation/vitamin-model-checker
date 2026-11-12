@@ -1,76 +1,53 @@
-# ATLF algorithm reference
+# ATLF algorithm
 
-This page covers the denotations and code path of the ATLF checker in
-`model_checker/algorithms/explicit/ATLF/`, for a developer reading or changing it;
-the syntax is in the [syntax cards](../reference/logic_knowledge_base.md#syntax-cards) and
-the model file format in [CGS sections](../reference/file_formats.md#cgs-sections).
+The ATLF checker computes, for each state, a value between 0 and 1 for an ATL
+formula instead of true or false: the best value coalition `A` can guarantee,
+whatever the other agents do. It accepts the same formulas as [ATL](atl.md) and
+runs on a `CGS` model. Formula syntax is in the
+[knowledge base](../reference/logic_knowledge_base.md#syntax-cards), the model
+file in [CGS sections](../reference/file_formats.md#cgs-sections).
 
-## Model
+## Overview
 
-- Type: `CGS`
-- Same game structure as ATL; evaluation uses the ATLF fixed-point engine.
+The formula is evaluated from the innermost subformula outward, as in the
+[shared steps](index.md#steps-shared-by-the-set-based-checkers), but each
+subformula becomes a value per state, not a set:
 
-## Formula language
+1. An atom's value in a state is its cell in the labelling matrix. The CGS loader
+   accepts only `0` and `1` there, so atoms are 0.0 or 1.0; `true` is 1.0 and
+   `false` 0.0 everywhere.
+2. The connectives combine values state by state: `!phi` is `1 - phi`, `&&` is
+   `min`, `||` is `max`, and `phi -> psi` is `max(1 - phi, psi)`.
+3. Coalition operators use the pre-image below.
 
-Parser: `parsers/formulas/ATLF/parser.py`
+Every step uses only `1 - x`, `min` and `max`, so with 0 or 1 atoms every result
+is also 0 or 1 (printed as `0`, `1`, `0.0` or `1.0`).
 
-```text
-phi ::= p | !phi | phi && psi | phi || psi | phi -> psi
-      | <A> X phi | <A> F phi | <A> G phi | <A>(phi U psi) | <A> phi U psi
-```
+## Pre-image
 
-Coalition form matches ATL: `<1>`, `<1,2>`. `<A>(phi U psi)` and `<A> phi U psi`
-build the same tree (see
-[until after a prefix](../reference/logic_knowledge_base.md#until-after-a-prefix)); a connective
-after the unparenthesised form is a syntax error (see
-[prefix before a connective](../reference/logic_knowledge_base.md#prefix-before-a-connective)).
+`Pre(v)` gives each state `s` the largest value, over the coalition's moves at
+`s`, of the smallest value `v` takes on the states that move can reach, whatever
+the other agents play. A state with no coalition move gets 0.0.
 
-## Semantic denotations
+## Operators
 
-ATLF gives each state a number, not a yes or no. An atom's value in a state is its
-cell in the labelling matrix, read as a float (`get_tuple_list_prop` in `ATLF/ATLF.py`).
-The connectives combine values state by state (`ATLF/operators.py`,
-`ATLF/real_value_utils.py`), as Table 1 shows.
+`phi` below stands for the values of the subformula, and `max` and `min` apply
+state by state. Each iteration stops when no value changes.
 
-**Table 1: ATLF connective values.**
+**Table 1: ATLF operators.**
 
-| Formula | Value in state `s` |
-| :--- | :--- |
-| `!phi` | `1 - phi(s)` |
-| `phi && psi` | `min(phi(s), psi(s))` |
-| `phi \|\| psi` | `max(phi(s), psi(s))` |
-
-Coalition modalities are fixed points over these values (`ATLF/preimage.py`). The
-result is a list of `(state, value)` pairs, and the `initial_state` field is a text
-line with the value at the initial state, such as `Initial state s0: 0.0`.
-
-Implementation techniques (per-operator transition cache): [algorithm design](index.md).
-
-## Theory vs implementation
-
-Table 2 sets the usual theory beside this implementation.
-
-**Table 2: ATLF theory and implementation.**
-
-| Aspect | Theory | Implementation |
+| Formula | Computed as | Iteration starts from |
 | :--- | :--- | :--- |
-| Valuation | Often real-valued / fixed-point ATL | ATLF engine over CGS |
-| Syntax | ATL-like coalitions | Same surface family as ATL |
+| `<A> X phi` | `Pre(phi)` | (no iteration) |
+| `<A> F phi` | `Z = max(Z, Pre(Z))`, values only grow | `phi` |
+| `<A> G phi` | `Z = min(Pre(Z), phi)`, values only shrink | `phi` |
+| `<A> (phi U psi)` | `Z = max(Z, min(Pre(Z), phi))`, values only grow | `psi` |
 
-## Code map
+When `phi` is 1 in every state, `<A> G phi` returns 1 everywhere without applying
+`Pre`, even at a state with no coalition move, which `Pre` would set to 0.
 
-Table 3 lists the files of the checker and their role.
+## Result
 
-**Table 3: ATLF code map.**
-
-| Path | Role |
-| :--- | :--- |
-| `ATLF/ATLF.py` | Entry |
-| `ATLF/solver.py` | Dispatch |
-| `ATLF/operators.py` | Operators |
-| `ATLF/preimage.py` | Pre-image |
-| `ATLF/real_value_utils.py` | Real-valued helpers |
-
-## Tests
-
-ATLF coverage under `model_checker/tests/` (parser and algorithm suites).
+`res` is `Result: ` followed by the list of `(state, value)` pairs in the model's
+state order, such as `Result: [('s0', 1.0), ('s1', 0.0)]`. `initial_state` gives
+the value at the initial state, such as `Initial state s0: 1.0`, not true or false.

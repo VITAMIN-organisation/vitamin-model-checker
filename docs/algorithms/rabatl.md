@@ -1,66 +1,41 @@
-# RABATL algorithm reference
+# RABATL algorithm
 
-This page gives the denotations and code path of RABATL in
-`model_checker/algorithms/explicit/RABATL/`, for developers reading or changing
-the checker; the syntax is in the
-[knowledge base](../reference/logic_knowledge_base.md#rbatl--rabatl) and the model format
+The RABATL checker decides the same formulas as [RBATL](rbatl.md), `<A><b> phi`,
+on a `costCGS` model whose costs are split by agent: in each state, each joint
+action gives every agent its own cost vector. Formula syntax is in the
+[knowledge base](../reference/logic_knowledge_base.md#rbatl--rabatl), the model file
 in [costCGS sections](../reference/file_formats.md#costcgs-sections).
 
-## Model
+## Overview
 
-- Type: `costCGS` with split costs
-- Uses `Costs_for_actions_split` and sums coalition members' cost components
-  on joint actions.
+RABATL runs the RBATL [bounded pre-image](rbatl.md#bounded-pre-image) and
+[operators](rbatl.md#operators) unchanged; only the cost of a joint action
+differs.
 
-## Formula language
+## Cost of a joint action
 
-Parser: `parsers/formulas/RABATL/parser.py`
+For each resource `i`, the cost of a joint action at state `s` is the sum of the
+costs that the coalition's members pay for it at `s`. The other agents' costs are
+not counted. The joint action is within the bound when that sum is at most `b_i`
+for every resource `i` that `b` covers.
 
-Same surface as RBATL:
+So the same joint action can be within the bound for one coalition and not for
+another, and RBATL and RABATL can give different sets on models that describe the
+same game, one with one cost per joint action and one with costs per agent.
 
-```text
-<1,2><10,5> F goal
-```
+Example: two agents; in `s0` the joint action `AA` leads to `s1`, where `p` holds,
+and agent 1 pays 1 for it while agent 2 pays 5; `BB` stays in `s0` and costs both
+nothing; `s1` loops, with no cost given, so it never enters a result. Table 1
+lists the results:
 
-Each bound value is between 1 and 1000000; the rules are in
-[the knowledge base](../reference/logic_knowledge_base.md#rbatl--rabatl).
+**Table 1: RABATL results on the example.**
 
-## Semantic denotations
+| Formula | Coalition cost of `AA` | Result |
+| :--- | :---: | :--- |
+| `<1><2> X p` | 1 | `{s0}` |
+| `<2><2> X p` | 5 | `{}` |
+| `<1,2><2> X p` | 6 | `{}` |
+| `<1,2><6> X p` | 6 | `{s0}` |
 
-Same per-step vector affordability check as RBATL, with different cost
-aggregation from the model. Winning sets can differ from RBATL on the same
-formula when split sums disagree with flat costs.
-
-Not a separate recursive-modality engine: shares `bounded_atl_solver` with
-RBATL.
-
-Implementation techniques (shared with RBATL: transition cache, bit-vector, AST memo): [algorithm design](index.md).
-
-## Theory vs implementation
-
-Table 1 sets the theory next to what the code does:
-
-**Table 1: RABATL theory and implementation.**
-
-| Aspect | Theory | Implementation |
-| :--- | :--- | :--- |
-| Costs | Split / coalition-sum | `Costs_for_actions_split` |
-| Syntax | Vector bounds | Same as RBATL |
-| Engine | Related resource ATL | Shared bounded ATL solver |
-
-## Code map
-
-Table 2 lists the files RABATL runs; paths are relative to
-`model_checker/algorithms/explicit/`.
-
-**Table 2: RABATL code map.**
-
-| Path | Role |
-| :--- | :--- |
-| `RABATL/RABATL.py` | Entry |
-| `RABATL/preimage.py` | Split-cost pre-image |
-| `shared/bounded_atl_solver.py` | Shared solve path |
-
-## Tests
-
-RABATL fixtures under costCGS / algorithm tests.
+A joint action with no cost for `s` in the model never counts as within the bound,
+as in RBATL.

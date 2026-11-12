@@ -1,103 +1,56 @@
-# NatSL algorithm reference
+# NatSL algorithm
 
-This page explains how NatSL is checked, for developers reading or changing the
-checker in `model_checker/algorithms/explicit/NatSL/`; the syntax is in the
-[knowledge base](../reference/logic_knowledge_base.md#natsl---natural-strategy-logic) and the
-model format in [CGS sections](../reference/file_formats.md#cgs-sections).
+The NatSL checker decides formulas such as
+`E{2}x A{1}y: (x, 1)(y, 2) F goal`: is there a strategy `x` of size at most 2 for
+agent 1 that reaches `goal` against every strategy `y` of size at most 1 for
+agent 2? It runs on a `CGS` model. Formula syntax is in the
+[knowledge base](../reference/logic_knowledge_base.md#natsl---natural-strategy-logic),
+the model file in [CGS sections](../reference/file_formats.md#cgs-sections).
 
-## Model
+## Strategies
 
-- Type: `CGS`
-- A binding `(x, 1)` makes strategy variable `x` play agent 1; the bindings of a
-  formula must cover every agent of the model exactly once.
+A strategy is an ordered list of rules `(condition, action)` ending with
+`(T, action)`, where `T` holds everywhere. A state follows the first rule whose
+condition holds there. A condition is one literal (`p` or `!p`), or two or more
+literals joined all by `and` or all by `or`. Its size counts symbols, with `!`
+counted apart: `p` is 1, `!p` is 2, `p and q` is 3. The conditions of a strategy
+for a quantifier `E{k}x` or `A{k}x` have a total size of at most `k - 1`, plus 1
+for the final `T`; no condition appears twice.
 
-## Formula language
+Binding a strategy to agent `a` keeps, in each state, only the joint actions in
+which `a` plays the action its rule selects. If that leaves a state with no
+transition, the strategy is not admissible: the action must be available, and
+there is no fallback to an idle move.
 
-Parser: `parsers/formulas/NatSL/parser.py`
+## How a check runs
 
-The checker runs a fragment with one temporal goal per formula. A natural
-strategy is an ordered list of condition/action rules: an earlier matching
-condition wins over a later one, and `T` can be used as a default condition. The
-bound `k` of a quantifier `E{k}x` or `A{k}x` limits the strategy's complexity. The quantifier prefix has
-the form `E* A*`, purely existential prefixes included, as in:
+1. The model is checked: the bindings cover every agent exactly once, the model
+   has no `*` cells, and in each state the joint actions are every combination of
+   the agents' local actions. The prefix must be existential quantifiers followed
+   by universal ones.
+2. The goal is rewritten for CTL: `F p` as `AF p`, `G p` as `AG p`, `X p` as
+   `AX p`, and the negated goals `!F p` as `AG !p`, `!G p` as `AF !p` and `!X p`
+   as `AX !p`.
+3. For each profile of existential strategies, the model is pruned by their
+   bindings:
+   - with no universal quantifier, the goal is checked on the pruned model;
+   - otherwise the goal is first checked with the opponents unrestricted, and a
+     yes is final; on a no, every profile of universal strategies is applied on
+     top, and the goal must hold for all of them.
+4. The formula holds if some existential profile succeeds.
 
-```text
-E{2}controller A{1}opponent: (controller, 1)(opponent, 2) F goal
-```
+The goal is checked by the [CTL checker](ctl.md) on the pruned model, at the
+initial state.
 
-- Prefix order: the parser also accepts other orders such as `A{1}x E{1}y:`;
-  `model_checking` then returns a validation error, "This restricted NatSL[1G]
-  prototype accepts only a two-block E* A* prefix; universal-then-existential
-  or repeated alternation is unsupported" (`NatSL/core.py`).
-- Bindings: on a 2-agent model, `E{1}x: (x, 1) F goal` fails with "The
-  executable fragment requires a closed binding prefix covering every model
-  agent exactly once; expected [1, 2], got [1]".
-- Goals: `F`, `G` and `X` over one proposition, and their negations, as in
-  `E{1}x:(x,1) not F goal` or `!F goal`. The operator is uppercase and followed
-  by a space; `not` is lowercase. Strategy
-  variables may be multi-character identifiers such as `controller`.
-- Connectives in a goal: `E{1}x: (x, 1) F p && q` and
-  `E{1}x: (x, 1) F (p && q)` are both rejected with "Unsupported goal; this
-  prototype accepts F p, G p, X p and their negations, with an uppercase
-  operator and a space after it". The other logics with a prefix report
-  `F p && q` as ambiguous and give both readings
-  ([knowledge base](../reference/logic_knowledge_base.md#prefix-before-a-connective));
-  NatSL supports neither reading, so it does not offer them: a goal is one
-  operator over one proposition.
+## Modes
 
-## Semantic denotations
+`space` (the default) generates the strategies one existential profile at a time.
+`time` builds every strategy first, keeps the pruned models of the profiles that
+fail against unrestricted opponents, and then checks the universal strategies on
+those.
 
-The checker searches bounded natural strategies in the order of the prefix: for
-`E{2}x A{1}y: (x, 1)(y, 2) F goal` it looks for a strategy of complexity at most
-2 for `x` that wins against every admissible strategy of complexity at most 1
-for `y`. Each existential profile is first checked against unrestricted
-opponents, with [NatATL](natatl.md) pruning and a CTL check of the
-goal. A yes there is final; a no is not, so the bounded universal strategies are
-then enumerated.
+## Result
 
-- Exact action pruning: when a strategy selects an action, the model's joint
-  actions inconsistent with that choice are removed, and the goal is then
-  checked on the pruned CGS by the CTL backend. If the selected action is
-  unavailable in a covered state, the strategy profile is inadmissible; there
-  is no implicit idle-action fallback.
-- Modes: `model_checking(..., mode=)` in `NatSL/core.py` runs a space-oriented
-  lazy search (`mode="space"`, the default) or a time-oriented materialized
-  search (`mode="time"`). Both must agree on satisfiability.
-
-## Theory vs implementation
-
-Table 1 sets the paper next to the code. In the paper's grammar `p` is a
-proposition, `a` an agent, `s_a` a strategy variable, `k` the complexity bound
-and `f` a function on truth values:
-
-**Table 1: NatSL theory and implementation.**
-
-| Aspect | Paper (AAMAS 2022, Definition 2) | Code |
-| :--- | :--- | :--- |
-| Grammar | `phi ::= p \| Es_a^{<=k}. phi \| (a, s_a) phi \| f(phi, ..., phi) \| X phi \| phi U phi` | One goal `F`, `G` or `X` over one proposition, or its negation, after an `E* A*` prefix |
-| Notation | `Es_a^{<=k}.` and `(a, s_a)` | `E{k}s:` and `(s, a)` |
-| Boolean functions | Any `f` on truth values (the paper uses true, `max` and `-x`) | None inside a goal |
-| Quantifier alternation | Arbitrary | Two blocks, existential then universal |
-| Precedence and quantifier scope | Not stated (as in `Es. phi U psi`) | Not needed: a goal has one operator |
-| Out of scope | Arbitrary Strategy Logic | No support for arbitrary LTL objectives, recall strategies or epistemic guards; such input fails the prefix or goal checks |
-
-## Code map
-
-Table 2 lists the files of the checker and their role; paths are relative to
-`model_checker/`.
-
-**Table 2: NatSL code map.**
-
-| Path | Role |
-| :--- | :--- |
-| `algorithms/explicit/NatSL/core.py` | Entry and shared bounded-strategy model-checking core |
-| `parsers/formulas/NatSL/parser.py` | Formula parser |
-
-## Tests
-
-Paths are relative to `model_checker/`:
-
-- `tests/integration/algorithms/natsl/`: semantic regression tests.
-- `tests/unit/parsers/formulas/test_natsl_parser.py`: parser tests.
-- `tests/fixtures/CGS/NatSL/`: NatSL CGS fixtures.
-- Scalability experiments are in `experiments/natsl/` (see [experiments.md](../examples/natsl_experiments.md)).
+Besides `Satisfiability`, `res` and `initial_state`, the result reports the mode,
+the normalized formula, the CTL goal, counters of the profiles checked and skipped,
+and the last assignment examined (not necessarily a winning one).

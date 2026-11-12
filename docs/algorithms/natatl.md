@@ -1,77 +1,64 @@
-# NatATL algorithm reference
+# NatATL algorithm
 
-This page covers the denotations and code path of the NatATL checker in
-`model_checker/algorithms/explicit/NatATL/`, for a developer reading or changing
-it; the syntax is in the [syntax cards](../reference/logic_knowledge_base.md#syntax-cards)
-and the model file format in [CGS sections](../reference/file_formats.md#cgs-sections).
+The NatATL checker decides `<{A}, k> phi`: does coalition `A` have simple
+strategies, each of size at most `k`, that force `phi`? It runs on a `CGS` model.
+The logic name `NatATL` runs memoryless strategies, which look only at the current
+state; `NatATL_Recall` runs strategies that look at the history. Formula syntax
+is in the [knowledge base](../reference/logic_knowledge_base.md#syntax-cards), the
+model file in [CGS sections](../reference/file_formats.md#cgs-sections).
 
-## Model
+## Strategies
 
-- Type: `CGS`
-- Bound `k` limits strategy complexity (condition-token depth), not coalition size.
+A strategy of one agent is an ordered list of rules `(condition, action)`; no two
+rules of a strategy have the same action. A state follows the first rule whose
+condition holds there: a rule applies only to the states no earlier rule covered.
 
-## Formula language
+A condition is one atom or atoms joined by `and`, such as `p and q`; the generator
+may repeat an atom (`p and p and q`), and a negated form puts `!` on the first
+atom (`!p and q`). Its size is its number of words, plus 1 if it contains `!`.
+The size of a strategy is the sum of the sizes of its conditions.
 
-Parser: `parsers/formulas/NatATL/parser.py`
+## How a check runs
 
-```text
-phi ::= ... | <{A}, k> X phi | <{A}, k> F phi | <{A}, k> G phi | <{A}, k>(phi U psi)
-```
+1. For `i = 1, 2, ..., k`, the checker lists, for each member of `A`, the
+   strategies of size exactly `i` (each set of rules in one order only), and tries
+   the profiles, one strategy per member. It stops at the first profile that works;
+   which one is found first can vary between runs.
+2. A profile prunes the model. In each state a rule covers, the agent keeps only
+   the joint actions where it plays the rule's action or idles (the `IDLE` or `I`
+   action). In the states no rule covers, the agent idles. Whether the rule's
+   action is available in the state is not checked: if it is not, only idling is
+   left. A `*` cell is never pruned.
+3. The formula is rewritten with `A` in place of each coalition, so
+   `<{1}, 2> F goal` becomes `AF goal`, and the [CTL checker](ctl.md) checks it at
+   the initial state of the pruned model.
 
-Braces around agents and a positive integer `k` are required. `k = 0` is rejected with
-an error that names the value.
+The condition of each rule is checked once on the model and reused across
+profiles (see [speed-ups](index.md#speed-ups)).
 
-## Semantic denotations
+## Recall
 
-The natural strategies follow "Natural Strategic Ability" (Jamroga, Malvone and
-Murano, Artificial Intelligence, 2019).
+`NatATL_Recall` unfolds the model into a tree of histories of depth 4 from the
+initial state. A condition is either a plain condition, which prunes every node
+whose state satisfies it, or a pattern over histories, built with `.` (then) and
+`*` (repeat), which prunes along one history that matches it. A condition that
+contains `!` or `*` adds 1 to the size. Unlike the memoryless case, a strategy fails when a rule's action is not
+available where its condition holds. The pruned tree is turned back into a model
+and checked as above.
 
-NatATL has two variants, listed in Table 1.
+## Result
 
-**Table 1: NatATL variants.**
+The result has `Satisfiability`, `Complexity Bound` (the size `i` at which a
+profile worked, or `k` when none did), `Winning Strategy per agent` (only when
+satisfied, one list of rules per member, such as
+`[{'condition_action_pairs': [('q', 'A')]}]`), `res` (`Result: True`) and
+`initial_state` (`Initial state s0: True`).
 
-| Variant | Path | Meaning |
-| :--- | :--- | :--- |
-| Memoryless | `NatATL/Memoryless/` | Strategies depend on current state |
-| Recall | `NatATL/Recall/` | History-dependent strategies |
-
-The logic name `NatATL` selects the memoryless solver and `NatATL_Recall` the recall
-solver (`NatATL/Recall/natatl_recall.py`). NatATLF has its own page,
-[NatATLF](natatlf.md).
-
-Return contract: a dict with boolean `Satisfiability`, `Complexity Bound` (the
-smallest bound at which a strategy was found, or the formula's bound `k` when none
-was), `Winning Strategy per agent` (only
-when satisfied), and the text fields `res` and `initial_state`. There is no
-CTL-style winning-set report.
-
-Implementation techniques (strategy pruning, condition cache): [algorithm design](index.md).
-
-## Theory vs implementation
-
-Table 2 sets the usual theory beside this implementation.
-
-**Table 2: NatATL theory and implementation.**
-
-| Aspect | Theory | Implementation |
-| :--- | :--- | :--- |
-| Bound `k` | Strategy complexity | Condition-token depth |
-| Memory models | Memoryless / recall | Separate algorithm packages |
-| NatATLF | Related fixed-point flavor | Separate logic package, delegates to memoryless |
-
-## Code map
-
-Table 3 lists the files of the checker and their role.
-
-**Table 3: NatATL code map.**
-
-| Path | Role |
-| :--- | :--- |
-| `NatATL/Memoryless/` | Memoryless solver |
-| `NatATL/Recall/` | Recall solver and tree helpers |
-| `NatATL/natatl_ast.py` | Shared AST helpers |
-| `NatATL/NatATLtoCTL.py` | Formula to CTL text and coalition extraction |
-
-## Tests
-
-NatATL fixtures and integration tests under `model_checker/tests/`.
+A profile that leaves a state with no move is not rejected, unlike in
+[LTL](ltl.md); the CTL check then treats that state as a dead end. Example: two
+agents with actions `A`, `B` (agent 1) and `C`, `D` (agent 2) and no idle action.
+`s0` (labelled `p`) goes to `s1` (`q`) or `s2` (no atom), `s1` to `s2` or `s3`,
+`s2` to `s3`, and `s3` (`p` and `q`) loops. Every move from `s0` leaves `p`, yet
+`<{1,2},1> G p` is true at size 1: the strategy found for agent 1, such as
+`(q, A)`, has no rule that covers `s0`, so agent 1 must idle there, which removes
+every move of `s0`.

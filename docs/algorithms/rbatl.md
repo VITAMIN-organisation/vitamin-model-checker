@@ -1,70 +1,57 @@
-# RBATL algorithm reference
+# RBATL algorithm
 
-This page gives the denotations and code path of RBATL in
-`model_checker/algorithms/explicit/RBATL/`, for developers reading or changing
-the checker; the syntax is in the
-[knowledge base](../reference/logic_knowledge_base.md#rbatl--rabatl) and the model format
+The RBATL checker decides `<A><b> phi`: can coalition `A` force `phi` when every
+step it takes costs at most the bound vector `b`? It runs on a `costCGS` model, where
+each joint action has a cost vector in each state. Formula syntax is in the
+[knowledge base](../reference/logic_knowledge_base.md#rbatl--rabatl), the model file
 in [costCGS sections](../reference/file_formats.md#costcgs-sections).
 
-## Model
+## Overview
 
-- Type: `costCGS`
-- Flat action costs: `Costs_for_actions`, one line per joint action as
-  `action state$cost[:cost...]`, several states joined by `;` (see
-  [costCGS sections](../reference/file_formats.md#costcgs-sections)).
+The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers):
+it computes the set of states where each subformula holds and checks the initial
+state. A coalition operator is computed from the bounded pre-image (next section),
+once for `X` and as a [fixpoint](index.md#overview) for `F`, `G` and `U`. A
+subformula that appears twice is computed once.
 
-## Formula language
+## Bounded pre-image
 
-Parser: `parsers/formulas/RBATL/parser.py`
+`Pre(Z)` is the set of states from which the coalition can move into `Z` within the
+bound. A state `s` is in `Pre(Z)` when the coalition has a move `m` (one action per
+member) such that:
 
-```text
-phi ::= ... | <A><b1,b2,...> X phi | <A><b1,...> F phi | ...
-```
+1. some joint action that contains `m` leads into `Z` and its cost vector at `s` is
+   within `b`: `cost_i <= b_i` for each resource `i` that `b` covers (with `b` of
+   length 1, the second cost value is not limited);
+2. every state that a joint action containing `m` can reach is in `Z`, whatever the
+   other agents play.
 
-Vector bounds are comma-separated. `R` / `W` rejected at parse time. Each bound value
-is between 1 and 1000000; the rules are in
-[the knowledge base](../reference/logic_knowledge_base.md#rbatl--rabatl).
+Three consequences follow:
 
-`<A><b> phi U psi` and `<A><b> (phi U psi)` build the same tree (see
-[the knowledge base](../reference/logic_knowledge_base.md#until-after-a-prefix)), and
-`<A><b>F p && q` is a syntax error that asks for parentheses (see
-[the knowledge base](../reference/logic_knowledge_base.md#prefix-before-a-connective)).
+- The bound applies to each step on its own. Costs do not add up along a path, so
+  a goal ten cheap steps away is as reachable as one step away.
+- Only one joint action of the move has to be within the bound. The costs of the
+  other agents' other choices are not checked.
+- A joint action with no cost for `s` in the model never counts as within the bound.
 
-## Semantic denotations
+## Operators
 
-On each coalition-controlled transition, resource `i` must satisfy
-`cost_i <= b_i` (per-step affordability, not cumulative path totals).
+Table 1 lists what each operator computes; `[[phi]]` is the set of states where
+`phi` holds.
 
-Shares the bounded ATL solver pattern (`shared/bounded_atl_solver.py`) with
-RABATL; cost derivation differs.
+**Table 1: RBATL operators.**
 
-Implementation techniques (transition cache, bit-vector, AST memo): [algorithm design](index.md).
-
-## Theory vs implementation
-
-Table 1 sets the theory next to what the code does:
-
-**Table 1: RBATL theory and implementation.**
-
-| Aspect | Theory | Implementation |
+| Formula | Set computed | Iteration starts from |
 | :--- | :--- | :--- |
-| Bounds | Resource vector | `<10,5>` second bracket group |
-| Costs | Flat action costs | `Costs_for_actions` |
-| Engine | Resource-bounded ATL | Shared bounded ATL solver |
+| `<A><b> X phi` | `Pre([[phi]])` | (no iteration) |
+| `<A><b> F phi` | least fixpoint of `Z = Z \| Pre(Z)` | `[[phi]]` |
+| `<A><b> G phi` | greatest fixpoint of `Z = Pre(Z) & [[phi]]` | all states |
+| `<A><b> (phi U psi)` | least fixpoint of `Z = Z \| (Pre(Z) & [[phi]])` | `[[psi]]` |
 
-## Code map
+Example: one agent; in `s0` action `A` (cost 3) leads to `s1`, where `p` holds, and
+action `B` (cost 0) stays in `s0`. `<1><2> F p` gives `{s1}`: `A` costs more than 2,
+so `s0` never enters the set. `<1><3> F p` gives `{s0, s1}`. `<1><2> G !p` gives
+`{s0}`, since `B` keeps the agent in `s0` at cost 0.
 
-Table 2 lists the files RBATL runs; paths are relative to
-`model_checker/algorithms/explicit/`.
-
-**Table 2: RBATL code map.**
-
-| Path | Role |
-| :--- | :--- |
-| `RBATL/RBATL.py` | Entry |
-| `RBATL/preimage.py` | Cost vector pre-image |
-| `shared/bounded_atl_solver.py` | Shared solve path |
-
-## Tests
-
-RBATL fixtures under costCGS / algorithm tests.
+[RABATL](rabatl.md) runs the same algorithm; only the cost of a joint action is
+computed differently.

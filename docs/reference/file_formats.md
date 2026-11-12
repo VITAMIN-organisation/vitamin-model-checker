@@ -229,11 +229,11 @@ s1: 80 : 60
 
 Use this format for Wallet_ATL models. Action strings can include wallet-aware
 codes such as `D20` (deposit) or `B50` (bid); the full list of codes is in
-[Wallet_ATL](../algorithms/wallet_atl.md#semantic-denotations). They are longer than one character,
+[Wallet_ATL](../algorithms/wallet_atl.md#payable-moves). They are longer than one character,
 so write the joint profile in the explicit form with `|` (see the cell formats in
 [CGS Sections](#cgs-sections)): `D20|0` means agent 1 deposits 20 and agent 2 plays
 the neutral action `0`. Which moves are available depends on the wallets; see
-[Wallet_ATL](../algorithms/wallet_atl.md#semantic-denotations).
+[Wallet_ATL](../algorithms/wallet_atl.md#payable-moves).
 
 ## BirelationalMatrix Sections (ICTL)
 

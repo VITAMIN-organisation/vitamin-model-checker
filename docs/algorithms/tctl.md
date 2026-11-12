@@ -1,131 +1,62 @@
-# TCTL algorithm reference
+# TCTL algorithm
 
-This page gives the algorithm of the TCTL checker in
-`model_checker/algorithms/explicit/TCTL/` and how it differs from the theory, for
-a developer reading or changing the checker. The logic is introduced in
-[TCTL in the knowledge base](../reference/logic_knowledge_base.md#tctl---timed-ctl) and the
-model file in [timedCGS sections](../reference/file_formats.md#timedcgs-sections). It
-follows Hugh Anderson and P.S. Thiagarajan, _Verification of Real-time Systems_,
-Chapter 6, "Model checking and timed CTL" (NUS CS5270 lecture notes, also called
-the TIGER notes; "the notes" below).
+The TCTL checker decides CTL formulas with clock constraints, such as
+`AF (p : x<=3)`, on a `timedCGS` model: locations with real-valued clocks,
+invariants on locations and guards and resets on edges. Formula syntax is in the
+[knowledge base](../reference/logic_knowledge_base.md#tctl---timed-ctl), the model
+file in [timedCGS sections](../reference/file_formats.md#timedcgs-sections).
 
-## Model
+## Zone graph
 
-- Type: `timedCGS`: a CGS with `Clocks`, `Clock_constraints` and `Invariants`
-  sections (`TimedCGS.read_file` in
-  `parsers/game_structures/timed_cgs/timed_cgs.py`).
-- Clocks: the automaton clocks of the `Clocks` section (the set `X` of the
-  notes, not the next operator), and `J`, the formula clocks used in freeze and
-  guards. `J` is collected from the formula, is disjoint from the automaton
-  clocks, and extends the zone graph.
+Clock values are real numbers, so the checker groups them into zones (sets of
+clock values described by bounds on clocks and clock differences) and works on
+regions, pairs (location, zone):
 
-## Formula language
+1. Clocks named in the formula, by a freeze `x . phi` or a guard, are added to the
+   model's clocks if new.
+2. The initial region is the initial location with every clock at 0, cut by the
+   location's invariant. If that is empty, the graph is empty.
+3. From each region, the graph is built breadth first with two kinds of successor:
+   letting time pass (every clock grows, then the invariant applies) and taking an
+   edge (the guard applies, then the resets, then the target's invariant). Empty
+   zones and time steps that change nothing are dropped.
+4. Each zone is normalized against the largest constant each clock is compared
+   with in the model and the formula, so the graph is finite.
 
-Parser: `parsers/formulas/TCTL/`
+## Overview
 
-```text
-phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
-      | x <= c | x < c | x >= c | x > c
-      | j . phi                         (freeze)
-      | phi : clock_expr                (guard attachment)
-      | E F phi | A F phi | E G phi | A G phi
-      | E (phi U psi) | A (phi U psi)
-      | E phi U psi   | A phi U psi     (same AST as parenthesized form)
-```
+Each subformula becomes a set of regions: an atom is every region whose location
+has it, and `!`, `&&`, `||`, `->` are set operations over all regions. `phi : x<=3`
+keeps the regions of `phi` whose zone can satisfy the guard. A freeze `x . phi`
+keeps the regions that, with `x` reset to 0, satisfy `phi`.
 
-The words `until`, `eventually` and `globally` stand for `U`, `F` and `G`. `x`
-is a clock, `c` an integer constant, and `j` a formula clock, named like a
-proposition (lowercase first letter). Freeze `j . phi` resets `j` to 0 and
-evaluates `phi`; `phi : clock_expr` attaches a clock guard that filters the
-timed backward step.
+`Pre(Z)` is the set of regions with an edge of the zone graph into `Z`, kept only
+when its zone, under the guard of the operand (if any), is not empty. There is no
+`X` operator: the next region in dense time is not unique.
 
-- No next operator: `X p`, `AX p`, `EX p` and `A next p` are rejected with a
-  message that quotes the operator, such as "TCTL has no next operator ('AX' at
-  position 1): time is dense, so there is no unique next state". Names such as
-  `xray` and `nextstate` are propositions.
-- A connective after a prefix that no parenthesis closes (`AF p && q`,
-  `A p U q && r`, freeze `j. p && q`, clock constraint `AF p : x<5 && q`) is a
-  syntax error that gives the position and both readings (see
-  [the knowledge base](../reference/logic_knowledge_base.md#prefix-before-a-connective)).
+## Operators
 
-## Semantic denotations
+`All` is the set of all regions and `[[phi]]` the set of regions where `phi`
+holds.
 
-The checker builds a zone graph, a symbolic form of the regional transition
-system (RTS) whose nodes are regions `(location, zone)` with delay and discrete
-edges. Each subformula is evaluated bottom-up into the set of regions that
-satisfy it (`rsat` labelling):
+**Table 1: TCTL operators.**
 
-- Atoms label all regions at locations where the proposition holds.
-- Clock constraints label regions whose zone meets the guard: the zone, the guard
-  and the location invariant have a non-empty intersection.
-- Freeze `j.phi`: region `r` satisfies `j.phi` when `r` with formula clock `j`
-  reset to `0` satisfies `phi`.
-- Boolean connectives are union, intersection and complement over all regions.
-
-Temporal operators are fixpoints over region sets. `Pre(Z)` is one reverse step
-in the zone graph over delay and discrete edges (`timed_predecessors` in
-`parsers/game_structures/timed_cgs/regions.py`), filtered by the attached clock
-guard when there is one. `Sat(phi)` is the set of regions labelled with `phi`,
-`All` the set of all regions, and `lfp` / `gfp` the least and greatest
-fixpoints. Table 1 gives the
-fixpoint of each operator:
-
-**Table 1: TCTL temporal operators as fixpoints over regions.**
-
-| Operator | Definition |
-| :--- | :--- |
-| `EF phi` | `lfp Z . Sat(phi) union Pre(Z)` |
-| `AF phi` | `All \ gfp Z . (All \ Sat(phi)) intersect Pre(Z)` |
-| `EG phi` | `gfp Z . Sat(phi) intersect Pre(Z)` |
-| `AG phi` | `All \ lfp Z . (All \ Sat(phi)) union Pre(Z)` |
-| `E(phi U psi)` | `lfp Z . Sat(psi) union (Sat(phi) intersect Pre(Z))` |
-| `A(phi U psi)` | `All \ lfp Z . (All \ Sat(psi)) union ((All \ Sat(phi)) intersect (All \ Sat(psi)) intersect AX(Z))` where `AX(Z) = All \ Pre(All \ Z)` |
-
-The result lists the locations where at least one region satisfies the formula.
-The initial state satisfies it when the initial node of the zone graph is in the
-set or is contained in a satisfying region at the same location.
-
-Implementation techniques for the zone graph: [algorithm design](index.md).
-
-## Theory vs implementation
-
-Table 2 sets the notes next to the code:
-
-**Table 2: TCTL theory and implementation.**
-
-| Aspect | The notes (Definition 35) | Code |
+| Formula | Set computed | Iteration starts from |
 | :--- | :--- | :--- |
-| Fragment | `p`, clock constraints, `!`, `&&`, `\|\|`, `z in psi`, `A(psi1 U psi2)`, `E(psi1 U psi2)` | Same, plus `F`, `G`, `->` and attached guards `phi : clock_expr` |
-| Freeze | `z in psi` | `j . phi` |
-| `F` and `G` | Not in the fragment | Computed directly by the fixpoints of Table 1 |
-| Bounded until | Written with freeze, as `z in A((psi1 && z <= 5) U psi2)` | No bounded-until syntax; write the same freeze form |
-| Symbolic state space | Regions | Zone graph |
+| `EF phi` | least fixpoint of `Z = Z \| Pre(Z)` | `[[phi]]` |
+| `EG phi` | greatest fixpoint of `Z = [[phi]] & Pre(Z)` | `All` |
+| `AF phi` | `All` minus the greatest fixpoint of `Z = (All - [[phi]]) & Pre(Z)` | `All` |
+| `AG phi` | `All` minus the least fixpoint of `Z = Z \| Pre(Z)` | `All - [[phi]]` |
+| `E(phi U psi)` | least fixpoint of `Z = [[psi]] \| ([[phi]] & Pre(Z))` | `[[psi]]` |
+| `A(phi U psi)` | `All` minus the least fixpoint of `Z = N \| ((All - [[phi]]) & N & (All - Pre(All - Z)))`, with `N = All - [[psi]]` | `N` |
 
-## Code map
+Because the `A(phi U psi)` iteration starts from every region where `psi` fails,
+its result holds only where `psi` holds. Example: one clock `x`; `s0` goes to
+`s1`, which loops; only `s1` is labelled `p`; both locations have the invariant
+`x<=2`. `AF p` holds at `s0`, but `A(true U p)` does not.
 
-Table 3 gives the role of each file the TCTL checker uses:
+## Result
 
-**Table 3: TCTL code map.**
-
-| Path | Role |
-| :--- | :--- |
-| `TCTL/TCTL.py` | Entry: parse, extend clocks, zone graph, solve, project |
-| `TCTL/solver.py` | AST traversal and handler dispatch |
-| `TCTL/evaluators.py` | Leaf, boolean, freeze, and clock-guard handlers |
-| `TCTL/operators.py` | Temporal fixpoints on regions |
-| `timed_cgs/regions.py` | Region sets, `timed_predecessors`, projection |
-| `timed_cgs/formula_clocks.py` | Collect `J` from AST; extend `TimedCGS` |
-| `timed_cgs/zone_graph.py` | Zone graph construction |
-| `parsers/formulas/TCTL/` | Parser and AST types |
-
-## Tests
-
-Table 4 lists the TCTL tests and fixtures and what each covers:
-
-**Table 4: TCTL tests and fixtures.**
-
-| Path | Coverage |
-| :--- | :--- |
-| `tests/integration/algorithms/tctl/test_correctness.py` | Temporal ops, guards, freeze |
-| `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared timedCGS with TOL |
-| `tests/unit/parsers/models/timed_cgs/test_zone_graph.py` | Zone graph paths and guards |
+The formula holds when the initial region is in the final set. `res` lists the
+locations of the regions in the set, and `initial_state` gives the verdict, as in
+the [shared steps](index.md#steps-shared-by-the-set-based-checkers).

@@ -146,7 +146,7 @@ flowchart TB
 CTL is the only logic with a `generate_trace` option. It returns a witness or a
 counterexample for the outermost operator of the formula, or no trace; see
 [Traces](../reference/logic_knowledge_base.md#traces-optional) and the
-[CTL theory and implementation table](../algorithms/ctl.md#theory-vs-implementation).
+[CTL traces](../algorithms/ctl.md#traces).
 
 ```mermaid
 flowchart TD

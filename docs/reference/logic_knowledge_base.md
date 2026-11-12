@@ -3,8 +3,8 @@
 This is the cross-logic theory and syntax map for VITAMIN, for a developer who
 writes formulas in several logics or adds a logic. The per-logic pages in
 [docs/algorithms/](../algorithms/index.md) (for example
-[ictl.md](../algorithms/ictl.md)) hold denotations, fixpoints, model validation
-and how the code differs from the papers, and
+[ictl.md](../algorithms/ictl.md)) say how each checker computes its operators and
+which model checks it runs, and
 [file_formats.md](file_formats.md) says how to author `.txt` models.
 
 ## Contents
@@ -13,6 +13,7 @@ and how the code differs from the papers, and
 - [Per-logic algorithm pages](#per-logic-algorithm-pages)
 - [Boolean logic (shared syntax)](#boolean-logic-shared-syntax)
 - [CTL (Computation Tree Logic)](#ctl---computation-tree-logic)
+- [ATL*](#atl-star)
 - [NatSL](#natsl---natural-strategy-logic)
 - [OATL](#oatl)
 - [OL](#ol)
@@ -128,8 +129,8 @@ with a prefix before Until, `prefix p U q` and `prefix (p U q)` are the same
 formula and build the same tree: `<1> p U q` and `<1> (p U q)`, `<J5> p U q` and
 `<J5> (p U q)`, `A p U q` and `A(p U q)`. ATL writes the first form (Alur,
 Henzinger, Kupferman, JACM 2002), and the obstruction logics write the
-second. ATL* reads `<<A>> p U q` the same way; the reason and the other ATL* forms
-are in [the ATL* reference](../algorithms/atl_star.md). Release (`R`) and Weak Until
+second. ATL* reads `<<A>> p U q` the same way; the other ATL* forms
+are in [ATL*](#atl-star). Release (`R`) and Weak Until
 (`W`) follow the same rule where a logic has them. The 17 logics covered are listed
 in `model_checker/tests/unit/parsers/formulas/test_until_after_prefix.py`.
 
@@ -157,12 +158,12 @@ These parse, because they have one reading:
   `<1> ((p && q) U r)`, because `<1> p` alone is no formula of these logics.
 
 ATL* differs, because `<<1>> p` and a bare Until inside a coalition are ATL*
-formulas; its rules and messages are in [the ATL* reference](../algorithms/atl_star.md).
+formulas; its rules and messages are in [ATL*](#atl-star).
 LTL has no prefix: its `F`, `G`, `X` and `U` follow the precedence table of the
 [Spot LTL library](https://spot.lre.epita.fr/tl.pdf), so
 `F p && q` is `(F p) && q` and `p U q && r` is `(p U q) && r`.
 NatSL has no connectives after its prefix, so it rejects `E{1}x: (x, 1) F p && q`
-without offering two readings; see [the NatSL reference](../algorithms/natsl.md#formula-language).
+without offering two readings; see [NatSL](#natsl---natural-strategy-logic).
 
 ### Operators and names
 
@@ -229,8 +230,58 @@ The checker accepts:
 - Path quantifiers `E` / `A` with temporal operators `X`, `F`, `G`, and `U`.
 - Boolean connectives shared with the common formula syntax.
 
-Denotations, traces and how the code differs from the theory:
+How the checker computes each operator, and traces:
 [CTL algorithm](../algorithms/ctl.md).
+
+<a id="atl-star"></a>
+## ATL*
+
+ATL* lets a coalition scope over any path formula, including nested coalitions,
+on a `CGS` model. A state formula `phi` holds at a state; a path formula `psi`,
+such as a bare Until, holds on a path:
+
+```text
+phi ::= p | !phi | phi && phi | phi || phi | phi -> phi | <<A>> psi
+psi ::= phi | !psi | psi && psi | X psi | psi U psi | F psi | G psi | <<A>> psi
+```
+
+A temporal operator outside a coalition parses but is an error when checked:
+`p && X q` gives "a bare Next is not a state formula; temporal operators need a
+<<...>> coalition around them".
+
+A coalition is written `<<1,2>>`, with agent ids in `1..n`; an empty coalition is
+a syntax error. ATL writes a coalition with single angle brackets (`<1,2>`);
+Wallet_ATL uses `<<...>>` with a different meaning ([Wallet_ATL](#wallet_atl)).
+
+Table 1 lists the written forms of an Until under a coalition:
+
+**Table 1: Until under an ATL* coalition.**
+
+| Form | Reading |
+| :--- | :--- |
+| `<<A>> x U y` | The coalition covers the Until: the same tree as `<<A>> (x U y)` |
+| `<<A>> (x U y)` | The coalition covers the Until |
+| `(<<A>> x) U y` | The coalition covers only the left operand; this is a path formula, so it is checkable only inside another coalition, as in `<<B>> ((<<A>> x) U y)` |
+
+Each operand of that `U` is one unary formula, so `<<1>> X p U q` is
+`<<1>> ((X p) U q)` and `X <<1>> p U q` is `X (<<1>> (p U q))`.
+
+`!`, `X`, `F` and `G` bind tighter than the connectives: `<<1>> (F p && G q)` is
+`<<1>> ((F p) && (G q))`. These are syntax errors that ask for parentheses:
+
+- A second `U`, as in `<<1>> p U q U r` or `p U q U r`.
+- `U` next to `&&`, `||` or `->`, as in `p U q && r` or `p && q U r`. The messages
+  are `'x U y && z' is ambiguous: write (x U y) && z or x U (y && z)` and
+  `'x && y U z' is ambiguous: write (x && y) U z or x && (y U z)`, with the
+  position of the `U`.
+- A connective right after a coalition, as in `<<1>> p && q`, `<<1>> F p && q` or
+  `<<1>> (p U q) && r`: in ATL* `<<1>> p && q` can be `(<<1>> p) && q` or
+  `<<1>> (p && q)`. Write `(<<1>> F p) && q` or `<<1>> (F p && q)`. A coalition at
+  the end, `q && <<1>> F p`, has one reading.
+
+An atom the model does not declare is an error: "'zz' is not among the model's
+declared propositions ['p', 'q']". How the checker works:
+[ATL* algorithm](../algorithms/atl_star.md).
 
 <a id="natsl---natural-strategy-logic"></a>
 ## NatSL (Natural Strategy Logic)
@@ -263,10 +314,18 @@ The checker accepts:
 - Multi-character strategy variables and explicit agent bindings. The bindings cover
   every agent of the model exactly once, so `E{1}x: (x, 1) F goal` checks only on a
   1-agent model.
-- A goal is an operator, a space and a proposition (`F goal`); see [operators and names](#operators-and-names).
+- A goal is `F`, `G` or `X` (uppercase), a space and one proposition (`F goal`),
+  or its negation, written before the operator (`!F goal`, `not F goal`; `F !goal`
+  is rejected); see
+  [operators and names](#operators-and-names). A connective in a goal, as in
+  `E{1}x: (x, 1) F p && q` or `F (p && q)`, is rejected with "Unsupported goal;
+  this prototype accepts F p, G p, X p and their negations, with an uppercase
+  operator and a space after it".
+- Each strategy variable is quantified once and bound once, each agent is bound
+  once, and each bound `{k}` is at least 1.
 
-How the strategies are searched, the `space` and `time` modes, and how the code
-differs from the paper: [NatSL algorithm](../algorithms/natsl.md).
+How the strategies are searched and the `space` and `time` modes:
+[NatSL algorithm](../algorithms/natsl.md).
 
 <a id="oatl"></a>
 ## OATL
@@ -324,8 +383,8 @@ state `s` costs `$(s, a)`.
 <1><0> X p
 ```
 
-Denotations, how costs and missing costs are read, and how the code differs from
-the paper: [OATL algorithm](../algorithms/oatl.md).
+How the checker computes each operator and reads costs and missing costs:
+[OATL algorithm](../algorithms/oatl.md).
 
 <a id="ol"></a>
 ## OL
@@ -334,7 +393,7 @@ the paper: [OATL algorithm](../algorithms/oatl.md).
 
 OL (Obstruction Logic, ECAI 2023) is a game against a Demon on `costCGS` models: `<Jk> phi` holds when the Demon, with a budget of `k` at each step, can disable edges so that every remaining path satisfies `phi`.
 It is OATL with the coalition of all agents.
-The [OL algorithm reference](../algorithms/ol.md) gives the rules and the sources.
+How the checker computes it: [OL algorithm](../algorithms/ol.md).
 
 The standard syntax is the cost prefix `<Jk> phi`, where `k` is a natural number, 0 included.
 
@@ -360,7 +419,7 @@ The standard syntax is the cost prefix `<Jk> phi`, where `k` is a natural number
 <J3> (p U q)
 ```
 
-Denotations and how the code differs from the paper: [OL algorithm](../algorithms/ol.md).
+How the checker computes each operator: [OL algorithm](../algorithms/ol.md).
 
 <a id="rbatl--rabatl"></a>
 ## RBATL / RABATL
@@ -400,7 +459,7 @@ RBATL and RABATL accept the same formulas.
 <1><5> (p U q)
 ```
 
-Denotations, the two cost sections and how the code differs from the theory:
+How the checkers compute each operator and the cost of a joint action:
 [RBATL algorithm](../algorithms/rbatl.md) and [RABATL algorithm](../algorithms/rabatl.md).
 
 <a id="capatl"></a>
@@ -424,9 +483,18 @@ CapATL is designed for models with explicit capacity constraints ([`capCGS`](fil
 #### Supported syntax
 
 - Coalition: `<{agent1,agent2,...}>` (curly braces required; no `, k`).
-- Knowledge: `K1(2 is c)`, `K2(!(3 is c) && 1 is cop)`, alias `kcap1(...)`,
-  where `a is c` is the paper's `a -> c`. Accepted forms, errors and precedence
-  are in [the CapATL reference](../algorithms/capatl.md#formula-language).
+- Knowledge: `Ka(cap)`, as in `K1(2 is c)`, with `kcap1(...)` as the word alias.
+  `cap` is a capacity formula: `a is c` (agent number `a` has capacity `c`, a name
+  from the model's `Capacities` section), combined with `!`, `&&`, `||`, `->`,
+  `true`, `false` and parentheses, with the precedence of the other connectives.
+  `K2(!(3 is c) && 1 is cop)` says that agent 2 knows that agent 3 does not have
+  capacity `c` and agent 1 has `cop`. `Ka(...)` may stand alone or inside any
+  formula (`<{1}> F (g && K1(1 is c))`); `a is c` is valid only inside it.
+- Knowledge errors: `K1 1 is c` (no parentheses), `K1(K2(1 is c))` (nested `K`),
+  `K1(p)` (an atom inside `K`) and an agent out of range are errors whose message
+  names the part. `K1x` and `K12x` are each one word, refused as names because they
+  start with a capital ("Atomic proposition 'K1x' is invalid: ..."); the bare word
+  `kcap` is reserved (see [names and keywords](#names-and-keywords)).
 - Temporal operators: `X`, `F`, `G`, `U`, and binary `R` (Release).
 
 #### Validation rules
@@ -449,8 +517,7 @@ CapATL is designed for models with explicit capacity constraints ([`capCGS`](fil
 <{1}> false R g
 ```
 
-Denotations and how the code differs from the paper:
-[CapATL algorithm](../algorithms/capatl.md).
+How the checker computes each operator: [CapATL algorithm](../algorithms/capatl.md).
 
 <a id="cotl"></a>
 ## COTL
@@ -503,8 +570,8 @@ other demons and the path, on an `ObstructionModel`.
 <1,2><3> (p U q)
 ```
 
-Denotations, which operators hold on a path that stops, and how the code differs
-from the paper: [COTL algorithm](../algorithms/cotl.md).
+How the checker computes each operator, and which operators hold on a path that
+stops: [COTL algorithm](../algorithms/cotl.md).
 
 <a id="wallet_atl"></a>
 ## Wallet_ATL
@@ -513,7 +580,13 @@ ATL with wallet-aware coalitions over [`WalletCGS`](file_formats.md#walletcgs-se
 
 The coalition syntax is `<<agents[:wallet constraints]>>` followed by a temporal formula.
 The `<<>>` prefix is mandatory before `X`, `F`, `G`, or `U`; bare temporal operators without a coalition are rejected.
-Each wallet guard names a coalition agent, and every guard must hold; see [Wallet_ATL formula language](../algorithms/wallet_atl.md#formula-language).
+A guard is written `wallet(agent, op value)`, with `op` one of `>=`, `<=`, `==`,
+`>`, `<` and `value` a natural number, and guards are joined with `&&` only, as in
+`<<1,2:wallet(1, >= 10) && wallet(2, >= 0)>>`. Every guard must hold; a coalition
+agent with no guard is unconstrained, and one agent may have several guards
+(`wallet(1, >= 3) && wallet(1, <= 5)`). Each guard names a coalition agent:
+`<<1:wallet(2, >= 5)>>` is a syntax error that names agent 2. `<<>>` with no agent
+is an error.
 
 Wallet_ATL uses a `<<...>>` prefix instead of `<1>` because plain ATL uses `<1>` for
 coalitions only, while Wallet_ATL embeds optional balance guards (`:wallet(agent, op value)`)
@@ -532,10 +605,10 @@ For example:
 
 The temporal operators are `X`, `F`, `G`, `U`. The model type is `WalletCGS`. See [Wallet_ATL usage](../examples/wallet_atl_usage.md).
 
-Which moves an agent can pay for, where each operator checks the guard, and how
-the code differs from the paper: [Wallet_ATL algorithm](../algorithms/wallet_atl.md)
-(see its [operators](../algorithms/wallet_atl.md#operators) and
-[semantic denotations](../algorithms/wallet_atl.md#semantic-denotations)).
+Which moves an agent can pay for and where each operator checks the guard:
+[Wallet_ATL algorithm](../algorithms/wallet_atl.md) (see its
+[payable moves](../algorithms/wallet_atl.md#payable-moves) and
+[operators](../algorithms/wallet_atl.md#operators)).
 
 <a id="ictl---intuitionistic-ctl"></a>
 ## ICTL (Intuitionistic CTL)
@@ -591,7 +664,7 @@ E p R q
 
 The model type is `BirelationalMatrix`, a `CGS` subclass; its cells are in
 [BirelationalMatrix sections](file_formats.md#birelationalmatrix-sections-ictl).
-Denotations, the C1/C2 model checks and how the code differs from the papers:
+How the checker computes each operator, and the C1/C2 model checks:
 [ICTL algorithm](../algorithms/ictl.md).
 
 <a id="iatl---intuitionistic-atl"></a>
@@ -636,8 +709,8 @@ p -> q
 
 The model type is `BCGS`, a `CGS` subclass: CGS `Transition` cells (joint
 actions) plus a boolean `Preorder` section (see
-[BCGS sections](file_formats.md#bcgs-sections-iatl)). Denotations, the C1/C2
-model checks and how the code differs from the paper:
+[BCGS sections](file_formats.md#bcgs-sections-iatl)). How the checker
+computes each operator, and the C1/C2 model checks:
 [IATL algorithm](../algorithms/iatl.md).
 
 <a id="tctl---timed-ctl"></a>
@@ -662,8 +735,8 @@ EF (p : x<=1)
 j.A(j<=7 U goal)
 ```
 
-The model type is `timedCGS`. The zone graph, the fixpoints over regions and how
-the code differs from the theory: [TCTL algorithm](../algorithms/tctl.md).
+The model type is `timedCGS`. The zone graph and the fixpoints over regions:
+[TCTL algorithm](../algorithms/tctl.md).
 
 <a id="tol---timed-obstruction-logic"></a>
 ## TOL
@@ -691,8 +764,8 @@ same way.
 
 The freeze `j.phi` resets formula clock `j` to `0` at the current state.
 
-The model type is `timedCGS`, the same as TCTL. Denotations and how the code
-differs from the paper: [TOL algorithm](../algorithms/tol.md).
+The model type is `timedCGS`, the same as TCTL. How the checker computes each
+operator: [TOL algorithm](../algorithms/tol.md).
 
 <a id="empty-coalition-policy"></a>
 ## Empty and repeated coalition policy
