@@ -193,6 +193,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- costCGS and timedCGS files: a cost for a state that is not in `Name_State` is an
+  error that names the state and the action. Before, it was kept and never used.
 - costCGS files: `Costs_for_actions` or `Costs_for_actions_split` placed after
   `Transition` no longer have their lines read as transition rows, and comment
   lines (`#`, `//`) inside `Transition` are skipped.

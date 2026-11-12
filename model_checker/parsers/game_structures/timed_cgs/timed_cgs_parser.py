@@ -29,6 +29,7 @@ _NON_TIMED_SECTION_HEADERS = (
 def parse_base_sections(lines: list[str], instance: Any) -> None:
     cost_cgs_parser.parse_cost_sections(lines, instance)
     cost_cgs_parser.parse_common_sections(lines, instance)
+    cost_cgs_parser.validate_cost_states(instance)
     cost_cgs_parser.parse_transitions(lines, instance)
 
 

@@ -1,4 +1,4 @@
-"""OATL model checking entry point; semantics in docs/OATL/algorithm.md."""
+"""OATL model checking entry point; semantics in docs/algorithms/oatl.md."""
 
 from model_checker.algorithms.explicit.OATL.solver import solve_tree
 from model_checker.algorithms.explicit.shared import (

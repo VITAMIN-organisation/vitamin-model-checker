@@ -1,6 +1,6 @@
 """The KB sections "Names and keywords" and "Syntax cards" against the code.
 
-docs/logic_knowledge_base.md is the one doc that states the reserved words, the word
+docs/reference/logic_knowledge_base.md is the one doc that states the reserved words, the word
 operators and a syntax card per logic. These tests read its tables, so a change to
 `OPERATOR_WORDS`, `FORMULA_RESERVED_WORDS`, a parser or a logic's model type that
 the doc does not follow fails here. The KB lives outside the package, so these tests
@@ -26,7 +26,7 @@ from model_checker.tests.helpers.formula_cases import (
     unary,
 )
 
-_KB = Path(__file__).resolve().parents[5] / "docs" / "logic_knowledge_base.md"
+_KB = Path(__file__).resolve().parents[5] / "docs" / "reference" / "logic_knowledge_base.md"
 _EXCEPT = "every logic except "
 
 

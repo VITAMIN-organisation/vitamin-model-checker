@@ -1,7 +1,7 @@
 """Which words are proposition names, in every logic.
 
 A name starts with a lowercase letter (`goal`, `gOAL`); `Goal` and `P` are errors.
-The reserved words (docs/logic_knowledge_base.md, "Names and keywords", checked
+The reserved words (docs/reference/logic_knowledge_base.md, "Names and keywords", checked
 against `FORMULA_RESERVED_WORDS` by test_names_doc.py) are never names, and the word
 forms of the operators (`eventually`, `until`) are operators.
 """
@@ -49,7 +49,7 @@ _RESERVED_IN_OTHER_CASE = sorted(
 @pytest.mark.parametrize(("logic", "word"), _RESERVED_IN_OTHER_CASE)
 def test_reserved_word_in_another_letter_case_is_not_a_proposition(logic, word):
     """`F Globally` is an error: reserved words are case-insensitive as names
-    (docs/logic_knowledge_base.md, "Names and keywords", rule 2)."""
+    (docs/reference/logic_knowledge_base.md, "Names and keywords", rule 2)."""
     prefix, op = OPERATOR_FORMS[logic]
     assert parse(logic, f"{prefix}{op} {word}") is None
 

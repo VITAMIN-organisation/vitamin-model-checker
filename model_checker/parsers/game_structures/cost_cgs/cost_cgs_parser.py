@@ -96,6 +96,18 @@ def parse_cost_line(line: str, instance: Any, parse_split: bool = False) -> None
         instance.cost_for_action.update({key: costs})
 
 
+def validate_cost_states(instance: Any) -> None:
+    """Reject a cost whose state is not in Name_State; call it after the common
+    sections are parsed."""
+    declared = {str(s) for s in instance.states}
+    for key in instance.cost_for_action:
+        action_name, _, state = key.partition(";")
+        if state not in declared:
+            raise ValueError(
+                f"Cost for undeclared state '{state}' for action '{action_name}'."
+            )
+
+
 def normalize_cost_action_keys(instance: Any) -> None:
     """Rewrite cost keys as `|`-joined profiles (``AAC`` to ``A|A|C``, ``***`` to
     ``*|*|*``, ``*`` unchanged); call it once ``Number_of_agents`` is known."""

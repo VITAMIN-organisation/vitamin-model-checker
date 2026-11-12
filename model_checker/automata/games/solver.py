@@ -24,7 +24,7 @@ def solve(game: Game) -> GameSolution:
         raise ImportError(
             "Spot is required for solve() "
             "(pip install spottl on Linux, or conda-forge elsewhere; "
-            "see docs/ATL_STAR/algorithm.md)"
+            "see docs/algorithms/atl_star.md)"
         )
     if game.objective is None:
         raise ValueError(

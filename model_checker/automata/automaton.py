@@ -31,7 +31,7 @@ class Automaton:
             raise ImportError(
                 "Spot is required for Automaton.from_ltl() "
                 "(pip install spottl on Linux, or conda-forge elsewhere; "
-                "see docs/ATL_STAR/algorithm.md)"
+                "see docs/algorithms/atl_star.md)"
             )
 
         graph = spot.translate(formula, "parity", "deterministic")
@@ -44,7 +44,7 @@ class Automaton:
             raise ImportError(
                 "Spot is required for Automaton.acceptance_condition() "
                 "(pip install spottl on Linux, or conda-forge elsewhere; "
-                "see docs/ATL_STAR/algorithm.md)"
+                "see docs/algorithms/atl_star.md)"
             )
 
         return self._classify(self._priorities())

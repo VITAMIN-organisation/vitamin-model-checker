@@ -28,6 +28,7 @@ class CostCGS(CGS):
 
         cost_cgs_parser.parse_cost_sections(lines, self)
         cost_cgs_parser.parse_common_sections(lines, self)
+        cost_cgs_parser.validate_cost_states(self)
         cost_cgs_parser.normalize_cost_action_keys(self)
         cost_cgs_parser.parse_transitions(lines, self)
 

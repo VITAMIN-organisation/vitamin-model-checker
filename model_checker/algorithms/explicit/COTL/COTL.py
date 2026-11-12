@@ -1,4 +1,4 @@
-"""COTL model checking entry point; semantics in docs/COTL/algorithm.md."""
+"""COTL model checking entry point; semantics in docs/algorithms/cotl.md."""
 
 from model_checker.algorithms.explicit.COTL.solver import solve_tree
 from model_checker.algorithms.explicit.shared import (

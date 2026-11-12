@@ -45,7 +45,7 @@ def test_every_agent_of_the_model_may_join(logic):
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", sorted(set(_COALITION) - {"COTL"}))
 def test_empty_coalition_is_rejected(logic):
-    """`<>` names no agent (docs/logic_knowledge_base.md rejects it in every logic but COTL)."""
+    """`<>` names no agent (docs/reference/logic_knowledge_base.md rejects it in every logic but COTL)."""
     assert parse(logic, _formula(logic, "")) is None
 
 
@@ -76,7 +76,7 @@ def test_agent_outside_the_model_is_rejected_by_number(logic, agent):
     ],
 )
 def test_agent_listed_twice_is_rejected_by_number(logic, agents, repeated):
-    """A coalition is a set of agents (docs/logic_knowledge_base.md, "Empty and
+    """A coalition is a set of agents (docs/reference/logic_knowledge_base.md, "Empty and
     Repeated Coalition Policy"), so no agent is listed twice; the error names the
     repeated agent."""
     [error, *_] = parse_errors(logic, _formula(logic, agents))

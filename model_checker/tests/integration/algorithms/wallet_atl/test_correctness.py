@@ -71,7 +71,7 @@ class TestWalletATLSemantics:
 
     @pytest.mark.parametrize("goal", ["p", "q"])
     def test_eventually_equals_true_until(self, wallet_atl_model, goal):
-        """`<<A:C>>F psi` equals `<<A:C>>true U psi` (docs/Wallet_ATL/algorithm.md)."""
+        """`<<A:C>>F psi` equals `<<A:C>>true U psi` (docs/algorithms/wallet_atl.md)."""
         coalition = "<<1:wallet(1, >= 10)>>"
         eventually = _core_walletatl_checking(wallet_atl_model, f"{coalition}F {goal}")
         until = _core_walletatl_checking(wallet_atl_model, f"{coalition} true U {goal}")
@@ -258,7 +258,7 @@ class TestWalletATLGuards:
         keeps wPre(Pre({s0, s1})) & [[p]] = {s0} (s1 fails the guard); round 2 finds
         no move from any state into {s0}; the result is empty. Def. 4.5 would check
         the guard only at s0 and keep it, an open question in
-        docs/Wallet_ATL/algorithm.md.
+        docs/algorithms/wallet_atl.md.
         """
         content = (
             "Transition\n0 I|0 0\n0 * 0\n0 0 *\nName_State\ns0 s1 s2\n"

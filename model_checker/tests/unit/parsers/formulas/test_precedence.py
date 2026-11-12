@@ -1,6 +1,6 @@
 """Connectives group the same way in every logic.
 
-Precedence follows docs/logic_knowledge_base.md ("Boolean Operators"): `!` binds
+Precedence follows docs/reference/logic_knowledge_base.md ("Boolean Operators"): `!` binds
 tightest, then `&&`, `||`, `->`. `&&` and `||` group to the left, `->` to the right.
 Each flat formula must build the tree of its parenthesized reading and differ from
 the other reading, so a parser that ignored the parentheses would fail.

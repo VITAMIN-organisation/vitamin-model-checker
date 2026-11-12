@@ -82,3 +82,23 @@ def test_transition_rows_stop_at_cost_section_and_skip_comments():
     ]
     rows = cost_cgs_parser.extract_transition_rows(lines, CostCGS())
     assert rows == [["0", "I*"], ["0", "0"]]
+
+
+@pytest.mark.unit
+def test_cost_for_undeclared_state_is_refused():
+    """`s9` is not in Name_State, so its cost is an error naming the state and the action."""
+    lines = [
+        "Transition",
+        "I",
+        "Name_State",
+        "s0",
+        "Initial_State",
+        "s0",
+        "Costs_for_actions",
+        "I s0$1",
+        "I s9$1",
+        "Number_of_agents",
+        "1",
+    ]
+    with pytest.raises(ValueError, match=r"undeclared state 's9' for action 'I'"):
+        CostCGS()._parse_lines(lines)

@@ -40,7 +40,7 @@ def product(
         raise ImportError(
             "Spot is required for product() "
             "(pip install spottl on Linux, or conda-forge elsewhere; "
-            "see docs/ATL_STAR/algorithm.md)"
+            "see docs/algorithms/atl_star.md)"
         )
     spot_mod, buddy_mod = spot, buddy
 

@@ -2,7 +2,7 @@
 
 `A p U q`, `A(p U q)` and `A[p U q]` are one formula; square brackets go only
 around an Until or Release, and only in CTL and ICTL (Clarke, Emerson, Sistla
-1986, p. 246; docs/logic_knowledge_base.md, "Grouping and Nesting").
+1986, p. 246; docs/reference/logic_knowledge_base.md, "Grouping and Nesting").
 """
 
 import pytest
