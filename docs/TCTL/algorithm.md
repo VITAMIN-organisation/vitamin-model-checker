@@ -50,7 +50,7 @@ Clock sets:
 
 ```text
 phi ::= p | gamma | !phi | phi && psi | phi || psi
-      | y.reset(phi)                    -- FREEZE (VITAMIN: y.phi)
+      | y.reset(phi)                    (freeze; VITAMIN writes y.phi)
       | A[phi U psi]_gamma | E[phi U psi]_gamma
 ```
 
@@ -59,11 +59,11 @@ VITAMIN surface syntax:
 ```text
 phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
       | x <= c | x < c | x >= c | x > c
-      | j . phi                         -- FREEZE
-      | phi : clock_expr                -- guard attachment (paper subscript gamma)
+      | j . phi                         (freeze)
+      | phi : clock_expr                (guard attachment, paper subscript gamma)
       | E F phi | A F phi | E G phi | A G phi
       | E (phi U psi) | A (phi U psi)
-      | E phi U psi   | A phi U psi     -- same AST as parenthesized form
+      | E phi U psi   | A phi U psi     (same AST as parenthesized form)
 ```
 
 Sugar: `F` / `G` / `U` / `until` / `eventually` / `globally`.
@@ -98,7 +98,7 @@ A[phi U psi]_<=c  ~  y.reset(phi && A[true U (y<=c && psi)])   with fresh y in Y
 - FREEZE `y.phi`: region `r` satisfies `y.phi` when `r` with formula clock `y`
   reset to `0` satisfies `phi`.
 - Until uses region-level fixpoints with timed backward steps. Because
-  formula are evaluated on each zone-graph node, prefix obligations correspond to
+  formulas are evaluated on each zone-graph node, prefix obligations correspond to
   the paper's `phi@i` requirement along delay and discrete edges.
 - Boolean connectives are union, intersection, and complement over all regions in
   the zone graph.
@@ -124,12 +124,15 @@ Implementation techniques (zone graph): [algorithm_design.md](../algorithm_desig
 
 ## Model-checking pipeline
 
+The checker parses the formula, reads the model, extends the clocks and builds the
+zone graph before solving:
+
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1f5f99", "primaryTextColor": "#ffffff", "primaryBorderColor": "#4a90d9", "lineColor": "#75808f", "tertiaryTextColor": "#75808f", "titleColor": "#75808f", "clusterBkg": "transparent", "clusterBorder": "#75808f", "edgeLabelBackground": "transparent"}}}%%
 flowchart TB
     parse["TCTLParser.parse"]
     load["TimedCGS.read_file"]
-    clocks["collect_formula_clocks + extend_timed_cgs_clocks"]
+    clocks["collect_formula_clocks<br/>+ extend_timed_cgs_clocks"]
     zones["ZoneGraph(tcgs)"]
     solve["solve_tree (rsat)"]
     project["project_regions_to_locations"]
@@ -148,8 +151,12 @@ All temporal operators share `timed_predecessors` in
 
 ### Fixpoints (region sets)
 
+Table 2 gives the fixpoint each temporal operator computes over region sets:
+
+**Table 2: Temporal operator fixpoints.**
+
 | Operator | Definition |
-|----------|------------|
+| :--- | :--- |
 | `EF phi` | `lfp Z . Sat(phi) union Pre(Z)` |
 | `AF phi` | `All \ gfp Z . (All \ Sat(phi)) intersect Pre(Z)` |
 | `EG phi` | `gfp Z . Sat(phi) intersect Pre(Z)` |
@@ -161,8 +168,12 @@ All temporal operators share `timed_predecessors` in
 
 ## Code map
 
+Table 3 gives the role of each file the TCTL checker uses:
+
+**Table 3: TCTL code map.**
+
 | Path | Role |
-|------|------|
+| :--- | :--- |
 | `TCTL/TCTL.py` | Entry: parse, extend clocks, zone graph, solve, project |
 | `TCTL/solver.py` | AST traversal and handler dispatch |
 | `TCTL/evaluators.py` | Leaf, boolean, FREEZE, and clock-guard handlers |
@@ -174,8 +185,12 @@ All temporal operators share `timed_predecessors` in
 
 ## Tests
 
+Table 4 lists the TCTL tests and fixtures and what each covers:
+
+**Table 4: TCTL tests and fixtures.**
+
 | Path | Coverage |
-|------|----------|
+| :--- | :--- |
 | `tests/integration/algorithms/tctl/test_correctness.py` | Temporal ops, guards, FREEZE |
 | `tests/fixtures/timedCGS/tctl_tol_minimal.txt` | Shared timedCGS with TOL |
 | `tests/unit/parsers/models/timed_cgs/test_zone_graph.py` | Zone graph paths and guards |

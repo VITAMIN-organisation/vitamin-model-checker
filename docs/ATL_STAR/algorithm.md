@@ -79,7 +79,7 @@ reduced to a 2-player parity game in the steps of Table 2.
 | :---: | :--- |
 | 1 | Eliminate nested `<<A'>> psi'` bottom-up into fresh propositions |
 | 2 | Translate the remaining pure-LTL `psi` to a deterministic parity automaton |
-| 3 | Product with the CGS, unfold into a turn-based arena, solve as parity/Buchi/co-Buchi |
+| 3 | Product with the CGS, unfold into a turn-based arena, solve as parity/Büchi/co-Büchi |
 | 4 | `<<A>> psi`'s truth set = player 0's winning region |
 
 Needs `model_checker/automata/` (vendored, wraps Spot); no other logic
