@@ -39,12 +39,13 @@ The knowledge base holds:
   [Until after a prefix](#until-after-a-prefix),
   [a prefix before a connective](#prefix-before-a-connective) and
   [operators and names](#operators-and-names).
-- One section for each of CTL, NatSL, OATL, OL, RBATL and RABATL, CapATL, COTL,
-  Wallet_ATL, ICTL, IATL, TCTL and TOL: the syntax and semantics from the literature,
-  the formulas and model type the code accepts, with examples, and a link to the
-  logic's algorithm page. LTL, ATL, ATLF, ATL*, NatATL (with
-  NatATL_Recall) and NatATLF have no section of their own; their algorithm pages
-  below hold that material.
+- One section for each of CTL, ATL*, NatSL, OATL, OL, RBATL and RABATL, CapATL,
+  COTL, Wallet_ATL, ICTL, IATL, TCTL and TOL: the formulas and model type the code
+  accepts, with examples, and a link to the logic's algorithm page. The sections
+  for CTL, NatSL, OATL, OL, RBATL and RABATL, CapATL, COTL, ICTL and IATL also
+  give a theoretical background. LTL, ATL, ATLF, NatATL (with NatATL_Recall) and
+  NatATLF have no section of their own; their algorithm pages below hold that
+  material.
 - The shared policies: [empty and repeated coalitions](#empty-coalition-policy),
   [names and keywords](#names-and-keywords), the [syntax cards](#syntax-cards) (one
   table row per logic with its prefix, operators, model type and an example), a
@@ -97,8 +98,8 @@ in [word operators](#word-operators).
 Every logic spells the connectives this way. A single `&` or `|`, and `>` as
 implication, are rejected in all of them
 (`model_checker/tests/unit/parsers/formulas/test_connective_spelling.py`), so a
-formula is never valid in one logic and invalid in another. NatSL goals take no
-connectives.
+connective spelling is accepted by every logic except NatSL, or by none. NatSL
+goals take no connectives.
 
 ### Grouping and nesting
 
@@ -161,13 +162,15 @@ ATL* differs, because `<<1>> p` and a bare Until inside a coalition are ATL*
 formulas; its rules and messages are in [ATL*](#atl-star).
 LTL has no prefix: its `F`, `G`, `X` and `U` follow the precedence table of the
 [Spot LTL library](https://spot.lre.epita.fr/tl.pdf), so
-`F p && q` is `(F p) && q` and `p U q && r` is `(p U q) && r`.
+`F p && q` is `(F p) && q`, `p U q && r` is `(p U q) && r` and `F p U q` is
+`(F p) U q`. One rule differs: Spot ranks `!` above `U` (Spot-tl, Sec. 3.1, p. 15), while
+VITAMIN reads `!p U q` as `!(p U q)`. Write `(!p) U q` for Spot's reading.
 NatSL has no connectives after its prefix, so it rejects `E{1}x: (x, 1) F p && q`
 without offering two readings; see [NatSL](#natsl---natural-strategy-logic).
 
 ### Operators and names
 
-Temporal operators (`X`, `F`, `G`, `U`, and in CTL and ICTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`) are words of their own. TCTL has no `X` (see [the TCTL reference](../algorithms/tctl.md)).
+Temporal operators (`X`, `F`, `G`, `U`, in CTL and ICTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`, and in TCTL `AF`, `AG`, `EF`, `EG`) are words of their own. TCTL has no `X` (see [the TCTL reference](../algorithms/tctl.md)).
 Follow one with a space, `(` or `!`: `F p`, `F (p && q)`, `F !p`.
 
 A name starts with a lowercase letter ([names and keywords](#names-and-keywords)), so an operator glued to a name, such as `Fp`, is an error; the three ways it fails are in [operators glued to a name](#operators-glued-to-a-name).
@@ -177,7 +180,7 @@ Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/te
 
 A name the model does not declare is an error in every logic, wherever it sits in the formula: under `!`, inside an Until or a conjunction.
 The error type is `semantic` (NatSL reports `validation`), so a typo never reads as a proposition that is false everywhere, which would make `AG !typo` true.
-The message names it: "Proposition(s) 'zz' not among the model's declared propositions [...]"; NatSL words it "Unknown proposition 'zz'; model propositions are [...]".
+The message names it: "Proposition(s) 'zz' not among the model's declared propositions [...]". Two logics word it differently: ATL* gives "'zz' is not among the model's declared propositions [...]" and NatSL "Unknown proposition 'zz'; model propositions are [...]".
 `model_checker/tests/integration/algorithms/test_error_contract.py` checks this for each registered logic.
 
 The truth table of the boolean operators:
@@ -230,7 +233,7 @@ The checker accepts:
 - Path quantifiers `E` / `A` with temporal operators `X`, `F`, `G`, and `U`.
 - Boolean connectives shared with the common formula syntax.
 
-How the checker computes each operator, and traces:
+The model type is `CGS`. How the checker computes each operator, and traces:
 [CTL algorithm](../algorithms/ctl.md).
 
 <a id="atl-star"></a>
@@ -324,7 +327,7 @@ The checker accepts:
 - Each strategy variable is quantified once and bound once, each agent is bound
   once, and each bound `{k}` is at least 1.
 
-How the strategies are searched and the `space` and `time` modes:
+The model type is `CGS`. How the strategies are searched and the `space` and `time` modes:
 [NatSL algorithm](../algorithms/natsl.md).
 
 <a id="oatl"></a>
@@ -344,7 +347,10 @@ state `s` costs `$(s, a)`.
 - Bounded coalition: `[[A]]_n theta` in the paper, `<A><n> theta` in VITAMIN
     - `A`: the coalition of agents.
     - `n`: the Demon's budget per step.
-- Operators: `X`, `U`, `R` are primitive; `F`, `G`, `W` are derived.
+- Operators: the paper's grammar has `X`, `U` and `R` only (Def. 1). VITAMIN also
+  reads `F`, `G` and `W`, which OL defines as abbreviations (ECAI 2023, after
+  Def. 1): `F phi` is `true U phi`, `G phi` is `false R phi`, and `phi W psi` is
+  `psi R (phi || psi)`.
 
 #### Semantics
 
@@ -395,7 +401,7 @@ OL (Obstruction Logic, ECAI 2023) is a game against a Demon on `costCGS` models:
 It is OATL with the coalition of all agents.
 How the checker computes it: [OL algorithm](../algorithms/ol.md).
 
-The standard syntax is the cost prefix `<Jk> phi`, where `k` is a natural number, 0 included.
+The paper writes `<n> X phi`, `<n> (phi U psi)` and `<n> (phi R psi)`, where `n` is a natural number, 0 included (ECAI 2023, Def. 1); VITAMIN writes the prefix `<Jn>`.
 
 ### Syntax
 
@@ -546,7 +552,10 @@ every path left by the disabled edges satisfies `theta`, whatever the other
 demons do. A path may stop when every edge out of its last state is disabled.
 Example: on the case-study attack graph of the paper
 (`model_checker/tests/fixtures/ObstructionModel/COTL/cotl_attack_graph_3demons_6states.txt`),
-`<1,3><1> G !q` holds at `s0` and `<1,2><1> G !q` does not, as Sec. 5 states.
+`<1,3><1> G !q` holds at `s0` and `<1,2><1> G !q` does not. Sec. 5 states these
+two results for an unspecified budget `n` and gives no cost values, only that the
+attacks a10, a20, b12 and b22 cost more than the budget; the budget 1 and the
+costs come from the fixture.
 
 COTL and OATL both come from obstruction logic, but they share no checker
 code. In OATL a single Demon helps against a coalition of agents on a
@@ -593,8 +602,8 @@ coalitions only, while Wallet_ATL embeds optional balance guards (`:wallet(agent
 inside the same prefix, so the grammar uses a dedicated `<< ... >>` token. That
 avoids clashing with other bracket conventions in VITAMIN: OATL/RBATL `<1><5>`
 (coalition then cost bound), NatATL `<{1}, k>`, CapATL `<{1}>`, and OL `<Jk>`.
-OATL's two bracket groups are separate tokens; Wallet's double brackets are one
-nested delimiter around agents plus guards.
+OATL's lexer reads `<1><5>` as one token, which is why `<1> <5>` is an error;
+Wallet's double brackets are one nested delimiter around agents plus guards.
 
 For example:
 
@@ -619,7 +628,8 @@ ICTL (Intuitionistic CTL) extends CTL with intuitionistic propositional
 connectives over [birelational models](file_formats.md#birelationalmatrix-sections-ictl) (EUMAS25b). Each
 model has two relations on the same finite state set:
 
-- `P` (`<=_P`): information preorder; truth is monotone as knowledge grows.
+- `P` (`<=_P`): information order, a partial order (reflexive, transitive and
+  antisymmetric, EUMAS25b Def. 1 and footnote 4); truth is monotone as knowledge grows.
 - `R`: serial transition relation; path quantifiers range over infinite `R`-paths.
 
 Path formulas (`X`, `U`, `R`) use standard CTL semantics on `R`-paths. Only
@@ -627,13 +637,16 @@ implication and negation are intuitionistic: `phi -> psi` is checked at all
 `P`-refinements of the current state.
 
 The paper's well-behaved frames satisfy the confluence constraints C1 and C2
-between `P` and `R` (EUMAS25b Def. 1). See [ICTL/algorithm.md](../algorithms/ictl.md).
+between `P` and `R` (EUMAS25b Def. 1). See the [ICTL algorithm](../algorithms/ictl.md).
 
 #### Standard syntax (state formulas)
 
-- Boolean: `->`, `not`, `/\`, `\/` (implication is primitive; no excluded middle).
+- Boolean: the constant false, `/\`, `\/` and `->`. Implication is primitive and
+  negation is defined from it, `not phi` = `phi -> false`, so the excluded middle
+  does not hold.
 - Path quantifiers: `E`, `A` over `R`-paths.
-- Temporal: `X`, `U`, `R`; surface sugar `F` / `G` after `E` or `A`.
+- Temporal: `X`, `U`, `R`. The paper has no `F` or `G`; VITAMIN adds them as
+  sugar after `E` or `A`.
 
 ICTL model checking is PTIME-complete and runs in time `O(|M|^2 * |phi|)` for a
 finite birelational model `M` and a formula `phi` (EUMAS25b Theorem 4).
@@ -677,7 +690,8 @@ connectives and dual coalition modalities over [BCGS](file_formats.md#bcgs-secti
 KR 2025). Each model combines:
 
 - CGS transitions: joint action profiles (multi-agent moves).
-- Preorder `P`: information refinement; intuitionistic truth is monotone along `P`.
+- Partial order `P`: information refinement; intuitionistic truth is monotone along
+  `P`. The model file holds it in a section named `Preorder`.
 
 The coalition modalities are written `<A>` and `[A]` for the paper's `<<A>>` and
 `[[A]]`:
@@ -741,11 +755,12 @@ The model type is `timedCGS`. The zone graph and the fixpoints over regions:
 <a id="tol---timed-obstruction-logic"></a>
 ## TOL
 
-Linear-style Timed Obstruction Logic with demonic cost prefixes over `timedCGS`
+Timed Obstruction Logic with demonic cost prefixes over `timedCGS`
 models (AAMAS 2025). At each step the Demon may deactivate outgoing transitions
 whose total cost is at most `k`; the Adversary chooses a remaining edge.
 
 The demonic prefix is `{Jk}`, where `k` is a positive integer (paper notation `<k>`).
+The paper allows `k = 0` (AAMAS 2025, Def. 10); VITAMIN rejects `{J0}`.
 For example:
 
 ```text
@@ -771,7 +786,7 @@ operator: [TOL algorithm](../algorithms/tol.md).
 ## Empty and repeated coalition policy
 
 Outside COTL, VITAMIN does not support an empty strategic coalition written as `<>`.
-In ATL literature an empty coalition can be related to opponent-only or path-level reasoning; in this implementation that overlaps CTL existential quantification (`E`, `EF`, ...) without making the logic explicit.
+In ATL an empty coalition `<<>>` is the CTL universal path quantifier `A` (JACM 2002, p. 675), so `<> F p` would say what `AF p` already says.
 
 The policy is to reject `<> ...` in every logic except COTL, whose legion of demons may be empty (`<><0>`). Table 3 gives the correct surface for each property:
 
@@ -779,7 +794,7 @@ The policy is to reject `<> ...` in every logic except COTL, whose legion of dem
 
 | Intent | Use | Do not use |
 | :--- | :--- | :--- |
-| Existential path reachability (CTL) | `EF p` | `<> F p` |
+| Eventually on all paths (CTL) | `AF p` | `<> F p` |
 | Strategic coalition (ATL) | `<1> F p`, `<1,2> G p` | `<> F p` |
 | Linear path eventually (LTL) | `F p` | `<> F p` |
 | Cost-bounded strategy (OATL / RBATL) | `<1><5> F p` | `<> F p`, `<1> F p` without bound, `<1> <5> F p` |
@@ -788,7 +803,7 @@ The policy is to reject `<> ...` in every logic except COTL, whose legion of dem
 | IATL universal coalition | `[1] G p` | `[] G p` (empty `[]` rejected) |
 
 Table 4 lists where the rejection is enforced, for the logics whose coalition form
-differs; ATL*, NatATL_Recall, NatATLF, TCTL and TOL are not listed:
+differs; ATL*, NatATL_Recall, NatATLF, NatSL, ICTL, TCTL and TOL are not listed:
 
 **Table 4: Where an empty coalition is rejected.**
 
@@ -939,8 +954,7 @@ name, instead of `Fp` being read as `F p`. Most patterns are constants in
 `syntax_patterns.py`:
 
 - Every logic except IATL, TCTL, TOL, ATL* and NatSL, ICTL included:
-  `PROPOSITION_TOKEN` = `[a-zA-Z][a-zA-Z0-9_]*` (Wallet_ATL writes the same pattern
-  in its parser). `_goal` is therefore an `Invalid character '_'` error.
+  `PROPOSITION_TOKEN` = `[a-zA-Z][a-zA-Z0-9_]*`, Wallet_ATL included. `_goal` is therefore an `Invalid character '_'` error.
 - ATL*: its grammar's own `IDENT` = `[a-zA-Z_][a-zA-Z0-9_]*`, so `_goal` is
   read as one word and refused by name.
 - IATL, TCTL and TOL: `ICTL_PROPOSITION_TOKEN` (also named
@@ -993,7 +1007,10 @@ only on a 1-agent model (see [NatSL](#natsl---natural-strategy-logic)).
 The prefix, operators and model type of each logic are in the
 [syntax cards](#syntax-cards); Table 7 adds what the cards leave out, and the
 algorithm pattern each checker follows (the techniques behind them are in
-[algorithm design](../algorithms/index.md)).
+[algorithm design](../algorithms/index.md)). The path type is Linear when a formula
+is read on one path (LTL) and Branching when every temporal operator sits under a
+path quantifier, coalition, strategy quantifier or demonic prefix and the formula
+holds at a state:
 
 **Table 7: Path type, algorithm pattern and notes for each logic.**
 
@@ -1009,7 +1026,7 @@ algorithm pattern each checker follows (the techniques behind them are in
 | NatATLF | Branching | Strategy search and pruning | Delegates to the memoryless NatATL solver |
 | NatSL | Branching | Strategy search and pruning | Schedule `space` (default) or `time` |
 | OATL | Branching | Bound-aware coalition pre-image and fixpoints | Demon budget per step |
-| OL | Linear | Bound-aware coalition pre-image and fixpoints (OATL with all agents) | Demonic bound `<Jk>` |
+| OL | Branching | Bound-aware coalition pre-image and fixpoints (OATL with all agents) | Demonic bound `<Jk>` |
 | RBATL | Branching | Bound-aware coalition pre-image and fixpoints | Resource vector bound, flat action costs |
 | RABATL | Branching | Bound-aware coalition pre-image and fixpoints | Resource vector bound, coalition-sum costs |
 | CapATL | Branching | Coalition pre-image over capacity-restricted moves, and fixpoints | Knowledge operator `K1(...)` (the digit is the agent) |
@@ -1018,7 +1035,7 @@ algorithm pattern each checker follows (the techniques behind them are in
 | ICTL | Branching | Upward closure and pre-image fixpoints | Intuitionistic `->` and `not` |
 | IATL | Branching | Upward closure and coalition pre-image fixpoints | Intuitionistic `->` and `!`; `[A]` is the universal coalition |
 | TCTL | Branching | Zone graph and fixpoints over regions | Clock constraints and freeze |
-| TOL | Linear | Zone graph and obstruction fixpoints | Per-step obstruction, clock constraints and freeze |
+| TOL | Branching | Zone graph and obstruction fixpoints | Per-step obstruction, clock constraints and freeze |
 
 <a id="model-syntax"></a>
 ## Model syntax
