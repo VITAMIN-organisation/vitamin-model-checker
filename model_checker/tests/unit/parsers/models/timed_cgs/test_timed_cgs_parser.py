@@ -133,3 +133,19 @@ def test_timed_sections_are_dropped_before_the_cgs_parser_runs():
         "Name_State",
         "s0",
     ]
+
+
+@pytest.mark.unit
+def test_clocks_over_several_lines_are_merged():
+    """`x` then `y` declares both clocks; the second line does not replace the first."""
+    parsed = _sections("Clocks", "x", "y z")
+    assert parsed.clocks == ["x", "y", "z"]
+    assert parsed.clocks_dict == {"x": 0, "y": 1, "z": 2}
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("rows", [["x x"], ["x", "y x"]])
+def test_duplicate_clock_is_refused(rows):
+    """A clock declared twice, on one line or two, is an error naming it."""
+    with pytest.raises(ValueError, match="Clock 'x' is declared twice"):
+        _sections("Clocks", *rows)

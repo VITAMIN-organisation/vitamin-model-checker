@@ -68,3 +68,37 @@ def test_state_without_a_wallet_row_is_rejected(temp_file, rows, named):
     """AAMAS26b Def. 3.1 makes W total on Q x Ag, so a state with no row is an error."""
     with pytest.raises(ValueError, match=named):
         WalletCGS().read_file(temp_file(_content("I *", 1, rows)))
+
+
+@pytest.mark.unit
+def test_wallet_row_for_an_undeclared_state_is_rejected(temp_file):
+    """`s9` is not in Name_State; the row is not dropped silently."""
+    rows = "s0: 5\ns1: 5\ns9: 5\n"
+    with pytest.raises(ValueError, match=r"undeclared state 's9'.*'s9: 5'"):
+        WalletCGS().read_file(temp_file(_content("I *", 1, rows)))
+
+
+@pytest.mark.unit
+def test_state_with_two_wallet_rows_is_rejected(temp_file):
+    """W is a function on Q x Ag (Def. 3.1): a second row for s0 is not a replacement."""
+    rows = "s0: 5\ns0: 6\ns1: 5\n"
+    with pytest.raises(ValueError, match=r"repeated.*'s0'.*'s0: 6'"):
+        WalletCGS().read_file(temp_file(_content("I *", 1, rows)))
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("value", ["abc", "5x", "-5", "1.5"])
+def test_wallet_value_that_is_not_a_natural_number_is_rejected(temp_file, value):
+    """A balance is in Q+ (Def. 3.1): the error names the value and the line."""
+    rows = f"s0: {value}\ns1: 5\n"
+    with pytest.raises(ValueError, match=rf"'{value}'.*'s0: {value}'"):
+        WalletCGS().read_file(temp_file(_content("I *", 1, rows)))
+
+
+@pytest.mark.unit
+def test_comment_and_blank_lines_inside_wallets_are_skipped(temp_file):
+    """A `#` line holding a colon is not a row, and a blank line does not end the section."""
+    rows = "# note: kept\ns0: 5\n\n// s9: 1\ns1: 7\n"
+    model = WalletCGS()
+    model.read_file(temp_file(_content("I *", 1, rows)))
+    assert model.wallets == {"s0": (5,), "s1": (7,)}

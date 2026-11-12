@@ -35,6 +35,9 @@ def parse_base_sections(lines: list[str], instance: Any) -> None:
 
 def parse_timed_sections(lines: list[str], instance: Any) -> None:
     state_count = len(instance.states)
+    instance.clocks = []
+    instance.clocks_dict = {}
+    instance.clock_constraints_dict = {}
     instance.clock_constraint_struct = [[""] * state_count for _ in range(state_count)]
     instance.invariants_arr = [[] for _ in range(state_count)]
 
@@ -77,11 +80,14 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
 
 
 def _parse_clocks(instance: Any, line: str) -> None:
-    instance.clocks = line.split()
-    for clock in instance.clocks:
+    """Add the clocks of one `Clocks` line; the section may span several lines."""
+    for clock in line.split():
         validate_model_name(clock, kind="Clock")
-    instance.clock_constraints_dict = {clock: [] for clock in instance.clocks}
-    instance.clocks_dict = {value: index for index, value in enumerate(instance.clocks)}
+        if clock in instance.clocks_dict:
+            raise ValueError(f"Clock '{clock}' is declared twice in Clocks: '{line}'.")
+        instance.clocks_dict[clock] = len(instance.clocks)
+        instance.clocks.append(clock)
+        instance.clock_constraints_dict[clock] = []
 
 
 def _parse_clock_constraints_row(instance: Any, line: str, row: int) -> None:

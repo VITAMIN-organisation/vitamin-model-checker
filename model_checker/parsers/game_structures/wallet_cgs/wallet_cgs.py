@@ -1,6 +1,6 @@
 import re
 
-from model_checker.parsers.game_structures.cgs import cgs_actions
+from model_checker.parsers.game_structures.cgs import cgs_actions, cgs_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
 
@@ -35,31 +35,18 @@ class WalletCGS(CGS):
     def _parse_lines(self, lines: list[str]) -> None:
         super()._parse_lines(lines)
 
-        current_section = None
+        in_wallets = False
+        headers = cgs_parser.SECTION_HEADERS | cgs_parser.EXTENSION_SECTION_HEADERS
 
         for line in lines:
             line = line.strip()
 
-            if line == "Wallets":
-                current_section = "Wallets"
+            if cgs_parser.is_blank_or_comment(line):
                 continue
-            elif line == "" or line.startswith("Transition"):
-                current_section = None
-                continue
-
-            if current_section == "Wallets":
-                if ":" in line:
-                    parts = line.split(":")
-                    state = parts[0].strip()
-                    wallet_values = [
-                        int(x.strip()) for x in parts[1:] if x.strip().isdigit()
-                    ]
-                    expected_length = self.get_number_of_agents()
-                    if len(wallet_values) != expected_length:
-                        raise ValueError(
-                            f"Error in {state}: expected {expected_length} wallets, found {len(wallet_values)}."
-                        )
-                    self.wallets[state] = tuple(wallet_values)
+            if line in headers:
+                in_wallets = line == "Wallets"
+            elif in_wallets and ":" in line:
+                self._parse_wallet_row(line)
 
         # AAMAS26b Def. 3.1: W : Q x Ag -> Q+ gives a balance in every state.
         missing = [str(s) for s in self.states if str(s) not in self.wallets]
@@ -68,6 +55,28 @@ class WalletCGS(CGS):
                 f"Wallets has no row for state(s) {', '.join(missing)}; "
                 "every state needs one balance per agent."
             )
+
+    def _parse_wallet_row(self, line: str) -> None:
+        """One `state: v1 : v2 ...` row: a declared state, once, with a natural
+        number (Q+, AAMAS26b Def. 3.1) per agent."""
+        state, *texts = (part.strip() for part in line.split(":"))
+        if state not in self.all_states_set:
+            raise ValueError(f"Wallets row for undeclared state '{state}': '{line}'.")
+        if state in self.wallets:
+            raise ValueError(
+                f"Wallets has a repeated row for state '{state}': '{line}'."
+            )
+        for text in texts:
+            if not (text.isascii() and text.isdigit()):
+                raise ValueError(
+                    f"Wallet value '{text}' is not a natural number in '{line}'."
+                )
+        expected_length = self.get_number_of_agents()
+        if len(texts) != expected_length:
+            raise ValueError(
+                f"Error in {state}: expected {expected_length} wallets, found {len(texts)}."
+            )
+        self.wallets[state] = tuple(int(text) for text in texts)
 
     def parse_parameterized_action(self, action_string):
         """(name, value, is_consumption, is_income) of an action token; numbers,
