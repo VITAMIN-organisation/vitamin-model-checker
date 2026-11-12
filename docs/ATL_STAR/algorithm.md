@@ -26,9 +26,9 @@ psi ::= phi | !psi | psi && psi | X psi | psi U psi | F psi | G psi | <<A>> psi
 A coalition is written `<<1,2>>`, and agent ids must be in `1..n`. Unlike ATL,
 `<<A>>` may appear anywhere inside a path formula, not just at the root.
 
-ATL writes a coalition with single angle brackets (`<1,2>`). ATL* uses `<<A>>`, the
-same brackets as [Wallet_ATL](../logic_knowledge_base.md#wallet_atl), but it scopes
-over a nested path formula.
+ATL writes a coalition with single angle brackets (`<1,2>`). ATL* writes it with
+`<<A>>`, which scopes over a nested path formula; Wallet_ATL uses the same brackets
+with a different meaning ([Wallet_ATL](../logic_knowledge_base.md#wallet_atl)).
 
 ### Until under a coalition
 
@@ -43,12 +43,11 @@ Table 1 lists the written forms of an Until under a coalition:
 | `(<<A>> x) U y` | The coalition covers only the left operand; it is a path formula, so it is checkable only inside another coalition, as in `<<B>> ((<<A>> x) U y)` |
 
 The reading of `<<A>> x U y` comes from the paper that defines ATL (Alur,
-Henzinger, Kupferman, JACM 49(5), 2002). Section 3.1 (p. 685) writes the ATL
-formula `<<A>>phi1 U phi2` for the coalition over the Until. Section 3.4 (p. 689)
-defines ATL as the fragment of ATL* in which every temporal operator is
-immediately preceded by a path quantifier, so the ATL formula keeps its meaning in
-ATL*. The same section says ATL* formulas are the state formulas, and
-`(<<A>> x) U y` is only a path formula.
+Henzinger, Kupferman, JACM 49(5), 2002). It writes the ATL formula
+`<<A>>phi1 U phi2` for the coalition over the Until, and defines ATL as the
+fragment of ATL* in which every temporal operator is immediately preceded by a path
+quantifier, so the ATL formula keeps its meaning in ATL*. It also says ATL*
+formulas are the state formulas, and `(<<A>> x) U y` is only a path formula.
 
 Each operand of that `U` is one unary formula, so `<<1>> X p U q` is
 `<<1>> ((X p) U q)` and `X <<1>> p U q` is `X (<<1>> (p U q))`.
@@ -56,7 +55,7 @@ Each operand of that `U` is one unary formula, so `<<1>> X p U q` is
 ### Precedence and ambiguity
 
 `!`, `X`, `F` and `G` bind tighter than the connectives, as the paper reads the
-winning condition $\Box\Diamond \mathit{done} \to \psi$ (p. 693):
+winning condition $\Box\Diamond \mathit{done} \to \psi$:
 `<<1>> (F p && G q)` is `<<1>> ((F p) && (G q))`.
 
 The paper states no precedence rule for the rest, so these are syntax errors that
@@ -84,7 +83,7 @@ here. It is reduced to a 2-player parity game in the steps of Table 2:
 | 1 | Eliminate nested `<<A'>> psi'` bottom-up into fresh propositions |
 | 2 | Translate the remaining pure-LTL `psi` to a deterministic parity automaton |
 | 3 | Product with the CGS, unfold into a turn-based arena, solve as parity/Büchi/co-Büchi |
-| 4 | `<<A>> psi`'s truth set = player 0's winning region |
+| 4 | The truth set of `<<A>> psi` is player 0's winning region |
 
 Steps 2 and 3 need `model_checker/automata/` (vendored, wraps Spot); no other logic
 here depends on it. See [Requires Spot](#requires-spot).
@@ -115,7 +114,7 @@ Table 3 sets the usual theory beside this implementation:
 | :--- | :--- | :--- |
 | Empty coalition | Literature may allow | Rejected (parse error) |
 | Unknown atom | Semantics typically leaves undefined | Rejected (semantic error), never silently false |
-| Strategy synthesis | Part of ATL*'s semantics | Separate `synthesize_strategy` entry point, not in `model_checking`'s result dict; only a single, non-nested coalition formula |
+| Strategy synthesis | Part of ATL*'s semantics | Separate `synthesize_strategy` entry point, not in `model_checking`'s result dict; only a single, non-nested coalition formula ([details](#strategy-synthesis-entry-point)) |
 
 ## Cost of model checking
 
@@ -124,7 +123,7 @@ formula size in the worst case, whatever the model. At realistic model sizes the
 explicit-state product and arena construction here (not Spot's own game solver)
 tends to dominate wall time.
 
-## Strategy synthesis is a separate entry point
+## Strategy synthesis entry point
 
 `ATL_STAR.model_checking`'s result dict is the usual satisfaction dict
 (satisfying states, whether the initial state holds), same as every other

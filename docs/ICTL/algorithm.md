@@ -154,10 +154,10 @@ An Until or Release under a path quantifier takes three forms, all with one tree
 `p && q` as its left operand.
 
 The forms come from the two ICTL papers, AREA23b and EUMAS25b. AREA23b writes
-$A(\varphi\ U\ \psi)$ in its grammar (Definition 1, p. 43). EUMAS25b writes
-$A(\varphi_1\ U\ \varphi_2)$ in its equivalences and examples (pp. 8, 12),
-$A[\bot R(\ldots)]$ once (p. 10) and $A\varphi_1 U \varphi_2$ in its algorithm
-(p. 14); its grammar (p. 5) is $A\psi$ with
+$A(\varphi\ U\ \psi)$ in its grammar (Definition 1). EUMAS25b writes
+$A(\varphi_1\ U\ \varphi_2)$ in its equivalences and examples,
+$A[\bot R(\ldots)]$ once and $A\varphi_1 U \varphi_2$ in its algorithm;
+its grammar is $A\psi$ with
 $\psi ::= \bigcirc\varphi \mid \varphi U \varphi \mid \varphi R \varphi$, so U and
 R share one notation and ICTL takes `[...]` around both. Neither paper states a
 precedence rule, so a connective after a prefix that no parenthesis closes, as in
@@ -279,12 +279,12 @@ Implementation techniques (P-upset precompute): [algorithm_design.md](../algorit
 
 ## Model-checking pipeline
 
-Evaluation is bottom-up on the formula parse tree.
+The checker reads the model, parses the formula, builds the formula tree and solves it; evaluation is bottom-up on that tree:
 
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1f5f99", "primaryTextColor": "#ffffff", "primaryBorderColor": "#4a90d9", "lineColor": "#75808f", "tertiaryTextColor": "#75808f", "titleColor": "#75808f", "clusterBkg": "transparent", "clusterBorder": "#75808f", "edgeLabelBackground": "transparent"}}}%%
-flowchart TB
-    load["BirelationalMatrix.read_file + check_conditions_hold"]
+flowchart LR
+    load["BirelationalMatrix.read_file<br/>+ check_conditions_hold"]
     parse["ICTLParser.parse"]
     tree["ICTLModelChecker.build_tree"]
     solve["solve_tree"]

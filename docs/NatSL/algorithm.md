@@ -34,8 +34,7 @@ Strategy variables may use multi-character identifiers such as `controller`, `op
 
 Supported temporal goals are `F`, `G`, and `X`, including their negated forms. The operator is uppercase and followed by a space; `not` is lowercase.
 
-The full logic is larger. The NatSL paper, AAMAS 2022 (local copy
-`docs/papers/AAMAS22.pdf`, section 3.1, Definition 2), defines
+The full logic is larger. The NatSL paper, AAMAS 2022 (Definition 2), defines
 
 ```text
 phi ::= p | Es_a^{<=k}. phi | (a, s_a) phi | f(phi, ..., phi) | X phi | phi U phi

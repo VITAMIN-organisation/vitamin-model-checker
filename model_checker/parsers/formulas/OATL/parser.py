@@ -2,10 +2,7 @@
 X, F, G, U, R and W.
 """
 
-import re
-
 from model_checker.parsers.syntax_patterns import (
-    AGENT_LIST,
     NON_NEGATIVE_INT,
     OATL_COALITION_BUDGET_TOKEN,
 )
@@ -18,8 +15,6 @@ from ..parser_utils import (
     validate_coalition_bound_token,
 )
 from ..shared_parser import BaseLogicParser, word_rule
-
-_LEADING_ZERO_BOUND_RE = re.compile(rf"<{AGENT_LIST}><0\d")
 
 
 class OATLParser(BaseLogicParser):
@@ -83,12 +78,6 @@ class OATLParser(BaseLogicParser):
         return super().parse(formula, **kwargs)
 
     def _coalition_bound_pre_validation(self, formula) -> tuple[bool, str | None]:
-        if _LEADING_ZERO_BOUND_RE.search(formula):
-            return (
-                False,
-                "Bound cannot have leading zeros (e.g., use <1><5>, not <1><05>)",
-            )
-
         err = coalition_bound_error(
             formula,
             "Temporal operators require a bound in the form <coalition><k> with k>=0 (e.g., <1><5>F p)",

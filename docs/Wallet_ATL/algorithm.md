@@ -53,8 +53,7 @@ Two rules go beyond the Wallet ATL paper (AAMAS 2026, cited under
 ## Semantic denotations
 
 Source: the paper that defines the logic, "Wallet ATL: Towards Reliable Smart
-Contract Verification" (AAMAS 2026; kept locally as `docs/papers/AAMAS26b.pdf`,
-which git does not track).
+Contract Verification" (AAMAS 2026).
 
 An action token is one of three kinds:
 
@@ -65,7 +64,7 @@ An action token is one of three kinds:
 A joint move (one action per agent) counts only when every agent can take its
 part at the current state. A consumption action of amount `v` needs at least `v`
 in the acting agent's wallet there; income and neutral actions are always
-allowed (the paper's Def. 3.1 and 4.1, and p. 3: "Actions in Act-up are always
+allowed (the paper's Def. 3.1 and 4.1: "Actions in Act-up are always
 permitted"). An agent that models the contract is checked like any other.
 
 The pre-image, the set of states from which the coalition can force the next
@@ -78,7 +77,7 @@ structure gives each agent at least one move per state (JACM 2002 Def. 2.1).
 Balances come from the `Wallets` section, one row per state, and are not
 recomputed along transitions. A state with no row is a load error that names
 it, because the paper's wallet function assigns "each agent a non-negative
-balance in every state" (Def. 3.1, p. 3). A wallet guard
+balance in every state" (Def. 3.1). A wallet guard
 (`wallet(agent, op value)`, see [Formula language](#formula-language)) is
 checked at the state where a coalition move starts; [Operators](#operators)
 says where each operator checks it.
@@ -129,7 +128,7 @@ answer named in each item:
   its first update, so it skips the loop and returns all states, guard or not.
   The code applies `wPre` in every round, as in the other cases.
 - Balance updates: the paper's Def. 4.4 changes only the acting agent's wallet,
-  while its section 3.2 and Example 3.3 also move the amount to or from the
+  while its Example 3.3 also moves the amount to or from the
   contract. The code applies neither rule (see
   [Semantic denotations](#semantic-denotations)).
 - A consumption letter with no amount (`D`): the paper's Def. 3.1 takes amounts

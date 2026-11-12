@@ -36,6 +36,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- RBATL and RABATL reject a bound value with a leading zero (`<1><05>F p`,
+  `<1><2,05>F p`) with the message OATL gives, "Bound cannot have leading zeros".
+  Before, they read `<1><05>` as 5.
 - A syntax error names a word operator as written: `<J1> weak p` in OL gives
   "Syntax error near token 'weak'", where it said 'W'. In CTL, a temporal operator
   with no quantifier gets the same "must be preceded by a quantifier" message as

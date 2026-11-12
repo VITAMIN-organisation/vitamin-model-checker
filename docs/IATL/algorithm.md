@@ -216,9 +216,11 @@ Implementation techniques (P-upset precompute, per-coalition transition cache): 
 
 ## Model-checking pipeline
 
+The checker loads the model, parses the formula, builds the formula tree and solves it:
+
 ```mermaid
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1f5f99", "primaryTextColor": "#ffffff", "primaryBorderColor": "#4a90d9", "lineColor": "#75808f", "tertiaryTextColor": "#75808f", "titleColor": "#75808f", "clusterBkg": "transparent", "clusterBorder": "#75808f", "edgeLabelBackground": "transparent"}}}%%
-flowchart TB
+flowchart LR
     load["read_file + check_conditions_hold"]
     parse["IATLParser.parse"]
     tree["IATLModelChecker.build_tree"]

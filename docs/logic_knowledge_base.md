@@ -29,7 +29,6 @@ author `.txt` models.
 - [Syntax cards](#syntax-cards)
 - [Logic comparison matrix](#summary-logic-comparison-matrix)
 - [Model syntax](#model-syntax)
-- [Technical references](#technical-references)
 
 ## Overview
 
@@ -112,8 +111,8 @@ Table 2 lists the brackets that group a formula and the logics that take them:
 | `[...]` | Around the Until of a path quantifier, `A[p U q]` (CTL, ICTL), or its Release, `E[p R q]` (ICTL) | CTL and ICTL only |
 
 CTL writes square brackets only around an Until, `A[f1 U f2]`, and groups
-everything else with parentheses (Clarke, Emerson, Sistla, ACM TOPLAS 1986,
-p. 246). ICTL writes them once, around a Release (EUMAS25b, Bozzelli et al., EUMAS 2025, p. 10), and ICTL
+everything else with parentheses (Clarke, Emerson, Sistla, ACM TOPLAS 1986).
+ICTL writes them once, around a Release (EUMAS25b, Bozzelli et al., EUMAS 2025), and ICTL
 also takes them around an Until because its grammar treats U and R alike (see
 [the ICTL reference](ICTL/algorithm.md)). `[p] && q` and `AF [p]` are syntax
 errors, and so is `[...]` as grouping in every other logic (IATL writes `[1,2]` as a
@@ -128,7 +127,7 @@ operator after it (`<1>F`, `AF`), and the TCTL/TOL freeze `j.`. In every logic
 with a prefix before Until, `prefix p U q` and `prefix (p U q)` are the same
 formula and build the same tree: `<1> p U q` and `<1> (p U q)`, `<J5> p U q` and
 `<J5> (p U q)`, `A p U q` and `A(p U q)`. ATL writes the first form (Alur,
-Henzinger, Kupferman, JACM 2002, p. 685), and the obstruction logics write the
+Henzinger, Kupferman, JACM 2002), and the obstruction logics write the
 second. ATL* reads `<<A>> p U q` the same way; the reason and the other ATL* forms
 are in [the ATL* reference](ATL_STAR/algorithm.md). Release (`R`) and Weak Until
 (`W`) follow the same rule where a logic has them. The 17 logics covered are listed
@@ -160,7 +159,7 @@ These parse, because they have one reading:
 ATL* differs, because `<<1>> p` and a bare Until inside a coalition are ATL*
 formulas; its rules and messages are in [the ATL* reference](ATL_STAR/algorithm.md).
 LTL has no prefix: its `F`, `G`, `X` and `U` follow the precedence table of the
-[Spot LTL library](https://spot.lre.epita.fr/tl.pdf) (section 3.1), so
+[Spot LTL library](https://spot.lre.epita.fr/tl.pdf), so
 `F p && q` is `(F p) && q` and `p U q && r` is `(p U q) && r`.
 NatSL has no connectives after its prefix, so it rejects `E{1}x: (x, 1) F p && q`
 without offering two readings; see [the NatSL reference](NatSL/algorithm.md#supported-fragment).
@@ -432,6 +431,7 @@ The parsers are `RBATL/parser.py` and `RABATL/parser.py`, with the same surface 
 
 - Comma separation: resource vectors use commas, not colons.
 - Bound range: each bound value is between 1 and 1,000,000. `<1><0,5>F p` is an error, "Invalid bound value 0: must be between 1 and 1000000".
+- Leading zeros: a bound value with a leading zero (`<1><05>F p`, `<1><2,05>F p`) is an error, as in OATL: "Bound cannot have leading zeros (e.g., use <1><5>, not <1><05>)".
 - Resource count: the length of the bound vector is not checked against the model. Bound `i` limits cost value `i`; cost values beyond the last bound are not limited, and bounds beyond the last cost value are ignored (`RBATL/preimage.py`, `RABATL/preimage.py`).
 
 #### Cost models
@@ -481,7 +481,7 @@ CapATL is designed for models with explicit capacity constraints ([`capCGS`](fil
 
 - Coalition modality: `<{A}> phi` (paper-style agent set; capacities constrain
   available actions via the `capCGS` model, not a formula numeric bound).
-- Knowledge: K^a_cap(phi) (AAMAS 2024, grammar p. 125, meaning p. 126),
+- Knowledge: K^a_cap(phi) (AAMAS 2024),
   "agent a knows that the capacity assignment verifies phi", where phi is a
   capacity assignment formula built from `a -> c` (agent `a` has capacity `c`),
   negation and conjunction.
@@ -814,7 +814,7 @@ The quantifiers are `A` and `E`, with `F`, `G`, `U` (no `X` or release).
 Clocks and clock guards:
 
 - Automaton clocks `X` from the model `Clocks` section.
-- Formula clocks `J` via freeze `j.phi` (reset `j` to `0`, written `j.reset(phi)` in the [TCTL reference](TCTL/algorithm.md)).
+- Formula clocks `J` via freeze `j.phi` (reset `j` to `0`, written `j.reset(phi)` in the [TCTL algorithm reference](TCTL/algorithm.md)).
 - Guards: standalone `x <= 5` or attachment `phi : x <= c` on subformulas.
 
 For example:
@@ -848,8 +848,8 @@ j.{J5}(j<=7 U goal)
 
 The temporal operators are `F`, `G`, `U`, `R`, `W` (paper) and `X` (VITAMIN extension).
 
-The cost `k` is a per-step demonic deactivation budget (paper
-obstruction game), not cumulative path cost. OL (`<Jk>`) reads its budget the
+The cost `k` is the total cost of outgoing transitions the Demon may
+deactivate at each step; it is not summed along the path. OL (`<Jk>`) reads its budget the
 same way.
 
 The freeze `j.phi` resets formula clock `j` to `0` at the current state.
@@ -895,7 +895,7 @@ differs; ATL*, NatATL_Recall, NatATLF, TCTL and TOL are not listed:
 | Wallet_ATL | `<<1>>` | `<<>>` invalid (lexer) |
 | CTL / LTL | `E` / `A` or none | `<> ` invalid syntax |
 
-VITAMIN also rejects a coalition that lists an agent twice, because a coalition is a set of agents (ATL, JACM 2002 p. 685, rule S3: A "is a set of players").
+VITAMIN also rejects a coalition that lists an agent twice, because a coalition is a set of agents (ATL, JACM 2002, rule S3: A "is a set of players").
 This holds in every logic whose coalition lists agents, including IATL's `[A]` and COTL's list of demons (its legion).
 For example, `<1,1> F p` in ATL and `<{2,1,2}> F p` in CapATL are errors that name the repeated agent.
 
@@ -1125,13 +1125,3 @@ sections of every model type, how a loader detects the type, and examples are in
 - [timedCGS](file_formats.md#timedcgs-sections): costCGS with clocks.
 - [ObstructionModel](file_formats.md#obstructionmodel-sections-cotl): COTL's graph
   with demons.
-
-## Technical references
-
-The theory in this page draws on these textbooks:
-
-- Baier, C. & Katoen, J. P. (2008). _Principles of Model Checking_. MIT Press.
-  It covers the theoretical foundations for CTL and LTL, state-space exploration,
-  and labelling algorithms.
-- Jamroga, W. (2015). _Specification of Multi-Agent Systems_. It covers strategic
-  reasoning, ATL/NatATL foundations, and capacity-constrained logic formalisms.

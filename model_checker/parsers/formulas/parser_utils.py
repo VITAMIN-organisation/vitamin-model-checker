@@ -161,9 +161,16 @@ _COALITION_AND_BOUND_RE = re.compile(rf"{COALITION_ATL_TOKEN}\s*{COALITION_ATL_T
 _SPACED_BOUND_RE = re.compile(rf"(?<!\d>){COALITION_ATL_TOKEN}\s+{COALITION_ATL_TOKEN}")
 
 
+_LEADING_ZERO_BOUND_RE = re.compile(rf"<{AGENT_LIST}><(?:\d+,)*0\d")
+
+
 def coalition_bound_error(formula: str, missing_message: str) -> str | None:
-    """The error for a coalition whose bound is spaced off (`<1> <5>F p`) or
-    missing (`<1> F p`, `<1> p until q`, whatever operator follows), else None."""
+    """The error for a coalition bound written with a leading zero (`<1><05>F p`,
+    `<1><2,05>F p`), spaced off (`<1> <5>F p`) or missing (`<1> F p`,
+    `<1> p until q`, whatever operator follows), else None. A bare `0` is a value
+    error reported later."""
+    if _LEADING_ZERO_BOUND_RE.search(formula):
+        return "Bound cannot have leading zeros (e.g., use <1><5>, not <1><05>)"
     if _SPACED_BOUND_RE.search(formula):
         return (
             "The bound follows its coalition with no space: write <1><5>, not <1> <5>"

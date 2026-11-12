@@ -5,7 +5,7 @@ This page gives the denotations and code path of OL in
 checker; the syntax is in the [knowledge base](../logic_knowledge_base.md#ol) and
 the model format in [costCGS sections](../file_formats.md#costcgs-sections). The method follows D. Catta, J. Leneutre,
 V. Malvone, "Obstruction Logic: a Strategic Temporal Logic to Reason about
-Dynamic Game Models", ECAI 2023 (`docs/papers/ECAI23.pdf`). OL is the special case
+Dynamic Game Models", ECAI 2023. OL is the special case
 of [OATL](../OATL/algorithm.md) in which no agent makes a choice of its own, so
 OL keeps only its parser and entry point and runs the OATL solver (see
 [Semantic denotations](#semantic-denotations)).
@@ -46,8 +46,8 @@ Table 1 lists the written forms of `U`, `R` and `W` after the prefix (`U` shown)
 
 | Form | Accepted | Where it comes from |
 | :--- | :--- | :--- |
-| `<J2> (p U q)` | yes | ECAI 2023, Definition 1 (PDF page 2): $\langle n\rangle(\varphi\ U\ \varphi)$ and $\langle n\rangle(\varphi\ R\ \varphi)$. |
-| `<J2> p U q` | yes | The paper's prose writes this form too, $\langle n\rangle\varphi\ U\ \psi$ (PDF page 4). |
+| `<J2> (p U q)` | yes | ECAI 2023, Definition 1: $\langle n\rangle(\varphi\ U\ \varphi)$ and $\langle n\rangle(\varphi\ R\ \varphi)$. |
+| `<J2> p U q` | yes | The paper's prose writes this form too, $\langle n\rangle\varphi\ U\ \psi$. |
 
 `W` is the paper's abbreviation
 $\langle n\rangle(\varphi\ W\ \psi) := \langle n\rangle(\psi\ R\ (\varphi \lor \psi))$
@@ -90,7 +90,7 @@ disable all their edges to states outside $Y$ for a total cost of at most $k$
 OATL has the same Demon, but there a coalition of agents also picks its part of
 each joint action. With the coalition of all agents, the agents pick the whole
 joint action, which is the Traveler's single move in OL. AAMAS 2024
-(`docs/papers/AAMAS24b.pdf`, section 6) states this for a formula without nested
+states this for a formula without nested
 strategic operators: $\mathfrak{M}, s \models_{OL} \langle\langle n\rangle\rangle\psi$
 iff $\mathfrak{M}, s \models [\![Ag]\!]^n\psi$, where $[\![Ag]\!]^n$ is the OATL
 operator for the coalition $Ag$ of all agents with budget $n$. The paper adds

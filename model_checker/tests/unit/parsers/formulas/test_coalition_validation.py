@@ -155,7 +155,18 @@ def test_space_between_coalition_and_bound_is_named(logic, formula):
 
 
 @pytest.mark.unit
-def test_oatl_leading_zero_bound_is_named_before_a_word_operator():
-    """`<1><05> eventually p` gets the leading-zero message, as `<1><05>F p` does."""
-    errors = parse_errors("OATL", "<1><05> eventually p")
+@pytest.mark.parametrize(
+    ("logic", "formula"),
+    [
+        ("OATL", "<1><05> eventually p"),
+        ("RBATL", "<1><05> eventually p"),
+        ("RABATL", "<1><05> eventually p"),
+        ("RBATL", "<1><2,05>F p"),
+        ("RABATL", "<1><2,05>F p"),
+    ],
+)
+def test_leading_zero_bound_is_named(logic, formula):
+    """A leading zero in a bound (or in any element of a resource vector) gets the
+    leading-zero message, also before a word operator."""
+    errors = parse_errors(logic, formula)
     assert any("leading zeros" in error for error in errors), errors

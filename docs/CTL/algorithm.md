@@ -60,7 +60,7 @@ its path formula holds on that path. A lasso is a path that ends in a loop.
 E. M. Clarke, E. A. Emerson and A. P. Sistla describe the same counterexample
 for `AG f`, a path to a state where `f` fails ("Automatic Verification of
 Finite-State Concurrent Systems Using Temporal Logic Specifications", ACM TOPLAS
-8(2), 1986, `docs/papers/CES86.pdf`, p. 256). Table 2 lists the trace for each
+8(2), 1986). Table 2 lists the trace for each
 root operator.
 
 **Table 2: CTL trace per root operator.**

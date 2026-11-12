@@ -24,8 +24,8 @@ cap ::= a is c | !cap | cap && cap | cap || cap | cap -> cap
       | true | false | (cap)             -- c = capacity name
 ```
 
-`Ka(cap)` is the knowledge operator K^a_cap(phi) of AAMAS 2024 (grammar p. 125,
-meaning p. 126): "agent a knows that the capacity assignment verifies phi". A
+`Ka(cap)` is the knowledge operator K^a_cap(phi) of AAMAS 2024:
+"agent a knows that the capacity assignment verifies phi". A
 capacity assignment gives each agent one of its capacities (the model's
 `Capacities_assignment` rows list which ones it may take). `cap`, the paper's
 capacity assignment formula, is written with `a is c` for the paper's `a -> c`:
@@ -37,7 +37,7 @@ agent 3 does not have capacity `c` and agent 1 has `cop`.
   It may stand alone (`K1(1 is c)`) or inside any formula
   (`<{1}> F (g && K1(1 is c))`). `a is c` is valid only inside it.
 - Errors: the parentheses are part of the paper's rule, and the paper's `cap` has
-  only `a -> c`, negation and conjunction (p. 126 adds disjunction, implication,
+  only `a -> c`, negation and conjunction (the paper adds disjunction, implication,
   true and false as sugar). So `K1 1 is c`, `K1(K2(1 is c))` and `K1(p)` are
   errors with a message that names the part, and so is an agent out of range.
 - Names: `K1x` and `K12x` are each read as one word, not as the operator `K1`

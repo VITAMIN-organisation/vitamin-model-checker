@@ -85,7 +85,7 @@ phi ::= {Jk} F phi | {Jk} G phi
 ```
 
 - `{Jk}`: demonic prefix, `k` a positive integer (`{J[1-9]...}`).
-- `{J2} (p U q)` is the form of the paper (Definition 10, PDF page 4); `{J2} p U q`
+- `{J2} (p U q)` is the form of the paper (Definition 10); `{J2} p U q`
   builds the same tree. The same holds for `R` and `W`. See
   [the knowledge base](../logic_knowledge_base.md#until-after-a-prefix).
 - A connective after a prefix that no parenthesis closes (`{J2}F p && q`,

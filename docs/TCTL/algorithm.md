@@ -6,8 +6,9 @@ code path in `model_checker/algorithms/explicit/TCTL/`. The logic is introduced 
 [TCTL in the knowledge base](../logic_knowledge_base.md#tctl---timed-ctl) and the
 model file in [timedCGS sections](../file_formats.md#timedcgs-sections). It follows Hugh Anderson and
 P.S. Thiagarajan, _Verification of Real-time Systems_, Chapter 6, "Model
-checking and timed CTL" (NUS CS5270 lecture notes; TIGER notes, called "the notes" below): regional
-transition system, TCTL-minus fragment, and the `rsat` labelling algorithm.
+checking and timed CTL" (NUS CS5270 lecture notes, also called the TIGER notes;
+"the notes" below). It covers the regional transition system, the TCTL-minus
+fragment and the `rsat` labelling algorithm.
 
 ## Overview
 
@@ -36,7 +37,7 @@ API results project regions to location names where at least one region
 satisfies the formula. Initial-state satisfaction holds when any region at the
 initial location is satisfying.
 
-## TCTL-minus syntax (notes)
+## TCTL-minus syntax
 
 Clock sets:
 
@@ -66,8 +67,9 @@ The words `until`, `eventually` and `globally` stand for `U`, `F` and `G`.
 
 A connective after a prefix that no parenthesis closes (`AF p && q`,
 `A p U q && r`, freeze `j. p && q`, clock constraint `AF p : x<5 && q`) is a
-syntax error that gives the position and both readings, as in every logic with a prefix (see
-[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective));
+syntax error. The message gives the position and both readings, as for every logic
+with a prefix (see
+[the knowledge base](../logic_knowledge_base.md#prefix-before-a-connective)).
 `AF p`, `AG AF p` and `AG (p -> EF q)` parse.
 
 Standard reductions (`~` means "is defined as"):
@@ -77,7 +79,7 @@ Standard reductions (`~` means "is defined as"):
 - `EG phi` ~ `!A[!phi U true]`
 - `AG phi` ~ `!E[!phi U true]`
 
-Bounded until (encoding in the notes via freeze):
+Bounded until (encoding from the notes, via freeze):
 
 ```text
 A[phi U psi]_<=c  ~  j.reset(phi && A[true U (j<=c && psi)])   with fresh j in J
