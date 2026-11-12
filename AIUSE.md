@@ -1,6 +1,6 @@
 # AI usage
 
-Last updated: 2026-11-11
+Last updated: 2026-11-12
 
 ## Tools
 
@@ -19,8 +19,7 @@ Design choices, logic semantics and releases are decided by the maintainer.
 
 ## Responsibility
 
-Kim Quyen LY reviewed every AI-assisted change, made every commit, and is
-fully responsible for the code, tests and docs produced with AI help.
+Kim Quyen Ly reviewed every AI-assisted change and is fully responsible for the code, tests and docs produced with AI help.
 
 ## Updating this file
 

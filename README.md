@@ -32,14 +32,15 @@ print(result)
 ```
 
 Most logics expose the same `model_checking(formula, filename)` entry point and
-return a plain dict suitable for serialization.
+return a plain dict suitable for serialization. The exceptions are listed in
+[Engine Layer](docs/guides/architecture.md#engine-layer).
 
 Higher-level helpers are available from the public API:
 
 ```python
 from model_checker import FormulaParserFactory, execute_model_checking_with_parser
 
-parser = FormulaParserFactory.get_parser("CTL")
+parser = FormulaParserFactory.get_parser_instance("CTL")
 # execute_model_checking_with_parser(...) for integrated workflows
 ```
 
@@ -47,10 +48,10 @@ parser = FormulaParserFactory.get_parser("CTL")
 
 Built-in formula logics include ATL, ATLF, ATL_STAR, CapATL, COTL, CTL, IATL,
 ICTL, LTL, NatATL, NatATLF, NatSL, OATL, OL, RABATL, RBATL, TCTL, TOL, and
-Wallet_ATL. Model
-structures include CGS, BCGS, CostCGS, CapCGS, WalletCGS, and timedCGS. See
+Wallet_ATL, plus `NatATL_Recall`, the recall variant of NatATL. The 8 model types, by registry name, are CGS, BCGS, costCGS,
+capCGS, WalletCGS, timedCGS, BirelationalMatrix and ObstructionModel. See
 `pyproject.toml` entry points (`vitamin.parsers`, `vitamin.models`,
-`vitamin.benchmarks`) for the full registry.
+`vitamin.benchmarks`, `vitamin.metadata`) for the full registry.
 
 ## Repository role
 
@@ -98,4 +99,6 @@ The rules for using AI tools in a contribution are in
 
 Distributed under the SOURCE-AVAILABLE NON-COMMERCIAL LICENSE. See LICENSE for
 the full text. Commercial use requires prior written permission from the
-copyright holder.
+copyright holder. The vendored automata library in `model_checker/automata/` is
+under the MIT License instead; see
+[model_checker/automata/NOTICE.md](model_checker/automata/NOTICE.md).

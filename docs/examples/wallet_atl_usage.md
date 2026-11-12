@@ -1,7 +1,11 @@
 # Wallet_ATL
 
-Wallet_ATL extends standard ATL with per-agent wallet balances. Coalitions can
-include wallet constraints on which strategies are feasible.
+Wallet_ATL extends standard ATL with per-agent wallet balances. A joint move is
+kept only if every agent can pay for its action
+([payable moves](../algorithms/wallet_atl.md#payable-moves)), and a coalition
+can add wallet guards, conditions on balances in the states where it moves
+([operators](../algorithms/wallet_atl.md#operators) says where each operator
+checks them).
 
 ## Model type
 
@@ -17,7 +21,7 @@ Coalitions use double angle brackets. Optional wallet guards come after `:`.
 <<1,2:wallet(1, >= 50) && wallet(2, <= 100)>>G safe
 ```
 
-Temporal operators: `X`, `F`, `G`, `U`. Every temporal formula must begin with a `<<>>` coalition prefix.
-
-Wallet guards use `wallet(agent, operator value)`, as in `wallet(1, >= 50)`, where operator is
-`>=`, `<=`, `>`, `<`, or `==`.
+Temporal operators: `X`, `F`, `G`, `U`. The guard form and its rules (comparison
+operators, natural-number values, guard agents in the coalition, `&&` only,
+`<<>>` rejected) are in the
+[knowledge base](../reference/logic_knowledge_base.md#wallet_atl).
