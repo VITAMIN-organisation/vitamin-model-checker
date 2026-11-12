@@ -66,3 +66,19 @@ def test_cost_lookup_accepts_non_letter_action_tokens():
     cost_cgs_parser.normalize_cost_action_keys(instance)
     assert instance.get_cost_for_action("AA^", "s0") == [1, 1]
     assert instance.get_cost_for_action("A|A|^", "s0") == [1, 1]
+
+
+@pytest.mark.unit
+def test_transition_rows_stop_at_cost_section_and_skip_comments():
+    """`Costs_for_actions` after `Transition` ends the matrix; `#` and `//` lines are not rows."""
+    lines = [
+        "Transition",
+        "# a comment",
+        "0 I*",
+        "// another comment",
+        "0 0",
+        "Costs_for_actions",
+        "I* s0$1",
+    ]
+    rows = cost_cgs_parser.extract_transition_rows(lines, CostCGS())
+    assert rows == [["0", "I*"], ["0", "0"]]

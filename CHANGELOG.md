@@ -193,6 +193,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- costCGS files: `Costs_for_actions` or `Costs_for_actions_split` placed after
+  `Transition` no longer have their lines read as transition rows, and comment
+  lines (`#`, `//`) inside `Transition` are skipped.
 - costCGS cost lines: a third token (such as a second state after a space instead of
   `;`) and a negative cost are errors that name the value and the line. Before, the
   extra token was dropped and a negative cost was kept.

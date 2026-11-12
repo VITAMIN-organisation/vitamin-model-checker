@@ -140,13 +140,19 @@ def extract_transition_rows(lines: list[str], instance: Any) -> list[Any]:
     for line in lines:
         stripped = line.strip()
 
+        if cgs_parser.is_blank_or_comment(stripped):
+            continue
+
         if stripped in transition_headers:
             current_section = transition_headers[stripped]
             if stripped == "Transition_With_Costs":
                 instance.usesCostsInsteadOfActions = True
-        elif stripped in cgs_parser.SECTION_HEADERS:
+        elif (
+            stripped in cgs_parser.SECTION_HEADERS
+            or stripped in cgs_parser.EXTENSION_SECTION_HEADERS
+        ):
             current_section = None
-        elif current_section == "Transition" and stripped:
+        elif current_section == "Transition":
             rows_graph.append(stripped.split())
 
     return rows_graph
