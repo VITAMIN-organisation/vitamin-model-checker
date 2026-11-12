@@ -19,8 +19,10 @@ from model_checker.parsers.syntax_patterns import (
     NATATL_CAPACITY_RE,
     NATATL_COALITION_TOKEN,
     NEGATIVE_AGENT_IN_COALITION_RE,
+    NOT_FOLLOWED_BY_NAME_CHAR,
     PROPOSITION_TOKEN,
     TRAILING_COALITION_COMMA_RE,
+    operator_regex,
 )
 
 PROPOSITION_TOKEN_PATTERN = PROPOSITION_TOKEN
@@ -32,7 +34,18 @@ _INVALID_PROPOSITION_MSG = (
 
 # Modal/path tokens must not be substrings of proposition identifiers (Goal, Flux).
 _MODAL_TOKEN_PREFIX = r"(?:^|(?<![a-zA-Z0-9_]))"
-_MODAL_TOKEN_SUFFIX = r"(?![a-zA-Z0-9_])"
+_MODAL_TOKEN_SUFFIX = NOT_FOLLOWED_BY_NAME_CHAR
+
+# Any spelling of these operators, as a whole word (`R`, `release`, not `Rx`).
+_RELEASE_OR_WEAK = _MODAL_TOKEN_PREFIX + operator_regex("RELEASE", "WEAK")
+_CTL_UNARY_RE = re.compile(
+    _MODAL_TOKEN_PREFIX + operator_regex("NEXT", "EVENTUALLY", "GLOBALLY")
+)
+_CTL_UNTIL_RE = re.compile(_MODAL_TOKEN_PREFIX + operator_regex("UNTIL"))
+_CTL_TEMPORAL_RE = re.compile(
+    _MODAL_TOKEN_PREFIX + operator_regex("NEXT", "EVENTUALLY", "GLOBALLY", "UNTIL")
+)
+_CTL_QUANTIFIER_RE = re.compile(_MODAL_TOKEN_PREFIX + operator_regex("FORALL", "EXIST"))
 
 
 def until_operands(p) -> tuple:
@@ -147,9 +160,8 @@ def validate_release_weak_rejected(
     """Reject R and W (or the words release and weak), glued (`<1><5>R p`) or infix
     (`<1><5> p R q`), for a logic whose solver lacks them; propositions such as
     ``r`` or ``p_weak`` stay valid."""
-    operator = _MODAL_TOKEN_PREFIX + r"(?:[RW]|release|weak)" + _MODAL_TOKEN_SUFFIX
     prefix = rf"(?:{COALITION_ATL_TOKEN}|{NATATL_COALITION_TOKEN})"
-    if re.search(rf"{prefix}.*?{operator}", formula):
+    if re.search(rf"{prefix}.*?{_RELEASE_OR_WEAK}", formula):
         return (
             False,
             f"{logic_name} does not support Release (R) or Weak Until (W) operators",
@@ -164,39 +176,20 @@ def validate_ctl_path_quantifiers(formula: str) -> tuple[bool, str | None]:
     if not stripped:
         return True, None
 
-    if re.match(
-        _MODAL_TOKEN_PREFIX + r"(?:X|F|G)" + _MODAL_TOKEN_SUFFIX,
-        stripped,
-    ):
+    if _CTL_UNARY_RE.match(stripped):
         return (
             False,
             "Temporal operators (X, F, G) must be preceded by a quantifier (A or E)",
         )
 
-    if re.match(_MODAL_TOKEN_PREFIX + r"U" + _MODAL_TOKEN_SUFFIX, stripped):
+    if _CTL_UNTIL_RE.match(stripped):
         return (
             False,
             "UNTIL operator (U) must be preceded by a quantifier (A or E)",
         )
 
-    has_temporal = bool(
-        re.search(
-            _MODAL_TOKEN_PREFIX + r"(?:X|F|G|U)" + _MODAL_TOKEN_SUFFIX,
-            stripped,
-        )
-    )
-    has_quantifier = bool(
-        re.search(
-            _MODAL_TOKEN_PREFIX
-            + r"(?:A|E)"
-            + _MODAL_TOKEN_SUFFIX
-            + r"|"
-            + _MODAL_TOKEN_PREFIX
-            + r"(?:forall|exist)\b",
-            stripped,
-            re.IGNORECASE,
-        )
-    )
+    has_temporal = _CTL_TEMPORAL_RE.search(stripped)
+    has_quantifier = _CTL_QUANTIFIER_RE.search(stripped)
     if has_temporal and not has_quantifier:
         return (
             False,

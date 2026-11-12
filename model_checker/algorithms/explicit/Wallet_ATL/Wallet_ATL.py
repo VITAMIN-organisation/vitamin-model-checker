@@ -13,6 +13,7 @@ from model_checker.algorithms.explicit.shared import (
 from model_checker.algorithms.explicit.shared.atom_utils import formula_leaves
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.parsers.syntax_patterns import spelling_to_symbol
 from model_checker.utils.error_handler import (
     create_error_response,
     unresolved_leaves_error,
@@ -21,27 +22,8 @@ from model_checker.utils.error_handler import (
 from .preimage import build_feasible_transition_cache
 from .solver import solve_tree
 
-_UNARY_OPERATOR_MAP = {
-    "!": "!",
-    "not": "!",
-    "X": "X",
-    "next": "X",
-    "F": "F",
-    "eventually": "F",
-    "G": "G",
-    "globally": "G",
-    "always": "G",
-}
-_BINARY_OPERATOR_MAP = {
-    "or": "||",
-    "||": "||",
-    "and": "&&",
-    "&&": "&&",
-    "->": "->",
-    "implies": "->",
-    "U": "U",
-    "until": "U",
-}
+_UNARY_OPERATOR_MAP = spelling_to_symbol("NOT", "NEXT", "EVENTUALLY", "GLOBALLY")
+_BINARY_OPERATOR_MAP = spelling_to_symbol("OR", "AND", "IMPLIES", "UNTIL")
 _COALITION_TEMPORAL_UNARY = {"X", "F", "G"}
 
 

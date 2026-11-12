@@ -12,7 +12,10 @@ from model_checker.parsers.formulas.parser_utils import (
     until_operands,
     validate_coalition,
 )
-from model_checker.parsers.formulas.shared_parser import BaseLogicParser
+from model_checker.parsers.formulas.shared_parser import (
+    BaseLogicParser,
+    word_rule,
+)
 from model_checker.parsers.syntax_patterns import AGENT_LIST, CAPATL_COALITION_TOKEN
 
 # K^a_cap of the paper, typed as `K1` or `kcap1`; `K1x` stays a proposition name.
@@ -49,14 +52,8 @@ class CapATLParser(BaseLogicParser):
         self.build()
 
     # --- Specific Tokens ---
-    def t_RELEASE(self, t):
-        r"R(?![a-zA-Z0-9_])|release\b"
-        t.value = "R"
-        return t
-
-    def t_IS(self, t):
-        r"is\b"
-        return t
+    t_RELEASE = word_rule("RELEASE")
+    t_IS = word_rule("IS")
 
     def t_KCAP(self, t):
         agent = re.sub(r"\D", "", t.value)

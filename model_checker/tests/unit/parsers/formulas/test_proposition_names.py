@@ -219,3 +219,27 @@ def test_binary_word_operator_builds_the_symbol_tree(logic, word, symbol):
     spelled = parse(logic, binary(logic, f"p {word} q"))
     assert spelled is not None, f"{logic} rejected '{word}'"
     assert repr(spelled) == repr(parse(logic, binary(logic, f"p {symbol} q")))
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "logic, formula, word",
+    [
+        ("OL", "<J1> weak p", "weak"),
+        ("LTL", "until p", "until"),
+        ("LTL", "F p next", "next"),
+    ],
+)
+def test_syntax_error_names_the_word_as_written(logic, formula, word):
+    """`<J1> weak p` names `weak`, not the symbol `W` it is read as."""
+    errors = parse_errors(logic, formula)
+    assert any(f"near token '{word}'" in error for error in errors), errors
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("formula", ["a U p", "e U p"])
+def test_ctl_name_a_or_e_is_not_a_quantifier(formula):
+    """The names `a` and `e` are not the quantifiers `A` and `E` (lowercase `a U p`
+    has no quantifier)."""
+    errors = parse_errors("CTL", formula)
+    assert any("preceded by a path quantifier" in error for error in errors), errors

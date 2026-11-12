@@ -5,7 +5,11 @@ from model_checker.parsers.formulas.parser_utils import (
     run_common_prechecks,
     until_operands,
 )
-from model_checker.parsers.formulas.shared_parser import BaseLogicParser
+from model_checker.parsers.formulas.shared_parser import (
+    BaseLogicParser,
+    quantifier_rules,
+    word_rule,
+)
 
 
 class ICTLParser(BaseLogicParser):
@@ -32,20 +36,8 @@ class ICTLParser(BaseLogicParser):
     t_RBRACKET = r"\]"
     t_PROP = PROPOSITION_TOKEN_PATTERN
 
-    def t_FORALL(self, t):
-        r"A(?=[FGXUR\s(\[]|$)|\bforall\b"
-        t.value = "A"
-        return t
-
-    def t_EXIST(self, t):
-        r"E(?=[FGXUR\s(\[]|$)|\bexist\b"
-        t.value = "E"
-        return t
-
-    def t_RELEASE(self, t):
-        r"R(?![a-zA-Z0-9_])|release\b"
-        t.value = "R"
-        return t
+    t_FORALL, t_EXIST = quantifier_rules("FGXUR")
+    t_RELEASE = word_rule("RELEASE")
 
     # --- Grammar Rules ---
     def p_expression_ternary(self, p):

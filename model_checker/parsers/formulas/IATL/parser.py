@@ -13,7 +13,7 @@ from model_checker.parsers.formulas.parser_utils import (
     until_operands,
     validate_coalition,
 )
-from model_checker.parsers.formulas.shared_parser import BaseLogicParser
+from model_checker.parsers.formulas.shared_parser import BaseLogicParser, word_rule
 from model_checker.parsers.syntax_patterns import (
     COALITION_ATL_TOKEN,
     COALITION_UNIVERSAL_TOKEN,
@@ -38,10 +38,7 @@ class IATLParser(BaseLogicParser):
         self.n_agent = 0
         self.build()
 
-    def t_RELEASE(self, t):
-        r"R(?![a-zA-Z0-9_])|release\b"
-        t.value = "R"
-        return t
+    t_RELEASE = word_rule("RELEASE")
 
     t_COALITION = COALITION_ATL_TOKEN
     t_COALITION_UNIVERSAL = COALITION_UNIVERSAL_TOKEN

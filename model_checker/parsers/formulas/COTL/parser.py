@@ -15,7 +15,7 @@ from ..parser_utils import (
     until_operands,
     validate_agents,
 )
-from ..shared_parser import BaseLogicParser
+from ..shared_parser import BaseLogicParser, word_rule
 
 _LEGION_BUDGET_RE = re.compile(r"^<(?P<legion>[\d,]*)><(?P<budget>\d+)>")
 _LEGION_BUDGET_TOKEN_RE = re.compile(COTL_LEGION_BUDGET_TOKEN)
@@ -68,15 +68,8 @@ class COTLParser(BaseLogicParser):
         r"WX(?![a-zA-Z0-9_])"
         return t
 
-    def t_RELEASE(self, t):
-        r"R(?![a-zA-Z0-9_])|release\b"
-        t.value = "R"
-        return t
-
-    def t_WEAK(self, t):
-        r"W(?![a-zA-Z0-9_])|weak\b"
-        t.value = "W"
-        return t
+    t_RELEASE = word_rule("RELEASE")
+    t_WEAK = word_rule("WEAK")
 
     def p_expression_legion_unary(self, p):
         """expression : LEGION NEXT expression

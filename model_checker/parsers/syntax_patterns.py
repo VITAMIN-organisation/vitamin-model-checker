@@ -1,6 +1,7 @@
 """Shared regex building blocks for formula parsers and CGS validation."""
 
 import re
+from typing import NamedTuple
 
 _ALNUM_UNDERSCORE = r"a-zA-Z0-9_"
 _LETTER = r"a-zA-Z"
@@ -37,30 +38,62 @@ TCTL_TOL_PROPOSITION_TOKEN = ICTL_PROPOSITION_TOKEN
 # The boolean constants, written in lowercase in formulas and AST leaves.
 BOOLEAN_CONSTANTS = frozenset({"true", "false"})
 
+
+class OperatorSpelling(NamedTuple):
+    """The symbol an operator token stands for and its word spellings."""
+
+    symbol: str
+    words: tuple[str, ...]
+
+
+# The one list of word spellings, by token name. Words are lowercase only. A logic
+# lexes only the tokens it declares, but every word here is reserved in all logics
+# (KB "Atomic Proposition Policy").
+OPERATOR_WORDS: dict[str, OperatorSpelling] = {
+    "AND": OperatorSpelling("&&", ("and",)),
+    "OR": OperatorSpelling("||", ("or",)),
+    "NOT": OperatorSpelling("!", ("not",)),
+    "IMPLIES": OperatorSpelling("->", ("implies",)),
+    "UNTIL": OperatorSpelling("U", ("until",)),
+    "GLOBALLY": OperatorSpelling("G", ("globally", "always")),
+    "NEXT": OperatorSpelling("X", ("next",)),
+    "EVENTUALLY": OperatorSpelling("F", ("eventually",)),
+    "RELEASE": OperatorSpelling("R", ("release",)),
+    "WEAK": OperatorSpelling("W", ("weak",)),
+    "FORALL": OperatorSpelling("A", ("forall",)),
+    "EXIST": OperatorSpelling("E", ("exist",)),
+    "TIME_SEP": OperatorSpelling(":", ("with",)),
+    "IS": OperatorSpelling("is", ("is",)),
+}
+
+# A letter operator ends where a name would go on (`U` in `p U q`, not in `Up`).
+NOT_FOLLOWED_BY_NAME_CHAR = rf"(?![{_ALNUM_UNDERSCORE}])"
+
+
+def spelling_regex(spelling: str) -> str:
+    """Regex of one spelling; a letter spelling must end the word (`and`, not `android`)."""
+    suffix = NOT_FOLLOWED_BY_NAME_CHAR if spelling.isalpha() else ""
+    return re.escape(spelling) + suffix
+
+
+def spelling_to_symbol(*tokens: str) -> dict[str, str]:
+    """Map every spelling of `tokens` to its symbol (`not` and `!` to `!`)."""
+    return {
+        spelling: row.symbol
+        for row in (OPERATOR_WORDS[token] for token in tokens)
+        for spelling in (row.symbol, *row.words)
+    }
+
+
+def operator_regex(*tokens: str) -> str:
+    """Regex group of every spelling of `tokens` (`R`, `release`, `W`, `weak`)."""
+    return "(?:" + "|".join(map(spelling_regex, spelling_to_symbol(*tokens))) + ")"
+
+
 # Reserved words that must not be used as atomic proposition names (case-insensitive,
 # so `True` and `FALSE` are refused as well: no parser reads them as names).
 FORMULA_RESERVED_WORDS = (
-    frozenset(
-        {
-            "and",
-            "or",
-            "not",
-            "implies",
-            "until",
-            "release",
-            "globally",
-            "next",
-            "eventually",
-            "always",
-            "forall",
-            "exist",
-            # Operator words in some logics only, reserved in all; see the KB
-            # "Atomic Proposition Policy".
-            "weak",
-            "with",
-            "is",
-        }
-    )
+    frozenset(word for row in OPERATOR_WORDS.values() for word in row.words)
     | BOOLEAN_CONSTANTS
 )
 

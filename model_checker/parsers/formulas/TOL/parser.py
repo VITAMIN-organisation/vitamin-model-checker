@@ -7,7 +7,10 @@ from model_checker.parsers.formulas.parser_utils import (
     run_common_prechecks,
     until_operands,
 )
-from model_checker.parsers.formulas.shared_parser import BaseLogicParser
+from model_checker.parsers.formulas.shared_parser import (
+    BaseLogicParser,
+    word_rule,
+)
 from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
 
 
@@ -151,17 +154,8 @@ class TOLParser(BaseLogicParser):
         self.build()
 
     # --- Specific Tokens ---
-    # Every word rule is a function and t_PROP is a string: PLY tries all function
-    # rules before any string rule, so no word operator lexes as a name.
-    def t_RELEASE(self, t):
-        r"R(?![a-zA-Z0-9_])|release\b"
-        t.value = "R"
-        return t
-
-    def t_WEAK(self, t):
-        r"W(?![a-zA-Z0-9_])|weak\b"
-        t.value = "W"
-        return t
+    t_RELEASE = word_rule("RELEASE")
+    t_WEAK = word_rule("WEAK")
 
     def t_FALSE(self, t):
         r"\#|false\b"
@@ -171,9 +165,7 @@ class TOLParser(BaseLogicParser):
         r"\@|true\b"
         return t
 
-    def t_TIME_SEP(self, t):
-        r":|,|with\b"
-        return t
+    t_TIME_SEP = word_rule("TIME_SEP", ":|,")
 
     t_PROP = TCTL_TOL_PROPOSITION_TOKEN
     t_DEMONIC = r"{J[1-9]\d*}"

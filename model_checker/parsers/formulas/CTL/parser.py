@@ -9,7 +9,7 @@ from ..parser_utils import (
     until_operands,
     validate_ctl_path_quantifiers,
 )
-from ..shared_parser import BaseLogicParser
+from ..shared_parser import BaseLogicParser, quantifier_rules
 
 
 class CTLParser(BaseLogicParser):
@@ -27,15 +27,7 @@ class CTLParser(BaseLogicParser):
     t_RBRACKET = r"\]"
     t_PROP = PROPOSITION_TOKEN_PATTERN
 
-    def t_FORALL(self, t):
-        r"A(?=[FGXU\s(\[]|$)|\bforall\b"
-        t.value = "A"
-        return t
-
-    def t_EXIST(self, t):
-        r"E(?=[FGXU\s(\[]|$)|\bexist\b"
-        t.value = "E"
-        return t
+    t_FORALL, t_EXIST = quantifier_rules("FGXU")
 
     # --- Grammar Rules ---
 

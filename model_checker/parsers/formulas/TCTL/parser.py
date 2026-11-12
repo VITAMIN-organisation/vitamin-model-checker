@@ -14,7 +14,10 @@ from model_checker.parsers.formulas.parser_utils import (
     run_common_prechecks,
     until_operands,
 )
-from model_checker.parsers.formulas.shared_parser import BaseLogicParser
+from model_checker.parsers.formulas.shared_parser import (
+    BaseLogicParser,
+    quantifier_rules,
+)
 from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
 
 # `X` alone is never a TCTL name (a name starts lowercase), so this cannot reject a
@@ -147,39 +150,8 @@ class TCTLParser(BaseLogicParser):
         self.build()
 
     # --- Specific Tokens ---
-    def t_PROP(self, t):
-        reserved = {
-            "implies": "IMPLIES",
-            "true": "TRUE",
-            "false": "FALSE",
-            "forall": "FORALL",
-            "exist": "EXIST",
-            "and": "AND",
-            "or": "OR",
-            "not": "NOT",
-        }
-        t.type = reserved.get(t.value, "PROP")
-        if t.type == "FORALL":
-            t.value = "A"
-        elif t.type == "EXIST":
-            t.value = "E"
-        return t
-
-    t_PROP.__doc__ = TCTL_TOL_PROPOSITION_TOKEN
-
-    def t_IMPLIES(self, t):
-        r"->|implies\b"
-        return t
-
-    def t_FORALL(self, t):
-        r"A(?=[FGXU\s(\[]|$)|forall\b"
-        t.value = "A"
-        return t
-
-    def t_EXIST(self, t):
-        r"E(?=[FGXU\s(\[]|$)|exist\b"
-        t.value = "E"
-        return t
+    t_PROP = TCTL_TOL_PROPOSITION_TOKEN
+    t_FORALL, t_EXIST = quantifier_rules("FGXU")
 
     t_GEQ = r"\>\="
     t_LEQ = r"\<\="

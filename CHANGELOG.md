@@ -25,6 +25,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- A syntax error names a word operator as written: `<J1> weak p` in OL gives
+  "Syntax error near token 'weak'", where it said 'W'. In CTL, a temporal operator
+  with no quantifier gets the same "must be preceded by a quantifier" message as
+  its symbol also when it is written as a word (`p until q`,
+  `eventually p`) or when the formula holds a proposition named `a` or `e`
+  (`a U p`); both ended in a syntax error before. The word spellings of the
+  operators are read from one table (`OPERATOR_WORDS` in `syntax_patterns.py`)
+  by every parser, the prechecks and the reserved-word check.
 - Breaking: a WalletCGS file needs a `Wallets` row for every state. Before, a state
   with no row loaded and was read as holding 0 for every agent; loading now fails
   with `Wallets has no row for state(s) s1; ...`, since the Wallet ATL paper

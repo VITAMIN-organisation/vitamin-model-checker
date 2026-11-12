@@ -28,6 +28,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from model_checker.parsers.syntax_patterns import BOOLEAN_CONSTANTS, OPERATOR_WORDS
+
 from ..parser_utils import (
     ambiguous_prefix_message,
     validate_proposition_identifier,
@@ -45,26 +47,18 @@ class ATLStarParseError(ValueError):
         self.position = position
 
 
+_CONNECTIVE_TOKENS = ("NOT", "AND", "OR", "IMPLIES")
+_TEMPORAL_TOKENS = ("NEXT", "EVENTUALLY", "GLOBALLY", "UNTIL")
+
 _KEYWORDS = {
-    "not": "NOT",
-    "and": "AND",
-    "or": "OR",
-    "implies": "IMPLIES",
-    "next": "NEXT",
-    "eventually": "EVENTUALLY",
-    "globally": "GLOBALLY",
-    "always": "GLOBALLY",
-    "until": "UNTIL",
-    "true": "TRUE",
-    "false": "FALSE",
-}
+    word: token
+    for token in _CONNECTIVE_TOKENS + _TEMPORAL_TOKENS
+    for word in OPERATOR_WORDS[token].words
+} | {constant: constant.upper() for constant in BOOLEAN_CONSTANTS}
 
 # Uppercase only, so one-letter props like `p` stay free.
 _SINGLE_LETTER_KEYWORDS = {
-    "X": "NEXT",
-    "F": "EVENTUALLY",
-    "G": "GLOBALLY",
-    "U": "UNTIL",
+    OPERATOR_WORDS[token].symbol: token for token in _TEMPORAL_TOKENS
 }
 
 # IDENT takes a leading `_` so that `_goal` fails with the name rule's message

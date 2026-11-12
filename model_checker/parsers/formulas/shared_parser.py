@@ -14,6 +14,12 @@ from typing import Any
 import ply.lex as lex
 import ply.yacc as yacc
 
+from model_checker.parsers.syntax_patterns import (
+    OPERATOR_WORDS,
+    operator_regex,
+    spelling_regex,
+)
+
 from .common_tokens import COMMON_TOKEN_NAMES
 from .parser_utils import (
     NodeMarks,
@@ -22,6 +28,40 @@ from .parser_utils import (
     run_common_prechecks,
     validate_proposition_identifier,
 )
+
+
+def word_rule(token: str, symbol_regex: str | None = None, *, normalize: bool = True):
+    """Return a PLY rule for `token` that reads its symbol or one of its words in
+    `OPERATOR_WORDS`; with `normalize` the token's value is the symbol, whatever
+    the spelling.
+
+    `symbol_regex` replaces the table's symbol when a logic reads it in context
+    (`A` before `F`, `:` or `,`). Every rule from here is a function, which PLY
+    tries before the string rule `t_PROP`; the rules share one line number, so PLY
+    orders them by name, which is safe while no two match the same text.
+    """
+    symbol, words = OPERATOR_WORDS[token]
+
+    def rule(self, t):
+        # Kept for p_error, which names what the user wrote (`weak`, not `W`).
+        t.text = t.value
+        if normalize:
+            t.value = symbol
+        return t
+
+    if symbol_regex is None:
+        rule.__doc__ = operator_regex(token)
+    else:
+        rule.__doc__ = "|".join([symbol_regex, *map(spelling_regex, words)])
+    return rule
+
+
+def quantifier_rules(operator_letters: str):
+    """Return the FORALL and EXIST rules: `A` and `E` are quantifiers only before
+    one of `operator_letters`, a space, `(`, `[` or the end, so `AF` splits and
+    `Abc` does not."""
+    lookahead = rf"(?=[{operator_letters}\s(\[]|$)"
+    return word_rule("FORALL", "A" + lookahead), word_rule("EXIST", "E" + lookahead)
 
 
 class BaseLogicParser:
@@ -41,25 +81,10 @@ class BaseLogicParser:
     t_RPAREN = r"\)"
     t_ignore = " \t"
 
-    def t_UNTIL(self, t):
-        r"U(?![a-zA-Z0-9_])|until\b"
-        t.value = "U"
-        return t
-
-    def t_GLOBALLY(self, t):
-        r"G(?![a-zA-Z0-9_])|globally\b|always\b"
-        t.value = "G"
-        return t
-
-    def t_NEXT(self, t):
-        r"X(?![a-zA-Z0-9_])|next\b"
-        t.value = "X"
-        return t
-
-    def t_EVENTUALLY(self, t):
-        r"F(?![a-zA-Z0-9_])|eventually\b"
-        t.value = "F"
-        return t
+    t_UNTIL = word_rule("UNTIL")
+    t_GLOBALLY = word_rule("GLOBALLY")
+    t_NEXT = word_rule("NEXT")
+    t_EVENTUALLY = word_rule("EVENTUALLY")
 
     def t_FALSE(self, t):
         r"false\b"
@@ -69,25 +94,13 @@ class BaseLogicParser:
         r"true\b"
         return t
 
-    def t_AND(self, t):
-        # Canonical: &&. Alias: word and. A single & is an invalid character.
-        r"&&|and\b"
-        return t
-
-    def t_OR(self, t):
-        # Canonical: ||. Alias: word or. A single | is an invalid character.
-        r"\|\||or\b"
-        return t
-
-    def t_NOT(self, t):
-        # Canonical: !. Alias: word not
-        r"!|not\b"
-        return t
-
-    def t_IMPLIES(self, t):
-        # Canonical: ->. Alias: word implies. A lone > is not implication.
-        r"->|implies\b"
-        return t
+    # A single & or | is an invalid character, and a lone > is not implication.
+    # The AST keeps the spelling of a connective (`and` or `&&`), as the solvers
+    # read both.
+    t_AND = word_rule("AND", normalize=False)
+    t_OR = word_rule("OR", normalize=False)
+    t_NOT = word_rule("NOT", normalize=False)
+    t_IMPLIES = word_rule("IMPLIES", normalize=False)
 
     def t_newline(self, t):
         r"\n+"
@@ -207,9 +220,8 @@ class BaseLogicParser:
         if p:
             lexpos = getattr(p, "lexpos", None)
             if lexpos is not None:
-                err_msg = (
-                    f"Syntax error near token '{p.value}' at position {lexpos + 1}"
-                )
+                shown = getattr(p, "text", p.value)
+                err_msg = f"Syntax error near token '{shown}' at position {lexpos + 1}"
             else:
                 err_msg = f"Syntax error near token '{p.value}'"
         else:

@@ -16,7 +16,7 @@ from ..parser_utils import (
     until_operands,
     validate_coalition_bound_token,
 )
-from ..shared_parser import BaseLogicParser
+from ..shared_parser import BaseLogicParser, word_rule
 
 _MISSING_BOUND_TEMPORAL_RE = re.compile(rf"<{AGENT_LIST}>\s*[FGXURW]")
 _COALITION_BOUND_PROBE_RE = re.compile(
@@ -53,15 +53,8 @@ class OATLParser(BaseLogicParser):
     _bound_pattern = NON_NEGATIVE_INT
     _min_bound = 0
 
-    def t_RELEASE(self, t):
-        r"R(?![a-zA-Z0-9_])|release\b"
-        t.value = "R"
-        return t
-
-    def t_WEAK(self, t):
-        r"W(?![a-zA-Z0-9_])|weak\b"
-        t.value = "W"
-        return t
+    t_RELEASE = word_rule("RELEASE")
+    t_WEAK = word_rule("WEAK")
 
     # === Grammar ===
     def p_expression_ternary(self, p):

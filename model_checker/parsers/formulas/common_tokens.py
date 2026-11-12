@@ -1,6 +1,6 @@
 """Common token definitions shared across all logic parsers."""
 
-# Boolean + core temporal names. RELEASE/WEAK are opt-in per logic (COTL, OL, CapATL, IATL).
+# Boolean + core temporal names. A logic with RELEASE or WEAK adds the token itself.
 COMMON_TOKEN_NAMES = [
     "LPAREN",
     "RPAREN",

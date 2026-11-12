@@ -1,32 +1,18 @@
 from typing import Any
 
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
+from model_checker.parsers.syntax_patterns import spelling_to_symbol
 
-# The parser keeps the spelling the user wrote (`and`, `NEXT`), so map each spelling
-# to one symbol.
-_SYMBOL = {
-    "!": "!",
-    "NOT": "!",
-    "&&": "&&",
-    "AND": "&&",
-    "||": "||",
-    "OR": "||",
-    "->": "->",
-    "IMPLIES": "->",
-    "X": "X",
-    "NEXT": "X",
-    "F": "F",
-    "EVENTUALLY": "F",
-    "G": "G",
-    "GLOBALLY": "G",
-    "U": "U",
-    "UNTIL": "U",
-}
+# The parser keeps the spelling of a connective (`and` or `&&`), so map each
+# spelling to one symbol.
+_SYMBOL = spelling_to_symbol(
+    "NOT", "AND", "OR", "IMPLIES", "NEXT", "EVENTUALLY", "GLOBALLY", "UNTIL"
+)
 _CONNECTIVES = ("&&", "||", "->")
 
 
 def _symbol(node: Any) -> str | None:
-    return None if isinstance(node, str) else _SYMBOL[node[0].upper()]
+    return None if isinstance(node, str) else _SYMBOL[node[0]]
 
 
 def _operand(node: Any) -> str:

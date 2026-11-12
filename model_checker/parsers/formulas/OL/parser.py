@@ -13,7 +13,7 @@ from ..parser_utils import (
     run_common_prechecks,
     until_operands,
 )
-from ..shared_parser import BaseLogicParser
+from ..shared_parser import BaseLogicParser, word_rule
 
 _LEADING_ZERO_BOUND_RE = re.compile(r"<J(0\d+)>")
 
@@ -42,15 +42,8 @@ class OLParser(BaseLogicParser):
     t_PROP = PROPOSITION_TOKEN_PATTERN
     t_DEMONIC = OL_DEMONIC_TOKEN
 
-    def t_RELEASE(self, t):
-        r"R(?![a-zA-Z0-9_])|release\b"
-        t.value = "R"
-        return t
-
-    def t_WEAK(self, t):
-        r"W(?![a-zA-Z0-9_])|weak\b"
-        t.value = "W"
-        return t
+    t_RELEASE = word_rule("RELEASE")
+    t_WEAK = word_rule("WEAK")
 
     # === Grammar ===
     def p_expression_ternary(self, p):
