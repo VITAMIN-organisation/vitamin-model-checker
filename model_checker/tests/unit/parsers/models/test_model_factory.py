@@ -55,10 +55,14 @@ def test_header_inside_a_name_is_not_a_header(name):
 
 
 @pytest.mark.unit
-def test_birelational_cells_select_the_birelational_matrix():
-    """ICTL frames write transition cells as P, R or P,R instead of joint actions."""
+@pytest.mark.parametrize("comment", ["", "// frame\n"])
+def test_birelational_cells_select_the_birelational_matrix(comment):
+    """ICTL frames write transition cells as P, R or P,R instead of joint actions.
+
+    A `//` line is a comment, as in the parsers, not a transition row.
+    """
     content = (
-        "Transition\nP,R P\n0 P,R\nName_State\ns0 s1\nInitial_State\ns0\n"
+        f"Transition\n{comment}P,R P\n0 P,R\nName_State\ns0 s1\nInitial_State\ns0\n"
         "Atomic_propositions\ne\nLabelling\n1\n0\nNumber_of_agents\n1\n"
     )
     assert detect_model_type_from_content(content) == "BirelationalMatrix"

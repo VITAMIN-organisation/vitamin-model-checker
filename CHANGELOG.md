@@ -193,6 +193,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Model type detection: a `//` comment line in the `Transition` section of an ICTL
+  birelational matrix made the file load as a CGS. It is now skipped like a `#`
+  comment, as `docs/file_formats.md` states.
 - OATL, RBATL and RABATL: `<1><-5>F p` said "Negative agent indices are not
   allowed"; it now says "Bound must not be negative". `<-1>F p` keeps the agent
   message.

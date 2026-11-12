@@ -14,6 +14,7 @@ from model_checker.parsers.game_structures.birelational_matrix.birelational_matr
     BirelationalMatrix,
 )
 from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
+from model_checker.parsers.game_structures.cgs import cgs_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
 from model_checker.parsers.game_structures.obstruction_model.obstruction_model import (
@@ -60,7 +61,7 @@ def _has_birelational_transition_cells(content: str) -> bool:
     found_marker = False
     for raw in content.splitlines():
         line = raw.strip()
-        if not line or line.startswith("#"):
+        if cgs_parser.is_blank_or_comment(line):
             continue
         if line in _MODEL_SECTION_HEADERS:
             if in_transition:
@@ -70,8 +71,6 @@ def _has_birelational_transition_cells(content: str) -> bool:
         if not in_transition:
             continue
         tokens = line.split()
-        if not tokens:
-            continue
         if not all(token in _BIRELATIONAL_CELL_TOKENS for token in tokens):
             return False
         if any(token in _BIRELATIONAL_MARKER_TOKENS for token in tokens):
