@@ -38,15 +38,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `<{1}> F kcap` gets "Atomic proposition 'kcap' clashes with reserved keyword.",
   `K1(1 is kcap)` gets "Capacity 'kcap' clashes with reserved keyword.", and a
   CapCGS model file that declares `kcap` as a proposition or capacity is refused
-  when the file is read. Other logics and plain CGS models keep `kcap` as a name. No model
-  file in this repository or in the Workbench declares it.
+  when the file is read. So is a CapCGS name of `kcap` and digits (`kcap1`,
+  `kcap42`), which CapATL reads as the operator: "Capacity 'kcap1' spells the
+  CapATL knowledge operator (kcap1(...)), so no formula could name it."
+  `kcap1x` stays a name. Other logics and plain CGS models keep `kcap` and
+  `kcap1` as names. No model file in this repository or in the Workbench
+  declares them.
 - OATL, RBATL and RABATL name a missing bound for any coalition without one, such
   as `<1> eventually p` or `(<1><5>F p) && (<2> F q)`: OATL gives "Temporal
   operators require a bound ...", RBATL and RABATL give "RBATL requires a resource
   bound ...". Before, only a symbol operator right after the coalition (`<1> F p`)
   got that message; the rest got "Invalid character" errors for `<`. OATL also
   names a leading-zero bound before a word operator and in any coalition of the
-  formula (`<1><05> eventually p`).
+  formula (`<1><05> eventually p`). A space between a coalition and its bound
+  (`<1> <5>F p`) is an error in all three logics: "The bound follows its coalition
+  with no space: write <1><5>, not <1> <5>", where it gave "Invalid character
+  '<'" before.
 - Breaking: a WalletCGS file needs a `Wallets` row for every state. Before, a state
   with no row loaded and was read as holding 0 for every agent; loading now fails
   with `Wallets has no row for state(s) s1; ...`, since the Wallet ATL paper
@@ -350,6 +357,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
+- Breaking: `read_from_model_object` of CGS, CapCGS and CostCGS (and the
+  ObstructionModel stub that raised `NotImplementedError`). Nothing in the
+  checker, its tests or the Workbench called it, and it skipped the checks that
+  `read_file` makes: it loaded no wallets for a WalletCGS and checked no names.
+  Load a model with `read_file`.
 - Breaking: WalletCGS `get_valid_actions`, `get_next_states` and
   `simulate_transition`. Wallet_ATL never called them. With more than one agent
   they treated the last agent as the contract and skipped its wallet check,

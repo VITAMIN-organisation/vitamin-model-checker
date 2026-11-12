@@ -67,7 +67,7 @@ class CGSProtocol(Protocol):
         """Return index of the state with the given name."""
         ...
 
-    def get_state_name_by_index(self, index: int) -> Any:
+    def get_state_name_by_index(self, index: int) -> str:
         """Return state name at the given index."""
         ...
 

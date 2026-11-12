@@ -156,13 +156,21 @@ def validate_natsl_temporal_atom(atom: str) -> tuple[bool, str | None]:
 
 _COALITION_RE = re.compile(COALITION_ATL_TOKEN)
 _COALITION_AND_BOUND_RE = re.compile(rf"{COALITION_ATL_TOKEN}\s*{COALITION_ATL_TOKEN}")
+# A coalition, not itself a bound (`<5>` of `<1><5>` comes right after `1>`),
+# then a space and its bound.
+_SPACED_BOUND_RE = re.compile(rf"(?<!\d>){COALITION_ATL_TOKEN}\s+{COALITION_ATL_TOKEN}")
 
 
-def has_coalition_without_bound(formula: str) -> bool:
-    """True when a coalition has no bound after it (`<1> F p`, `<1> p until q`),
-    whatever operator follows. `<1> <5>` has its bound, only spaced off, so it is
-    left to the lexer."""
-    return bool(_COALITION_RE.search(_COALITION_AND_BOUND_RE.sub(" ", formula)))
+def coalition_bound_error(formula: str, missing_message: str) -> str | None:
+    """The error for a coalition whose bound is spaced off (`<1> <5>F p`) or
+    missing (`<1> F p`, `<1> p until q`, whatever operator follows), else None."""
+    if _SPACED_BOUND_RE.search(formula):
+        return (
+            "The bound follows its coalition with no space: write <1><5>, not <1> <5>"
+        )
+    if _COALITION_RE.search(_COALITION_AND_BOUND_RE.sub(" ", formula)):
+        return missing_message
+    return None
 
 
 def validate_release_weak_rejected(

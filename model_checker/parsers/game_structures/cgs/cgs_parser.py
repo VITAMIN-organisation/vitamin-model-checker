@@ -6,7 +6,6 @@ import numpy as np
 
 from model_checker.parsers.game_structures.cgs.cgs_utils import (
     validate_agent_label_name,
-    validate_model_name,
 )
 
 # --- Constants ---
@@ -320,9 +319,7 @@ def _apply_atomic_propositions(instance, atomic_propositions_list):
     seen = set()
     unique = []
     for prop in atomic_propositions_list:
-        validate_model_name(
-            prop, kind="Atomic proposition", reserved_words=instance.RESERVED_WORDS
-        )
+        instance.validate_name(prop, kind="Atomic proposition")
         if prop not in seen:
             seen.add(prop)
             unique.append(prop)

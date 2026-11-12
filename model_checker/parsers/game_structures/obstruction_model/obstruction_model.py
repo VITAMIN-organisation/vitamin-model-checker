@@ -65,9 +65,6 @@ class ObstructionModel(CGS):
             elif section is not None:
                 self._demon_lines[section].append((number, line))
 
-    def read_from_model_object(self, model):
-        raise NotImplementedError("ObstructionModel is loaded with read_file")
-
     def validate_model_structure(self) -> None:
         """Check the graph and labelling, then read and check the demon sections."""
         num_states = len(self.states)

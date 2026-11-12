@@ -302,7 +302,8 @@ erase transitions. Erasing joint action `a` at state `s` costs `$(s, a)`.
 **Parser Location:** `model_checker/parsers/formulas/OATL/parser.py`
 
 **Supported Syntax:**
-1.  **Format**: `<coalition><budget>` (e.g., `<1,2><10>`).
+1.  **Format**: `<coalition><budget>` (e.g., `<1,2><10>`), with no space between
+    the two parts (`<1> <5>` is an error).
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W` (and their keywords).
 3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [Atomic Proposition Policy](#atomic-proposition-policy)).
 4.  **Boolean Constants**: Supports `true` and `false`.
@@ -395,7 +396,8 @@ RBATL and RABATL extend ATL with vector cost bounds on coalition strategies over
 **Parser locations:** `RBATL/parser.py`, `RABATL/parser.py` (same surface syntax).
 
 **Supported Syntax:**
-1.  **Format**: `<coalition><bound1,bound2,...>` (e.g., `<1><10,5>`).
+1.  **Format**: `<coalition><bound1,bound2,...>` (e.g., `<1><10,5>`), with no space
+    between the two parts (`<1> <5>` is an error).
 2.  **Temporal Operators**: `X`, `F`, `G`, `U` (`R`/`W` rejected at parser).
 3.  **Multi-resource bounds**: comma-separated inside the second angle-bracket group.
 
@@ -824,7 +826,7 @@ VITAMIN does **not** support an empty strategic coalition written as `<>`. In AT
 | Existential path reachability (CTL) | `EF p` | `<> F p` |
 | Strategic coalition (ATL) | `<1> F p`, `<1,2> G p` | `<> F p` |
 | Linear path eventually (LTL) | `F p` | `<> F p` |
-| Cost-bounded strategy (OATL / RBATL) | `<1><5> F p` | `<> F p`, `<1> F p` without bound |
+| Cost-bounded strategy (OATL / RBATL) | `<1><5> F p` | `<> F p`, `<1> F p` without bound, `<1> <5> F p` |
 | Capacity / strategy-bound (NatATL) | `<{1}, 5> F p` | `<> F p` |
 | Capacity coalition (CapATL) | `<{1}> F p` | `<> F p` |
 | IATL universal coalition | `[1] G p` | `[] G p` (empty `[]` rejected) |
@@ -880,8 +882,10 @@ therefore means the same in every logic, apart from `kcap` below.
 `kcap` (in any letter case) is reserved in CapATL only: in its formulas and in a
 CapCGS model, as a proposition or a capacity name. CapATL writes its knowledge
 operator `K1(...)` or `kcap1(...)`, and its parser reads `kcap` followed by digits
-as that operator, so the bare word is the only spelling left to reserve. In the
-other logics `kcap` and `kcap1` stay valid names.
+as that operator, so the bare word is the only spelling left to reserve. A CapCGS
+model also refuses names of `kcap` and digits (`kcap1`, `kcap42`), since no CapATL
+formula could name them; `kcap1x` is an ordinary name. In the other logics and
+plain CGS models `kcap` and `kcap1` stay valid names.
 
 `true` and `false` are the boolean constants, so a model that declares a proposition, clock or
 capacity with either name (`true`, `True`, `FALSE`, ...) is rejected when it is read. The constants

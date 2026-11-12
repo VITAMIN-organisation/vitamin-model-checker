@@ -31,11 +31,6 @@ class CostCGS(CGS):
         cost_cgs_parser.normalize_cost_action_keys(self)
         cost_cgs_parser.parse_transitions(lines, self)
 
-    def read_from_model_object(self, model: Any) -> None:
-        """Copy fields from an existing model object, including cost_for_action."""
-        super().read_from_model_object(model)
-        self.cost_for_action = model.cost_for_action
-
     # --- Cost Accessor Methods ---
 
     def get_cost_for_action(self, action: str, state: str) -> Any:

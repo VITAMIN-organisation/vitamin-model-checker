@@ -62,7 +62,6 @@ class WalletCGS(CGS):
                     self.wallets[state] = tuple(wallet_values)
 
         # AAMAS26b Def. 3.1: W : Q x Ag -> Q+ gives a balance in every state.
-        # Not in validate_model_structure: read_from_model_object loads no wallets.
         missing = [str(s) for s in self.states if str(s) not in self.wallets]
         if missing:
             raise ValueError(

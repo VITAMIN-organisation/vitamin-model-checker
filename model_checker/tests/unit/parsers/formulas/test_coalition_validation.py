@@ -146,6 +146,15 @@ def test_coalition_without_bound_is_named_for_every_spelling(logic, formula):
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize("logic", sorted(_BOUND_MESSAGE))
+@pytest.mark.parametrize("formula", ["<1> <5>F p", "(<1><5>F p) && (<2>  <3> G q)"])
+def test_space_between_coalition_and_bound_is_named(logic, formula):
+    """`<1> <5>F p` is an error that says the bound follows with no space."""
+    errors = parse_errors(logic, formula)
+    assert any("with no space" in error for error in errors), errors
+
+
+@pytest.mark.unit
 def test_oatl_leading_zero_bound_is_named_before_a_word_operator():
     """`<1><05> eventually p` gets the leading-zero message, as `<1><05>F p` does."""
     errors = parse_errors("OATL", "<1><05> eventually p")

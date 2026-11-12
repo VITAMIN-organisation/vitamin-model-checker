@@ -117,6 +117,7 @@ def test_bad_value_is_refused_by_name(lines, message):
         ("Next", "Capacity 'Next' clashes with reserved keyword"),
         ("with", "Capacity 'with' clashes with reserved keyword"),
         ("kcap", "Capacity 'kcap' clashes with reserved keyword"),
+        ("kcap42", "Capacity 'kcap42' spells the CapATL knowledge operator"),
     ],
 )
 def test_capacity_name_follows_the_name_rule(name, message):
@@ -127,14 +128,22 @@ def test_capacity_name_follows_the_name_rule(name, message):
 
 
 @pytest.mark.unit
-def test_capcgs_proposition_kcap_is_refused():
-    """A CapCGS model is read by CapATL, which reserves `kcap`; a plain CGS keeps it."""
-    lines = _lines(props="kcap", extra=["Capacities", "c"])
-    with pytest.raises(ValueError, match="Atomic proposition 'kcap' clashes"):
+@pytest.mark.parametrize(
+    ("name", "message"),
+    [("kcap", "clashes with reserved keyword"), ("kcap1", "spells the CapATL")],
+)
+def test_capcgs_proposition_kcap_is_refused(name, message):
+    """A CapCGS model is read by CapATL, which reads `kcap1` as its operator and
+    reserves `kcap`; a plain CGS keeps both, and `kcap1x` is a name everywhere."""
+    lines = _lines(props=name, extra=["Capacities", "c"])
+    with pytest.raises(ValueError, match=f"Atomic proposition '{name}' {message}"):
         CapCGS()._parse_lines(lines)
     cgs = CGS()
     cgs_parser.parse_cgs_file(lines, cgs)
-    assert list(cgs.atomic_propositions) == ["kcap"]
+    assert list(cgs.atomic_propositions) == [name]
+    capcgs = CapCGS()
+    capcgs._parse_lines(_lines(props="kcap1x", extra=["Capacities", "c"]))
+    assert list(capcgs.atomic_propositions) == ["kcap1x"]
 
 
 @pytest.mark.unit

@@ -12,7 +12,7 @@ from model_checker.parsers.syntax_patterns import (
 
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
-    has_coalition_without_bound,
+    coalition_bound_error,
     run_common_prechecks,
     until_operands,
     validate_coalition_bound_token,
@@ -89,12 +89,11 @@ class OATLParser(BaseLogicParser):
                 "Bound cannot have leading zeros (e.g., use <1><5>, not <1><05>)",
             )
 
-        if has_coalition_without_bound(formula):
-            return (
-                False,
-                "Temporal operators require a bound in the form <coalition><k> with k>=0 (e.g., <1><5>F p)",
-            )
-        return True, None
+        err = coalition_bound_error(
+            formula,
+            "Temporal operators require a bound in the form <coalition><k> with k>=0 (e.g., <1><5>F p)",
+        )
+        return err is None, err
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
         valid, err = run_common_prechecks(

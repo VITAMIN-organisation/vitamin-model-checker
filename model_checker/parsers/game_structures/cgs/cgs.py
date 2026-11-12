@@ -16,16 +16,22 @@ from model_checker.parsers.syntax_patterns import FORMULA_RESERVED_WORDS
 
 
 class CGS:
-    """A CGS model, loaded with `read_file(path)` or `read_from_model_object(model)`."""
+    """A CGS model, loaded with `read_file(path)`."""
 
     # Words a name in the model file may not be; a model type read by one logic
     # only uses that logic's words (CapCGS: CapATL).
     RESERVED_WORDS = FORMULA_RESERVED_WORDS
 
+    def validate_name(self, name: str, kind: str) -> None:
+        """Reject a proposition or capacity name that no formula could reference."""
+        cgs_utils.validate_model_name(
+            name, kind=kind, reserved_words=self.RESERVED_WORDS
+        )
+
     # --- Initialization and File Reading ---
 
     def __init__(self):
-        """Create an empty CGS; load data with read_file or read_from_model_object."""
+        """Create an empty CGS; load data with read_file."""
         self._reset_state()
 
     def _reset_state(self):
@@ -59,31 +65,6 @@ class CGS:
         self._reset_state()
         cgs_parser.parse_cgs_file(lines, self)
 
-    def read_from_model_object(self, model):
-        """Fill this CGS from an existing model object instead of reading a file."""
-        self.graph = model.transition_matrix
-        self.states = np.array(model.state_names)
-        self.atomic_propositions = np.array(model.propositions)
-        self.matrix_prop = model.labelling_function
-        self.initial_state = model.initial_state
-        na = getattr(model, "number_of_agents", None)
-        if na is None:
-            self.number_of_agents = None
-        elif isinstance(na, int):
-            self.number_of_agents = na
-        else:
-            self.number_of_agents = int(str(na).strip()) if str(na).strip() else None
-        self.actions = model.actions
-        labels = getattr(model, "agent_labels", None)
-        self.agent_labels = list(labels) if labels else []
-        self.unknown_transition_matrix = getattr(model, "unknown_transition_matrix", [])
-        self.invalidate_caches()
-        self._cached_edges = None
-        self._cached_graph_id = None
-        self._cached_reverse_index = None
-        self._cached_reverse_index_graph_id = None
-        self.validate_model_structure()
-
     # --- Cached Properties for Performance ---
 
     @property
@@ -115,7 +96,7 @@ class CGS:
             return self.state_to_index[state_str]
         raise IndexError(f"State '{state}' not found in model")
 
-    def get_state_name_by_index(self, index):
+    def get_state_name_by_index(self, index) -> str:
         """Return the state name at the given index. Raises IndexError if index is out of range."""
         if index < 0:
             raise IndexError(f"State index must be non-negative, got {index}")
@@ -123,7 +104,7 @@ class CGS:
             raise IndexError(
                 f"State index {index} is out of bounds for {len(self.states)} states"
             )
-        return self.states[index]
+        return str(self.states[index])
 
     # --- Agent and Coalition Methods ---
 

@@ -8,8 +8,10 @@ import numpy as np
 
 from model_checker.parsers.game_structures.cgs import cgs_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
-from model_checker.parsers.game_structures.cgs.cgs_utils import validate_model_name
-from model_checker.parsers.syntax_patterns import CAPATL_RESERVED_WORDS
+from model_checker.parsers.syntax_patterns import (
+    CAPATL_KNOWLEDGE_NAME_RE,
+    CAPATL_RESERVED_WORDS,
+)
 
 
 class CapCGS(CGS):
@@ -18,8 +20,18 @@ class CapCGS(CGS):
 
     RESERVED_WORDS = CAPATL_RESERVED_WORDS
 
+    def validate_name(self, name: str, kind: str) -> None:
+        """Also reject `kcap1`, `kcap42`: CapATL reads them as its knowledge
+        operator, so no formula could name them."""
+        super().validate_name(name, kind)
+        if CAPATL_KNOWLEDGE_NAME_RE.fullmatch(name):
+            raise ValueError(
+                f"{kind} {name!r} spells the CapATL knowledge operator "
+                f"({name}(...)), so no formula could name it."
+            )
+
     def __init__(self):
-        """Initialize an empty CapCGS; load data with read_file or read_from_model_object."""
+        """Initialize an empty CapCGS; load data with read_file."""
         super().__init__()
         self.capacities_assignment = []
         self.action_capacities = []
@@ -55,9 +67,7 @@ class CapCGS(CGS):
         def process_capacities(line):
             values = line.split()
             for value in values:
-                validate_model_name(
-                    value, kind="Capacity", reserved_words=self.RESERVED_WORDS
-                )
+                self.validate_name(value, kind="Capacity")
             capacities_list.extend(values)
 
         def process_capacities_assignment(line):
@@ -130,13 +140,6 @@ class CapCGS(CGS):
             self.graph.append(processed_row)
 
         self.actions = list(set(actions))
-
-    def read_from_model_object(self, model):
-        """Initialize from a model object (alternative to read_file)."""
-        super().read_from_model_object(model)
-        self.capacities_assignment = model.capacities_assignment
-        self.action_capacities = model.action_capacities
-        self.capacities = np.array(model.capacities)
 
     # --- Capacity Accessor Methods ---
 

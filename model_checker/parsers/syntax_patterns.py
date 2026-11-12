@@ -102,6 +102,9 @@ FORMULA_RESERVED_WORDS = (
 # the other logics have no such operator and keep `kcap` as a name.
 CAPATL_KNOWLEDGE_WORD = "kcap"
 CAPATL_RESERVED_WORDS = FORMULA_RESERVED_WORDS | {CAPATL_KNOWLEDGE_WORD}
+# `kcap1`, `kcap42`: the operator itself, so a CapCGS model may not use it as a
+# name (no CapATL formula could reach it). `kcap1x` is an ordinary name.
+CAPATL_KNOWLEDGE_NAME_RE = re.compile(rf"{CAPATL_KNOWLEDGE_WORD}\d+")
 
 # NatATL capacity coalitions: <{1,2}, 5>.
 NATATL_CAPACITY_RE = re.compile(rf"<{{({AGENT_LIST})}},\s*(\d+)>")

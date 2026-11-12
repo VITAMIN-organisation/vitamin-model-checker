@@ -7,7 +7,7 @@ from model_checker.parsers.syntax_patterns import COALITION_BOUND_TOKEN
 
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
-    has_coalition_without_bound,
+    coalition_bound_error,
     run_common_prechecks,
     until_operands,
     validate_coalition_bound_token,
@@ -84,9 +84,8 @@ class RBATLParser(BaseLogicParser):
         if not valid:
             return False, err
 
-        if has_coalition_without_bound(formula):
-            return (
-                False,
-                "RBATL requires a resource bound (e.g., <1><5>) for temporal operators",
-            )
-        return True, None
+        err = coalition_bound_error(
+            formula,
+            "RBATL requires a resource bound (e.g., <1><5>) for temporal operators",
+        )
+        return err is None, err
