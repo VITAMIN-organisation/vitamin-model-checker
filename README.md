@@ -93,7 +93,8 @@ See `docker/README.md` for the Docker workflow.
 
 The rules for using AI tools in a contribution are in
 [CONTRIBUTING.md](CONTRIBUTING.md). How the maintainer used AI tools is in
-[AIUSE.md](AIUSE.md).
+[AIUSE.md](AIUSE.md). The people who have contributed are listed in
+[CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## License
 
