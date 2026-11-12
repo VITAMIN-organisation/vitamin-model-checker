@@ -23,6 +23,9 @@ an error that names the value.
 
 ## Semantic denotations
 
+The natural strategies follow "Natural Strategic Ability" (Jamroga, Malvone and
+Murano, Artificial Intelligence, 2019).
+
 NatATL has two variants, listed in Table 1.
 
 **Table 1: NatATL variants.**

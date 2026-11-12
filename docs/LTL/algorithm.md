@@ -39,6 +39,15 @@ did not mean to declare appears in the message.
 3. Rewrite the formula to an A-prefixed CTL-shaped form (`ltl_to_ctl`) and check
    sure-win on the pruned model.
 
+A strategy is a list of rules, each a condition and an action, as in "Natural
+Strategic Ability" (Jamroga, Malvone and Murano, Artificial Intelligence, 2019).
+A state follows the first rule whose condition holds there: a rule applies only to
+the states no earlier rule covered, and a rule whose condition holds in no
+uncovered state selects nothing. In LTL a state that no rule covers is not
+restricted (NatATL Memoryless plays idle there). A profile that leaves a state with
+no successor, because neither the action of its rule nor idle is among the agent's
+actions in that state, is not admissible and does not count as a witness.
+
 The rewrite is a parsing bridge, not a semantics-preserving embedding of LTL
 into CTL. It is built from the parsed formula, so `p U q U r` (which groups to the
 right) becomes `A(p U A(q U r))`.

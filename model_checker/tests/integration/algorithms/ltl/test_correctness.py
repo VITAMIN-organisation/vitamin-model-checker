@@ -97,6 +97,22 @@ class TestLTLSemantics:
         """goal is reached on ltl_1agent_3states_minimal but does not hold everywhere."""
         self._assert_verdict(model_checking(formula, ltl_minimal_model.filename), holds)
 
+    @pytest.mark.parametrize(
+        ("formula", "holds"),
+        [
+            ("F false", False),  # no path ever satisfies false
+            ("F (p && !p)", False),  # a contradiction holds at no state
+            ("F (p && q)", False),  # p holds only at s0 and q only at s1
+            ("F p", True),  # s0 is the initial state and p holds there
+            ("F true", True),  # true holds at every state
+        ],
+    )
+    def test_f_of_a_formula_that_holds_nowhere_is_false(
+        self, ltl_minimal_model, formula, holds
+    ):
+        """A formula that holds in no state makes `F` of it false."""
+        self._assert_verdict(model_checking(formula, ltl_minimal_model.filename), holds)
+
 
 @pytest.mark.integration
 @pytest.mark.model_checking

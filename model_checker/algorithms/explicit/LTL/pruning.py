@@ -1,76 +1,24 @@
-"""Matrix-based pruning for the LTL solution concepts, reusing `modify_matrix` from
-NatATL Memoryless."""
+"""Matrix-based pruning for the LTL solution concepts, reusing the rule application
+of NatATL Memoryless."""
 
 from model_checker.algorithms.explicit.CTL.CTL import model_checking
-from model_checker.algorithms.explicit.NatATL.Memoryless.matrix_utils import (
-    modify_matrix,
+from model_checker.algorithms.explicit.NatATL.Memoryless.pruning import (
+    apply_first_matching_rules,
 )
 from model_checker.algorithms.explicit.shared.result_formatters import (
     initial_state_holds,
-    states_of_result,
 )
 from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
 
 
 def process_transition_matrix_data(cgs, model, agents, *strategies):
     graph = [row[:] for row in cgs.graph]
-    state_to_index = cgs.state_to_index
     cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
-    actions_per_agent = cgs_actions.extract_actions_for_agents(cgs.graph, agents)
-    agent_actions = {}
-    for _i, agent_key in enumerate(actions_per_agent.keys()):
-        agent_actions[f"actions_{agent_key}"] = actions_per_agent[agent_key]
 
     for strategy_index, strategy in enumerate(strategies, start=1):
-        state_sets = set()
-        temp = set()
-        for iteration, (condition, action) in enumerate(
-            strategy["condition_action_pairs"]
-        ):
-            # Cache model_checking results for conditions to avoid redundant CTL calls
-            if not hasattr(cgs, "_condition_cache"):
-                cgs._condition_cache = {}
-            cache_key = (condition, model)
-            if cache_key not in cgs._condition_cache:
-                states = model_checking(condition, model, preloaded_model=cgs)
-                cgs._condition_cache[cache_key] = states
-            else:
-                states = cgs._condition_cache[cache_key]
-            state_set = states_of_result(states, condition)
-
-            if iteration > 0:
-                if state_set:
-                    temp = state_sets
-                    state_sets = state_set - temp
-                else:
-                    state_sets = set(cgs.states)
-                    action = "I"
-                graph = modify_matrix(
-                    graph,
-                    state_sets,
-                    action,
-                    strategy_index,
-                    agents,
-                    num_agents=cgs.get_number_of_agents(),
-                    state_to_index=state_to_index,
-                    in_place=True,
-                )
-            else:
-                if state_set:
-                    state_sets = state_set
-                else:
-                    state_sets = set(cgs.states)
-                    action = "I"
-                graph = modify_matrix(
-                    graph,
-                    state_sets,
-                    action,
-                    strategy_index,
-                    agents,
-                    num_agents=cgs.get_number_of_agents(),
-                    state_to_index=state_to_index,
-                    in_place=True,
-                )
+        graph, _ = apply_first_matching_rules(
+            cgs, model, agents, strategy_index, strategy, graph
+        )
 
     return graph
 
@@ -106,16 +54,10 @@ def pruning(cgs, model, agents, formula, current_agents):
     cgs1.actions = cached_cgs.actions[:] if cached_cgs.actions else []
 
     cgs1.graph = process_transition_matrix_data(cgs1, model, agents, *current_agents)
-    try:
-        cgs_validation.validate_nat_idle_requirements(
-            cgs1.graph, cgs1.get_number_of_agents()
-        )
-    except ValueError as e:
-        error_msg = str(e)
-        if "Idle error" in error_msg or "All elements in row" in error_msg:
-            pass
-        else:
-            raise
+    # The model has a successor for every state, so a state without one was cut off by
+    # the profile: the profile leaves the agent no move there and is not admissible.
+    if cgs_validation.validate_total_transitions(cgs1.graph, cgs1.states):
+        return False
     return initial_state_holds(
         model_checking(formula, model, preloaded_model=cgs1), formula
     )

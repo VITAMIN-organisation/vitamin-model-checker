@@ -193,6 +193,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- LTL: `F false`, `F (p && !p)` and `F (p && q)` on a model where the operand holds
+  in no state gave `Result: True`. A rule whose condition holds in no state became
+  "idle everywhere", which removed every transition of a model with no idle action,
+  and the empty model satisfied `AF false`. Now such a rule selects nothing, a state
+  follows the first rule that holds there (before, a later rule could also cut a
+  state an earlier rule had covered), and a profile that leaves a state with no
+  successor is not admissible.
 - NatATL (memoryless and recall) and NatATLF check a connective between
   coalition formulas, such as `(<{1},1>F p) && (<{2},3>G q)` or
   `p and <{2},3>F q`. Before, a coalition formula left of a connective failed:
