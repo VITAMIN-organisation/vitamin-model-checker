@@ -193,6 +193,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- ATL*: a formula nested about 140 levels deep (for example 2000 nested `<<1>> F`
+  or 2000 parentheses) raised `RecursionError` out of the parser. It now gives
+  the error "Formula is nested too deeply to parse". The depth limit stays, set
+  by the Python recursion limit.
 - RABATL error messages (Release or Weak Until rejected, missing resource bound)
   said "RBATL"; they now name RABATL.
 - LTL: `F false`, `F (p && !p)` and `F (p && q)` on a model where the operand holds

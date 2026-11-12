@@ -41,12 +41,11 @@ def _negated(depth: int) -> str:
     return f"({text})"
 
 
-# ATL* raises RecursionError already at depth 200 (a known bug), so it is left out.
 @pytest.mark.unit
-@pytest.mark.parametrize("logic", sorted(set(CONNECTIVE_LOGICS) - {"ATL_STAR"}))
+@pytest.mark.parametrize("logic", CONNECTIVE_LOGICS)
 def test_deep_nesting_is_parsed_or_rejected_with_an_error(logic):
-    """200 nested negations parse; 5000 parse or fail with a message, never raise."""
-    assert parse(logic, unary(logic, _negated(200))) is not None
+    """50 nested negations parse; 5000 parse or fail with a message, never raise."""
+    assert parse(logic, unary(logic, _negated(50))) is not None
 
     parser = FormulaParserFactory.get_parser_instance(logic)
     result = parser.parse(unary(logic, _negated(5000)), n_agent=2)

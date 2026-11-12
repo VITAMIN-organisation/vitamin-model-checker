@@ -19,6 +19,7 @@ from model_checker.parsers.formulas.ATL_STAR.formula import (
     Until,
 )
 from model_checker.parsers.formulas.ATL_STAR.grammar import ATLStarParseError, parse
+from model_checker.parsers.formulas.ATL_STAR.parser import ATLStarParser
 
 pytestmark = pytest.mark.atl_star
 
@@ -145,3 +146,16 @@ def test_malformed_input_raises(text):
     """Empty input, a missing operand or parenthesis, or a stray token."""
     with pytest.raises(ATLStarParseError):
         parse(text)
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["<<1>> F " * 2000 + "p", "(" * 2000 + "p" + ")" * 2000],
+    ids=["coalitions", "parentheses"],
+)
+def test_deep_nesting_is_an_error_not_a_recursion_crash(text):
+    """The parser descends once per level, so a very deep formula is refused with a
+    message instead of raising RecursionError out of `parse`."""
+    parser = ATLStarParser()
+    assert parser.parse(text, n_agent=2) is None
+    assert "nested" in parser.errors[0], parser.errors

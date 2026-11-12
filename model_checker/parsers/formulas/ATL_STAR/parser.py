@@ -28,3 +28,6 @@ class ATLStarParser:
         except ATLStarParseError as e:
             self.errors.append(str(e))
             return None
+        except RecursionError:
+            self.errors.append("Formula is nested too deeply to parse")
+            return None
