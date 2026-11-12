@@ -292,6 +292,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   capacity name with an empty error list. The parse now fails with
   `Atomic proposition 'Globally' clashes with reserved keyword.`
   (`Capacity 'Next' ...` for a CapATL capacity).
+- TCTL and TOL accepted a reserved word as a clock name in a freeze (`Next.AF p`)
+  or a clock comparison (`AF p : Weak<=2`, `{J1}F p with Release<=2`). The parse
+  now fails with `Clock 'Next' clashes with reserved keyword.`, as for a
+  proposition name. Clock names in the `Clocks` section of a TimedCGS model are
+  not checked.
 
 ### Removed
 

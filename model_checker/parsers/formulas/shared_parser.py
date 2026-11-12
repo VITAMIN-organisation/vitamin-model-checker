@@ -196,8 +196,8 @@ class BaseLogicParser:
     def _check_proposition_name(
         self, name: str, kind: str = "Atomic proposition"
     ) -> None:
-        """Log why `name` cannot be a proposition (a reserved word in any letter
-        case), so `parse` returns None with that reason."""
+        """Log why `name` cannot be a proposition, clock or capacity (a reserved
+        word in any letter case), so `parse` returns None with that reason."""
         _, err = validate_proposition_identifier(name, kind=kind)
         if err is not None:
             self._log_error(err)

@@ -860,8 +860,11 @@ Atomic identifiers for propositions and variables must follow a shared alphabet 
 - Examples: `p`, `Goal`, `safe_1`
 - Validation: `validate_proposition_identifier()` in
   `model_checker/parsers/formulas/parser_utils.py`. It checks the propositions of
-  CGS models and, in every logic, the propositions of a formula and the capacity
-  names of a CapATL formula.
+  CGS models and, in every logic, the propositions of a formula, the capacity
+  names of a CapATL formula and the clock names of a TCTL or TOL formula (in a
+  freeze `x.phi` and a comparison `x<=2`). Clock names in the `Clocks` section of
+  a TimedCGS model are not checked, so a model may declare a clock such as `Next`
+  that no formula can name.
 
 **Reserved keywords (case-insensitive):** `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`, `weak`, `with`, `is`, `true`, `false`
 

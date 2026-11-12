@@ -226,6 +226,7 @@ class TCTLParser(BaseLogicParser):
 
     def p_expression_freeze(self, p):
         """expression : PROP DOT expression"""
+        self._check_proposition_name(p[1], kind="Clock")
         p[0] = FreezeExpr(p[1], p[3])
         self._prefix_over(p[0], f"{p[1]}.", p.lexpos(1), p[3])
 
@@ -243,6 +244,7 @@ class TCTLParser(BaseLogicParser):
         | PROP GEQ CONST
         | PROP GREATER CONST
         """
+        self._check_proposition_name(p[1], kind="Clock")
         p[0] = SimpleTimeExpr(p[1] + p[2] + p[3])
 
     # --- Validation ---

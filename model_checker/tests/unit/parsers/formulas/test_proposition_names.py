@@ -100,6 +100,25 @@ def test_capacity_name_follows_the_name_rule():
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    "logic, formula",
+    [
+        ("TCTL", "AF p : Next<=2"),
+        ("TCTL", "Next.AF p"),
+        ("TOL", "{J1}F p : Next<=2"),
+        ("TOL", "{J1}F p with Next<=2"),
+        ("TOL", "{J1}F p : x<=1, Next<=2"),
+        ("TOL", "Next.{J1}F p"),
+    ],
+)
+def test_clock_name_follows_the_name_rule(logic, formula):
+    """A clock in a freeze or a comparison is refused with a reason that names `Next`."""
+    # `next` is reserved in any letter case (KB "Reserved keywords").
+    errors = parse_errors(logic, formula)
+    assert any("Clock 'Next'" in error for error in errors), errors
+
+
+@pytest.mark.unit
 @pytest.mark.parametrize("logic", sorted(OPERATOR_FORMS))
 @pytest.mark.parametrize(
     "name",
