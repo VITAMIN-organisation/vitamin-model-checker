@@ -15,9 +15,9 @@ def proposition_index(atomic_propositions, element) -> int | None:
         return None
 
 
-def validate_atomic_proposition_name(name: str) -> None:
-    """Reject proposition names that formula parsers cannot reference."""
-    valid, err = validate_proposition_identifier(str(name))
+def validate_model_name(name: str, *, kind: str) -> None:
+    """Reject a proposition, clock or capacity name that no formula could reference."""
+    valid, err = validate_proposition_identifier(str(name), kind=kind)
     if not valid:
         raise ValueError(err)
 

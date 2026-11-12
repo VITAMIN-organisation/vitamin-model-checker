@@ -116,8 +116,8 @@ def validate_proposition_identifier(
     """Return (True, None) when name is a valid atomic proposition identifier.
 
     Applies the shared model/formula alphabet and rejects reserved keywords.
-    `kind` names what the identifier is in the message (a CapATL capacity
-    follows the same rule).
+    `kind` names what the identifier is in the message: clocks and capacities,
+    in models and formulas, follow the same rule.
     """
     # Reserved words first, so `True` is reported as the constant it spells.
     if name.lower() in reserved_words:

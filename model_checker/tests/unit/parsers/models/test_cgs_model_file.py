@@ -110,6 +110,22 @@ def test_bad_value_is_refused_by_name(lines, message):
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    ("name", "message"),
+    [
+        ("Goal", "Capacity 'Goal' is invalid"),
+        ("Next", "Capacity 'Next' clashes with reserved keyword"),
+        ("with", "Capacity 'with' clashes with reserved keyword"),
+    ],
+)
+def test_capacity_name_follows_the_name_rule(name, message):
+    """A CapATL formula cannot name `Goal` or `with`, so the model may not declare them."""
+    lines = _lines(extra=["Capacities", f"c {name}"])
+    with pytest.raises(ValueError, match=message):
+        CapCGS()._parse_lines(lines)
+
+
+@pytest.mark.unit
 def test_agent_label_count_must_match_the_agents():
     """One label for two agents is caught by structure validation."""
     cgs = CGS()

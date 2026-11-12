@@ -93,8 +93,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   reads `is` in lowercase only: `K1(1 IS c)` is a syntax error.
 - Breaking: a name starts with a lowercase letter, then letters, digits or `_`
   (`goal`, `goalA`, `safe_1`). This holds for a proposition in every logic and
-  every model, a clock in a TCTL or TOL formula (`x.phi`, `x<=2`) and a capacity
-  in a CapATL formula (`K1(1 is c)`). Before, a name could start with any letter.
+  every model, a clock in a TCTL or TOL formula (`x.phi`, `x<=2`) or in the
+  `Clocks` section of a TimedCGS model, and a capacity in a CapATL formula
+  (`K1(1 is c)`) or in the `Capacities` section of a CapCGS model. Before, a name
+  could start with any letter, and a model clock or capacity could also be a
+  reserved word such as `next` or `with`.
   - `F Goal`, `AF P` and a model proposition `GOAL` fail with `Atomic proposition
     'Goal' is invalid: a name starts with a lowercase letter, ...`; a clock or a
     capacity gets the same message starting `Clock 'Goal'` or `Capacity 'Goal'`.
@@ -102,8 +105,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     such as `P` or `GOAL` as `Invalid character 'P'`.
   - `Fp` is read as one word, which starts with a capital, so it is an error and
     never `F p`.
-  - Clock names in a TimedCGS model and capacity names in a CapCGS model are not
-    checked yet.
 - Breaking: NatATL, NatATL_Recall and NatATLF reject a bound `k` below 1, such as
   `<{1}, 0>F p`, with "Invalid bound 0: must be at least 1". Before, `k = 0` parsed
   and the solver returned false for every formula.
@@ -309,8 +310,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - TCTL and TOL accepted a reserved word as a clock name in a freeze (`Next.AF p`)
   or a clock comparison (`AF p : Weak<=2`, `{J1}F p with Release<=2`). The parse
   now fails with `Clock 'Next' clashes with reserved keyword.`, as for a
-  proposition name. Clock names in the `Clocks` section of a TimedCGS model are
-  not checked.
+  proposition name. The `Clocks` section of a TimedCGS model follows the same
+  rule (see the lowercase-name entry above).
 
 ### Removed
 

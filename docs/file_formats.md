@@ -158,7 +158,9 @@ cap A
 cop B
 ```
 
-- `Capacities` - space-separated capacity/resource names.
+- `Capacities` - space-separated capacity/resource names. A name follows the
+  proposition rule: `[a-z][a-zA-Z0-9_]*` and not a reserved word
+  ([Atomic Proposition Policy](logic_knowledge_base.md#atomic-proposition-policy)).
 - `Capacities_assignment` - `agents x capacities` matrix of `0`/`1` values.
   Row `i` is agent `i`; column `j` is capacity `j` (same order as `Capacities`).
 - `Actions_for_capacities` - one line per capacity: `capacity_name action1 action2 ...`
@@ -224,7 +226,8 @@ Preorder
 
 `timedCGS` extends costCGS with three timed sections:
 
-- `Clocks` - clock names used in the model,
+- `Clocks` - clock names used in the model, which follow the proposition rule
+  ([Atomic Proposition Policy](logic_knowledge_base.md#atomic-proposition-policy)),
 - `Clock_constraints` - per-transition clock resets and bounds,
 - `Invariants` - clock invariants per state.
 

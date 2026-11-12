@@ -70,6 +70,23 @@ def test_malformed_constraint_is_refused_with_its_place(section, cell, message):
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    ("name", "message"),
+    [
+        ("Goal", "Clock 'Goal' is invalid"),
+        ("P", "Clock 'P' is invalid"),
+        ("Next", "Clock 'Next' clashes with reserved keyword"),
+        ("true", "Clock 'true' clashes with reserved keyword"),
+        ("with", "Clock 'with' clashes with reserved keyword"),
+    ],
+)
+def test_clock_name_follows_the_name_rule(name, message):
+    """A TCTL or TOL formula cannot name these clocks, so the model may not declare them."""
+    with pytest.raises(ValueError, match=message):
+        _sections("Clocks", f"x {name}")
+
+
+@pytest.mark.unit
 def test_core_section_header_ends_the_invariants():
     """A row after `Number_of_agents` is not an invariant of the next state."""
     parsed = _sections("Invariants", "x<=2", "Number_of_agents", "x<=9", states=("s0",))

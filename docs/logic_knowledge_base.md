@@ -851,7 +851,7 @@ VITAMIN also rejects a coalition that lists an agent twice, because a coalition 
 <a id="atomic-proposition-policy"></a>
 ## Atomic Proposition Policy
 
-Proposition names, clock names in a TCTL or TOL formula and capacity names in a CapATL formula follow one alphabet and must not clash with reserved syntax keywords. CGS action names (`A`, `block_a1`) are not names in this sense and may start with a capital.
+Proposition, clock and capacity names, in a model and in a formula, follow one alphabet and must not clash with reserved syntax keywords. CGS action names (`A`, `block_a1`) are not names in this sense and may start with a capital.
 
 **Standard alphabet (models and every logic):**
 - Pattern: `[a-z][a-zA-Z0-9_]*` (`NAME_RE` in `syntax_patterns.py`): a lowercase
@@ -864,11 +864,12 @@ Proposition names, clock names in a TCTL or TOL formula and capacity names in a 
   ```
 - Validation: `validate_proposition_identifier()` in
   `model_checker/parsers/formulas/parser_utils.py`. It checks the propositions of
-  CGS models and, in every logic, the propositions of a formula, the capacity
-  names of a CapATL formula and the clock names of a TCTL or TOL formula (in a
-  freeze `x.phi` and a comparison `x<=2`). Clock names in the `Clocks` section of
-  a TimedCGS model are not checked, so a model may declare a clock such as `Next`
-  that no formula can name.
+  CGS models, the `Clocks` section of a TimedCGS model, the `Capacities` section
+  of a CapCGS model and, in every logic, the propositions of a formula, the
+  capacity names of a CapATL formula and the clock names of a TCTL or TOL formula
+  (in a freeze `x.phi` and a comparison `x<=2`). So a model cannot declare a clock
+  or capacity such as `Next` that no formula can name; the message starts
+  `Clock 'Next'` or `Capacity 'Next'`.
 
 **Reserved keywords (case-insensitive):** `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`, `weak`, `with`, `is`, `true`, `false`
 
@@ -876,8 +877,8 @@ Proposition names, clock names in a TCTL or TOL formula and capacity names in a 
 TOL read `weak`, TOL reads `with` and CapATL reads `is` as an operator word; a name
 therefore means the same in every logic.
 
-`true` and `false` are the boolean constants, so a model that declares a proposition with
-either name (`true`, `True`, `FALSE`, ...) is rejected when it is read. The constants
+`true` and `false` are the boolean constants, so a model that declares a proposition, clock or
+capacity with either name (`true`, `True`, `FALSE`, ...) is rejected when it is read. The constants
 themselves are written in lowercase in a formula.
 
 **Lexer word patterns:** each parser's lexer reads a word (a run of letters,

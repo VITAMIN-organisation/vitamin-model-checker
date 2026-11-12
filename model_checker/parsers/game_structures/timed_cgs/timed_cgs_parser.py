@@ -3,6 +3,7 @@
 from typing import Any
 
 from model_checker.parsers.game_structures.cgs import cgs_parser
+from model_checker.parsers.game_structures.cgs.cgs_utils import validate_model_name
 from model_checker.parsers.game_structures.cost_cgs import cost_cgs_parser
 from model_checker.parsers.game_structures.timed_cgs.constraint_syntax import (
     CELL_CONSTRAINT_RE,
@@ -76,6 +77,8 @@ def parse_timed_sections(lines: list[str], instance: Any) -> None:
 
 def _parse_clocks(instance: Any, line: str) -> None:
     instance.clocks = line.split()
+    for clock in instance.clocks:
+        validate_model_name(clock, kind="Clock")
     instance.clock_constraints_dict = {clock: [] for clock in instance.clocks}
     instance.clocks_dict = {value: index for index, value in enumerate(instance.clocks)}
 

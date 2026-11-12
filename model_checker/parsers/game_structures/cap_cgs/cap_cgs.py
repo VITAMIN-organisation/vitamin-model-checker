@@ -8,6 +8,7 @@ import numpy as np
 
 from model_checker.parsers.game_structures.cgs import cgs_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
+from model_checker.parsers.game_structures.cgs.cgs_utils import validate_model_name
 
 
 class CapCGS(CGS):
@@ -49,10 +50,10 @@ class CapCGS(CGS):
         }
 
         def process_capacities(line):
-            if line:
-                values = line.split()
-                if values:
-                    capacities_list.extend(values)
+            values = line.split()
+            for value in values:
+                validate_model_name(value, kind="Capacity")
+            capacities_list.extend(values)
 
         def process_capacities_assignment(line):
             if line:
