@@ -188,14 +188,15 @@ _CHECKED_THROUGH_CTL = {
 def test_proposition_the_ctl_parser_reads_as_an_operator_is_refused(
     temp_file, logic, name
 ):
-    """These logics check through CTL text, where A and E are quantifiers; such a name must not give a verdict."""
+    """CTL reads A and E as quantifiers, so such a name must not give a verdict;
+    a name starts lowercase, so the model is refused on load."""
     model = temp_file(
         f"Transition\nI a\nI a\nName_State\ns0 s1\nInitial_State\ns0\n"
         f"Atomic_propositions\n{name} q\nLabelling\n0 0\n1 1\nNumber_of_agents\n1\n"
     )
     error = _CHECKERS[logic].load()(_CHECKED_THROUGH_CTL[logic], model)["error"]
     assert error["type"] == "semantic"
-    assert f"'{name}' cannot be used by this logic" in error["message"]
+    assert f"Atomic proposition '{name}' is invalid" in error["message"]
 
 
 @pytest.mark.integration

@@ -16,8 +16,8 @@ Grammar, lowest to highest precedence:
 - Word forms (`not`, `and`, `until`, ...) are lowercase only. `X`, `F`, `G`, `U` are
   uppercase only, so lowercase one-letter propositions stay free.
 - A name follows the rule of every logic (`validate_proposition_identifier`): it
-  starts with a letter and is no reserved word in any case, so `Always`, `True`
-  and `exist` are errors.
+  starts with a lowercase letter and is no reserved word in any case, so `Goal`,
+  `Always`, `True` and `exist` are errors.
 - `<<1>> p U q` is `<<1>>(p U q)`, as in ATL (JACM 2002, p. 689).
 - `F`, `G`, `||` and `->` become the seven constructors of formula.py, so the
   verifier handles only those.

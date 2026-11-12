@@ -155,13 +155,13 @@ without offering two readings; see [the NatSL reference](NatSL/algorithm.md#supp
 
 Temporal operators (`X`, `F`, `G`, `U`, and in CTL and ICTL `AX`, `AF`, `AG`, `EX`, `EF`, `EG`; TCTL has no `X`, see [the TCTL reference](TCTL/algorithm.md)) are words of their own. Follow one with a space, `(` or `!`: `F p`, `F (p && q)`, `F !p`.
 
-An operator written with no space before a name, such as `Fp` or `FFuel`, is part of that name, so no logic reads it as an operator applied to the name. A name that only starts with an operator letter, such as `Fuel` or `Goal`, is valid when it stands alone: in `F Fuel` the space makes `F` the operator and `Fuel` the name. A binary operator follows the same rule: `pUq` is one name, and `p U q` is the Until.
+An operator written with no space before a name, such as `Fp`, is never read as the operator applied to the name (`F p`). A name starts with a lowercase letter ([Atomic Proposition Policy](#atomic-proposition-policy)), so the glued form is an error. A binary operator follows the same rule: `pUq` starts lowercase, so it is one name like any other and must be declared in the model; `p U q` is the Until.
 
-Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py` checks it for each registered logic. The form with no space fails in one of three ways:
+Every logic follows this rule, and `model_checker/tests/unit/parsers/formulas/test_operator_spacing.py` checks it for each registered logic. The glued form fails in one of three ways:
 
-- LTL and ATL* read it as one name, then report that the name is not among the model's declared propositions, with the name in the message. LTL checks every name, whatever its case or digits.
-- NatSL rejects it: `Fgoal`, and a goal with no operator such as `Goal`, are errors. A lowercase operator (`f goal`) is also an error, because operators are uppercase.
-- Every other parser reports a syntax error.
+- Every logic except NatSL reads `Fp` as one word and refuses it by name, with `Atomic proposition 'Fp' is invalid`.
+- IATL, TCTL and TOL give `Invalid character 'F'` for a word that starts with two capitals, such as `FFuel`, because their lexer reads only a capital followed by a lowercase letter as the start of a word.
+- NatSL rejects it as an unsupported goal: `Fgoal` is an error. A lowercase operator (`f goal`) is also an error, because operators are uppercase.
 
 A name the model does not declare is an error in every logic, wherever it sits in the formula: under `!`, inside an Until or a conjunction. The error type is `semantic` (NatSL reports `validation`), so a typo never reads as a proposition that is false everywhere, which would make `AG !typo` true. The message names it: "Proposition(s) 'zz' not among the model's declared propositions [...]". `model_checker/tests/integration/algorithms/test_error_contract.py` checks this for each registered logic.
 
@@ -304,7 +304,7 @@ erase transitions. Erasing joint action `a` at state `s` costs `$(s, a)`.
 **Supported Syntax:**
 1.  **Format**: `<coalition><budget>` (e.g., `<1,2><10>`).
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W` (and their keywords).
-3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
+3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [Atomic Proposition Policy](#atomic-proposition-policy)).
 4.  **Boolean Constants**: Supports `true` and `false`.
 
 **Validation Rules:**
@@ -354,7 +354,7 @@ OL (Obstruction Logic, ECAI 2023) is a game against a Demon on `costCGS` models:
 **Supported Syntax:**
 1.  **Format**: `<Jk>` (e.g., `<J5>`). The letter `J` is mandatory inside the angle brackets.
 2.  **Temporal Operators**: `X`, `F`, `G`, `U`, `R`, `W`.
-3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
+3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [Atomic Proposition Policy](#atomic-proposition-policy)).
 
 **Validation Rules:**
 - **Mandatory `J`**: OL prefixes must use `<Jk>`, not bare `<k>`.
@@ -520,7 +520,7 @@ Example: on the case-study attack graph of the paper
 **Supported Syntax:**
 1.  **Format**: `<legion><budget>` (e.g., `<1,3><1>`, `<><0>`). Demon indices go from 1 to `Number_of_demons`.
 2.  **Temporal Operators**: `X`, `WX` (weak next), `F`, `G`, `U`, `R`, `W`. Binary operators may be written `<G><n> (phi U psi)` or without parentheses.
-3.  **Propositions**: `[a-zA-Z][a-zA-Z0-9_]*`.
+3.  **Propositions**: `[a-z][a-zA-Z0-9_]*` (see [Atomic Proposition Policy](#atomic-proposition-policy)).
 
 **Formula Examples:**
 ```text
@@ -632,7 +632,7 @@ Diagonal cells should be `P` or `P,R` so reflexivity of `P` holds. Metadata:
 1. **Quantifiers:** `E` / `exist`, `A` / `forall`.
 2. **Temporal:** `X`, `U`, `R`; sugar `F` / `G` (also `eventually`, `globally`, etc.).
 3. **Boolean:** `&&`, `||`, `!` / `not`, `->` / `implies`.
-4. **Propositions:** standard alphabet `[a-zA-Z][a-zA-Z0-9_]*`. Path/temporal
+4. **Propositions:** standard alphabet `[a-z][a-zA-Z0-9_]*`. Path/temporal
    tokens (`E`, `A`, `X`, `F`, `G`, `U`, `R`, keywords) are lexed separately so
    forms such as `EX` / `AG` are operators, not atoms.
 
@@ -649,7 +649,7 @@ EF e
 AX e
 AF e
 AG (p -> EF q)
-AG Goal
+AG goal
 E p R q
 !(e -> h)
 ```
@@ -851,13 +851,17 @@ VITAMIN also rejects a coalition that lists an agent twice, because a coalition 
 <a id="atomic-proposition-policy"></a>
 ## Atomic Proposition Policy
 
-Atomic identifiers for propositions and variables must follow a shared alphabet and must not clash with reserved syntax keywords.
+Proposition names, clock names in a TCTL or TOL formula and capacity names in a CapATL formula follow one alphabet and must not clash with reserved syntax keywords. CGS action names (`A`, `block_a1`) are not names in this sense and may start with a capital.
 
-**Standard alphabet (models and most logics):**
-- Pattern: `[a-zA-Z][a-zA-Z0-9_]*` (`PROPOSITION_TOKEN` in `syntax_patterns.py`)
-- Logics: CTL, LTL, ATL, ATL*, NatATL, NatSL, OATL, OL, RBATL, CapATL, COTL, ICTL,
-  Wallet_ATL
-- Examples: `p`, `Goal`, `safe_1`
+**Standard alphabet (models and every logic):**
+- Pattern: `[a-z][a-zA-Z0-9_]*` (`NAME_RE` in `syntax_patterns.py`): a lowercase
+  letter, then letters, digits or `_`.
+- Examples: `p`, `goal`, `safe_1`, `goalA`. `P`, `Goal` and `GOAL` are errors
+  (IATL, TCTL and TOL report `P` and `GOAL` as an invalid character, see below):
+
+  ```text
+  Atomic proposition 'Goal' is invalid: a name starts with a lowercase letter, then letters, digits or _ ([a-z][a-zA-Z0-9_]*).
+  ```
 - Validation: `validate_proposition_identifier()` in
   `model_checker/parsers/formulas/parser_utils.py`. It checks the propositions of
   CGS models and, in every logic, the propositions of a formula, the capacity
@@ -876,23 +880,23 @@ therefore means the same in every logic.
 either name (`true`, `True`, `FALSE`, ...) is rejected when it is read. The constants
 themselves are written in lowercase in a formula.
 
-**Lexer-specific proposition patterns (modal compound disambiguation):**
-- **IATL, TCTL, TOL**: `ICTL_PROPOSITION_TOKEN` /
-  `TCTL_TOL_PROPOSITION_TOKEN` =
-  `[a-z][a-zA-Z0-9_]*` or `[A-Z][a-z][a-zA-Z0-9_]*`. Mixed-case names such as
-  `Goal` are supported; all-caps operator-shaped names and single uppercase
-  letters (for example `P`) are not proposition tokens.
-- **ICTL**: uses the standard alphabet above; `E` / `A` / temporal tokens are
-  separate lexer rules (not the restricted `ICTL_PROPOSITION_TOKEN` pattern).
-- **NatSL temporal atoms**: Use the standard alphabet above, including the
-  reserved-word rule; `true` and `false` are accepted as constants. Single
-  uppercase `E` / `A` are rejected after `F`, `G` or `X` because they are
-  quantifier tokens in a NatSL formula.
-- **CTL pre-validation**: Bare temporal operators at formula start are detected
-  with token-boundary rules, so proposition names such as `Goal` or `Flux` are
-  not mistaken for `G` / `F` operators.
+**Lexer word patterns:** each parser's lexer reads a word (a run of letters,
+digits and `_`) with a pattern wider than the name rule, so that `Goal` or `Fp`
+is read as one word and refused by name, instead of `Fp` being read as `F p`. The
+patterns are constants in `syntax_patterns.py`:
+- Every logic except IATL, TCTL and TOL, ICTL included: `PROPOSITION_TOKEN` =
+  `[a-zA-Z][a-zA-Z0-9_]*`.
+- IATL, TCTL and TOL: `ICTL_PROPOSITION_TOKEN` (also named
+  `TCTL_TOL_PROPOSITION_TOKEN`) = `[a-z][a-zA-Z0-9_]*` or
+  `[A-Z][a-z][a-zA-Z0-9_]*`, so that `AF` and `EX` stay operators. `Goal` is
+  refused by name; an all-capital word such as `P` or `GOAL` is an
+  `Invalid character` error.
+- NatSL temporal atoms: the standard alphabet and the reserved-word rule; `true`
+  and `false` are accepted as constants.
 
-**Known limitation (CTL, LTL, ATL, NatATL, and related logics):** A proposition whose name is exactly a modal operator token (for example `F`, `E`, or `EX`) may be unparseable in some positions because the lexer reads it as syntax. Prefer descriptive names (`Goal`, `safe_1`) over single-letter operator aliases.
+No name can be an uppercase operator token such as `F`, `E` or `EX`, since names
+start lowercase; the lowercase operator words (`until`, `forall`) are reserved
+keywords.
 
 ---
 

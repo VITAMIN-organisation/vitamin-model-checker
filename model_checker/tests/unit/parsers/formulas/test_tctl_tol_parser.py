@@ -17,7 +17,7 @@ def _parse(logic: str, formula: str):
 @pytest.mark.unit
 @pytest.mark.parametrize(
     ("logic", "module", "formula"),
-    [("TCTL", TCTL, "j.p"), ("TOL", TOL, "j.Goal")],
+    [("TCTL", TCTL, "j.p"), ("TOL", TOL, "j.goal")],
 )
 def test_freeze_binds_the_clock_name(logic, module, formula):
     """`j.p` freezes clock j over p."""

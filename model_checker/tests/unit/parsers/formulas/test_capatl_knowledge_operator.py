@@ -65,7 +65,9 @@ def test_forms_outside_the_paper_are_rejected_with_a_message(formula, message):
 
 
 @pytest.mark.parametrize("name", ["K1x", "K12x", "Knowledge"])
-def test_k_followed_by_letters_is_a_proposition(name):
-    """`K1x` and `Knowledge` are names: K needs digits then a parenthesis."""
+def test_k_followed_by_letters_is_a_refused_name(name):
+    """`K1x` and `Knowledge` are one word, not K (K needs digits then a
+    parenthesis), and a name cannot start with a capital."""
     result, errors = _parse(f"<{{1}}> F {name}")
-    assert result == ("<{1}>F", name), errors
+    assert result is None
+    assert any(f"'{name}' is invalid" in error for error in errors), errors

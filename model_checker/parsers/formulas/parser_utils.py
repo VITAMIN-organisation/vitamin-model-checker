@@ -14,18 +14,21 @@ from model_checker.parsers.syntax_patterns import (
     COALITION_ATL_TOKEN,
     EMPTY_COALITION_RE,
     FORMULA_RESERVED_WORDS,
+    NAME_RE,
+    NAME_TOKEN,
     NATATL_CAPACITY_RE,
     NATATL_COALITION_TOKEN,
-    NATSL_QUANTIFIER_TOKENS,
     NEGATIVE_AGENT_IN_COALITION_RE,
-    PROPOSITION_FULL_RE,
     PROPOSITION_TOKEN,
     TRAILING_COALITION_COMMA_RE,
 )
 
 PROPOSITION_TOKEN_PATTERN = PROPOSITION_TOKEN
 
-_INVALID_PROPOSITION_MSG = "expected identifier matching [a-zA-Z][a-zA-Z0-9_]*"
+_INVALID_PROPOSITION_MSG = (
+    "a name starts with a lowercase letter, then letters, digits or _ "
+    f"({NAME_TOKEN})"
+)
 
 # Modal/path tokens must not be substrings of proposition identifiers (Goal, Flux).
 _MODAL_TOKEN_PREFIX = r"(?:^|(?<![a-zA-Z0-9_]))"
@@ -116,15 +119,16 @@ def validate_proposition_identifier(
     `kind` names what the identifier is in the message (a CapATL capacity
     follows the same rule).
     """
-    if not PROPOSITION_FULL_RE.match(name):
-        return (
-            False,
-            f"{kind} {name!r} is invalid: {_INVALID_PROPOSITION_MSG}.",
-        )
+    # Reserved words first, so `True` is reported as the constant it spells.
     if name.lower() in reserved_words:
         return (
             False,
             f"{kind} {name!r} clashes with reserved keyword.",
+        )
+    if not NAME_RE.match(name):
+        return (
+            False,
+            f"{kind} {name!r} is invalid: {_INVALID_PROPOSITION_MSG}.",
         )
     return True, None
 
@@ -134,15 +138,7 @@ def validate_natsl_temporal_atom(atom: str) -> tuple[bool, str | None]:
     and `false` are accepted, as in every other logic."""
     if atom in BOOLEAN_CONSTANTS:
         return True, None
-    valid, err = validate_proposition_identifier(atom)
-    if not valid:
-        return False, err
-    if atom in NATSL_QUANTIFIER_TOKENS:
-        return (
-            False,
-            f"NatSL temporal atom {atom!r} clashes with quantifier token {atom!r}.",
-        )
-    return True, None
+    return validate_proposition_identifier(atom)
 
 
 def validate_release_weak_rejected(

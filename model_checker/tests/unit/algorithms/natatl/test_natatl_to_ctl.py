@@ -19,9 +19,10 @@ def test_translation_keeps_operator_agents_and_bound():
 
 
 @pytest.mark.unit
-def test_name_starting_with_an_operator_letter_is_kept_whole():
-    """`Fuel` must reach CTL as one name, not as `F uel`."""
-    assert natatl_to_ctl("<{1},1>F Fuel") == "A F Fuel"
+def test_name_starting_with_an_operator_letter_is_refused_whole():
+    """`Fuel` is refused as one name, not read as `F uel`."""
+    with pytest.raises(ValueError, match="Atomic proposition 'Fuel'"):
+        natatl_to_ctl("<{1},1>F Fuel")
 
 
 @pytest.mark.unit

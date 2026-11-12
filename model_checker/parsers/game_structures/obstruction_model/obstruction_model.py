@@ -22,7 +22,7 @@ from model_checker.parsers.game_structures.cgs.cgs_validation import (
     validate_labelling_matrix_dimensions,
     validate_transition_matrix_dimensions,
 )
-from model_checker.parsers.syntax_patterns import PROPOSITION_FULL_RE
+from model_checker.parsers.syntax_patterns import ACTION_NAME_RE
 
 IDLE = "*"
 _DEMON_SECTIONS = ("Number_of_demons", "Demon_actions", "Curses")
@@ -140,7 +140,7 @@ class ObstructionModel(CGS):
                 raise ValueError(
                     f"{where}: demon must be between 1 and {self.number_of_demons}"
                 )
-            if not PROPOSITION_FULL_RE.match(action):
+            if not ACTION_NAME_RE.match(action):
                 raise ValueError(
                     f"{where}: action must be a name such as 'block_a1' "
                     f"(the idle action '{IDLE}' is implicit)"

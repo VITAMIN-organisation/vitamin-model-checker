@@ -2,7 +2,7 @@
 
 - Each quantifier needs a bound ``{k}``, and their order is kept.
 - A goal is ``F``, ``G`` or ``X``, then a space and a name, or its negation: ``Fa``
-  is one name, and ``f a`` is not a goal.
+  and ``f a`` are not goals.
 """
 
 from __future__ import annotations

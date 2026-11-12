@@ -91,6 +91,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the lowercase word as an operator (OATL `<1><2> F weak`) it is a syntax error.
   Before, most logics and all models accepted them as proposition names. CapATL
   reads `is` in lowercase only: `K1(1 IS c)` is a syntax error.
+- Breaking: a name starts with a lowercase letter, then letters, digits or `_`
+  (`goal`, `goalA`, `safe_1`). This holds for a proposition in every logic and
+  every model, a clock in a TCTL or TOL formula (`x.phi`, `x<=2`) and a capacity
+  in a CapATL formula (`K1(1 is c)`). Before, a name could start with any letter.
+  - `F Goal`, `AF P` and a model proposition `GOAL` fail with `Atomic proposition
+    'Goal' is invalid: a name starts with a lowercase letter, ...`; a clock or a
+    capacity gets the same message starting `Clock 'Goal'` or `Capacity 'Goal'`.
+  - IATL, TCTL and TOL refuse `Goal` the same way, but report an all-capital word
+    such as `P` or `GOAL` as `Invalid character 'P'`.
+  - `Fp` is read as one word, which starts with a capital, so it is an error and
+    never `F p`.
+  - Clock names in a TimedCGS model and capacity names in a CapCGS model are not
+    checked yet.
 - Breaking: NatATL, NatATL_Recall and NatATLF reject a bound `k` below 1, such as
   `<{1}, 0>F p`, with "Invalid bound 0: must be at least 1". Before, `k = 0` parsed
   and the solver returned false for every formula.
@@ -98,7 +111,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   such as "TCTL has no next operator ('AX' at position 1): time is dense, so there
   is no unique next state" (Alur, Courcoubetis, Dill, Information and Computation
   1993, p. 10). Before, the error was "Syntax error near token 'X'". Names such as
-  `Xray` still parse.
+  `xray` still parse.
 - Tests: the `e2e/` folder is removed; its three tests repeated integration tests.
   Markers that no test used are removed from `pyproject.toml` (`slow`, `e2e` and
   others), so `make test` no longer filters with `-m "not slow"`. The test
@@ -234,9 +247,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `A(p U A(q U r))`. Nested and parenthesised operands such as `((a && b)) U c`
   work. A formula the parser rejects raises a `ValueError` that names it, instead
   of being passed on unchanged.
-- NatATL, NatATL_Recall and NatATLF: a name that starts with `F`, `G`, `X` or `U`
-  (`Fuel`, `Goal`, `Until`) is a name, so `<{1},1>F Fuel` parses. Before, it was read
-  as an operator followed by the rest of the name and failed with a CTL syntax error.
+- NatATL, NatATL_Recall and NatATLF: a word that starts with `F`, `G`, `X` or `U`
+  (`Fuel`, `Goal`) is read as one word, so `<{1},1>F Fuel` is refused by the name
+  rule (names start lowercase, see Changed). Before, it was read as an operator
+  followed by the rest of the name and failed with a CTL syntax error.
 - A comment line (`#` or `//`) inside `Clocks`, `Clock_constraints` or `Invariants`
   of a `timedCGS` model file is skipped, as in every other section. Before, it was
   read as a row and the model failed with "Malformed clock constraint" or

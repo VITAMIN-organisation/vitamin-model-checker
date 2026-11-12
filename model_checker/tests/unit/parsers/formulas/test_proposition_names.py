@@ -1,6 +1,6 @@
 """Which words are proposition names, in every logic.
 
-A name starts with a letter and may start with an operator letter (`Apple`, `Xray`).
+A name starts with a lowercase letter (`goal`, `gOAL`); `Goal` and `P` are errors.
 The reserved words of docs/logic_knowledge_base.md ("Reserved keywords") are never
 names, and the word forms of the operators (`eventually`, `until`) are operators.
 """
@@ -92,43 +92,65 @@ def test_refused_name_is_named_in_the_errors(logic):
 
 
 @pytest.mark.unit
-def test_capacity_name_follows_the_name_rule():
-    """`K1(1 is Next)` is refused with a reason that names `Next`."""
-    # `next` is reserved in any letter case (KB "Reserved keywords").
-    errors = parse_errors("CapATL", "K1(1 is Next)")
-    assert any("Capacity 'Next'" in error for error in errors), errors
-
-
-@pytest.mark.unit
+# `Next` is reserved in any letter case (KB "Reserved keywords"); `Goal` starts
+# with a capital.
+@pytest.mark.parametrize("name", ["Next", "Goal"])
 @pytest.mark.parametrize(
-    "logic, formula",
+    "logic, formula, kind",
     [
-        ("TCTL", "AF p : Next<=2"),
-        ("TCTL", "Next.AF p"),
-        ("TOL", "{J1}F p : Next<=2"),
-        ("TOL", "{J1}F p with Next<=2"),
-        ("TOL", "{J1}F p : x<=1, Next<=2"),
-        ("TOL", "Next.{J1}F p"),
+        ("CapATL", "K1(1 is {})", "Capacity"),
+        ("TCTL", "AF p : {}<=2", "Clock"),
+        ("TCTL", "{}.AF p", "Clock"),
+        ("TOL", "{{J1}}F p : {}<=2", "Clock"),
+        ("TOL", "{{J1}}F p with {}<=2", "Clock"),
+        ("TOL", "{{J1}}F p : x<=1, {}<=2", "Clock"),
+        ("TOL", "{}.{{J1}}F p", "Clock"),
     ],
 )
-def test_clock_name_follows_the_name_rule(logic, formula):
-    """A clock in a freeze or a comparison is refused with a reason that names `Next`."""
-    # `next` is reserved in any letter case (KB "Reserved keywords").
-    errors = parse_errors(logic, formula)
-    assert any("Clock 'Next'" in error for error in errors), errors
+def test_clock_and_capacity_follow_the_name_rule(logic, formula, kind, name):
+    """A capacity, or a clock in a freeze or a comparison, is refused by name."""
+    errors = parse_errors(logic, formula.format(name))
+    assert any(f"{kind} '{name}'" in error for error in errors), errors
 
 
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", sorted(OPERATOR_FORMS))
-@pytest.mark.parametrize(
-    "name",
-    ["Apple", "Error", "Red", "Water", "Knowledge", "Xray", "nextstate", "p_X"],
-)
-def test_name_starting_with_an_operator_letter_is_a_proposition(logic, name):
-    """A, E, R, W, K and X start names too; the lexer must not split them off."""
+@pytest.mark.parametrize("name", ["gOAL", "x", "apple", "xray", "nextstate", "p_X"])
+def test_name_starting_with_a_lowercase_letter_is_a_proposition(logic, name):
+    """A name starts with a lowercase letter; capitals may follow."""
     prefix, op = OPERATOR_FORMS[logic]
     result = parse(logic, f"{prefix}{op} {name}")
     assert result is not None and holds_word(result, name), result
+
+
+_UPPERCASE_FIRST = ["Goal", "P", "GOAL", "Apple", "Xray"]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("logic", sorted(OPERATOR_FORMS))
+@pytest.mark.parametrize("name", _UPPERCASE_FIRST)
+def test_name_starting_with_an_uppercase_letter_is_refused(logic, name):
+    """`F Goal` is an error (naming rule 1): a name starts with a lowercase letter."""
+    assert parse(logic, unary(logic, name)) is None
+
+
+# NatSL raises instead of listing errors. IATL, TCTL and TOL lex only
+# `[A-Z][a-z]...` as a word, so that `AF` stays an operator; an all-capital word
+# is an invalid character there.
+_REFUSED_BY_NAME = sorted(
+    (logic, name)
+    for logic in set(OPERATOR_FORMS) - {"NatSL"}
+    for name in _UPPERCASE_FIRST
+    if not (logic in {"IATL", "TCTL", "TOL"} and name.isupper())
+)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(("logic", "name"), _REFUSED_BY_NAME)
+def test_refused_uppercase_name_is_named_in_the_errors(logic, name):
+    """`F Goal` is refused with a reason that names `Goal`."""
+    errors = parse_errors(logic, unary(logic, name))
+    assert any(f"'{name}' is invalid" in error for error in errors), errors
 
 
 # Wallet_ATL still rejects `true` and `false` in a formula (not yet decided).

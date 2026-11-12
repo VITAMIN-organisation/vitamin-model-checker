@@ -50,10 +50,13 @@ phi ::= p | ! phi | phi && phi | phi || phi | phi -> phi
       | j . phi
 ```
 
-- Atoms: lowercase identifiers (`p`, `safe_1`) or mixed-case names with a lowercase
-  second letter (`Goal`). Single-letter uppercase tokens (`F`, `G`, `X`, `U`, `R`,
-  `W`) remain temporal operators. Clock names in comparisons (`x<=3`) use the same
-  token class as propositions.
+- Atoms: identifiers that start with a lowercase letter (`p`, `safe_1`, `goalA`);
+  `Goal` is refused by name and an all-capital word such as `GOAL` is an
+  `Invalid character` error (see the
+  [Atomic Proposition Policy](../logic_knowledge_base.md#atomic-proposition-policy)).
+  Single-letter uppercase tokens (`F`, `G`, `X`, `U`, `R`, `W`) remain temporal
+  operators. Clock names in a formula (`x<=3`, `x.phi`) follow the same rule;
+  clock names in the `Clocks` section of a TimedCGS model are not checked.
 - **Automaton clocks** (`X` in the paper) come from the `Clocks` section of the model.
 - **Formula clocks** (`J` in the paper, disjoint from automaton clocks) appear in
   freeze and guards; they are collected from the AST and added when building

@@ -339,8 +339,10 @@ Common boolean operators:
 ## Practical Rules
 
 - End every formula with `;`.
-- Keep proposition names readable and letter-led, for example `ready`,
-  `Goal`, or `goal_reached`. Mixed case is allowed.
+- Start proposition, clock and capacity names in a formula with a lowercase
+  letter, for example `ready` or `goal_reached`; capitals may follow (`goalA`).
+  `Goal` is an error (see the
+  [Atomic Proposition Policy](logic_knowledge_base.md#atomic-proposition-policy)).
 - Avoid reserved words such as `and`, `or`, `F`, `G`, and `exists`.
 - Comments are allowed with `#` or `//`.
 - Multi-line formulas are fine as long as the final formula has a semicolon.

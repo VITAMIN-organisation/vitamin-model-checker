@@ -34,17 +34,16 @@ class TestLTLErrorHandling:
     @pytest.mark.parametrize(
         "formula,name",
         [
-            ("F Goal", "Goal"),
+            ("F gOAL", "gOAL"),
             ("G p1", "p1"),
             ("p U my_prop", "my_prop"),
             ("F pUq", "pUq"),
-            ("F Fp", "Fp"),
         ],
     )
     def test_ltl_undeclared_name_is_an_error_naming_it(
         self, ctl_small_model, formula, name
     ):
-        """Capitalised, numbered and glued names are checked like lowercase ones."""
+        """Names with capitals, digits, `_` or a glued operator are checked like `p`."""
         result = model_checking(formula, ctl_small_model.filename)
         assert result["error"]["type"] == "semantic"
         assert f"{name!r} not among the model's declared propositions" in (

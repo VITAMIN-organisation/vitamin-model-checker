@@ -29,7 +29,7 @@ p. 144) has none, and Anderson and Thiagarajan
 
 `X p`, `AX p`, `EX p` and `A next p` are rejected with a message that quotes the
 operator, such as "TCTL has no next operator ('AX' at position 1): time is dense,
-so there is no unique next state". Names such as `Xray` and `nextstate` are
+so there is no unique next state". Names such as `xray` and `nextstate` are
 propositions.
 
 API results project regions to **location names** where at least one region

@@ -22,7 +22,7 @@ _CTL_UNARY_NOT = frozenset({"!", "NOT", "not"})
 
 
 def parse_natatl_formula(formula: str, n_agent: int) -> Any:
-    """Parse a NatATL formula as written: ``Fp`` is one name, not ``F p``."""
+    """Parse a NatATL formula as written: ``Fp`` is one word (an invalid name), not ``F p``."""
     parser = FormulaParserFactory.get_parser_instance("NatATL")
     ast = parser.parse(formula.strip(), n_agent=n_agent)
     if ast is None:

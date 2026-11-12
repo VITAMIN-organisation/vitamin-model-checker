@@ -57,9 +57,9 @@ def test_binary_operator_table_lists_every_operator_the_logic_accepts(logic, op)
 @pytest.mark.unit
 @pytest.mark.parametrize("logic", sorted(OPERATOR_FORMS))
 def test_operator_and_name_apart_is_accepted(logic):
-    """`F p` and `F Fuel` parse and keep the name whole."""
+    """`F p` and `F fuel` parse and keep the name whole."""
     prefix, op = OPERATOR_FORMS[logic]
-    for atom in ("p", "Fuel"):
+    for atom in ("p", "fuel"):
         result = parse(logic, f"{prefix}{op} {atom}")
         assert result is not None, f"{logic} rejected '{prefix}{op} {atom}'"
         assert holds_word(result, atom), f"{logic} lost the name {atom}"
@@ -89,8 +89,8 @@ def test_operator_without_operand_is_rejected(logic):
 @pytest.mark.unit
 @pytest.mark.parametrize(("logic", "op"), _BINARY_CASES)
 def test_binary_operator_apart_from_its_names_is_accepted(logic, op):
-    """`p U q` and `Fuel U Goal` parse and keep both names."""
-    for left, right in (("p", "q"), ("Fuel", "Goal")):
+    """`p U q` and `fuel U goal` parse and keep both names."""
+    for left, right in (("p", "q"), ("fuel", "goal")):
         text = binary(logic, f"{left} {op} {right}")
         result = parse(logic, text)
         assert result is not None, f"{logic} rejected '{text}'"

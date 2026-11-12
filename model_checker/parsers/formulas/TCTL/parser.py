@@ -17,8 +17,8 @@ from model_checker.parsers.formulas.parser_utils import (
 from model_checker.parsers.formulas.shared_parser import BaseLogicParser
 from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
 
-# `X` alone is never a TCTL name (single uppercase letters are not proposition
-# tokens), so this cannot reject a valid formula; `Xray` and `nextstate` stay names.
+# `X` alone is never a TCTL name (a name starts lowercase), so this cannot reject a
+# valid formula; `xray` and `nextstate` stay names.
 _NEXT_OPERATOR = re.compile(
     _MODAL_TOKEN_PREFIX + r"(?:[AE]\s*)?(?:X|next)" + _MODAL_TOKEN_SUFFIX
 )

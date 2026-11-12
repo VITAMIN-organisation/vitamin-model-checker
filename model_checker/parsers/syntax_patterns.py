@@ -5,10 +5,16 @@ import re
 _ALNUM_UNDERSCORE = r"a-zA-Z0-9_"
 _LETTER = r"a-zA-Z"
 
-# Atomic propositions and formula proposition tokens (Goal, safe_1).
+# A proposition, clock or capacity name, in models and formulas (safe_1, gOAL).
+NAME_TOKEN = rf"[a-z][{_ALNUM_UNDERSCORE}]*"
+NAME_RE = re.compile(rf"^{NAME_TOKEN}$")
+
+# The lexer's word token is wider than NAME_RE so that `Goal` or `Fp` is read as
+# one word and the name check refuses it by name, instead of `F` and `p`.
 PROPOSITION_TOKEN = rf"[{_LETTER}][{_ALNUM_UNDERSCORE}]*"
-PROPOSITION_FULL_RE = re.compile(rf"^{PROPOSITION_TOKEN}$")
-ATOMIC_PROPOSITION_NAME_RE = PROPOSITION_FULL_RE
+
+# CGS actions may start with a capital (`A`, `block_a1`).
+ACTION_NAME_RE = re.compile(rf"^{PROPOSITION_TOKEN}$")
 
 # Agent indices inside coalitions.
 AGENT_LIST = r"\d+(?:,\d+)*"
@@ -21,11 +27,9 @@ COMPARISON_OPERATORS = (">=", "<=", "==", ">", "<")
 COMPARISON_OPS_ALT = "|".join(COMPARISON_OPERATORS)
 NON_NEGATIVE_INT = r"(?:0|[1-9]\d*)"
 
-# ICTL: lowercase atoms or mixed-case with lowercase from the second character
-# (avoids lexing EX, AX, EF, AG, ... as proposition names).
-ICTL_PROPOSITION_TOKEN = (
-    rf"(?:[a-z][{_ALNUM_UNDERSCORE}]*|[A-Z][a-z][{_ALNUM_UNDERSCORE}]*)"
-)
+# IATL, TCTL, TOL: a word token that does not swallow EX, AX, EF, AG, ...; it
+# still reads `Goal` whole so the name check can refuse it by name.
+ICTL_PROPOSITION_TOKEN = rf"(?:{NAME_TOKEN}|[A-Z][a-z][{_ALNUM_UNDERSCORE}]*)"
 
 # TCTL / TOL: same lexer constraint as ICTL (single-letter E/A/F/G/U/X/R/W stay operators).
 TCTL_TOL_PROPOSITION_TOKEN = ICTL_PROPOSITION_TOKEN
@@ -59,9 +63,6 @@ FORMULA_RESERVED_WORDS = (
     )
     | BOOLEAN_CONSTANTS
 )
-
-# NatSL quantifier tokens; uppercase E/A cannot be temporal atoms (lexer ambiguity).
-NATSL_QUANTIFIER_TOKENS = frozenset({"E", "A"})
 
 # NatATL capacity coalitions: <{1,2}, 5>.
 NATATL_CAPACITY_RE = re.compile(rf"<{{({AGENT_LIST})}},\s*(\d+)>")

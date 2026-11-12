@@ -16,9 +16,10 @@ class TestRABATLErrorHandling:
 
     def test_rabatl_invalid_formula_syntax(self, rabatl_model):
         """Test RABATL with invalid formula syntax."""
+        # A name starts with a lowercase letter, so this is not a proposition.
         result = model_checking("INVALID_FORMULA", rabatl_model.filename)
         assert "error" in result
-        assert result["error"]["type"] == "semantic"
+        assert result["error"]["type"] == "syntax"
 
     def test_rabatl_nonexistent_atomic_proposition(self, rabatl_model):
         """Test RABATL with non-existent atomic proposition."""

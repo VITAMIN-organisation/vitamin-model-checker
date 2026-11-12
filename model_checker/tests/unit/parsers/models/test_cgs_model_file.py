@@ -80,6 +80,7 @@ def test_agent_labels_replace_the_numbers():
             "Agent label 'bad@label' is invalid",
         ),
         (_lines(props="1goal"), "Atomic proposition '1goal' is invalid"),
+        (_lines(props="Goal"), "Atomic proposition 'Goal' is invalid"),
         (
             _lines(props="true"),
             "Atomic proposition 'true' clashes with reserved keyword",

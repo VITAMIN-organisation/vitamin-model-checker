@@ -41,7 +41,7 @@ def test_prefix_bindings_and_goal_are_read_in_order():
             "E{1}xA{1}y:(x,1)(y,2)F goal",
         ),
         ("E{1}x:(x,1) not F goal", "E{1}x:(x,1)!F goal"),
-        ("E{1}x:(x,1) F Goal", "E{1}x:(x,1)F Goal"),
+        ("E{1}x:(x,1) F gOAL", "E{1}x:(x,1)F gOAL"),
     ],
 )
 def test_spacing_outside_the_goal_is_free(formula, normal_form):
@@ -135,9 +135,8 @@ def test_goal_takes_no_connective(connective):
 @pytest.mark.unit
 @pytest.mark.parametrize("name", ["E", "A"])
 def test_quantifier_letter_is_not_a_goal_name(name):
-    """E and A start a quantifier, so the factory's NatSL parser refuses them as the goal."""
+    """E and A start a quantifier and a name starts lowercase, so the factory's
+    NatSL parser refuses them as the goal."""
     parser = NatSLParser()
     assert parser.parse(f"E{{1}}x:(x,1)F {name}") is None
-    assert parser.errors == [
-        f"NatSL temporal atom '{name}' clashes with quantifier token '{name}'."
-    ]
+    assert any(f"'{name}' is invalid" in error for error in parser.errors)

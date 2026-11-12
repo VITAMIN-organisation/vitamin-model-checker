@@ -47,12 +47,19 @@ def test_output_parses_as_ctl(ltl_formula):
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    "glued_formula",
-    ["Xp", "Fp", "FGp", "GFp", "AXp", "AGAFp", "FFuel", "Fgoal", "pUq"],
+    "glued_formula", ["Xp", "Fp", "FGp", "GFp", "AXp", "AGAFp", "FFuel", "Fgoal"]
 )
-def test_operator_glued_to_a_name_stays_one_name(glued_formula):
-    """`Fp` is a name, so it passes through unchanged."""
-    assert ltl_to_ctl(glued_formula) == glued_formula
+def test_operator_glued_to_a_name_is_a_refused_name(glued_formula):
+    """`Fp` is one word, and a name cannot start with a capital, so it is refused
+    by name rather than read as `F p`."""
+    with pytest.raises(ValueError, match=f"Atomic proposition '{glued_formula}'"):
+        ltl_to_ctl(glued_formula)
+
+
+@pytest.mark.unit
+def test_binary_operator_glued_to_names_stays_one_name():
+    """`pUq` is a name, so it passes through unchanged."""
+    assert ltl_to_ctl("pUq") == "pUq"
 
 
 @pytest.mark.unit
