@@ -1,5 +1,4 @@
-# MODEL: Attack graph of the case study (Sec. 5, Figure 2) in Catta, Leneutre,
-# Malvone, Murano, "Coalition Obstruction Temporal Logic", IJCAI 2025.
+# MODEL: Attack graph with 3 demons and 6 states.
 
 # LOGIC: COTL
 

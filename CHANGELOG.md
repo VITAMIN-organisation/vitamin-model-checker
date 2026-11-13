@@ -18,6 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   CGS loader accepts only 0 and 1, so before this change ATLF gave the same
   answers as ATL. Other logics still read a CGS. Benchmarks still generate CGS
   models for ATLF.
+- Docs: algorithm, reference and guide pages, README and AIUSE are checked
+  against the code and the papers, and their wrong statements are fixed.
+- `birelational_matrix` is a package with an `__init__.py` exporting
+  `BirelationalMatrix`, so it has an API page.
 
 ### Fixed
 
@@ -50,6 +54,9 @@ Wallet_ATL follow their papers. Read the "Breaking" entries before upgrading.
 
 ### Changed
 
+- Docs: pages are grouped under `docs/algorithms/` (one page per logic plus
+  `index.md`), `docs/reference/`, `docs/guides/` and `docs/examples/`. The old
+  `docs/<LOGIC>/algorithm.md` paths are gone.
 - RBATL and RABATL reject a bound with a leading zero (`<1><05>F p`,
   `<1><2,05>F p`) with OATL's message "Bound cannot have leading zeros". Before,
   `<1><05>` was read as 5.

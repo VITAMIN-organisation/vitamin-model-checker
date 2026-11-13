@@ -7,7 +7,8 @@ complete strategy domains and retaining every failed existentially pruned graph.
 It therefore has the more robust memory profile when the number of agents and
 the strategy bound grow.
 
-Developer-facing quick notes also live in `docs/NatSL/experiments.md`.
+Developer-facing quick notes also live in
+[docs/examples/natsl_experiments.md](../../docs/examples/natsl_experiments.md).
 
 ## Controlled variables
 
