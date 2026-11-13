@@ -24,6 +24,16 @@ def chain_model(test_data_dir):
 
 
 @pytest.fixture
+def sensor_model(test_data_dir):
+    """Two sensors reach s6 at (energy, memory) cost (3,1) at least, via s1 and s4."""
+    from model_checker.tests.helpers.model_helpers import load_test_model
+
+    return load_test_model(
+        test_data_dir, "costCGS/RBATL/rbatl_2agents_8states_sensor.txt"
+    )
+
+
+@pytest.fixture
 def rover_model(test_data_dir):
     """Mars rover mission model from the original VITAMIN examples."""
     from model_checker.tests.helpers.model_helpers import load_test_model

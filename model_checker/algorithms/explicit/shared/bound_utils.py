@@ -1,22 +1,8 @@
-"""Bound vectors for RBATL and RABATL: parse `<J><b1,b2,...>Op`, and increment or
-subtract vectors in lexicographic order."""
+"""Bound vectors for RBATL and RABATL: parse `<J><b1,b2,...>Op`."""
 
 from model_checker.algorithms.explicit.shared.coalition_constraints import (
     parse_coalition_and_bound_vector,
 )
-
-
-def inc_bound(current_bound: list[int], max_bound: list[int]) -> bool:
-    """Increment current_bound lexicographically; return False when past max_bound."""
-    for i in range(len(current_bound)):
-        if max_bound[i] == 0:
-            current_bound[i] = 0
-            continue
-        current_bound[i] += 1
-        if current_bound[i] <= max_bound[i]:
-            return True
-        current_bound[i] = 0
-    return False
 
 
 def extract_coalition_and_bound(formula_node_value: str) -> tuple[str, list[int]]:

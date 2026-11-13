@@ -117,3 +117,36 @@ class TestRBATLZeroBound:
         )
         result = model_checking(formula, rover_model.filename)
         assert extract_states_from_result(result) == {"s4", "s5", "s6", "s7", "s8"}
+
+
+@pytest.mark.unit
+@pytest.mark.model_checking
+@pytest.mark.semantic
+class TestRBATLCumulativeBound:
+    """The bound limits the summed cost of the coalition's moves along the path."""
+
+    @pytest.mark.parametrize(
+        ("formula", "expected"),
+        [
+            ("<1><1>F p", {"s1", "s2"}),
+            ("<1><2>F p", {"s0", "s1", "s2"}),
+            ("<1><1>(q U p)", {"s1", "s2"}),
+            ("<1><1>G q", {"s0", "s1"}),
+        ],
+    )
+    def test_chain_steps_add_up(self, chain_model, formula, expected):
+        """From s0 two steps of cost 1 reach p, so bound 1 only works from s1; s2 has p without q."""
+        result = model_checking(formula, chain_model.filename)
+        assert extract_states_from_result(result) == expected
+
+    def test_too_many_budgets_is_an_error_naming_the_bound(self, chain_model):
+        """Every budget up to the bound is solved, so a huge bound fails fast instead of hanging."""
+        error = model_checking("<1><1000000>F p", chain_model.filename)["error"]
+        assert error["type"] == "validation"
+        assert "Bound [1000000] needs 1000001 budgets" in error["message"]
+
+    @pytest.mark.parametrize(("bound", "holds"), [("3,1", True), ("2,1", False)])
+    def test_sensor_example_needs_three_energy(self, sensor_model, bound, holds):
+        """The cheapest way to s6 spends (2,0), (0,1) and (1,0): (3,1) in total."""
+        result = model_checking(f"<1,2><{bound}>F p", sensor_model.filename)
+        assert result["initial_state"] == f"Initial state s0: {holds}"

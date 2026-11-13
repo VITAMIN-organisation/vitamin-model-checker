@@ -1,8 +1,9 @@
 # RBATL algorithm
 
-The RBATL checker decides `<A><b> phi`: can coalition `A` force `phi` when every
-step it takes costs at most the bound vector `b`? It runs on a `costCGS` model,
-where each joint action has a cost vector in each state, one value per resource.
+The RBATL checker decides `<A><b> phi`: can coalition `A` force `phi` while the
+summed cost of its moves along the path stays within the bound vector `b`? It runs
+on a `costCGS` model, where each joint action has a cost vector in each state, one
+value per resource.
 Formula syntax is in the
 [knowledge base](../reference/logic_knowledge_base.md#rbatl--rabatl), the model file
 in [costCGS sections](../reference/file_formats.md#costcgs-sections).
@@ -12,49 +13,94 @@ in [costCGS sections](../reference/file_formats.md#costcgs-sections).
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers):
 it computes the set of states where each subformula holds and checks the initial
 state. A coalition operator is computed from the bounded
-[pre-image](index.md#overview) (next section), once for `X` and as a
-[fixpoint](index.md#overview) for `F`, `G` and `U`.
+[pre-image](index.md#overview) (next section), once for `X` and, for `F`, `G` and
+`U`, as one [fixpoint](index.md#overview) for each part of the bound still
+unspent (see [operators](#operators)).
 
 ## Bounded pre-image
 
-`Pre(Z)` is the set of states from which the coalition can move into `Z` within the
-bound. A state `s` is in `Pre(Z)` when the coalition has a move `m` (one action per
-member) such that:
+`Pre(Z, c)`, for a cost vector `c`, is the [pre-image](index.md#overview) of `Z`
+restricted to steps that cost at most `c`. A state `s` is in `Pre(Z, c)` when the coalition
+has a move `m` (one action per member) such that:
 
 1. some joint action that contains `m` leads into `Z` and its cost vector at `s` is
-   within `b`: `cost_i <= b_i` for each resource `i` that `b` covers (with `b` of
+   within `c`: `cost_i <= c_i` for each resource `i` that `c` covers (with `c` of
    length 1, the second cost value is not limited);
 2. every state that a joint action containing `m` can reach is in `Z`, whatever the
    other agents play.
 
-Four consequences follow:
+Three consequences follow:
 
-- The bound applies to each step on its own. Costs do not add up along a path, so
-  a goal ten cheap steps away is as reachable as one step away.
 - Only one joint action of the move has to be within the bound. The costs of the
   other agents' other choices are not checked.
 - A joint action with no cost for `s` in the model never counts as within the bound.
-- With `b_i = 0` only moves of cost 0 in resource `i` stay, so `<1><0> F p` asks
+- With `c_i = 0` only moves of cost 0 in resource `i` stay, so `<1><0> F p` asks
   whether `p` can be forced with moves of cost 0 alone.
 
 ## Operators
 
-Table 1 lists what each operator computes; `[[phi]]` is the set of states where
-`phi` holds.
+The bound `b` limits the sum of the costs of the coalition's moves along every
+path, for each resource: a strategy must keep every prefix of the path within `b`
+(Catta et al., RAB-ATL, PRIMA 2024, Def. 4, p. 5). The cost of a move is the cost
+defined in [Bounded pre-image](#bounded-pre-image); RABATL sums the members' costs
+instead. A goal two steps of cost 1 away needs `b >= 2`.
 
-**Table 1: RBATL operators.**
+The checker computes `W(b')`, the set of states where the formula holds when the
+unspent part of the bound is `b'`, for every `b' <= b` (componentwise), smallest
+first, so every `b'' < b'` (componentwise `<=` and not equal) is done before
+`b'`. A state is in `W(b')` when the coalition can make a move that costs at most
+`b' - b''` into `W(b'')` for some `b'' < b'`, or a move of cost 0 that the
+fixpoint below iterates. This is the loop over smaller budgets of Algorithm 2
+(PRIMA 2024, p. 12). Table 1 lists `W(b')`; `[[phi]]` is the set of states where
+`phi` holds and `paid(b')` is the union of `Pre(W(b''), b' - b'')` over all
+`b'' < b'`. When two budgets `b''' < b''` give the same set, `paid` uses only
+`b'''`: it leaves more for the paid move, so the result does not change.
+
+**Table 1: RBATL operators for one budget `b'`.**
 
 | Formula | Set computed | Iteration starts from |
 | :--- | :--- | :--- |
-| `<A><b> X phi` | `Pre([[phi]])` | (no iteration) |
-| `<A><b> F phi` | least fixpoint of `Z = Z \| Pre(Z)` | `[[phi]]` |
-| `<A><b> G phi` | greatest fixpoint of `Z = Pre(Z) & [[phi]]` | all states |
-| `<A><b> (phi U psi)` | least fixpoint of `Z = Z \| (Pre(Z) & [[phi]])` | `[[psi]]` |
+| `<A><b> X phi` | `Pre([[phi]], b)` | (no iteration) |
+| `<A><b> F phi` | least fixpoint of `Z = Z \| Pre(Z, 0) \| paid(b')` | `[[phi]]` |
+| `<A><b> G phi` | greatest fixpoint of `Z = (Pre(Z, 0) \| paid(b')) & [[phi]]` | all states |
+| `<A><b> (phi U psi)` | least fixpoint of `Z = Z \| ((Pre(Z, 0) \| paid(b')) & [[phi]])` | `[[psi]]` |
 
-Example: one agent; in `s0` action `A` (cost 3) leads to `s1`, where `p` holds, and
-action `B` (cost 0) stays in `s0`. `<1><2> F p` gives `{s1}`: `A` costs more than 2,
-so `s0` never enters the set. `<1><3> F p` gives `{s0, s1}`. `<1><2> G !p` gives
-`{s0}`, since `B` keeps the agent in `s0` at cost 0.
+Example: one agent; in `s0` action `A` (cost 1) leads to `s1`, in `s1` action `A`
+(cost 1) leads to `s2`, where `p` holds; action `B` (cost 0) loops in `s0` and
+`s1`, and `s2` loops at cost 0. `<1><1> F p` gives `{s1, s2}`: from `s0` the two
+steps cost 2. `<1><2> F p` gives `{s0, s1, s2}`. `<1><1> G !p` gives
+`{s0, s1}`, since `B` keeps the agent in place at cost 0.
+
+The number of budgets is the product of `b_i + 1` over the bound's entries, and
+the time grows with it. Measured with `<1,2><b,b> F p` on
+`model_checker/tests/fixtures/costCGS/RBATL/rbatl_2agents_8states_sensor.txt`:
+`(20,20)` takes 0.07 s, `(100,100)` 1.6 s and `(300,300)` 14 s. A bound that needs
+more than 100000 budgets is a validation error that names it.
 
 [RABATL](rabatl.md) runs the same algorithm; only the cost of a joint action is
 computed differently.
+
+## Differences from the papers
+
+Two points differ from the text of Algorithm 2 and follow Def. 5 (p. 6), which
+puts no condition on `phi` at the position where `psi` holds:
+
+- Until with `b > 0`: line 34 intersects every paid move with `[[phi]]`, so a state
+  where `psi` holds and `phi` does not never enters. The checker starts from
+  `[[psi]]`.
+- `G` with `b > 0`: lines 20-24 build the set as a least fixpoint seeded with the
+  paid moves into the sets of smaller budgets (for `b' = 0`, the cost-0 `G` set of
+  lines 13-18). The checker computes the greatest fixpoint of the same update,
+  which gives the same set.
+
+The cost of an Until counts the moves until `psi` holds, as in Algorithm 2.
+
+WOA 2024 (Table 1) reports its rover mission formula true with bound `(5,1)` and
+false with `(2,2)`. The test `test_rover_mission_formula_runs` writes the formula as
+`<1,2><5,1>F(oc && rm && <1><0,0>F((pl || pr) && <1><0,0>F(oc && rm)))` on
+`rbatl_2agents_11states_rover.txt` (the paper writes the coalition without bounds).
+The checker gives false at `s0` for `(5,1)` and `(2,2)` and true for `(5,3)`. Every
+move into `s4` costs `(2,4)`, `(3,5)` or `(5,3)`: comparing each resource rejects
+all three for `(5,1)`, while comparing vectors in lexicographic order (first
+resource first) accepts them, which the original VITAMIN code (commit e8ea8773)
+did.

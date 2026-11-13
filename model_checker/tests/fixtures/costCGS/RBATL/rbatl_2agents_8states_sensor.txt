@@ -1,0 +1,36 @@
+Transition
+0 AI IA AA 0 0 0 0
+0 0 0 0 IB 0 0 0
+0 0 0 0 0 BI 0 0
+0 0 0 0 IB BI 0 BB
+0 0 0 0 0 0 IC 0
+0 0 0 0 0 0 CI 0
+0 0 0 0 0 0 II 0
+0 0 0 0 0 0 IC,CI 0
+Name_State
+s0 s1 s2 s3 s4 s5 s6 s7
+Initial_State
+s0
+Costs_for_actions
+AI s0$2:0
+IA s0$2:0
+AA s0$4:0
+IB s1$0:1;s3$0:1
+BI s2$0:1;s3$0:1
+BB s3$0:2
+IC s4$1:0;s7$1:0
+CI s5$3:0;s7$3:0
+II s6$0:0
+Atomic_propositions
+p
+Labelling
+0
+0
+0
+0
+0
+0
+1
+0
+Number_of_agents
+2

@@ -25,8 +25,8 @@ on every page:
   step (see [COTL](cotl.md)).
 - Budget and bound: a budget limits what the Demon or a legion pays in one step
   (OATL, OL, COTL, TOL). A bound limits the players being checked: in RBATL and
-  RABATL each step's cost vector must stay within the vector `b`, one value per
-  resource; in NatATL, NatATLF and LTL each strategy's size is at most `k`.
+  RABATL it limits the summed cost of the coalition's moves along a path, one
+  value per resource (see [RBATL operators](rbatl.md#operators)); in NatATL, NatATLF and LTL each strategy's size is at most `k`.
 - Strategy: a rule that tells an agent which action to play; a profile is one
   strategy per agent.
 - Pre-image: the states from which one step can be forced into a given set `Z`.

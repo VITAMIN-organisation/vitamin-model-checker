@@ -22,6 +22,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: RBATL and RABATL bound the summed cost of the coalition's moves
+  along a path, per resource, as PRIMA 2024 defines it (Def. 4). Before, the bound
+  applied to each step on its own: on the chain test model `<1><1>F p` held at
+  `s0`, although `p` is two steps of cost 1 away. `<1><b>G p` with `b > 0` holds
+  only where `p` can be kept forever within the total. The Until also holds where
+  `psi` holds and `phi` does not. A bound that needs more than 100000 budgets (the
+  product of `b_i + 1`) is a validation error. See
+  [RBATL operators](docs/algorithms/rbatl.md#operators).
 - ATLF reads its model as `fuzzyCGS`, so labels such as `0.7` are accepted. The
   CGS loader accepts only 0 and 1, so before this change ATLF gave the same
   answers as ATL. Other logics still read a CGS. Benchmarks still generate CGS
