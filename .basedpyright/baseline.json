@@ -976,16 +976,6 @@
                 }
             }
         ],
-        "./model_checker/models/model_factory.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 37,
-                    "endColumn": 41,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/parsers/formulas/shared_parser.py": [
             {
                 "code": "reportOptionalMemberAccess",

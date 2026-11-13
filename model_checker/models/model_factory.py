@@ -160,7 +160,7 @@ def create_model_parser(
 
 
 def create_model_parser_for_logic(
-    filename: str, logic_type: str = None
+    filename: str, logic_type: str
 ) -> BCGS | CGS | CostCGS | CapCGS | BirelationalMatrix | TimedCGS | WalletCGS:
     """The model parser (CGS, costCGS, fuzzyCGS, ...) that `logic_type`, such as "OATL",
     needs for the file `filename`."""
