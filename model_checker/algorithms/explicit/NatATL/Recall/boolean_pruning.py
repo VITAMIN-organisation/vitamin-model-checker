@@ -19,27 +19,18 @@ def prune_tree_nodes(
     node: Node,
     state_set: set[str],
     action: str,
-    strategy_index: int,
+    agent: int,
     current_level: int = 0,
 ) -> int:
-    """Remove the children whose agent action does not match."""
+    """Remove the children where agent (numbered from 1) does not play action."""
     pruning_occurred = 0
 
     if node.state in state_set:
         children_to_remove = []
-        for i, (_child, actions) in enumerate(
-            zip(node.children, node.actions, strict=False)
-        ):
-            if strategy_index - 1 < len(actions):
-                if (actions[strategy_index - 1] != action) and (not node.pruned):
-                    children_to_remove.append(i)
-                    pruning_occurred = 1
-            else:
-                logger.warning(
-                    "Strategy index %d out of bounds for actions %s",
-                    strategy_index,
-                    actions,
-                )
+        for i in range(min(len(node.children), len(node.actions))):
+            if not node.plays(i, agent, action) and not node.pruned:
+                children_to_remove.append(i)
+                pruning_occurred = 1
 
         if pruning_occurred == 1:
             node.pruned = True
@@ -49,9 +40,7 @@ def prune_tree_nodes(
             del node.actions[i]
 
     for child in node.children:
-        if prune_tree_nodes(
-            child, state_set, action, strategy_index, current_level + 1
-        ):
+        if prune_tree_nodes(child, state_set, action, agent, current_level + 1):
             pruning_occurred = 1
 
     return pruning_occurred
@@ -62,7 +51,7 @@ def boolean_pruning(
     tree: Node,
     condition: str,
     action: str,
-    strategy_index: int,
+    agent: int,
     model_path: str,
 ) -> int:
     """Prune the tree by a boolean condition."""
@@ -73,4 +62,4 @@ def boolean_pruning(
         "States where '%s' holds: %s (count: %d)", condition, state_set, len(state_set)
     )
 
-    return prune_tree_nodes(tree, state_set, action, strategy_index)
+    return prune_tree_nodes(tree, state_set, action, agent)

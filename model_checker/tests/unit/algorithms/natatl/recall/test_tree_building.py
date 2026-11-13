@@ -75,8 +75,8 @@ def test_nodes_remember_the_history_above_them(temp_file):
 @pytest.mark.parametrize(
     ("max_depth", "matrix"),
     [
-        (0, [["0", "['a']", "0"], ["0", "0", "0"], ["0", "0", "0"]]),
-        (1, [["0", "['a']", "0"], ["0", "0", "['b']"], ["0", "0", "0"]]),
+        (0, [["0", "a", "0"], ["0", "0", "0"], ["0", "0", "0"]]),
+        (1, [["0", "a", "0"], ["0", "0", "b"], ["0", "0", "0"]]),
     ],
 )
 def test_folding_back_writes_edges_down_to_max_depth(temp_file, max_depth, matrix):
@@ -87,8 +87,8 @@ def test_folding_back_writes_edges_down_to_max_depth(temp_file, max_depth, matri
         Node("s1", cgs, action="a"),
         Node("s2", cgs, action="b"),
     )
-    root.add_child(child, action=["a"])
-    child.add_child(grandchild, action=["b"])
+    root.add_child(child, action="a")
+    child.add_child(grandchild, action="b")
     assert tree_to_initial_CGS(root, ["s0", "s1", "s2"], max_depth=max_depth) == matrix
 
 
@@ -104,13 +104,13 @@ def test_pruning_keeps_only_the_strategy_action_in_matching_states(temp_file):
     """At s0 the strategy plays a, so the b branch goes and the a branch stays."""
     cgs = _model(temp_file, [["0", "a", "b"], ["0", "I", "0"], ["0", "0", "I"]])
     root = Node("s0", cgs)
-    root.add_child(Node("s1", cgs, action="a"), action=["a"])
-    root.add_child(Node("s2", cgs, action="b"), action=["b"])
-    assert prune_tree_nodes(root, {"s0"}, "a", strategy_index=1) == 1
+    root.add_child(Node("s1", cgs, action="a"), action="a")
+    root.add_child(Node("s2", cgs, action="b"), action="b")
+    assert prune_tree_nodes(root, {"s0"}, "a", agent=1) == 1
     assert [
         (child.state, actions)
         for child, actions in zip(root.children, root.actions, strict=True)
-    ] == [("s1", ["a"])]
+    ] == [("s1", "a")]
 
 
 @pytest.mark.unit
@@ -118,9 +118,9 @@ def test_pruning_leaves_states_outside_the_condition(temp_file):
     """s0 is not in the state set, so nothing is pruned and the result is 0."""
     cgs = _model(temp_file, [["0", "a", "b"], ["0", "I", "0"], ["0", "0", "I"]])
     root = Node("s0", cgs)
-    root.add_child(Node("s1", cgs, action="a"), action=["a"])
-    root.add_child(Node("s2", cgs, action="b"), action=["b"])
-    assert prune_tree_nodes(root, {"s1"}, "a", strategy_index=1) == 0
+    root.add_child(Node("s1", cgs, action="a"), action="a")
+    root.add_child(Node("s2", cgs, action="b"), action="b")
+    assert prune_tree_nodes(root, {"s1"}, "a", agent=1) == 0
     assert [child.state for child in root.children] == ["s1", "s2"]
 
 
@@ -129,7 +129,7 @@ def test_boolean_pruning_uses_the_states_where_the_condition_holds(temp_file):
     """p holds at s0, so the strategy's guard `p` applies there and removes the b child."""
     cgs = _model(temp_file, [["0", "a"], ["0", "I"]])
     root = Node("s0", cgs)
-    root.add_child(Node("s1", cgs, action="a"), action=["a"])
-    root.add_child(Node("s1", cgs, action="b"), action=["b"])
+    root.add_child(Node("s1", cgs, action="a"), action="a")
+    root.add_child(Node("s1", cgs, action="b"), action="b")
     assert boolean_pruning(cgs, root, "p", "a", 1, cgs.filename) == 1
-    assert root.actions == [["a"]]
+    assert root.actions == ["a"]

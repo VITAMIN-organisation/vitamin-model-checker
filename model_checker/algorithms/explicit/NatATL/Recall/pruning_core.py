@@ -41,10 +41,11 @@ def legit_strategy_check(
     tree: Node,
     condition: str,
     action: str,
-    strategy_index: int,
+    agent: int,
     model_path: str,
 ) -> bool:
-    """Whether ``action`` is available in every state where ``condition`` holds."""
+    """Whether agent (numbered from 1) has ``action`` in every tree node where
+    ``condition`` holds."""
     condition_type = is_regex_or_boolean_formula(condition)
 
     if condition_type == "Boolean Formula":
@@ -74,29 +75,16 @@ def legit_strategy_check(
     if not state_set:
         return True
 
-    def check_action_exists(
-        node: Node, state_set: set[str], action: str, strategy_index: int
-    ) -> bool:
-        """Check if at least one matching action exists in matching states."""
-        if node.state in state_set:
-            action_exists = False
-            for _i, (_child, actions) in enumerate(
-                zip(node.children, node.actions, strict=False)
-            ):
-                if strategy_index - 1 < len(actions):
-                    if actions[strategy_index - 1] == action:
-                        action_exists = True
-                        break
-            if not action_exists:
+    def check_action_exists(node: Node) -> bool:
+        """Check that agent has action at every matching node of the subtree."""
+        # A leaf is where the tree was cut at its height, not a state with no move.
+        if node.state in state_set and node.children:
+            moves = range(min(len(node.children), len(node.actions)))
+            if not any(node.plays(i, agent, action) for i in moves):
                 return False
+        return all(check_action_exists(child) for child in node.children)
 
-        for child in node.children:
-            if not check_action_exists(child, state_set, action, strategy_index):
-                return False
-
-        return True
-
-    return check_action_exists(tree, state_set, action, strategy_index)
+    return check_action_exists(tree)
 
 
 def pruning(
@@ -105,27 +93,25 @@ def pruning(
     height: int,
     model_path: str,
     CTLformula: str,
+    agents: list[int],
     *strategies: dict,
 ) -> bool:
-    """Apply all agent strategies, rebuild a CGS from the tree, run CTL."""
+    """Apply all agent strategies, rebuild a CGS from the tree, run CTL; the i-th
+    strategy belongs to agents[i]."""
     pruning_flag = 0
 
-    for strategy_index, strategy in enumerate(strategies, start=1):
-        for _iteration, (condition, action) in enumerate(
-            strategy["condition_action_pairs"]
-        ):
-            if legit_strategy_check(
-                cgs, tree, condition, action, strategy_index, model_path
-            ):
+    for agent, strategy in zip(agents, strategies, strict=True):
+        for condition, action in strategy["condition_action_pairs"]:
+            if legit_strategy_check(cgs, tree, condition, action, agent, model_path):
                 condition_type = is_regex_or_boolean_formula(condition)
 
                 if condition_type == "Boolean Formula":
                     pruning_flag = boolean_pruning(
-                        cgs, tree, condition, action, strategy_index, model_path
+                        cgs, tree, condition, action, agent, model_path
                     )
                 elif condition_type == "Regex":
                     pruning_flag = regex_pruning(
-                        cgs, tree, condition, action, strategy_index, height
+                        cgs, tree, condition, action, agent, height
                     )
 
                 if are_all_nodes_pruned(tree):
@@ -138,12 +124,12 @@ def pruning(
                     "with condition '%s' (agent %d)",
                     action,
                     condition,
-                    strategy_index,
+                    agent,
                 )
                 return False
 
         if pruning_flag == 0:
-            pruning_flag = prune_tree_nodes(tree, set(cgs.states), "I", strategy_index)
+            pruning_flag = prune_tree_nodes(tree, set(cgs.states), "I", agent)
 
         reset_pruned_flag(tree)
 

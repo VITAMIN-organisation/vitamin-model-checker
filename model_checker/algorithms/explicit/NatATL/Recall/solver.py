@@ -55,9 +55,9 @@ def solve_natatl_recall(
             base_tree = build_tree_from_CGS(model_parser, states, height)
 
         # Generate regex conditions for this complexity level
-        reg_exp = create_reg_exp(i, atomic_propositions)
-        conditions = list(reg_exp)
-        actions = list(actions_list)
+        # Sorted, so the same strategy is found first on every run.
+        conditions = sorted(create_reg_exp(i, atomic_propositions))
+        actions = [sorted(agent_actions) for agent_actions in actions_list]
         cartesian_products = generate_guarded_action_pairs(conditions, actions)
 
         # Generate strategies for this complexity level
@@ -76,6 +76,7 @@ def solve_natatl_recall(
                 height,
                 filename,
                 CTLformula,
+                agents,
                 *collective_strategy,
             ):
                 logger.info("Solution found with strategy: %s", collective_strategy)

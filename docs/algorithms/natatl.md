@@ -71,8 +71,12 @@ into a tree of histories of depth 4 from the initial state. A plain condition
 prunes every node whose state satisfies it; a pattern, built with `.` (then) and
 `*` (repeat), prunes along one history that matches it. A condition that contains
 `!` or `*` adds 1 to the size. A strategy fails when a rule's action is not
-available where its condition holds. The pruned tree is turned back into a model
-and checked as in step 5 above.
+available at a tree node where its condition holds; the nodes where the tree is
+cut at its depth have no moves and are not checked. A member's action in a joint
+action is read at its agent number, and `I` and `IDLE` are the same action.
+Conditions and actions are tried in sorted order, so the same strategy is found
+first on every run. The pruned tree is turned back into a model and checked as in
+step 5 above.
 
 ## Result
 

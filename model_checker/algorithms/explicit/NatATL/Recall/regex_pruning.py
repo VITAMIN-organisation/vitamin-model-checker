@@ -16,10 +16,11 @@ def regex_pruning(
     tree: Node,
     condition: str,
     action: str,
-    strategy_index: int,
+    agent: int,
     height: int,
 ) -> int:
-    """Prune the tree by matching a regex pattern on its paths."""
+    """Prune the tree by matching a regex pattern on its paths; agent is numbered
+    from 1."""
     path = depth_first_search(cgs, tree, condition, height, height)
     if path is None:
         logger.debug("No path matches regex condition: %s", condition)
@@ -31,7 +32,7 @@ def regex_pruning(
         node: Node,
         path: list[str],
         action: str,
-        strategy_index: int,
+        agent: int,
         current_level: int,
     ) -> int:
         """Prune only nodes along the matched regex path."""
@@ -39,13 +40,10 @@ def regex_pruning(
 
         if current_level < len(path) and node.state == path[current_level]:
             children_to_remove = []
-            for i, (_child, actions) in enumerate(
-                zip(node.children, node.actions, strict=False)
-            ):
-                if strategy_index - 1 < len(actions):
-                    if (actions[strategy_index - 1] != action) and (not node.pruned):
-                        children_to_remove.append(i)
-                        pruning_occurred = 1
+            for i in range(min(len(node.children), len(node.actions))):
+                if not node.plays(i, agent, action) and not node.pruned:
+                    children_to_remove.append(i)
+                    pruning_occurred = 1
 
             if pruning_occurred == 1:
                 node.pruned = True
@@ -56,10 +54,10 @@ def regex_pruning(
 
             for child in node.children:
                 if prune_nodes_along_path(
-                    child, path, action, strategy_index, current_level + 1
+                    child, path, action, agent, current_level + 1
                 ):
                     pruning_occurred = 1
 
         return pruning_occurred
 
-    return prune_nodes_along_path(tree, path, action, strategy_index, 0)
+    return prune_nodes_along_path(tree, path, action, agent, 0)

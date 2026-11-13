@@ -80,6 +80,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- NatATL_Recall accepts a rule whose action is idle: it compared the model's `I`
+  with the rule's `IDLE` and never matched, and it treated the tree's cut-off leaves
+  as states with no action, so every rule failed (`<{1},1>G !r` was false on a model
+  where idling keeps away from `r`). It reads a member's action at its agent
+  number, not at its position in the coalition, and tries strategies in a fixed
+  order. See [Recall](docs/algorithms/natatl.md#recall).
 - LTL conditions can negate any atom (`p and !q`); before, `!` could only stand on
   the first atom. The condition generator also uses every connective it is given
   instead of the first one; LTL still passes `and` only. See

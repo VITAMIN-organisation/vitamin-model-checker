@@ -62,3 +62,17 @@ class TestNatATLRecallCritical:
         assert "error" not in result
         assert "Satisfiability" in result
         assert result["Satisfiability"] is False
+
+    def test_idle_rule_is_valid_and_keeps_away_from_r(self, temp_file):
+        """Agent 1 idling at s1 never reaches r at s2; the model writes idle as I, the rule
+        as IDLE, and the tree's cut-off leaves have no moves to check."""
+        content = build_cgs_model_content(
+            transitions=[["0", "II", "0"], ["0", "II", "bI"], ["0", "0", "II"]],
+            state_names=["s0", "s1", "s2"],
+            initial_state="s0",
+            labelling=[["1", "0", "0"], ["0", "1", "0"], ["0", "0", "1"]],
+            num_agents=2,
+            prop_names=["p", "q", "r"],
+        )
+        result = model_checking("<{1},1>G !r", temp_file(content))
+        assert result["Satisfiability"] is True

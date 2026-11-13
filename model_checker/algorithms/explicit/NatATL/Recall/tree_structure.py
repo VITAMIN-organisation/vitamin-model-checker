@@ -1,6 +1,10 @@
 """Node class for NatATL Recall execution traces and basic tree operations."""
 
 from model_checker.parsers.game_structures.cgs import CGS
+from model_checker.parsers.game_structures.cgs.cgs_actions import (
+    normalize_action_token,
+    parse_joint_action_cell,
+)
 
 
 class Node:
@@ -33,6 +37,15 @@ class Node:
         self.children.append(child)
         if action:
             self.actions.append(action)
+
+    def plays(self, child_index: int, agent: int, action: str) -> bool:
+        """Whether agent (numbered from 1) plays action on the edge to child
+        child_index; `I` and `IDLE` are the same action and `*` allows any."""
+        joint = str(self.actions[child_index]).strip()
+        if joint == "*":
+            return True
+        tokens = parse_joint_action_cell(joint, self.cgs.get_number_of_agents())[0]
+        return tokens[agent - 1] in (normalize_action_token(action), "*")
 
     def __repr__(self, level: int = 0) -> str:
         """Return indented representation for debugging."""
