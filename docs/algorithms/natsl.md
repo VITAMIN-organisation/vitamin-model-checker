@@ -7,6 +7,20 @@ agent 2? It runs on a `CGS` model. Formula syntax is in the
 [knowledge base](../reference/logic_knowledge_base.md#natsl---natural-strategy-logic),
 the model file in [CGS sections](../reference/file_formats.md#cgs-sections).
 
+## Fragment covered
+
+The checker covers the fragment of NatSL that Aruta, Malvone and Murano describe
+for their tool in "Development of Natural Strategies in Strategic Logics" (SPIRIT
+2024, p. 5): "strategies target only a single goal, and quantifiers over
+existential and universal agents are not alternated". Here that means one goal
+(`F`, `G` or `X` on one proposition, or its negation) and a prefix of existential
+quantifiers followed by universal ones, as the
+[steps below](#how-a-check-runs) check. The grammar of NatSL[F] in AAMAS 2022
+(Def. 2, p. 3) allows quantifiers in any order and builds goals with `X` and `U`;
+the checker rejects a `U` goal and any prefix that still has a universal
+quantifier before an existential one (after an outer `!( ... )` has swapped `E`
+and `A`).
+
 ## Strategies
 
 A strategy is an ordered list of rules `(condition, action)` ending with

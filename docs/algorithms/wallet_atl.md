@@ -61,3 +61,39 @@ Example: two agents; in `s0` agent 1 can play `I` (stay in `s0`) or `D20` (go to
 | 30 | `<<1>> F q` | `{s0, s1}` |
 | 30 | `<<1:wallet(1, >= 40)>> F q` | `{s1}`: the guard fails in `s0` |
 | 30 | `<<1:wallet(1, >= 20)>> F q` | `{s0, s1}` |
+
+## Two readings of the guard in the paper
+
+The Wallet ATL paper (Ferrando, Kana Zanlefack and Malvone, AAMAS 2026) gives
+two rules for where a guard must hold, and they disagree when a guard holds where
+a path starts but fails further along it:
+
+- Def. 4.5 (p. 4): a computation is C-consistent "if in the initial state q" every
+  coalition agent's balance meets its guard. The guard is checked once, at the
+  start.
+- Algorithm 1 (p. 5): every backward step filters the pre-image with `wPre`
+  (lines 9, 15 and 23), which keeps only the states where the coalition's guards
+  hold, so the guard must hold at each state where the coalition moves.
+
+Neither rule checks the guard at the target: Algorithm 1 starts the Until from
+`[[theta2]]` with no filter (line 20). The checker follows Algorithm 1, the one
+the paper says it implemented: "This algorithm has been implemented in the
+VITAMIN [19] tool" (p. 5).
+
+Example: two agents; `s0` moves to `s1` (`I|I`) and `s1` loops on itself (`*`).
+Agent 1 holds 10 in `s0` and 0 in `s1`, `p` holds in `s1` and `t` in both
+states. The guard is `wallet(1, >= 5)`, so it holds in `s0` and fails in `s1`.
+Table 3 lists the result at `s0` under each reading:
+
+**Table 3: The two readings on the example, at `s0`.**
+
+| Formula | Def. 4.5 | Algorithm 1 and the checker |
+| :--- | :--- | :--- |
+| `<<1:wallet(1, >= 5)>> X p` | true | true |
+| `<<1:wallet(1, >= 5)>> F p` | true | true |
+| `<<1:wallet(1, >= 5)>> G t` | true | false |
+
+The first two rows agree; the third differs. By Def. 4.5 the guard is met in `s0`, and
+every path from there keeps `t`. By Algorithm 1 the guard fails in `s1`, so `s1`
+drops out of the fixpoint for `G`, and then `s0`, whose only successor is `s1`,
+drops out too.

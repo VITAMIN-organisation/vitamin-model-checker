@@ -51,6 +51,12 @@ ordered by precedence:
 | Disjunction | `\|\|` | Logical OR |
 | Implication | `->` | Logical implication (p -> q) |
 
+`->` groups to the right: `p -> q -> r` is `p -> (q -> r)`, as in NuSMV (2.6
+manual, section 2.2.3, p. 13) and Spot (Spot-tl, section 3.1, p. 15). Tools
+disagree here: Spot-tl p. 15 notes that some tools treat `->` and `<->` as
+left-associative. `&&` and `||` group to the left. `test_precedence.py` checks
+these readings in every logic with connectives.
+
 The word forms `not`, `and`, `or` and `implies`, and the logics that read them, are
 in [word operators](#word-operators).
 
@@ -263,7 +269,9 @@ declared propositions ['p', 'q']". How the checker works:
 ### Theoretical background
 
 NatSL quantifies over bounded natural strategies and binds those strategies to
-agents. The checker implements a restricted one-goal fragment.
+agents. The checker implements a restricted one-goal fragment, the one SPIRIT
+2024 describes for its tool (p. 5); see
+[fragment covered](../algorithms/natsl.md#fragment-covered).
 
 #### Standard syntax
 
@@ -571,7 +579,12 @@ A guard is written `wallet(agent, op value)`, with `op` one of `>=`, `<=`, `==`,
 agent with no guard is unconstrained, and one agent may have several guards
 (`wallet(1, >= 3) && wallet(1, <= 5)`). Each guard names a coalition agent:
 `<<1:wallet(2, >= 5)>>` is a syntax error that names agent 2. `<<>>` with no agent
-is an error.
+is an error. The AAMAS 2026 grammar allows a guard on any agent (p. 4), but its
+semantics checks the guard only for each agent `a` in the coalition `A`, in the
+initial state of a computation (Def. 4.5, p. 4), so a guard on another agent
+could never change a result. The original Wallet_ATL code (original VITAMIN
+repository, branch `Wallet_ATL`, commit 32e7b562) ignored such a guard without a
+message, and of two guards on one agent it checked only the last one written.
 
 Wallet_ATL writes `<<...>>` instead of ATL's `<1>` because its guards sit inside
 the prefix, after the agents. ATL* also writes `<<...>>`, with a different meaning

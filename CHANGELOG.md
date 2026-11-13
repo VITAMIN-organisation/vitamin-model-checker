@@ -77,6 +77,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   require the section. A logic opts out through `"initial_state_required": False`
   in the `METADATA` of its formula package
   (`model_checker/parsers/formulas/OL/__init__.py`).
+- Breaking, compared with the original VITAMIN repository (commit e8ea8773).
+  Formulas or models written for that code can give other results in these
+  cases:
+  - Connectives have a precedence, `!` before `&&` before `||` before `->`, and
+    `->` groups to the right. The original parsers had no precedence table and
+    grouped to the right of each connective: `!p && q` was `!(p && q)`, `!p || q`
+    was `!(p || q)`, `p && q || r` was `p && (q || r)` and `p && q -> r` was
+    `p && (q -> r)`. They now read `(!p) && q`, `(!p) || q`, `(p && q) || r` and
+    `(p && q) -> r`. See
+    [Boolean logic](docs/reference/logic_knowledge_base.md#boolean-logic-shared-syntax).
+  - A state with no successor (a `Transition` row of only `0`) is a load error
+    ("Model structure validation failed: ...") that names the state and suggests a `*` self-loop. The original loaded such a
+    model, and its CTL and ATL read the state in different ways. In CTL, `AX phi`
+    held there whatever `phi` was, `EX phi` and `EG phi` failed, `AG phi` and
+    `EF phi` held exactly where `phi` did, and `AF phi` was computed as `AG phi`.
+    In ATL, every `<A>X phi` failed there, so `<1>X q` and `<2>X !q` both failed
+    at the same state. See
+    [CGS sections](docs/reference/file_formats.md#cgs-sections).
+  - NatATL, NatATLF, LTL and SolutionConcepts can build a strategy rule whose
+    action is idle (`I`), as AIJ 2019 does (p. 13). The original left `I` out of
+    the actions it built rules from, so a check of a coalition with bound `k` can
+    change from false to true. Example: two agents and three states; `s0` moves
+    to `s1` on `II`; `s1` stays on `II` and moves to `s2`, where `r` holds, on
+    `bI`; `s2` loops on `II`. LTL `G !r` with `k = 1` holds at `s0`, because
+    agent 1 can idle in `s1`; the original gave false.
+- Docs: [NatATLF](docs/algorithms/natatlf.md#relation-to-humanatlf) is NatATL on
+  labels 0 and 1. It is not HumanATL[F] of AAAI 2026, whose code is in
+  HumanATLFTool.
+  [NatSL](docs/algorithms/natsl.md#fragment-covered) covers the one-goal,
+  non-alternating fragment of SPIRIT 2024 (p. 5).
+  [Wallet_ATL](docs/algorithms/wallet_atl.md#two-readings-of-the-guard-in-the-paper)
+  gives the paper's two readings of where a guard holds (Def. 4.5 and
+  Algorithm 1) and an example where they differ. The knowledge base says that
+  `->` groups to the right, as in NuSMV and Spot, and why a Wallet_ATL guard must
+  name a coalition agent. OL and the file formats page say how a `*` cell of
+  `Transition` gets its cost.
 
 ### Fixed
 

@@ -34,7 +34,10 @@ The paper's example handles a state with none by adding a self-loop with a cost
 ("add a loop-edge on s5 to grant seriality, add a cost for each edge", p. 3).
 In the checker, write that self-loop as a positive cost in the state's own row
 and column. A `*` cell in `Transition_With_Costs` is an error for OL and OATL;
-TOL reads it as a self-loop of cost 0 ([TOL grade 0](tol.md#grade-0)).
+TOL reads it as a self-loop of cost 0 ([TOL grade 0](tol.md#grade-0)). With
+`Transition`, a `*` cell is accepted and priced by the action `*` in
+[Costs_for_actions](../reference/file_formats.md#costcgs-sections); the cost must
+be at least 1.
 
 The Demon never disables every edge of a state, so a state with one edge keeps it.
 With `n = 0` it cannot disable any edge that has a cost. So when every edge has

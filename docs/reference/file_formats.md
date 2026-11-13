@@ -173,6 +173,9 @@ any of these three sections:
   the formula. A line with a third
   space-separated token or a negative cost is an error. RBATL, RABATL and TOL
   accept a cost of 0; OL and OATL reject it (see [OATL](../algorithms/oatl.md#demon-pre-image)).
+  The action `*` prices a `*` cell (any joint action) of `Transition`: `* s1$2`
+  gives that cell in `s1` the cost 2. In OL and OATL this cost must also be at
+  least 1, so `* s1$0` is an error.
 - `Costs_for_actions_split`: the same line, with each `:`-separated group split
   again by `,` into one cost per agent: in `AA s0$1,2:3,4`, agent 1 pays 1 of
   resource 1 and 3 of resource 2, and agent 2 pays 2 and 4. RABATL adds the costs of the coalition's
