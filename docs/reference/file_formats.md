@@ -1,8 +1,9 @@
 # File formats
 
 This page describes the model and formula file conventions used by
-`vitamin-model-checker`. It is for people creating examples, fixtures, or VMI
-bundles. It does not define operator denotations; those live in
+`vitamin-model-checker`. It is for people creating examples, fixtures, or logic
+bundles for VMI (`vitamin-module-integrator`, which validates logic bundles and
+integrates them into this repository). It does not define operator denotations; those live in
 [logic_knowledge_base.md](logic_knowledge_base.md) and the per-logic pages in
 [docs/algorithms/](../algorithms/index.md).
 
@@ -21,9 +22,8 @@ bundles. It does not define operator denotations; those live in
 - [ObstructionModel sections (COTL)](#obstructionmodel-sections-cotl)
 - [Formula files](#formula-files)
 - [Formula syntax overview](#formula-syntax-overview)
-- [Practical rules](#practical-rules)
 
-## Model Files
+## Model files
 
 Model files are plain `.txt` files. The loader detects a type from the section
 headers and, for ICTL, from the `Transition` cells; the rules are in
@@ -36,7 +36,7 @@ atl_game.txt
 cotl_model.txt
 ```
 
-## Supported Model Types
+## Supported model types
 
 Table 1 lists each model type, the logics that use it, what it adds and how the
 loader detects it. The loader tests the rows in the table's order and takes the
@@ -56,15 +56,15 @@ line, spaces around it ignored:
 | [`capCGS`](#capcgs-sections) | CapATL | Capacity declarations and assignments. | A `Capacities` or `Capacities_assignment` header |
 | [`BCGS`](#bcgs-sections-iatl) | IATL | CGS transitions plus a boolean `Preorder` section. | A `Preorder` header |
 | [`BirelationalMatrix`](#birelationalmatrix-sections-ictl) | ICTL | Same sections as CGS; `Transition` cells are `0`/`R`/`P`/`P,R`. | Every `Transition` cell is one of those four and at least one is `P` or `P,R` |
-| [`CGS`](#cgs-sections) | ATL, CTL, LTL, NatATL, NatSL, ... | Standard concurrent game structure. | No row above matches |
+| [`CGS`](#cgs-sections) | ATL, ATL*, CTL, LTL, NatATL (and NatATL_Recall), NatATLF, NatSL | Standard concurrent game structure. | No row above matches |
 | [`fuzzyCGS`](#fuzzycgs-sections) | ATLF | `Labelling` cells between 0 and 1. | Never by headers, which are those of CGS; ATLF's `model_type` selects it |
 
 When checking a formula, the logic's `model_type` metadata also sets the type, so
 ICTL always loads a `BirelationalMatrix` and ATLF a `fuzzyCGS`.
 
-## CGS Sections
+## CGS sections
 
-A basic CGS model usually contains these sections:
+A CGS model has these sections:
 
 1. `Transition`
 2. `Unknown_Transition_by` (optional; the loader reads it into
@@ -124,7 +124,8 @@ Accepted cell values:
 - `0`: no transition,
 - a joint action profile for all agents (see formats below),
 - a comma-separated list of joint profiles such as `AC,AD` or `A|C,A|D`,
-- `*`: wildcard, meaning any joint action allows the transition.
+- `*`: wildcard, meaning any joint action allows the transition; it is read as a
+  profile with `*` in every agent position.
 
 Table 2 shows the two joint action formats. They are equivalent: both encode one
 move per agent, in agent order 1..n.
@@ -136,11 +137,9 @@ move per agent, in agent order 1..n.
 | Compact | `AC` | Agent 1 plays `A`, agent 2 plays `C` (one character per agent). |
 | Explicit | `A\|C` or `IDLE\|MOVE` | Same per-agent vector; use `\|` when action names are longer than one character. |
 
-Algorithms normalize every profile to the explicit `|`-separated form before coalition masking and strategy pruning. Compact and explicit cells therefore have the same verification semantics. A joint profile has exactly `Number_of_agents` actions (`parse_joint_action_cell` in `cgs_actions.py`), because a missing or extra action would move every later action to the wrong agent.
+Algorithms normalize every profile to the explicit `|`-separated form before coalition masking and strategy pruning. Compact and explicit cells therefore have the same verification semantics. A joint profile has exactly `Number_of_agents` actions (`parse_joint_action_cell` in `model_checker/parsers/game_structures/cgs/cgs_actions.py`), because a missing or extra action would move every later action to the wrong agent.
 
 A profile with too few or too many actions still loads. It fails when a checker reads the actions. For example, with 2 agents and the too-short cell `A`, ATL reports "Action joint 'A' in cell 'A' has 1 action(s); expected 2 (one per agent).". CTL does not read actions, so on such a file it returns a result.
-
-The cell wildcard `*` is treated as a profile with `*` in every agent position.
 
 Every state must have at least one outgoing transition (total / serial relation).
 Use a self-loop such as `*` on terminal states. Models that leave a row entirely
@@ -149,18 +148,18 @@ Use a self-loop such as `*` on terminal states. Models that leave a row entirely
 universal next can hold vacuously. A self-loop models a terminal situation as
 "remain forever."
 
-### State And Label Sections
+### State and label sections
 
 - `Name_State`: space-separated state names.
-- `Initial_State`: exactly one state from `Name_State`.
-- `Atomic_propositions`: proposition names.
+- `Initial_State`: exactly one state from `Name_State`, not `*`.
+- `Atomic_propositions`: proposition names, which follow the
+  [name rule](logic_knowledge_base.md#names-and-keywords) (`goal_reached`,
+  `goalA`; `Goal` is an error).
 - `Labelling`: one row per state, one column per proposition; a cell is `1` when
   the proposition holds in that state and `0` otherwise. A
   [fuzzyCGS](#fuzzycgs-sections) also accepts numbers between 0 and 1.
 
-`Initial_State` cannot be `*`.
-
-## costCGS Sections
+## costCGS sections
 
 `costCGS` extends CGS for cost-aware logics. A file is read as costCGS when it has
 any of these three sections:
@@ -169,15 +168,16 @@ any of these three sections:
   Several states share a line, joined by `;`: `AA s0$1:1;s2$1:1`. The values after
   `$`, separated by `:`, form the cost vector: value `i` is the cost in resource
   `i`, and RBATL compares it with bound `i` of the formula. A line with a third
-  token or a negative cost is an error.
+  space-separated token or a negative cost is an error.
 - `Costs_for_actions_split`: the same line, with each `:`-separated group split
-  again by `,` into one cost per agent: in `AA s0$1,2:3,4`, agents 1 and 2 pay 1 and
-  2 of resource 1, and 3 and 4 of resource 2. RABATL adds the costs of the coalition's
+  again by `,` into one cost per agent: in `AA s0$1,2:3,4`, agent 1 pays 1 of
+  resource 1 and 3 of resource 2, and agent 2 pays 2 and 4. RABATL adds the costs of the coalition's
   agents for each resource.
 - `Transition_With_Costs`: replaces `Transition`; a square matrix whose cells are
   edge costs, `0` for no edge. It gives no actions, so OATL accepts it only for a
   coalition of all agents and otherwise reports "a Transition_With_Costs model gives
-  only edge costs; use Transition with Costs_for_actions" (`OATL/preimage.py`).
+  only edge costs; use Transition with Costs_for_actions"
+  (`model_checker/algorithms/explicit/OATL/preimage.py`).
 
 Examples:
 
@@ -197,7 +197,7 @@ Transition_With_Costs
 4 0
 ```
 
-## capCGS Sections
+## capCGS sections
 
 `capCGS` adds capability information for CapATL:
 
@@ -221,11 +221,10 @@ cop B
 - `Capacities_assignment`: `agents x capacities` matrix of `0`/`1` values.
   Row `i` is agent `i`; column `j` is capacity `j` (same order as `Capacities`).
 - `Actions_for_capacities`: one line per capacity, `capacity_name action1 action2 ...`,
-  listing the actions that capacity enables (`CapATL/combinatorics.py`).
+  listing the actions that capacity enables
+  (`model_checker/algorithms/explicit/CapATL/combinatorics.py`).
 
-Use this format for CapATL-style capability reasoning.
-
-## fuzzyCGS Sections
+## fuzzyCGS sections
 
 `fuzzyCGS` is the model type of ATLF. It has the [CGS sections](#cgs-sections)
 and no others; only the `Labelling` cells differ. Each cell is the truth degree
@@ -252,7 +251,7 @@ Labelling
   it as CGS and rejects a label other than 0 or 1, for example with
   `Invalid labelling matrix value: '0.2' at row 1, column 0`.
 
-## WalletCGS Sections
+## WalletCGS sections
 
 `WalletCGS` extends CGS with a `Wallets` section. Each line maps a state to
 one balance per agent: the state, then each balance after its own `:`
@@ -268,14 +267,14 @@ s0: 100 : 50
 s1: 80 : 60
 ```
 
-Use this format for Wallet_ATL models. An action can carry an amount, such as
+In a Wallet_ATL model an action can carry an amount, such as
 `D20` or `W20`; which letters cost money and which never do is in
 [payable moves](../algorithms/wallet_atl.md#payable-moves). These actions are longer
 than one character, so write the joint profile in the explicit form with `|` (see
 the cell formats in [CGS sections](#cgs-sections)): `D20|0` means agent 1 plays
 `D20` and agent 2 plays the neutral action `0`.
 
-## BirelationalMatrix Sections (ICTL)
+## BirelationalMatrix sections (ICTL)
 
 ICTL reuses the CGS section layout (`Transition`, `Name_State`,
 `Initial_State`, `Atomic_propositions`, `Labelling`; `Number_of_agents` optional
@@ -292,11 +291,13 @@ actions; Table 3 lists them:
 | `P,R` | both (typical diagonal) |
 
 Every diagonal cell must be `P` or `P,R`, because the order `P` is reflexive;
-otherwise ICTL reports "The graph is not reflective." (reflexive) Bare `*` is a CGS idle
-convention and is not a valid ICTL preorder marker. Full validation (C1/C2 and frame rules):
-[ICTL algorithm](../algorithms/ictl.md).
+otherwise ICTL reports "The graph is not reflective." (the message's word for
+reflexive). A `*` on the diagonal gives that error; elsewhere a `*` loads with no
+error and is read as no relation, so write `0`. ICTL also checks
+the confluence conditions C1 and C2 between `P` and `R`; they and the other model
+checks are in the [ICTL algorithm](../algorithms/ictl.md).
 
-## BCGS Sections (IATL)
+## BCGS sections (IATL)
 
 IATL models are CGS files with an extra boolean `Preorder` matrix:
 
@@ -310,13 +311,13 @@ Preorder
 ```
 
 `Transition` cells use ordinary joint-action strings. `Preorder` entries are
-`0` or `1`. Detected when a `Preorder` header is present. Each diagonal
+`0` or `1`. Each diagonal
 `Transition` cell must hold the idle self-loop (`II,II` for 2 agents); otherwise
 IATL reports "There's no Idle from some states and some agents". A comment line
 inside `Preorder` is an error, unlike in the other sections (for a `#` line:
 "invalid literal for int() with base 10: '#'"). Details: [IATL algorithm](../algorithms/iatl.md).
 
-## timedCGS Sections
+## timedCGS sections
 
 `timedCGS` extends costCGS with three timed sections:
 
@@ -343,18 +344,18 @@ An invariant is `<clock><op><integer>` with `<op>` either `<=` or `<`, and sever
 can share a cell, separated by commas (`x<=5,y<3`). Time can pass in a state only while
 its invariant holds. Under `x<3` the clock never reaches 3, while under `x<=3` it
 reaches 3 exactly and cannot go past it. This follows the delay rule of AAMAS 2025
-(weighted timed automata): a delay `d` is allowed iff `v + d` satisfies the invariant.
+(weighted timed automata): with clock values `v` on entering the state, a delay
+`d` is allowed iff the invariant holds at `v + d`.
 Use `>=` guards in `Clock_constraints`, not in `Invariants`.
 
-Comment lines (`#` or `//`) are allowed in these sections, as in the CGS sections.
+## ObstructionModel sections (COTL)
 
-TOL and TCTL share this model type.
-
-## ObstructionModel Sections (COTL)
-
-A COTL model has no agents: it is a graph whose edges k demons can disable.
-It keeps `Name_State`, `Initial_State`, `Atomic_propositions` and `Labelling`
-from CGS, and adds three sections. It is detected by `Number_of_demons`.
+A COTL model has no agents: it is a graph whose edges its `Number_of_demons`
+demons can disable. It keeps `Name_State`, `Initial_State`, `Atomic_propositions`
+and `Labelling` from CGS, and adds three sections. A curse is a joint action of all
+demons at a state. A line of the `Curses` section gives a state, one action per
+demon (`*` for idle), and the edges out of that state that this curse disables. In the example below, when demon 1
+plays `cut_bad` and demon 2 idles (`*`) at `s0`, the edge `s0 -> s2` is disabled.
 
 ```text
 Transition
@@ -397,21 +398,20 @@ Unknown states, demons or actions, a curse listed twice, a cost below 1, and a
 disabled edge that is not in `Transition` are rejected with the line number.
 Semantics: [COTL algorithm](../algorithms/cotl.md).
 
-## Formula Files
+## Formula files
 
 This package reads one formula string per call and does not read formula files;
 the VITAMIN Workbench reads them (`vitamin_api/features/model_checking/services/processing/formula_parser.py`
 in the vitamin-workbench repository). The rules below are the Workbench's.
 
-Formula files usually sit next to their model file and use the
-`_formula.txt` suffix:
+For its example catalog, the Workbench pairs a model with `<model>_formula.txt` in
+the same folder when that file exists
+(`vitamin_api/features/examples/discovery.py`):
 
 ```text
 cotl_model.txt
 cotl_model_formula.txt
 ```
-
-This naming pattern helps tools pair formulas with models.
 
 A formula file holds one or more formulas. Each ends with `;`, except the last,
 which may omit it. A line holds at most one `;`, with nothing but a comment after it, so two
@@ -426,23 +426,11 @@ AG (request -> AF grant);
 
 Labels are optional. If used, a label must be an identifier followed by `:`.
 The first formula is treated as the primary formula by tools that need one.
+`#` or `//` starts a comment that runs to the end of the line.
 
-## Formula Syntax Overview
+## Formula syntax overview
 
 The prefix, operators, model type and one example formula of each logic are in the
 [syntax cards](logic_knowledge_base.md#syntax-cards). The connectives (`!`, `&&`,
 `||`, `->`) and the constants `true` and `false` are in
-[Boolean Logic](logic_knowledge_base.md#boolean-logic-shared-syntax).
-
-## Practical Rules
-
-- Formula files: `;` and line rules are in [formula files](#formula-files).
-- Proposition, clock and capacity names, in models and formulas, start with a
-  lowercase letter (`ready`, `goal_reached`, `goalA`; `Goal` is an error), and the
-  reserved words (`until`, `exist`, `true`, ...) are never names, in any letter
-  case. This is the name rule; the full rules and list are in
-  [names and keywords](logic_knowledge_base.md#names-and-keywords).
-- In a formula file, `#` or `//` starts a comment that runs to the end of the line.
-
-When adding examples for a new logic, keep the first model small. Small examples
-are easier to debug and make better validation fixtures for VMI bundles.
+[Boolean logic](logic_knowledge_base.md#boolean-logic-shared-syntax).

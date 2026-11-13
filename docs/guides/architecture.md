@@ -170,7 +170,6 @@ flowchart TB
 
 CTL is the only logic with a `generate_trace` option. It returns a witness or a
 counterexample for the outermost operator of the formula, or no trace; see
-[Traces](../reference/logic_knowledge_base.md#traces-optional) and the
 [CTL traces](../algorithms/ctl.md#traces). The diagram shows the three possible
 outcomes; which one CTL builds depends on the outermost operator and on whether
 the formula holds in the initial state. There is no trace when that pair has no

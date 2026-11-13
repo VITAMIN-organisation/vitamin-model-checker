@@ -7,10 +7,14 @@ writes formulas in several logics or adds a logic. The per-logic pages in
 which model checks it runs, and
 [file_formats.md](file_formats.md) says how to author `.txt` models.
 
+After the syntax every logic shares, the page has one section each for CTL,
+ATL*, NatSL, OATL, OL, RBATL and RABATL, CapATL, COTL, Wallet_ATL, ICTL, IATL, TCTL
+and TOL. LTL, ATL, ATLF, NatATL (with NatATL_Recall) and NatATLF have no section
+here: their syntax is in the [syntax cards](#syntax-cards) and the rest on their
+pages, listed in [algorithm design](../algorithms/index.md).
+
 ## Contents
 
-- [Overview](#overview)
-- [Per-logic algorithm pages](#per-logic-algorithm-pages)
 - [Boolean logic (shared syntax)](#boolean-logic-shared-syntax)
 - [CTL (Computation Tree Logic)](#ctl---computation-tree-logic)
 - [ATL*](#atl-star)
@@ -30,51 +34,6 @@ which model checks it runs, and
 - [Syntax cards](#syntax-cards)
 - [Logic comparison matrix](#summary-logic-comparison-matrix)
 - [Model syntax](#model-syntax)
-
-## Overview
-
-The knowledge base holds:
-
-- The syntax every logic shares: [connectives](#boolean-logic-shared-syntax),
-  [Until after a prefix](#until-after-a-prefix),
-  [a prefix before a connective](#prefix-before-a-connective) and
-  [operators and names](#operators-and-names).
-- One section for each of CTL, ATL*, NatSL, OATL, OL, RBATL and RABATL, CapATL,
-  COTL, Wallet_ATL, ICTL, IATL, TCTL and TOL: the formulas and model type the code
-  accepts, with examples, and a link to the logic's algorithm page. The sections
-  for CTL, NatSL, OATL, OL, RBATL and RABATL, CapATL, COTL, ICTL and IATL also
-  give a theoretical background. LTL, ATL, ATLF, NatATL (with NatATL_Recall) and
-  NatATLF have no section of their own; their algorithm pages below hold that
-  material.
-- The shared policies: [empty and repeated coalitions](#empty-coalition-policy),
-  [names and keywords](#names-and-keywords), the [syntax cards](#syntax-cards) (one
-  table row per logic with its prefix, operators, model type and an example), a
-  [summary table](#summary-logic-comparison-matrix), and a
-  [list of model types](#model-syntax).
-
-## Per-logic algorithm pages
-
-Each logic has its own algorithm page:
-
-- [CTL](../algorithms/ctl.md)
-- [LTL](../algorithms/ltl.md)
-- [ATL](../algorithms/atl.md)
-- [ATLF](../algorithms/atlf.md)
-- [ATL*](../algorithms/atl_star.md)
-- [NatATL](../algorithms/natatl.md)
-- [NatATLF](../algorithms/natatlf.md)
-- [NatSL](../algorithms/natsl.md)
-- [OATL](../algorithms/oatl.md)
-- [OL](../algorithms/ol.md)
-- [RBATL](../algorithms/rbatl.md)
-- [RABATL](../algorithms/rabatl.md)
-- [CapATL](../algorithms/capatl.md)
-- [COTL](../algorithms/cotl.md)
-- [Wallet_ATL](../algorithms/wallet_atl.md)
-- [ICTL](../algorithms/ictl.md)
-- [IATL](../algorithms/iatl.md)
-- [TCTL](../algorithms/tctl.md)
-- [TOL](../algorithms/tol.md)
 
 <a id="boolean-logic-shared-syntax"></a>
 ## Boolean logic (shared syntax)
@@ -123,8 +82,8 @@ coalition, see [IATL](#iatl---intuitionistic-atl)).
 ### Until after a prefix
 
 A prefix is the part of a formula that scopes over what follows it: a coalition
-(`<1>`, `<<1>>`), a coalition with a bound (`<1><5>`, the OL and TOL demonic
-bounds `<J5>` and `{J2}`) or a CTL path quantifier (`A`), each with the temporal
+(`<1>`, `<<1>>`), a coalition with a bound or budget (`<1><5>`, the OL and TOL
+Demon budgets `<J5>` and `{J2}`) or a CTL path quantifier (`A`), each with the temporal
 operator after it (`<1>F`, `AF`), and the TCTL/TOL freeze `j.`. In every logic
 with a prefix before Until, `prefix p U q` and `prefix (p U q)` are the same
 formula and build the same tree: `<1> p U q` and `<1> (p U q)`, `<J5> p U q` and
@@ -218,14 +177,6 @@ CTL is a branching-time logic defined over computation trees. Formulas are evalu
 - `EF p`: eventually p (reachability).
 - `AG (p -> AF q)`: always if p, then eventually q on all paths (liveness/response).
 
-#### Traces (optional)
-
-With `generate_trace=True` the result has a `trace` for
-the outermost operator of the formula at the initial state: a witness when an
-operator that starts with `E` holds, a counterexample when one that starts with
-`A` fails, and `None` otherwise. A root that is a boolean connective or an atom,
-or a path of more than 100 states, also gives `None`.
-
 ### Syntax
 
 The checker accepts:
@@ -233,8 +184,9 @@ The checker accepts:
 - Path quantifiers `E` / `A` with temporal operators `X`, `F`, `G`, and `U`.
 - Boolean connectives shared with the common formula syntax.
 
-The model type is `CGS`. How the checker computes each operator, and traces:
-[CTL algorithm](../algorithms/ctl.md).
+The model type is `CGS`. How the checker computes each operator:
+[CTL algorithm](../algorithms/ctl.md); the witness or counterexample path it can
+return: [traces](../algorithms/ctl.md#traces).
 
 <a id="atl-star"></a>
 ## ATL*
@@ -256,9 +208,9 @@ A coalition is written `<<1,2>>`, with agent ids in `1..n`; an empty coalition i
 a syntax error. ATL writes a coalition with single angle brackets (`<1,2>`);
 Wallet_ATL uses `<<...>>` with a different meaning ([Wallet_ATL](#wallet_atl)).
 
-Table 1 lists the written forms of an Until under a coalition:
+Table 3 lists the written forms of an Until under a coalition:
 
-**Table 1: Until under an ATL* coalition.**
+**Table 3: Until under an ATL* coalition.**
 
 | Form | Reading |
 | :--- | :--- |
@@ -344,7 +296,7 @@ state `s` costs `$(s, a)`.
 
 #### Standard syntax
 
-- Bounded coalition: `[[A]]_n theta` in the paper, `<A><n> theta` in VITAMIN
+- Coalition with a budget: `[[A]]_n theta` in the paper, `<A><n> theta` in VITAMIN
     - `A`: the coalition of agents.
     - `n`: the Demon's budget per step.
 - Operators: the paper's grammar has `X`, `U` and `R` only (Def. 1). VITAMIN also
@@ -359,7 +311,7 @@ state `s` costs `$(s, a)`.
   such that for every strategy of `A`, some remaining path satisfies `theta`.
   The agents outside `A` resolve the remaining choices in the Demon's favour.
 - The budget applies to each step separately; it is not a sum along the path.
-- Example: on the Figure 1 model of the paper
+- Example: on the model of the paper's Figure 1
   (`model_checker/tests/fixtures/costCGS/OATL/oatl_3agents_medium_6states_costs.txt`),
   `<1,2><2> G !(r && s && g)` is false at `s0` and `<1,2><3> G !(r && s && g)`
   is true. The least budget that stops the attack is 3, as the paper states.
@@ -414,8 +366,8 @@ The paper writes `<n> X phi`, `<n> (phi U psi)` and `<n> (phi R psi)`, where `n`
 #### Validation rules
 
 - Mandatory `J`: OL prefixes must use `<Jk>`, not bare `<k>`.
-- Bound requirement: every temporal operator must be prefixed with `<Jk>`.
-- Bound: `k >= 0` with no leading zero; `<J0>` is valid and `<J01>` is rejected.
+- Budget requirement: every temporal operator must be prefixed with `<Jk>`.
+- Budget value: `k >= 0` with no leading zero; `<J0>` is valid and `<J01>` is rejected.
 
 #### Formula examples
 
@@ -473,7 +425,7 @@ How the checkers compute each operator and the cost of a joint action:
 
 ### Theoretical background
 
-CapATL is designed for models with explicit capacity constraints ([`capCGS`](file_formats.md#capcgs-sections)), often involving knowledge (capability) and agent-scoped properties.
+CapATL is ATL on [`capCGS`](file_formats.md#capcgs-sections) models, in which each agent acts within one capacity (a named set of actions), chosen from those the model assigns it; it adds a knowledge operator over the capacity assignment. How the checker picks the capacities: [CapATL algorithm](../algorithms/capatl.md).
 
 #### Standard syntax
 
@@ -542,7 +494,7 @@ action `*` costs 0. The attacker is the path itself.
 - Legion modality: `<<G>>_n theta` in the paper, `<G><n> theta` in VITAMIN
     - `G`: a set of demons (a legion), possibly empty.
     - `n`: the legion's budget per step, `n >= 0`.
-- Operators: `X`, `X~` (weak next), `U`, `R` are primitive; `F`, `G`, `W` are derived.
+- Operators: `X`, weak next (`X~` in the paper, `WX` in VITAMIN), `U`, `R` are primitive; `F`, `G`, `W` are derived.
 
 #### Semantics
 
@@ -597,13 +549,9 @@ agent with no guard is unconstrained, and one agent may have several guards
 `<<1:wallet(2, >= 5)>>` is a syntax error that names agent 2. `<<>>` with no agent
 is an error.
 
-Wallet_ATL uses a `<<...>>` prefix instead of `<1>` because plain ATL uses `<1>` for
-coalitions only, while Wallet_ATL embeds optional balance guards (`:wallet(agent, op value)`)
-inside the same prefix, so the grammar uses a dedicated `<< ... >>` token. That
-avoids clashing with other bracket conventions in VITAMIN: OATL/RBATL `<1><5>`
-(coalition then cost bound), NatATL `<{1}, k>`, CapATL `<{1}>`, and OL `<Jk>`.
-OATL's lexer reads `<1><5>` as one token, which is why `<1> <5>` is an error;
-Wallet's double brackets are one nested delimiter around agents plus guards.
+Wallet_ATL writes `<<...>>` instead of ATL's `<1>` because its guards sit inside
+the prefix, after the agents. ATL* also writes `<<...>>`, with a different meaning
+([ATL*](#atl-star)).
 
 For example:
 
@@ -656,8 +604,9 @@ finite birelational model `M` and a formula `phi` (EUMAS25b Theorem 4).
 #### Supported syntax
 
 - Quantifiers: `E` / `exist`, `A` / `forall`.
-- Temporal: `X`, `U`, `R`; sugar `F` / `G` (also `eventually`, `globally`, etc.).
-- Boolean: `&&`, `||`, `!` / `not`, `->` / `implies`.
+- Temporal: `X`, `U`, `R`; sugar `F` / `G`; the words `next`, `eventually`,
+  `globally`, `always`, `until` and `release` ([word operators](#word-operators)).
+- Boolean: `&&` / `and`, `||` / `or`, `!` / `not`, `->` / `implies`.
 - Propositions: `[a-z][a-zA-Z0-9_]*` ([names and keywords](#names-and-keywords)). Path/temporal
   tokens (`E`, `A`, `X`, `F`, `G`, `U`, `R`, keywords) are lexed separately so
   forms such as `EX` / `AG` are operators, not atoms.
@@ -703,7 +652,8 @@ In the paper (Definition 2), a well-behaved BCGS satisfies the per-coalition
 constraints C1 and C2 (contravariant simulation of coalition decisions along `P`).
 
 On finitely-branching BCGS, perfect-recall and memoryless semantics coincide
-(KR 2025 Theorem 5); the explicit checker uses memoryless coalition pre-images.
+(KR 2025 Theorem 5); the explicit checker uses memoryless coalition
+[pre-images](../algorithms/index.md#overview).
 IATL model checking is PTIME-complete and runs in time `O(|G|^2 * |phi|)` for a
 finite BCGS `G` and a formula `phi` (KR 2025 Theorem 6).
 
@@ -737,7 +687,7 @@ The quantifiers are `A` and `E`, with `F`, `G`, `U` (no `X` or release).
 Clocks and clock guards:
 
 - Automaton clocks `X` from the model `Clocks` section.
-- Formula clocks `J` via freeze `j.phi` (reset `j` to `0`; `z in phi` in the notes, see the [TCTL algorithm reference](../algorithms/tctl.md)).
+- Formula clocks `J` via freeze `j.phi` (reset `j` to `0`).
 - Guards: standalone `x <= 5` or attachment `phi : x <= c` on subformulas.
 
 For example:
@@ -756,8 +706,10 @@ The model type is `timedCGS`. The zone graph and the fixpoints over regions:
 ## TOL
 
 Timed Obstruction Logic with demonic cost prefixes over `timedCGS`
-models (AAMAS 2025). At each step the Demon may deactivate outgoing transitions
-whose total cost is at most `k`; the Adversary chooses a remaining edge.
+models (AAMAS 2025). `{Jk} phi` holds when the Demon, deactivating at each step
+outgoing transitions of total cost at most `k`, can make every remaining path
+satisfy `phi`. The Demon is the player that disables moves or edges at a cost
+([algorithm design](../algorithms/index.md#overview)).
 
 The demonic prefix is `{Jk}`, where `k` is a positive integer (paper notation `<k>`).
 The paper allows `k = 0` (AAMAS 2025, Def. 10); VITAMIN rejects `{J0}`.
@@ -788,24 +740,25 @@ operator: [TOL algorithm](../algorithms/tol.md).
 Outside COTL, VITAMIN does not support an empty strategic coalition written as `<>`.
 In ATL an empty coalition `<<>>` is the CTL universal path quantifier `A` (JACM 2002, p. 675), so `<> F p` would say what `AF p` already says.
 
-The policy is to reject `<> ...` in every logic except COTL, whose legion of demons may be empty (`<><0>`). Table 3 gives the correct surface for each property:
+The policy is to reject `<> ...` in every logic except COTL, whose legion of demons may be empty (`<><0>`). Table 4 gives the correct surface for each property:
 
-**Table 3: Surface to use for each property.**
+**Table 4: Surface to use for each property.**
 
 | Intent | Use | Do not use |
 | :--- | :--- | :--- |
 | Eventually on all paths (CTL) | `AF p` | `<> F p` |
 | Strategic coalition (ATL) | `<1> F p`, `<1,2> G p` | `<> F p` |
 | Linear path eventually (LTL) | `F p` | `<> F p` |
-| Cost-bounded strategy (OATL / RBATL) | `<1><5> F p` | `<> F p`, `<1> F p` without bound, `<1> <5> F p` |
+| Cost-limited strategy (OATL / RBATL) | `<1><5> F p` | `<> F p`, `<1> F p` without a budget or bound, `<1> <5> F p` |
 | Capacity / strategy-bound (NatATL) | `<{1}, 5> F p` | `<> F p` |
 | Capacity coalition (CapATL) | `<{1}> F p` | `<> F p` |
 | IATL universal coalition | `[1] G p` | `[] G p` (empty `[]` rejected) |
 
-Table 4 lists where the rejection is enforced, for the logics whose coalition form
-differs; ATL*, NatATL_Recall, NatATLF, NatSL, ICTL, TCTL and TOL are not listed:
+Table 5 lists where the rejection is enforced, for the logics whose coalition form
+differs; ATL*, NatATL_Recall, NatATLF, NatSL, ICTL, TCTL and TOL are not listed.
+`<\s*>` stands for `<>` with or without spaces inside:
 
-**Table 4: Where an empty coalition is rejected.**
+**Table 5: Where an empty coalition is rejected.**
 
 | Logic | Coalition form | Empty coalition |
 | :--- | :--- | :--- |
@@ -813,10 +766,10 @@ differs; ATL*, NatATL_Recall, NatATLF, NatSL, ICTL, TCTL and TOL are not listed:
 | IATL | `<1>` exist, `[1]` forall | `<> ` and `[]` rejected |
 | NatATL | `<{1,2}, k>` | `<\s*>` rejected |
 | CapATL | `<{1,2}>` | `<\s*>` rejected |
-| OATL | `<1><5>` | `<\s*>` rejected; bound required |
-| COTL | `<1,3><1>` | `<><0>` allowed (empty legion of demons); bound required |
+| OATL | `<1><5>` | `<\s*>` rejected; budget required |
+| COTL | `<1,3><1>` | `<><0>` allowed (empty legion of demons); budget required |
 | RBATL / RABATL | `<1><5>` or `<1><2,2>` | `<\s*>` rejected; bound required |
-| OL | `<J5>` (cost, not agents) | N/A |
+| OL | `<J5>` (Demon budget, no agents) | N/A |
 | Wallet_ATL | `<<1>>` | `<<>>` invalid (lexer) |
 | CTL / LTL | `E` / `A` or none | `<> ` invalid syntax |
 
@@ -881,18 +834,16 @@ IATL, TCTL and TOL report an all-capital word such as `P` or `GOAL` as
 
 Reserved words (any letter case): `and`, `or`, `not`, `implies`, `until`, `release`, `globally`, `next`, `eventually`, `always`, `forall`, `exist`, `weak`, `with`, `is`, `true`, `false`.
 
-The list is `FORMULA_RESERVED_WORDS` in `syntax_patterns.py`: every operator word of
+The list is `FORMULA_RESERVED_WORDS` in `model_checker/parsers/syntax_patterns.py`: every operator word of
 the [word operators](#word-operators) table plus the two constants. A word is
 reserved in every logic, even where the logic has no such operator (`weak` in ATL,
 `with` outside TOL), so a name means the same in every logic, apart from `kcap` below.
 
-`kcap` (in any letter case) is reserved in CapATL only: in its formulas and in a
-capCGS model (the only model type CapATL reads), as a proposition or a capacity name. CapATL writes its knowledge
-operator `K1(...)` or `kcap1(...)`, and its parser reads `kcap` followed by digits
-as that operator, so the bare word is the only spelling left to reserve. A capCGS
-model also refuses names of `kcap` and digits (`kcap1`, `kcap42`), since no CapATL
-formula could name them; `kcap1x` is an ordinary name. In the other logics and
-plain CGS models `kcap` and `kcap1` stay valid names.
+CapATL alone also reserves `kcap` (any letter case), in its formulas and in capCGS
+models, as a proposition or capacity name. Its parser reads `kcap` followed by
+digits as the knowledge operator (`kcap1(...)` is `K1(...)`), so a capCGS model
+also refuses `kcap1` or `kcap42` as a name; `kcap1x` is an ordinary name. Other
+logics and plain CGS models accept `kcap` and `kcap1` as names.
 
 `true` and `false` are the boolean constants, so a model that declares a proposition, clock or
 capacity with either name (`true`, `True`, `FALSE`, ...) is rejected when it is read. In a
@@ -901,7 +852,7 @@ formula they are constants in lowercase, and `True` is a reserved-word error.
 ### Word operators
 
 Most operators have a word form beside the symbol: `p until q` is `p U q`, with the
-same precedence. Table 5 lists every word, the symbol it stands for and the
+same precedence. Table 6 lists every word, the symbol it stands for and the
 logics that read it. The words are `OPERATOR_WORDS` in `syntax_patterns.py`, which
 feeds every parser except NatSL's (its goal pattern reads `not` only), so a word is
 spelled the same in every logic that has it. In a logic that does not read a word,
@@ -911,7 +862,7 @@ reserved-word message and NatSL "Unsupported goal". CapATL's `kcap1(...)` is not
 the table, because the word carries the agent number; see `kcap` under
 [reserved words](#reserved-words).
 
-**Table 5: Word operators, their symbols and the logics that read them.**
+**Table 6: Word operators, their symbols and the logics that read them.**
 
 | Word | Symbol | Read by |
 | :--- | :--- | :--- |
@@ -963,20 +914,20 @@ name, instead of `Fp` being read as `F p`. Most patterns are constants in
   refused by name; an all-capital word such as `P` or `GOAL` is an
   `Invalid character` error.
 - NatSL temporal atoms: read with `[A-Za-z_][A-Za-z0-9_.]*` in its goal pattern
-  (`NatSL/parser.py`), then checked with the name rule and the reserved-word rule; `true` and
+  (`model_checker/parsers/formulas/NatSL/parser.py`), then checked with the name rule and the reserved-word rule; `true` and
   `false` are accepted as constants.
 
 <a id="syntax-cards"></a>
 ## Syntax cards
 
-Table 6 gives, for each logic, the prefix that scopes a formula, its temporal
+Table 7 gives, for each logic, the prefix that scopes a formula, its temporal
 operators as symbols, the model type it reads and one formula that parses. Word
 forms are in [word operators](#word-operators), and the connectives and constants
 in [Boolean logic](#boolean-logic-shared-syntax). The per-logic sections and
 algorithm pages give the semantics. Each example parses; the NatSL one also checks
 only on a 1-agent model (see [NatSL](#natsl---natural-strategy-logic)).
 
-**Table 6: Syntax card of each logic.**
+**Table 7: Syntax card of each logic.**
 
 | Logic | Prefix | Operators | Model | Example |
 | :--- | :--- | :--- | :--- | :--- |
@@ -1005,19 +956,20 @@ only on a 1-agent model (see [NatSL](#natsl---natural-strategy-logic)).
 ## Logic comparison matrix
 
 The prefix, operators and model type of each logic are in the
-[syntax cards](#syntax-cards); Table 7 adds what the cards leave out, and the
-algorithm pattern each checker follows (the techniques behind them are in
-[algorithm design](../algorithms/index.md)). The path type is Linear when a formula
+[syntax cards](#syntax-cards); Table 8 adds what the cards leave out, and the
+algorithm pattern each checker follows. A pre-image is the set of states from which
+one step can be forced into a given set; it and the other techniques are in
+[algorithm design](../algorithms/index.md#overview). The path type is Linear when a formula
 is read on one path (LTL) and Branching when every temporal operator sits under a
 path quantifier, coalition, strategy quantifier or demonic prefix and the formula
 holds at a state:
 
-**Table 7: Path type, algorithm pattern and notes for each logic.**
+**Table 8: Path type, algorithm pattern and notes for each logic.**
 
 | Logic | Path type | Algorithm pattern | Notes |
 | :--- | :--- | :--- | :--- |
 | CTL | Branching | Pre-image and fixpoints | Path quantifiers `A`, `E` |
-| LTL | Linear (sure-win) | Strategy search and pruning | No prefix |
+| LTL | Linear | Strategy search and pruning | No prefix; true when all agents together have natural strategies of size at most 5 under which the formula, rewritten for CTL with `A` before each temporal operator, holds at the initial state ([LTL](../algorithms/ltl.md)) |
 | ATL | Branching | Coalition pre-image and fixpoints | Coalition `<A>` with no bound |
 | ATLF | Branching | Coalition pre-image and fixpoints | Per-state values, not a set of states ([ATLF](../algorithms/atlf.md)) |
 | ATL* | Branching | LTL to deterministic parity automaton, product with the model, two-player game | Nested path formulas and coalitions inside `<<A>>`; no wallet guards |
@@ -1025,8 +977,8 @@ holds at a state:
 | NatATL_Recall | Branching | Strategy search and pruning | As NatATL, with recall strategies |
 | NatATLF | Branching | Strategy search and pruning | Delegates to the memoryless NatATL solver |
 | NatSL | Branching | Strategy search and pruning | Schedule `space` (default) or `time` |
-| OATL | Branching | Bound-aware coalition pre-image and fixpoints | Demon budget per step |
-| OL | Branching | Bound-aware coalition pre-image and fixpoints (OATL with all agents) | Demonic bound `<Jk>` |
+| OATL | Branching | Budget-aware coalition pre-image and fixpoints | Demon budget per step |
+| OL | Branching | Budget-aware coalition pre-image and fixpoints (OATL with all agents) | Demon budget `<Jk>` per step |
 | RBATL | Branching | Bound-aware coalition pre-image and fixpoints | Resource vector bound, flat action costs |
 | RABATL | Branching | Bound-aware coalition pre-image and fixpoints | Resource vector bound, coalition-sum costs |
 | CapATL | Branching | Coalition pre-image over capacity-restricted moves, and fixpoints | Knowledge operator `K1(...)` (the digit is the agent) |
