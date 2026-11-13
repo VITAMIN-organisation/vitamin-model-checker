@@ -127,6 +127,8 @@ def initialize(
 
     logger.debug("Complexity Bound: %d", k)
 
+    if isinstance(k, bool) or not isinstance(k, int) or k < 1:
+        raise ValueError(f"[VALIDATION] k must be an integer >= 1, got {k!r}")
     num_agents = cgs.get_number_of_agents()
     cgs_actions.validate_agent_numbers(agents, num_agents)
     actions_per_agent = cgs_actions.extract_actions_for_agents(

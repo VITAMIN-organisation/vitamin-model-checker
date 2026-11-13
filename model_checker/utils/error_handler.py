@@ -68,6 +68,7 @@ _TAGGED_ERROR_PREFIXES = (
     ("[SEMANTIC]", functools.partial(create_error_response, "semantic")),
     ("[SYNTAX]", functools.partial(create_error_response, "syntax")),
     ("[MODEL]", functools.partial(create_error_response, "model")),
+    ("[VALIDATION]", functools.partial(create_error_response, "validation")),
 )
 
 _SYNTAX_KEYWORDS = (

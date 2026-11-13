@@ -1,8 +1,8 @@
 # LTL algorithm
 
 The LTL checker decides an LTL formula such as `F goal` or `p U q` on a `CGS`
-model by asking whether the agents together have simple strategies under which
-every path satisfies it. Formula syntax is in the
+model by asking whether a coalition (a set of agents, all agents by default) has
+simple strategies under which every path satisfies it. Formula syntax is in the
 [knowledge base](../reference/logic_knowledge_base.md#syntax-cards), the model
 file in [CGS sections](../reference/file_formats.md#cgs-sections).
 
@@ -11,8 +11,9 @@ file in [CGS sections](../reference/file_formats.md#cgs-sections).
 LTL uses the strategies and the search of [NatATL](natatl.md#strategies), with
 these settings and differences:
 
-1. Every agent of the model gets a strategy, and the bound is fixed at `k = 5`:
-   sizes `i = 1, ..., 5` are tried, each agent's strategy having size exactly `i`.
+1. Each agent of the coalition gets a strategy, and sizes `i = 1, ..., k` are
+   tried, each agent's strategy having size exactly `i`. Agents outside the
+   coalition get no rule, so pruning leaves their moves open.
 2. A [profile](index.md#overview) prunes the model as in NatATL, except that in a state no rule covers
    the agent is not restricted (NatATL makes it idle there).
 3. A profile that leaves some state with no transition is not admissible and is
@@ -20,6 +21,22 @@ these settings and differences:
 4. The formula is rewritten for CTL by putting `A` before each temporal operator:
    `F p` becomes `AF p` and `p U q` becomes `A(p U q)`. The
    [CTL checker](ctl.md) checks it at the initial state of the pruned model.
+
+The coalition and the strategy size bound `k` (the same bound as in
+[NatATL](natatl.md)) are inputs of the check, as in the SureWin problem of the
+LTL paper (PAAMS 2025, Algorithm 1, p. 4). The keyword
+arguments `agents` (agent numbers between 1 and the number of agents, default
+all) and `k` (default 5) of `model_checking` set them:
+
+```python
+from model_checker.algorithms.explicit.LTL.LTL import model_checking
+
+model_checking("F goal", "model_checker/tests/fixtures/CGS/LTL/ltl_1agent_3states_minimal.txt", k=3, agents=[1])
+```
+
+A `k` that is not an integer of at least 1, an empty coalition, an agent named
+twice, or an agent number that is not an integer or is outside that range comes
+back as a validation error response whose message names the value.
 
 The rewrite is built from the parsed formula, so `p U q U r` (which groups to the
 right) becomes `A(p U A(q U r))`; it is not an exact translation of LTL into CTL.

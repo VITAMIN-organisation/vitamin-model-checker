@@ -11,6 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Model type `fuzzyCGS` (class `FuzzyCGS`) for ATLF: the CGS sections, with
   `Labelling` cells that are numbers between 0 and 1. See
   [fuzzyCGS sections](docs/reference/file_formats.md#fuzzycgs-sections).
+- LTL `model_checking` takes the keyword arguments `k` (strategy size bound,
+  default 5) and `agents` (the coalition, default every agent). Before, both were
+  fixed. A `k` that is not an integer of at least 1, or an invalid coalition, is
+  a validation error that names it. See
+  [LTL algorithm](docs/algorithms/ltl.md#how-a-check-runs).
+- LTL and NatATL reject an empty coalition, a coalition that names an agent twice
+  and an agent number that is not an integer (such as `True` or `1.5`), with a
+  validation error that shows the coalition or the number.
 
 ### Changed
 

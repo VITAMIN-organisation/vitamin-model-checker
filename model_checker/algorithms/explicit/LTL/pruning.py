@@ -8,12 +8,11 @@ from model_checker.algorithms.explicit.NatATL.Memoryless.pruning import (
 from model_checker.algorithms.explicit.shared.result_formatters import (
     initial_state_holds,
 )
-from model_checker.parsers.game_structures.cgs import CGS, cgs_actions, cgs_validation
+from model_checker.parsers.game_structures.cgs import CGS, cgs_validation
 
 
 def process_transition_matrix_data(cgs, model, agents, *strategies):
     graph = [row[:] for row in cgs.graph]
-    cgs_actions.validate_agent_numbers(agents, cgs.get_number_of_agents())
 
     for strategy_index, strategy in enumerate(strategies, start=1):
         graph, _ = apply_first_matching_rules(

@@ -975,7 +975,7 @@ holds at a state:
 | Logic | Path type | Algorithm pattern | Notes |
 | :--- | :--- | :--- | :--- |
 | CTL | Branching | Pre-image and fixpoints | Path quantifiers `A`, `E` |
-| LTL | Linear | Strategy search and pruning | No prefix; true when all agents together have natural strategies of size at most 5 under which the formula, rewritten for CTL with `A` before each temporal operator, holds at the initial state ([LTL](../algorithms/ltl.md)) |
+| LTL | Linear | Strategy search and pruning | No prefix; true when the coalition (all agents by default) has natural strategies of size at most `k` (5 by default) under which the formula, rewritten for CTL with `A` before each temporal operator, holds at the initial state ([LTL](../algorithms/ltl.md)) |
 | ATL | Branching | Coalition pre-image and fixpoints | Coalition `<A>` with no bound |
 | ATLF | Branching | Coalition pre-image and fixpoints | Per-state values, not a set of states ([ATLF](../algorithms/atlf.md)) |
 | ATL* | Branching | LTL to deterministic parity automaton, product with the model, two-player game | Nested path formulas and coalitions inside `<<A>>`; no wallet guards |
