@@ -43,16 +43,18 @@ def generate_conditions(
                         yield from generate_condition(k - 1, new_condition)
                     elif len(new_condition) > 1:
                         new_condition.sort()
-                        connective = connectives[0] if connectives else "and"
-                        new_condition_str = new_condition[0] + " " + connective + " "
-                        for i in range(1, len(new_condition) - 1):
-                            new_condition_str += (
-                                new_condition[i] + " " + connective + " "
-                            )
-                        new_condition_str += new_condition[-1]
-                        complexity = len(new_condition_str.split())
-                        if complexity <= max_complexity:
-                            yield from generate_condition(k - 1, [new_condition_str])
+                        joins = itertools.product(
+                            connectives, repeat=len(new_condition) - 1
+                        )
+                        for ops in joins:
+                            new_condition_str = new_condition[0]
+                            for op, prop in zip(ops, new_condition[1:], strict=True):
+                                new_condition_str += f" {op} {prop}"
+                            complexity = len(new_condition_str.split())
+                            if complexity <= max_complexity:
+                                yield from generate_condition(
+                                    k - 1, [new_condition_str]
+                                )
 
     for k in range(1, max_complexity + 1):
         yield from generate_condition(k, [])
@@ -63,12 +65,14 @@ def generate_negated_conditions(
 ) -> Generator[str, None, None]:
     """Yield each condition with every choice of negated atoms, within max_complexity."""
     for condition in conditions:
-        atomic_props = condition.split(" && ")
-        for combo in itertools.product(["", "!"], repeat=len(atomic_props)):
-            negated_props = [
-                f"{combo[i]}{atomic_props[i]}" for i in range(len(atomic_props))
-            ]
-            new_str = " && ".join(negated_props)
+        # Atoms and connectives alternate: "p and q or r".
+        words = condition.split()
+        atoms, joins = words[::2], words[1::2]
+        for combo in itertools.product(["", "!"], repeat=len(atoms)):
+            negated = [f"{sign}{atom}" for sign, atom in zip(combo, atoms, strict=True)]
+            new_str = negated[0] + "".join(
+                f" {op} {atom}" for op, atom in zip(joins, negated[1:], strict=True)
+            )
             complexity = len(new_str.split())
             if "!" in new_str:
                 complexity += 1
@@ -150,7 +154,9 @@ def generate_guarded_action_pairs(
 
     Returns an empty dict on error.
     """
-    connectives = ["and", "or"]
+    # `or` as well makes a k = 5 check that fails take 11 s instead of 0.1 s on a
+    # 3-state model with 3 propositions, so LTL keeps `and` only for now.
+    connectives = ["and"]
     try:
         cartesian_products: dict[str, list[tuple[str, str]]] = {}
         for _agent_key in agent_actions.keys():

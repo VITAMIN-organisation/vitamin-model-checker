@@ -161,8 +161,10 @@ def generate_deviations_for_agent(
 ) -> list[dict]:
     import itertools
 
-    C = ["and", "or"]
-    conditions = list(strategies_base.generate_conditions(atomic_propositions, C, k))
+    # Same connectives as the strategies being checked (strategies_base).
+    conditions = list(
+        strategies_base.generate_conditions(atomic_propositions, ["and"], k)
+    )
     all_candidates = []
     for condition in conditions:
         neg_conditions = list(
