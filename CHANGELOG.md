@@ -22,6 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   against the code and the papers, and their wrong statements are fixed.
 - `birelational_matrix` is a package with an `__init__.py` exporting
   `BirelationalMatrix`, so it has an API page.
+- RBATL and RABATL accept a bound of 0 (`<1><0,5>F p`): that resource then allows
+  only moves of cost 0. Before, any 0 was an error, so a formula that nests
+  `<1><0,0>`, such as the rover mission test, could not run.
 
 ### Fixed
 

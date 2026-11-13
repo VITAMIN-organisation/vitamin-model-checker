@@ -185,3 +185,9 @@ def test_leading_zero_bound_is_named(logic, formula):
     leading-zero message, also before a word operator."""
     errors = parse_errors(logic, formula)
     assert any("leading zeros" in error for error in errors), errors
+
+
+@pytest.mark.unit
+def test_resource_bound_zero_is_accepted():
+    """A 0 in any resource of the bound vector is a valid bound."""
+    assert parse("RBATL", "<1><0,5>F p") is not None

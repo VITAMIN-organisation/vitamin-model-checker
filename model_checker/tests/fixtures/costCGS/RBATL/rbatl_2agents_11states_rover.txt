@@ -1,0 +1,46 @@
+Transition
+I* CA CW CM 0 0 0 0 0 0 0
+0 MO,WO 0 0 AO 0 0 0 0 *N 0
+0 0 AO,MO 0 WO 0 0 0 0 *N 0
+0 0 0 AO,WO MO 0 0 0 0 *N 0
+0 0 0 0 II 0 LI RI 0 0 0
+0 0 0 0 0 0 II 0 0 0 0
+0 0 0 0 RI PI 0 0 0 0 LI
+0 0 0 0 LI 0 0 0 PI 0 RI
+0 0 0 0 0 0 0 II 0 0 0
+0 0 0 0 0 0 0 0 0 * 0
+0 0 0 0 0 0 0 0 0 0 * 
+Name_State
+s0 s1 s2 s3 s4 s5 s6 s7 s8 s9 s10
+Initial_State
+s0
+Costs_for_actions
+I* s0$0:0
+CA s0$0:0
+CW s0$0:0
+CM s0$0:0
+MO s1$0:0;s2$0:0;s3$2:4
+WO s1$0:0;s2$3:5;s3$0:0
+AO s1$5:3;s2$0:0;s3$0:0
+*N s1$0:0;s2$0:0;s3$0:0
+II s4$0:0;s5$0:0;s8$0:0
+LI s4$0:0;s6$0:0;s7$0:0
+RI s4$0:0;s6$0:0;s7$0:0
+PI s6$0:0;s7$0:0
+** s9$0:0;s10$0:0
+Atomic_propositions
+sp cp oc rm pl rp ip pr
+Labelling
+1 0 0 0 0 0 0 0
+0 1 0 0 0 0 0 0
+0 1 0 0 0 0 0 0
+0 1 0 0 0 0 0 0
+0 0 1 1 0 0 0 0
+0 0 0 0 1 0 0 0
+0 0 0 0 0 1 1 0
+0 0 0 0 0 1 1 0
+0 0 0 0 0 0 0 1
+0 0 0 0 0 0 0 0
+0 0 0 0 0 0 0 0
+Number_of_agents
+2

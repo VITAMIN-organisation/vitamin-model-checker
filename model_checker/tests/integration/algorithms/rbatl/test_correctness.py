@@ -90,6 +90,30 @@ class TestRBATLResultSet:
         assert ": False" in result["initial_state"]
 
     def test_invalid_bound_is_reported_when_atl_is_false(self, rbatl_model):
-        """Bound 0 is outside 1..1000000; it is an error whatever plain ATL says."""
-        result = model_checking("<1><0>G r", rbatl_model.filename)
-        assert "Invalid bound value 0" in result["error"]["message"]
+        """A bound above 1000000 is an error whatever plain ATL says."""
+        result = model_checking("<1><1000001>G r", rbatl_model.filename)
+        assert "Invalid bound value 1000001" in result["error"]["message"]
+
+
+@pytest.mark.integration
+@pytest.mark.model_checking
+@pytest.mark.semantic
+class TestRBATLZeroBound:
+    """Bound 0 keeps only the moves that cost 0."""
+
+    @pytest.mark.parametrize(
+        ("formula", "expected"),
+        [("<1><0>F p", {"s2"}), ("<1><0>G q", {"s0", "s1"})],
+    )
+    def test_only_free_moves(self, chain_model, formula, expected):
+        """Only the cost-0 self-loops are left, so s0 and s1 stay where they are."""
+        result = model_checking(formula, chain_model.filename)
+        assert extract_states_from_result(result) == expected
+
+    def test_rover_mission_formula_runs(self, rover_model):
+        """The rover paper's mission formula nests <1><0,0>; no repair fits (5,1)."""
+        formula = (
+            "<1,2><5,1>F(oc && rm && <1><0,0>F((pl || pr) && <1><0,0>F(oc && rm)))"
+        )
+        result = model_checking(formula, rover_model.filename)
+        assert extract_states_from_result(result) == {"s4", "s5", "s6", "s7", "s8"}

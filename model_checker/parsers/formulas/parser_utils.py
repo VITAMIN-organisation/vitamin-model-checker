@@ -169,7 +169,7 @@ def coalition_bound_error(formula: str, missing_message: str) -> str | None:
     """The error for a coalition bound written with a leading zero (`<1><05>F p`,
     `<1><2,05>F p`), spaced off (`<1> <5>F p`) or missing (`<1> F p`,
     `<1> p until q`, whatever operator follows) or negative (`<1><-5>F p`), else
-    None. A bare `0` is a value error reported later."""
+    None. A bare `0` is a valid bound."""
     if _NEGATIVE_BOUND_RE.search(formula):
         return "Bound must not be negative"
     if _LEADING_ZERO_BOUND_RE.search(formula):
@@ -279,7 +279,7 @@ def validate_coalition_bound_token(
 ):
     """Check tokens like "<1,2><3>" (coalition plus bound suffix).
 
-    When bound_limit is set, every bound number must be between 1 and that limit.
+    When bound_limit is set, every bound number must be between 0 and that limit.
     """
     if bound_pattern is None:
         bound_pattern = AGENT_LIST
@@ -291,9 +291,9 @@ def validate_coalition_bound_token(
     if bound_limit is not None:
         bound_values = [int(value) for value in match.group(2).split(",")]
         for value in bound_values:
-            if value <= 0 or value > bound_limit:
+            if value > bound_limit:
                 raise CoalitionValueError(
-                    f"Invalid bound value {value}: must be between 1 and {bound_limit}"
+                    f"Invalid bound value {value}: must be between 0 and {bound_limit}"
                 )
 
     return coalition_only

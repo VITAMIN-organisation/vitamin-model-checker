@@ -1,0 +1,21 @@
+Transition
+B A 0
+0 B A
+0 0 *
+Unknown_Transition_by
+Name_State
+s0 s1 s2
+Initial_State
+s0
+Costs_for_actions
+A s0$1;s1$1
+B s0$0;s1$0
+* s2$0
+Atomic_propositions
+p q
+Labelling
+0 1
+0 1
+1 0
+Number_of_agents
+1

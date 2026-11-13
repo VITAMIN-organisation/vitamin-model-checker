@@ -27,13 +27,15 @@ member) such that:
 2. every state that a joint action containing `m` can reach is in `Z`, whatever the
    other agents play.
 
-Three consequences follow:
+Four consequences follow:
 
 - The bound applies to each step on its own. Costs do not add up along a path, so
   a goal ten cheap steps away is as reachable as one step away.
 - Only one joint action of the move has to be within the bound. The costs of the
   other agents' other choices are not checked.
 - A joint action with no cost for `s` in the model never counts as within the bound.
+- With `b_i = 0` only moves of cost 0 in resource `i` stay, so `<1><0> F p` asks
+  whether `p` can be forced with moves of cost 0 alone.
 
 ## Operators
 

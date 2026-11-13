@@ -405,7 +405,8 @@ RBATL and RABATL accept the same formulas.
 #### Validation rules
 
 - Comma separation: resource vectors use commas, not colons.
-- Bound range: each bound value is between 1 and 1,000,000. `<1><0,5>F p` is an error, "Invalid bound value 0: must be between 1 and 1000000".
+- Bound range: each bound value is between 0 and 1,000,000. `<1><1000001>F p` is an error, "Invalid bound value 1000001: must be between 0 and 1000000".
+- Bound 0: a bound of 0 for a resource allows only moves of cost 0 in that resource. The PRIMA 2024 algorithm has its own cases for bound 0 (p. 12, lines 13 and 26).
 - Leading zeros: a bound value with a leading zero (`<1><05>F p`, `<1><2,05>F p`) is an error, as in OATL: "Bound cannot have leading zeros (e.g., use <1><5>, not <1><05>)".
 - Resource count: the length of the bound vector is not checked against the model. Bound `i` limits cost value `i`; cost values beyond the last bound are not limited, and bounds beyond the last cost value are ignored.
 
@@ -415,6 +416,7 @@ RBATL and RABATL accept the same formulas.
 <1><100,50> F goal
 <1,2><10,10,10> G safe
 <1><5> (p U q)
+<1><0,0> F goal
 ```
 
 How the checkers compute each operator and the cost of a joint action:
