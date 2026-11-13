@@ -1,5 +1,9 @@
 # AI usage
 
+This file tells users and contributors which AI tools the maintainer used in this
+repository, for what, and who answers for the result. The rules for AI use in a
+contribution are in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 Last updated: 2026-11-12
 
 ## Tools
@@ -19,7 +23,8 @@ Design choices, logic semantics and releases are decided by the maintainer.
 
 ## Responsibility
 
-Kim Quyen Ly reviewed every AI-assisted change and is fully responsible for the code, tests and docs produced with AI help.
+Kim Quyen Ly reviewed every AI-assisted change and is responsible for the code,
+tests and docs produced with AI help.
 
 ## Updating this file
 

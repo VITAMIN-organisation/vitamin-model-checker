@@ -54,7 +54,7 @@ model_checker/
 ├── models/                     # model parser factory (model_factory.py)
 ├── parsers/
 │   ├── formulas/               # per-logic formula parsers
-│   └── game_structures/        # one package per model type (8)
+│   └── game_structures/        # one package per model type (9)
 ├── tests/                      # unit, integration, performance tests
 ├── utils/                      # error handling and shared utilities
 ├── api.py                      # public exports
