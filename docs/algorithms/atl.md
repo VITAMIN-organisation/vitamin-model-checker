@@ -8,8 +8,9 @@ file in [CGS sections](../reference/file_formats.md#cgs-sections).
 ## Overview
 
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers).
-Each coalition operator is computed from the coalition pre-image, once for `X` and
-as a [fixpoint](index.md#overview) for `F`, `G` and `U`.
+Each coalition operator is computed from the coalition
+[pre-image](index.md#overview), once for `X` and as a
+[fixpoint](index.md#overview) for `F`, `G` and `U`.
 
 ## Coalition pre-image
 

@@ -8,7 +8,8 @@ in [costCGS sections](../reference/file_formats.md#costcgs-sections).
 
 ## Overview
 
-RABATL runs the RBATL [bounded pre-image](rbatl.md#bounded-pre-image) and
+RABATL runs the RBATL bounded [pre-image](index.md#overview) (see
+[RBATL](rbatl.md#bounded-pre-image)) and
 [operators](rbatl.md#operators) unchanged; only the cost of a joint action
 differs.
 

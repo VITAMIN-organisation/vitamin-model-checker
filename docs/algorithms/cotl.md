@@ -1,7 +1,7 @@
 # COTL algorithm
 
 The COTL checker decides `<L><n> phi` on an `ObstructionModel`: a graph of states
-whose edges demons can disable. `L` is a legion, a set of demons (it may be empty,
+whose edges [demons](index.md#overview) can disable. `L` is a legion, a set of demons (it may be empty,
 `<>`), with a budget `n` per step; the formula asks whether the legion can play so
 that, whatever the other demons do, every resulting path satisfies `phi`. Formula
 syntax is in the [knowledge base](../reference/logic_knowledge_base.md#cotl), the
@@ -25,9 +25,9 @@ possible outcome, and leaves the edges of `s` it does not disable. A legion pick
 that no listed curse extends leaves every edge; among such picks only the cheapest
 is considered.
 
-Two one-step sets are computed for a set of states `S`. A state `s` is in them
-when the legion has a pick of cost at most `n` such that, for every outcome, the
-remaining successors:
+Two [pre-images](index.md#overview) are computed for a set of states `S`. A
+state `s` is in them when the legion has a pick of cost at most `n` such that,
+for every outcome, the remaining successors:
 
 - `Next(S)`: are all in `S`, and there is at least one;
 - `NextOrStop(S)`: are all in `S`, or there are none (the path stops).
@@ -35,7 +35,8 @@ remaining successors:
 ## Operators
 
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers);
-`[[phi]]` is the set of states where `phi` holds.
+`[[phi]]` is the set of states where `phi` holds. Fixpoints, `R`, `W` and `WX` are
+defined in the [overview](index.md#overview).
 
 **Table 1: COTL operators.**
 

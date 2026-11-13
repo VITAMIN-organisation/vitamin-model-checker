@@ -12,8 +12,8 @@ Clock values are real numbers, so the checker groups them into zones (sets of
 clock values described by bounds on clocks and clock differences) and works on
 regions, pairs (location, zone):
 
-1. Clocks named in the formula, by a freeze `x . phi` or a guard, are added to the
-   model's clocks if new.
+1. Clocks named in the formula, by a freeze `x . phi` or a guard such as
+   `phi : x<=3`, are added to the model's clocks if new.
 2. The initial region is the initial location with every clock at 0, cut by the
    location's invariant. If that is empty, the graph is empty.
 3. From each region, the graph is built breadth first with two kinds of successor:
@@ -30,14 +30,15 @@ has it, and `!`, `&&`, `||`, `->` are set operations over all regions. `phi : x<
 keeps the regions of `phi` whose zone can satisfy the guard. A freeze `x . phi`
 keeps the regions that, with `x` reset to 0, satisfy `phi`.
 
-`Pre(Z)` is the set of regions with an edge of the zone graph into `Z`, kept only
-when its zone, under the guard of the operand (if any), is not empty. There is no
-`X` operator: the next region in dense time is not unique.
+`Pre(Z)`, the [pre-image](index.md#overview), is the set of regions with an edge
+of the zone graph into `Z`, kept only when its zone, under the guard of the
+operand (if any), is not empty. There is no `X` operator: the next region in
+dense time is not unique.
 
 ## Operators
 
 `All` is the set of all regions and `[[phi]]` the set of regions where `phi`
-holds.
+holds. Fixpoints are defined in the [overview](index.md#overview).
 
 **Table 1: TCTL operators.**
 

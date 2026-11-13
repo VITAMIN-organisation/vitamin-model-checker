@@ -2,15 +2,16 @@
 
 The ATL* checker decides `<<A>> psi` where `psi` is any path formula, such as
 `<<1>> (F p && G q)`, on a `CGS` model. Unlike the other checkers it does not
-iterate a pre-image: it turns each coalition formula into a two-player game and
-solves the game with the Spot automata library. Formula syntax is in the
-[knowledge base](../reference/logic_knowledge_base.md#atl-star), the model file in
+iterate a [pre-image](index.md#overview): it turns each coalition formula into a
+two-player game and solves the game with the Spot automata library. Formula
+syntax is in the [knowledge base](../reference/logic_knowledge_base.md#atl-star), the model file in
 [CGS sections](../reference/file_formats.md#cgs-sections).
 
 ## Overview
 
 The formula is evaluated from the innermost subformula outward into sets of
-states. Atoms, `true`, `!` and `&&` are the usual set operations; a temporal
+states. An atom is the set of states labelled with it, `true` is all states,
+and `!` and `&&` are complement and intersection; a temporal
 operator outside a coalition is an error ("a bare ... is not a state formula;
 temporal operators need a <<...>> coalition around them"). Each coalition
 formula `<<A>> psi` is solved for all states at once in four steps:

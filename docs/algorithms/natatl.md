@@ -1,10 +1,10 @@
 # NatATL algorithm
 
 The NatATL checker decides `<{A}, k> phi`: does coalition `A` have simple
-strategies, each of size at most `k`, that force `phi`? It runs on a `CGS` model.
-The logic name `NatATL` runs memoryless strategies, which look only at the current
-state; `NatATL_Recall` runs strategies that look at the history. Formula syntax
-is in the [knowledge base](../reference/logic_knowledge_base.md#syntax-cards), the
+strategies, each of [size](#strategies) at most the bound `k`, that force `phi`?
+It runs on a `CGS` model. The logic name `NatATL` runs memoryless strategies,
+which look only at the current state; `NatATL_Recall` runs strategies that look
+at the history. Formula syntax is in the [knowledge base](../reference/logic_knowledge_base.md#syntax-cards), the
 model file in [CGS sections](../reference/file_formats.md#cgs-sections).
 
 ## Strategies
@@ -22,7 +22,7 @@ The size of a strategy is the sum of the sizes of its conditions.
 
 1. For `i = 1, 2, ..., k`, the checker lists, for each member of `A`, the
    strategies of size exactly `i` (each set of rules in one order only), and tries
-   the profiles, one strategy per member. It stops at the first profile that works;
+   the [profiles](index.md#overview), one strategy per member. It stops at the first profile that works;
    which one is found first can vary between runs.
 2. A profile prunes the model. In each state a rule covers, the agent keeps only
    the joint actions where it plays the rule's action or idles (the `IDLE` or `I`
@@ -42,9 +42,9 @@ profiles (see [speed-ups](index.md#speed-ups)).
 initial state. A condition is either a plain condition, which prunes every node
 whose state satisfies it, or a pattern over histories, built with `.` (then) and
 `*` (repeat), which prunes along one history that matches it. A condition that
-contains `!` or `*` adds 1 to the size. Unlike the memoryless case, a strategy fails when a rule's action is not
-available where its condition holds. The pruned tree is turned back into a model
-and checked as above.
+contains `!` or `*` adds 1 to the size. Unlike the memoryless case, a strategy
+fails when a rule's action is not available where its condition holds. The
+pruned tree is turned back into a model and checked as above.
 
 ## Result
 

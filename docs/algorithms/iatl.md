@@ -26,7 +26,7 @@ except for `!` and `->`, which use the upward closure `^up` described in
 [ICTL](ictl.md#overview).
 
 `<A>` is the existential coalition and `[A]` the universal one, each with its own
-pre-image:
+[pre-image](index.md#overview):
 
 - `PreD(Z)`, for `<A>`: the [ATL pre-image](atl.md#coalition-pre-image).
 - `PreF(Z)`, for `[A]`: the states that have moves and where every move of `A` has
@@ -35,7 +35,8 @@ pre-image:
 ## Operators
 
 `Pre` below is `PreD` under `<A>` and `PreF` under `[A]`; `[[phi]]` is the set of
-states where `phi` holds and `S` the set of all states.
+states where `phi` holds and `S` the set of all states. Fixpoints and `R`
+(release) are defined in the [overview](index.md#overview).
 
 **Table 1: IATL operators.**
 

@@ -17,9 +17,16 @@ on every page:
 - Coalition: the agents named in the formula, such as `1,2` in `<1,2>`. A
   coalition move is one action per member; the other agents complete it into
   joint actions.
-- Idle: the action that does nothing, written `I` or `IDLE` in a model.
-- Demon: in the obstruction logics (OATL, OL, COTL, TOL), the player that
-  disables moves or edges, paying their cost from a budget per step.
+- Idle: the action that does nothing, written `I` or `IDLE` in a model (COTL
+  writes it `*`).
+- Demon: in OATL, OL and TOL, the one player that disables moves or edges,
+  paying their cost from a budget per step. COTL has one or more demons; a
+  legion, a set of them that may be empty, picks together within one budget per
+  step (see [COTL](cotl.md)).
+- Budget and bound: a budget limits what the Demon or a legion pays in one step
+  (OATL, OL, COTL, TOL). A bound limits the players being checked: in RBATL and
+  RABATL each step's cost vector must stay within the vector `b`, one value per
+  resource; in NatATL, NatATLF and LTL each strategy's size is at most `k`.
 - Strategy: a rule that tells an agent which action to play; a profile is one
   strategy per agent.
 - Pre-image: the states from which one step can be forced into a given set `Z`.
@@ -50,17 +57,18 @@ The checkers whose pages link to this section run the same outer steps, and thei
 pages describe only their own operators:
 
 1. The formula is evaluated from the innermost subformula outward; each
-   subformula becomes the set of states where it holds.
+   subformula `phi` becomes `[[phi]]`, the set of states where it holds.
 2. An atom is the set of states labelled with it.
 3. `!`, `&&` and `||` are complement, intersection and union on these sets;
    `phi -> psi` is the union of the complement of `[[phi]]` with `[[psi]]`.
 4. The formula holds in the model when the initial state is in the final set.
 
-The result has the text fields `res`, which is `Result: ` and the tuple of states
-in natural order (`s2` before `s10`), as in `Result: ('s0', 's1')`, and
-`initial_state`, such as `Initial state s0: True`, plus `formula` and `model`, the
-inputs. A syntax error or an atom the model does not declare gives an error
-instead.
+The result has four text fields: `res`, `Result: ` followed by the tuple of
+states of the final set in natural order (`s2` before `s10`), as in
+`Result: ('s0', 's1')`; `initial_state`, such as `Initial state s0: True`; and
+`formula` and `model`, the inputs. CTL with traces on adds more fields (see
+[CTL traces](ctl.md#traces)). A syntax error or an atom the model does not
+declare gives an error instead.
 
 ## Speed-ups
 
@@ -76,6 +84,6 @@ result.
 | Early stop | ATL, Wallet_ATL | In `F` and `U`, a state already in the set is not tested again |
 | Subformula memo | RBATL, RABATL, OATL, OL | A subformula that appears twice is computed once |
 | Per-check caches | CapATL | Capacity lookups are cached within one check and cleared before the next |
-| Upset table | ICTL, IATL | The states above each state in `P` are computed once per model |
+| Upset table | ICTL, IATL | The [upset](ictl.md#overview) of each state (the states above it in the preorder `P`) is computed once per check, not on every round |
 | Condition cache | NatATL | The states where a rule's condition holds are computed once and reused across strategies; LTL rebuilds the model for each candidate, so its cache lasts one candidate |
-| Curse grouping | COTL | Legion actions that no listed curse extends are merged into the cheapest one, so the work grows with the listed curses, not with all joint demon actions |
+| Curse grouping | COTL | Legion actions that no listed [curse](cotl.md#model) extends are merged into the cheapest one, so the work grows with the listed curses, not with all joint demon actions |

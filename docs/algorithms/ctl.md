@@ -9,8 +9,9 @@ the model file in [CGS sections](../reference/file_formats.md#cgs-sections).
 ## Overview
 
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers).
-Each temporal operator is computed from one of two pre-images, once for `X` and as
-a [fixpoint](index.md#overview) for the others:
+Each temporal operator is computed from one of two
+[pre-images](index.md#overview), once for `X` and as a
+[fixpoint](index.md#overview) for the others:
 
 - `PreE(Z)`: the states with at least one successor in `Z`.
 - `PreA(Z)`: the states that have successors and whose successors are all in `Z`.

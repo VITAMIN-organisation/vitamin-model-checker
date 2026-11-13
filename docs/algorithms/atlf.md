@@ -17,7 +17,7 @@ subformula becomes a value per state, not a set:
    between 0 and 1; `true` is 1.0 and `false` 0.0 everywhere.
 2. The connectives combine values state by state: `!phi` is `1 - phi`, `&&` is
    `min`, `||` is `max`, and `phi -> psi` is `max(1 - phi, psi)`.
-3. Coalition operators use the pre-image below.
+3. Coalition operators use the [pre-image](index.md#overview) defined below.
 
 Every step uses only `1 - x`, `min` and `max`, so every result lies between 0 and
 1, and a model whose labels are all 0 or 1 gives the same states as ATL, with 1.0
@@ -52,5 +52,5 @@ When `phi` is 1 in every state, `<A> G phi` returns 1 everywhere without applyin
 state order, such as `Result: [('s0', 0.2), ('s1', 0.3)]`. `initial_state` gives
 the value at the initial state, such as `Initial state s0: 0.2`, not true or false.
 Every value is a float. The result of `1 - x` (in `!phi` and `phi -> psi`) is
-rounded to 12 decimals, so `!p` with `p = 0.7` is `0.3`, not the
-`0.30000000000000004` that float subtraction leaves; labels are kept as written.
+rounded to 12 decimals, so `!p` with `p = 0.7` gives `0.3` where plain float
+subtraction would leave `0.30000000000000004`; labels are kept as written.

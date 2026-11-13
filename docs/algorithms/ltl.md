@@ -13,7 +13,7 @@ these settings and differences:
 
 1. Every agent of the model gets a strategy, and the bound is fixed at `k = 5`:
    sizes `i = 1, ..., 5` are tried, each agent's strategy having size exactly `i`.
-2. A profile prunes the model as in NatATL, except that in a state no rule covers
+2. A [profile](index.md#overview) prunes the model as in NatATL, except that in a state no rule covers
    the agent is not restricted (NatATL makes it idle there).
 3. A profile that leaves some state with no transition is not admissible and is
    skipped.

@@ -2,8 +2,9 @@
 
 The OATL checker decides `<A><n> phi` on a `costCGS` model: a Demon, the player
 that disables moves at a cost, has a budget of `n` at each step and disables moves
-of coalition `A` to steer the play towards `phi`; the
-[pre-image](#demon-pre-image) below says exactly what one step can force. Formula
+of coalition `A` to steer the play towards `phi`; the Demon
+[pre-image](index.md#overview), defined [below](#demon-pre-image), says exactly
+what one step can force. Formula
 syntax is in the
 [knowledge base](../reference/logic_knowledge_base.md#oatl), the model file in
 [costCGS sections](../reference/file_formats.md#costcgs-sections).
@@ -11,7 +12,7 @@ syntax is in the
 ## Overview
 
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers).
-A subformula that appears twice is computed once. Each temporal operator is
+Each temporal operator is
 computed from the Demon pre-image, once for `X` and as a
 [fixpoint](index.md#overview) for the others.
 
@@ -40,7 +41,8 @@ state is never disabled, so its cost is not needed.
 
 ## Operators
 
-`[[phi]]` is the set of states where `phi` holds.
+`[[phi]]` is the set of states where `phi` holds. `R` and `W` are defined in the
+[overview](index.md#overview).
 
 **Table 1: OATL operators.**
 

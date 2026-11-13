@@ -26,8 +26,10 @@ there is no fallback to an idle move.
 
 1. The model is checked: the bindings cover every agent exactly once, the model
    has no `*` cells, and in each state the joint actions are every combination of
-   the agents' local actions. The prefix must be existential quantifiers followed
-   by universal ones.
+   the agents' local actions. The quantifier prefix (`E{2}x A{1}y` in the
+   example) must be existential quantifiers followed by universal ones; an outer
+   `!( ... )` swaps every `E` and `A` before this check, so
+   `!(A{1}y E{2}x: ...)` is accepted.
 2. The goal is rewritten for CTL: `F p` as `AF p`, `G p` as `AG p`, `X p` as
    `AX p`, and the negated goals `!F p` as `AG !p`, `!G p` as `AF !p` and `!X p`
    as `AX !p`.

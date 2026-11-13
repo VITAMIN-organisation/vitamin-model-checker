@@ -27,15 +27,17 @@ C2: if s <=_P s' and s' -R-> t', then some t  has s -R-> t  and t <=_P t'
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers),
 except for `!` and `->`. Those hold at a state only if they hold at every state
 above it in `P`: for a set `Y`, `Y^up` is the set of states `s` whose whole upset
-`{t | s <=_P t}` lies in `Y`. The upsets are computed once per model.
+`{t | s <=_P t}` lies in `Y`. The upsets are computed once per check.
 
-`PreE(Z)` is the set of states with an `R` successor in `Z`; `PreA(Z)` is the set
-of states that have `R` successors and whose successors are all in `Z`. `Pre` below
-is `PreE` under `E` and `PreA` under `A`.
+There are two [pre-images](index.md#overview): `PreE(Z)` is the set of states
+with an `R` successor in `Z`; `PreA(Z)` is the set of states that have `R`
+successors and whose successors are all in `Z`. `Pre` below is `PreE` under `E`
+and `PreA` under `A`.
 
 ## Operators
 
 `[[phi]]` is the set of states where `phi` holds and `S` the set of all states.
+Fixpoints and `R` (release) are defined in the [overview](index.md#overview).
 
 **Table 1: ICTL operators.**
 

@@ -1,8 +1,9 @@
 # RBATL algorithm
 
 The RBATL checker decides `<A><b> phi`: can coalition `A` force `phi` when every
-step it takes costs at most the bound vector `b`? It runs on a `costCGS` model, where
-each joint action has a cost vector in each state. Formula syntax is in the
+step it takes costs at most the bound vector `b`? It runs on a `costCGS` model,
+where each joint action has a cost vector in each state, one value per resource.
+Formula syntax is in the
 [knowledge base](../reference/logic_knowledge_base.md#rbatl--rabatl), the model file
 in [costCGS sections](../reference/file_formats.md#costcgs-sections).
 
@@ -10,9 +11,9 @@ in [costCGS sections](../reference/file_formats.md#costcgs-sections).
 
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers):
 it computes the set of states where each subformula holds and checks the initial
-state. A coalition operator is computed from the bounded pre-image (next section),
-once for `X` and as a [fixpoint](index.md#overview) for `F`, `G` and `U`. A
-subformula that appears twice is computed once.
+state. A coalition operator is computed from the bounded
+[pre-image](index.md#overview) (next section), once for `X` and as a
+[fixpoint](index.md#overview) for `F`, `G` and `U`.
 
 ## Bounded pre-image
 

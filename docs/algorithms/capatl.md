@@ -17,7 +17,7 @@ sets of states:
    capacity to each agent.
 2. An atom is the set of pairs whose state is labelled with it; `!`, `&&`, `||`
    and `->` are set operations on pairs.
-3. Coalition operators use the pre-image below.
+3. Coalition operators use the [pre-image](index.md#overview) defined below.
 4. The result lists the states that appear in at least one pair of the final set,
    so a state holds if the formula holds there for some capacity assignment.
 
@@ -37,7 +37,8 @@ next subformula.
 ## Operators
 
 `[[phi]]` is the set of pairs where `phi` holds, each extended with the coalition
-moves allowed at the pair.
+moves allowed at the pair. Fixpoints and `R` (release) are defined in the
+[overview](index.md#overview).
 
 **Table 1: CapATL operators.**
 

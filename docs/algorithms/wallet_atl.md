@@ -28,11 +28,13 @@ balance of the next state.
 
 ## Operators
 
-`Pre(Z)` is the [ATL pre-image](atl.md#coalition-pre-image) over payable moves.
+`Pre(Z)` is the ATL [pre-image](index.md#overview) (see
+[ATL](atl.md#coalition-pre-image)) over payable moves.
 `Guard` is the set of states where every guard in `C` holds, each guard comparing
 an agent's balance in that state with a number (all states when `C` is empty).
 Each step of an operator is `Step(Z) = Pre(Z) & Guard`; `[[phi]]` is the set of
-states where `phi` holds.
+states where `phi` holds. Fixpoints are defined in the
+[overview](index.md#overview).
 
 **Table 1: Wallet_ATL operators.**
 
@@ -45,8 +47,8 @@ states where `phi` holds.
 
 The guard is checked in the state where the coalition moves, on every round of the
 fixpoint, but not in the target: a state in `[[psi]]` (or `[[phi]]` for `F`) is
-in the result even where the guard fails, and `X` does not check the guard in the next state.
-A state where the guard fails is not in the result of `X` or `G`.
+in the result even where the guard fails, and `X` does not check the guard in
+the next state. A state where the guard fails is not in the result of `X` or `G`.
 
 Example: two agents; in `s0` agent 1 can play `I` (stay in `s0`) or `D20` (go to
 `s1`, where `q` holds). Table 2 lists the results:

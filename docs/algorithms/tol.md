@@ -2,9 +2,9 @@
 
 The TOL checker decides `{Jn} phi` on a `timedCGS` model with edge costs: as in
 [OL](ol.md), a Demon (the player that disables edges at a cost, see
-[OATL](oatl.md#demon-pre-image)) with a budget of `n` per step disables edges, and the formula
-asks whether it can make every remaining path satisfy `phi`; formulas may also
-carry clock guards and freezes as in [TCTL](tctl.md). Formula syntax is in the
+[OATL](oatl.md#demon-pre-image)) with a budget of `n` per step disables edges,
+and the formula asks whether it can make every remaining path satisfy `phi`;
+formulas may also carry clock guards and freezes as in [TCTL](tctl.md). Formula syntax is in the
 [knowledge base](../reference/logic_knowledge_base.md#tol---timed-obstruction-logic),
 the model file in [timedCGS sections](../reference/file_formats.md#timedcgs-sections).
 
@@ -18,7 +18,8 @@ these is turned back into locations.
 
 ## Obstruction step
 
-`Down(Z)`, for a set of locations `Z`, keeps a location `s` when:
+`Down(Z)`, the TOL [pre-image](index.md#overview) of a set of locations `Z`, keeps
+a location `s` when:
 
 1. `s` has an edge into `Z`; under a clock guard, `s` must instead have a region
    with an edge of the zone graph into a region of `Z` whose zone satisfies the
@@ -33,7 +34,8 @@ first one found in the operand (the right operand for `U` and `R`, the left for
 
 ## Operators
 
-`[[phi]]` is the set of locations where `phi` holds.
+`[[phi]]` is the set of locations where `phi` holds. Fixpoints, `R` and `W` are
+defined in the [overview](index.md#overview).
 
 **Table 1: TOL operators.**
 
