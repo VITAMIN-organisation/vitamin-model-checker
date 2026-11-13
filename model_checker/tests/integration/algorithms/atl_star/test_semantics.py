@@ -85,3 +85,18 @@ def test_until_over_two_steps(temp_file):
 def test_path_formulas_on_the_four_state_model(cgs_simple_parser, formula, expected):
     """Conjunctions of temporal goals under one coalition, worked out from the edges."""
     assert _states(formula, cgs_simple_parser.filename) == expected
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("coalition", "expected"),
+    [("1", {"s0", "s1", "s3"}), ("2", {"s1", "s3"}), ("1,2", {"s0", "s1", "s3"})],
+)
+def test_until_fixpoint_written_without_parentheses(
+    cgs_simple_parser, coalition, expected
+):
+    """<<A>> p U q equals its one-step unfolding; at s0 only agent 1 can force s1."""
+    path = cgs_simple_parser.filename
+    unfolded = f"q || (p && <<{coalition}>> X <<{coalition}>> p U q)"
+    assert _states(f"<<{coalition}>> p U q", path) == expected
+    assert _states(unfolded, path) == expected

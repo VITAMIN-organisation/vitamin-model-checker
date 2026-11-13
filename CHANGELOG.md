@@ -28,6 +28,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   models for ATLF.
 - Docs: algorithm, reference and guide pages, README and AIUSE are checked
   against the code and the papers, and their wrong statements are fixed.
+- Docs: the [knowledge base](docs/reference/logic_knowledge_base.md#atl-star)
+  gives the sources for reading ATL* `<<A>> p U q` as `<<A>> (p U q)`; no paper
+  states this reading. A test checks the Until fixpoint law (FPU) written without
+  parentheses.
 - `birelational_matrix` is a package with an `__init__.py` exporting
   `BirelationalMatrix`, so it has an API page.
 - RBATL and RABATL accept a bound of 0 (`<1><0,5>F p`): that resource then allows
@@ -151,8 +155,9 @@ Wallet_ATL follow their papers. Read the "Breaking" entries before upgrading.
 - Breaking: CTL takes square brackets only around an Until, `A[p U q]`, as Clarke,
   Emerson and Sistla (1986, p. 246) write it. Before, `[p] && q` and `AF [p]`
   parsed with the brackets as parentheses.
-- Breaking: ATL* reads `<<1>> p U q` as `<<1>> (p U q)`, as the ATL paper does
-  (JACM 2002, p. 689). A chained `U` (`p U q U r`), a `U` next to `&&`, `||` or
+- Breaking: ATL* reads `<<1>> p U q` as `<<1>> (p U q)`, as ATL writes its Until
+  (JACM 2002, pp. 685, 689; no paper states the reading, see the
+  [knowledge base](docs/reference/logic_knowledge_base.md#atl-star)). A chained `U` (`p U q U r`), a `U` next to `&&`, `||` or
   `->` (`<<1>> (p U q && r)`) and any connective after a coalition
   (`<<1>> p && q`) are syntax errors asking for parentheses. Before,
   `<<1>> p U q` parsed as `(<<1>> p) U q` and failed with "a bare Until is not a

@@ -221,6 +221,25 @@ Table 3 lists the written forms of an Until under a coalition:
 Each operand of that `U` is one unary formula, so `<<1>> X p U q` is
 `<<1>> ((X p) U q)` and `X <<1>> p U q` is `X (<<1>> (p U q))`.
 
+No paper states how `<<A>> x U y` groups in ATL*. The ATL paper writes its Until
+with the coalition in front, `<<A>> x U y` (JACM 2002, p. 685), and defines ATL*
+as letting a coalition cover any path formula (p. 689); neither page reads the
+form without parentheses. The other tools write the parentheses: MCMAS
+`<g> (p U q)` (manual 1.2.2, section 3.2.4, pp. 23-24), PRISM-games
+`<<C>> P..[ "a" U "b" ]`, and NuSMV, which has no coalitions, `E [ p U q ]`
+(manual section 2.4.1, p. 37).
+
+The reading in Table 3 is inferred from Jamroga's ATL chapter (Jamroga 2015,
+*Logical Methods for Specification and Verification of Multi-Agent Systems*).
+Its grammar on p. 62 has `<<A>> x U y` as one operator, and the book states no
+precedence rule. Its fixpoint law (FPU) (pp. 63, 65) says that `<<A>> x U y` holds
+when `y` holds now, or `x` holds now and the coalition can force a next state
+where `<<A>> x U y` holds: `<<A>> x U y <-> y || (x && <<A>> X <<A>> x U y)`.
+Under the reading `(<<A>> x) U y` the right side would not be a state formula, so
+the law makes sense only if `<<A>>` covers the Until. The test
+`test_until_fixpoint_written_without_parentheses` checks both sides of (FPU), as
+written, on one model.
+
 `!`, `X`, `F` and `G` bind tighter than the connectives: `<<1>> (F p && G q)` is
 `<<1>> ((F p) && (G q))`. These are syntax errors that ask for parentheses:
 

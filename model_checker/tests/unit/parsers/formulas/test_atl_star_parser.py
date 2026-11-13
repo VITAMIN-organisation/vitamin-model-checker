@@ -1,7 +1,7 @@
 """ATL* grammar: the tree each form builds, and where an error points.
 
 The parser turns F, G, ->, || and false into U, !, && and true, so those trees are
-checked exactly. `<<1>> p U q` is `<<1>> (p U q)` (JACM 2002, p. 689); a connective
+checked exactly. `<<1>> p U q` is `<<1>> (p U q)`; a connective
 next to a bare U or after a coalition is ambiguous and must be parenthesized.
 """
 
@@ -68,6 +68,7 @@ def test_lowercase_single_letter_is_a_name():
             Coalition(frozenset({2}), Until(Coalition(frozenset({1}), _P), _Q)),
         ),
         ("<<1>>X p U q", Coalition(frozenset({1}), Until(Next(_P), _Q))),
+        ("X p U q", Until(Next(_P), _Q)),
         (
             "<<1>>X<<2>>p",
             Coalition(frozenset({1}), Next(Coalition(frozenset({2}), _P))),

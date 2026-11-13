@@ -18,7 +18,7 @@ Grammar, lowest to highest precedence:
 - A name follows the rule of every logic (`validate_proposition_identifier`): it
   starts with a lowercase letter and is no reserved word in any case, so `Goal`,
   `Always`, `True` and `exist` are errors.
-- `<<1>> p U q` is `<<1>>(p U q)`, as in ATL (JACM 2002, p. 689).
+- `<<1>> p U q` is `<<1>>(p U q)`: the coalition covers the whole Until.
 - `F`, `G`, `||` and `->` become the seven constructors of formula.py, so the
   verifier handles only those.
 """
@@ -217,8 +217,7 @@ class _Parser:
         open_token = self._expect("COALITION_OPEN")
         agents = self._agents()
         self._expect("COALITION_CLOSE")
-        # <<A>> phi1 U phi2 is the coalition over the Until, as in ATL (JACM 2002,
-        # p. 689).
+        # <<A>> phi1 U phi2 is the coalition over the Until, as ATL writes it.
         coalition = Coalition(agents=agents, path_formula=self._until())
         token = self._peek()
         if token.kind in _CONNECTIVES:
