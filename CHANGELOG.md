@@ -28,6 +28,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - TOL accepts the grade `{J0}`: the Demon then disables only edges of cost 0.
   Before, `{J0}` was a syntax error. `{J01}` is rejected with a message that names
   it, as OL does for `<J01>`. See [grade 0](docs/algorithms/tol.md#grade-0).
+- OL and OATL reject an edge or joint action whose cost adds up to 0 or less
+  (`$0` in `Costs_for_actions`, or a `Transition_With_Costs` cell such as `0:0`,
+  `00` or `-1`) with a model error that names it, as their papers require
+  positive costs. Before, `<J0>` could disable such an edge, so it differed from
+  CTL. Models with such an edge must give it a positive cost. A `*` self-loop in
+  `Transition_With_Costs` was already an error; the message now ends with "write
+  a self-loop as a cost on the diagonal". See
+  [OL algorithm](docs/algorithms/ol.md#how-a-check-runs).
 
 ### Fixed
 

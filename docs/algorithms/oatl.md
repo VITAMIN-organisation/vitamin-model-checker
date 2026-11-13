@@ -29,8 +29,12 @@ A state `s` is in `Pre(Z)` when these steps succeed:
    `n`.
 
 The unmarked moves each have at least one successor in `Z`. The budget applies to
-each step on its own; costs do not add up along a path. A move of cost 0 is
-disabled for free, so with `n = 0` the Demon can still disable zero-cost moves.
+each step on its own; costs do not add up along a path. Every joint action that
+has a cost must cost at least 1: in AAMAS 2024 the cost of a state and joint
+action is "a positive natural number" (p. 2). A joint action of cost 0 could be
+disabled with a budget of 0, so a cost that adds up to 0 or less is a model
+error that names the joint action and the state. With `n = 0` the Demon
+therefore cannot disable a joint action that has a cost.
 
 A joint action with no cost in the model cannot be priced. The checker computes
 the result twice, once as if such actions could never be disabled and once as if

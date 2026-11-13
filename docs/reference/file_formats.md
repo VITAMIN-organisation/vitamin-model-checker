@@ -168,7 +168,8 @@ any of these three sections:
   Several states share a line, joined by `;`: `AA s0$1:1;s2$1:1`. The values after
   `$`, separated by `:`, form the cost vector: value `i` is the cost in resource
   `i`, and RBATL compares it with bound `i` of the formula. A line with a third
-  space-separated token or a negative cost is an error.
+  space-separated token or a negative cost is an error. RBATL, RABATL and TOL
+  accept a cost of 0; OL and OATL reject it (see [OATL](../algorithms/oatl.md#demon-pre-image)).
 - `Costs_for_actions_split`: the same line, with each `:`-separated group split
   again by `,` into one cost per agent: in `AA s0$1,2:3,4`, agent 1 pays 1 of
   resource 1 and 3 of resource 2, and agent 2 pays 2 and 4. RABATL adds the costs of the coalition's
@@ -177,7 +178,11 @@ any of these three sections:
   edge costs, `0` for no edge. It gives no actions, so OATL accepts it only for a
   coalition of all agents and otherwise reports "a Transition_With_Costs model gives
   only edge costs; use Transition with Costs_for_actions"
-  (`model_checker/algorithms/explicit/OATL/preimage.py`).
+  (`model_checker/algorithms/explicit/OATL/preimage.py`). In OL and OATL a cell
+  whose costs add up to 0 or less, such as `0:0`, `00` or `-1`, is an error, and
+  so is `*`; TOL reads `*` as a self-loop of cost 0
+  ([TOL grade 0](../algorithms/tol.md#grade-0)). See
+  [OL](../algorithms/ol.md#how-a-check-runs).
 
 Examples:
 

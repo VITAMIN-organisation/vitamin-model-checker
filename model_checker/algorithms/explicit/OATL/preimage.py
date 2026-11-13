@@ -44,14 +44,21 @@ def _erase_cost(cgs, action: str, state_name: str) -> float | None:
     return cost_to_scalar(costs)
 
 
+def _nonpositive_cost_error(cost: float, where: str) -> ValueError:
+    # A free edge would let budget 0 disable it, so <J0> would no longer be CTL A.
+    return ValueError(
+        f"[MODEL] Cost {cost:g} for {where}: OL and OATL need a positive cost "
+        "on every edge"
+    )
+
+
 def _joint_transitions(
     cgs, edges_only: bool, agents: int
 ) -> list[tuple[JointTransition, ...]]:
     """Expand every transition cell once, with its cost when the model gives one.
 
-    A `Transition_With_Costs` cell is an edge with its cost and no actions, as in
-    the Kripke models of OL (ECAI 2023, Definition 2). It becomes one joint
-    action that all agents choose together.
+    A `Transition_With_Costs` cell is an edge with its cost and no actions; it
+    becomes one joint action that all agents choose together.
     """
     per_state = []
     for source, row in enumerate(cgs.graph):
@@ -61,20 +68,29 @@ def _joint_transitions(
             if cell in (0, "0"):
                 continue
             if edges_only:
+                cost = edge_cell_cost(cell)
+                if cost <= 0:
+                    target_name = cgs.get_state_name_by_index(target)
+                    raise _nonpositive_cost_error(
+                        cost, f"the edge {state_name} -> {target_name}"
+                    )
                 transitions.append(
                     JointTransition(
-                        tokens=(f"edge{target}",) * agents,
-                        target=target,
-                        cost=edge_cell_cost(cell),
+                        tokens=(f"edge{target}",) * agents, target=target, cost=cost
                     )
                 )
                 continue
             for action in cgs.build_action_list(cell):
+                action_cost = _erase_cost(cgs, action, state_name)
+                if action_cost is not None and action_cost <= 0:
+                    raise _nonpositive_cost_error(
+                        action_cost, f"{action} at {state_name}"
+                    )
                 transitions.append(
                     JointTransition(
                         tokens=tuple(action.split(AGENT_ACTION_SEPARATOR)),
                         target=target,
-                        cost=_erase_cost(cgs, action, state_name),
+                        cost=action_cost,
                     )
                 )
         per_state.append(tuple(transitions))

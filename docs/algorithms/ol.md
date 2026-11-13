@@ -20,11 +20,25 @@ The model can be written in either form:
   that reach the same state. Disabling that edge means disabling all of them, so
   it costs the sum of their costs.
 - `Transition_With_Costs`: each cell is one edge with its cost; `2` is an edge of
-  cost 2, and a vector such as `1:2:0` costs its sum, 3.
+  cost 2, a vector such as `1:2:0` costs its sum, 3, and the cell `0` exactly
+  means no edge.
+
+Every edge that has a cost must cost at least 1: in ECAI 2023 "edges are
+labeled by positive integers" (p. 2). An edge of cost 0 could be disabled with
+a budget of 0, so `<J0>` would no longer match CTL (see below). An edge whose
+costs add up to 0 or less (`$0` in `Costs_for_actions`, or a cell such as `0:0`,
+`00` or `-1`) is a model error that names the edge.
+
+Every state needs at least one outgoing edge (the paper's relation is serial).
+The paper's example handles a state with none by adding a self-loop with a cost
+("add a loop-edge on s5 to grant seriality, add a cost for each edge", p. 3).
+In the checker, write that self-loop as a positive cost in the state's own row
+and column. A `*` cell in `Transition_With_Costs` is an error for OL and OATL;
+TOL reads it as a self-loop of cost 0 ([TOL grade 0](tol.md#grade-0)).
 
 The Demon never disables every edge of a state, so a state with one edge keeps it.
-With `n = 0` it can still disable edges of cost 0.
-
-Example: in `s0`, an edge of cost 0 leads to `s1`, where `p` holds, and a
-self-loop of cost 5 stays in `s0`. `<J0> G !p` holds at `s0`: the Demon disables
-the edge to `s1` for free. `<J0> F p` does not.
+With `n = 0` it cannot disable any edge that has a cost. So when every edge has
+a cost, a formula whose grades are all 0 (the fragment OL0) holds exactly where
+the CTL formula with `A` (on all paths) in place of each `<J0>` holds (ECAI
+2023, Theorem 3, p. 5). Edges with no cost are handled as in
+[OATL](oatl.md#demon-pre-image).

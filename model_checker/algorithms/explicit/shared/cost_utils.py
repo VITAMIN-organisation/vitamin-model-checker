@@ -38,6 +38,10 @@ def edge_cell_cost(cell: object) -> float:
     try:
         return float(sum(float(part) for part in str(cell).split(":")))
     except ValueError:
+        hint = (
+            "; write a self-loop as a cost on the diagonal" if str(cell) == "*" else ""
+        )
         raise ValueError(
-            f"[MODEL] Transition_With_Costs cell '{cell}' is not a cost such as 2 or 1:2:0"
+            f"[MODEL] Transition_With_Costs cell '{cell}' is not a cost such as 2 or "
+            f"1:2:0{hint}"
         ) from None

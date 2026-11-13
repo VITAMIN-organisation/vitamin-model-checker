@@ -130,16 +130,14 @@ class TestOATLSemantics:
         result = model_checking(f"<1><{bound}>X p", temp_file(content))
         assert _holds_initially(result) is holds
 
-    @pytest.mark.parametrize("b_cost,holds", [("1", False), ("0", True)])
-    def test_budget_0_erases_only_zero_cost_moves(self, temp_file, b_cost, holds):
-        """At s0, move A reaches p and B misses it; with budget 0, B can be erased only if free."""
+    def test_budget_0_erases_nothing(self, temp_file):
+        """At s0, move A reaches p and B (cost 1) misses it; budget 0 cannot erase B."""
         content = _one_agent_model(
             transitions=[["0", "A", "B"], ["0", "*", "0"], ["0", "0", "*"]],
             labelling=[["0"], ["1"], ["0"]],
-            costs={"A": "s0$1", "B": f"s0${b_cost}"},
+            costs={"A": "s0$1", "B": "s0$1"},
         )
-        result = model_checking("<1><0>X p", temp_file(content))
-        assert _holds_initially(result) is holds
+        assert not _holds_initially(model_checking("<1><0>X p", temp_file(content)))
 
     def test_agents_outside_the_coalition_side_with_the_demon(self, temp_file):
         """Agent 1's only move reaches p if agent 2 helps, so nothing is erased."""

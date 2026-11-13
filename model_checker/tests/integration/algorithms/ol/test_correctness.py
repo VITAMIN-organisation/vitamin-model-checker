@@ -102,6 +102,34 @@ def test_edge_costs_from_transition_with_costs(test_data_dir, formula, expected)
     assert _states(test_data_dir, fixture, formula) == expected
 
 
+_TWO_STATES = (
+    "Name_State\ns0 s1\nInitial_State\ns0\nAtomic_propositions\np\n"
+    "Labelling\n0\n1\nNumber_of_agents\n1\n"
+)
+
+
+@pytest.mark.model_checking
+@pytest.mark.parametrize(
+    ("transitions", "message"),
+    [
+        ("Transition_With_Costs\n5 0:0\n0 1\n", "edge s0 -> s1"),
+        ("Transition_With_Costs\n5 00\n0 1\n", "edge s0 -> s1"),
+        ("Transition_With_Costs\n5 -1\n0 1\n", "Cost -1 for the edge s0 -> s1"),
+        (
+            "Transition\nA B\n0 C\nCosts_for_actions\nA s0$5\nB s0$0\nC s1$1\n",
+            "B at s0",
+        ),
+        ("Transition_With_Costs\n5 1\n0 *\n", "self-loop as a cost on the diagonal"),
+    ],
+)
+def test_edge_without_a_positive_cost_is_a_model_error(temp_file, transitions, message):
+    """Edge costs are positive integers; a free edge would let <J0> disable it."""
+    model_file = temp_file(transitions + _TWO_STATES)
+    error = model_checking("<J0> G !p", model_file)["error"]
+    assert error["type"] == "model"
+    assert message in error["message"]
+
+
 @pytest.mark.model_checking
 def test_a_missing_cost_that_decides_the_result_is_a_model_error(test_data_dir):
     """At s1 the edge to s2 has no cost, so whether the Demon can pay to block it is unknown."""

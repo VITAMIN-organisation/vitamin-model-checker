@@ -329,7 +329,7 @@ state `s` costs `$(s, a)`.
 #### Validation rules
 
 - Budget requirement: a budget is mandatory for every coalition-prefixed temporal operator.
-- Budget value: the budget `n` is an integer `n >= 0` with no leading zeros. With `n = 0` the Demon can erase only zero-cost joint actions.
+- Budget value: the budget `n` is an integer `n >= 0` with no leading zeros. Every joint action that has a cost must cost at least 1 (AAMAS 2024, p. 2; a cost of 0 or less is a model error), so with `n = 0` the Demon erases no joint action that has a cost. See [OATL algorithm](../algorithms/oatl.md#demon-pre-image).
 - Parentheses: binary operators may be written as in the paper, `<A><n> (phi U psi)`, or without parentheses.
 
 #### Formula examples
@@ -368,6 +368,7 @@ The paper writes `<n> X phi`, `<n> (phi U psi)` and `<n> (phi R psi)`, where `n`
 - Mandatory `J`: OL prefixes must use `<Jk>`, not bare `<k>`.
 - Budget requirement: every temporal operator must be prefixed with `<Jk>`.
 - Budget value: `k >= 0` with no leading zero; `<J0>` is valid and `<J01>` is rejected.
+- Edge costs: every edge that has a cost must cost at least 1 (ECAI 2023, p. 2); a cost of 0 or less is a model error. See [OL algorithm](../algorithms/ol.md#how-a-check-runs).
 
 #### Formula examples
 
