@@ -80,6 +80,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- LTL conditions can negate any atom (`p and !q`); before, `!` could only stand on
+  the first atom. The condition generator also uses every connective it is given
+  instead of the first one; LTL still passes `and` only. See
+  [LTL algorithm](docs/algorithms/ltl.md#how-a-check-runs).
 - ATLF rounds `1 - x` to 12 decimals: `!p` with `p = 0.7` is `0.3`, not
   `0.30000000000000004`. Every value in its result is a float, so a state at 0
   prints `0.0`, not `0`.
