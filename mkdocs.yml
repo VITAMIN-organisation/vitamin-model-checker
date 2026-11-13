@@ -57,7 +57,7 @@ nav:
   - Examples:
     - NatSL experiments: examples/natsl_experiments.md
     - NatSL logistics robot: examples/natsl_logistics_robot.md
-    - Wallet ATL usage: examples/wallet_atl_usage.md
+    - Wallet_ATL usage: examples/wallet_atl_usage.md
   - API Reference:
     - Overview: api/overview.md
     - Root: api/model_checker.md

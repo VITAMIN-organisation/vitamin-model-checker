@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Model type `fuzzyCGS` (class `FuzzyCGS`) for ATLF: the CGS sections, with
+  `Labelling` cells that are numbers between 0 and 1. See
+  [fuzzyCGS sections](docs/reference/file_formats.md#fuzzycgs-sections).
+
+### Changed
+
+- ATLF reads its model as `fuzzyCGS`, so labels such as `0.7` are accepted. The
+  CGS loader accepts only 0 and 1, so before this change ATLF gave the same
+  answers as ATL. Other logics still read a CGS. Benchmarks still generate CGS
+  models for ATLF.
+
+### Fixed
+
+- ATLF rounds `1 - x` to 12 decimals: `!p` with `p = 0.7` is `0.3`, not
+  `0.30000000000000004`. Every value in its result is a float, so a state at 0
+  prints `0.0`, not `0`.
+
 ## [2.0.0] - 2026-11-12
 
 A major release: formulas and model files follow stricter rules (names start with

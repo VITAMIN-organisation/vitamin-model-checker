@@ -24,9 +24,11 @@ def union_values(states1, states2):
 
 
 def difference_values(states1, states2):
-    """Returns the difference between matching values: states1[i] - states2[i]."""
+    """Returns the difference between matching values: states1[i] - states2[i],
+    rounded to 12 decimals because float subtraction leaves noise (1 - 0.7 is
+    0.30000000000000004), the only arithmetic ATLF does besides min and max."""
     dict2 = _to_dict(states2)
-    return [(state, val - dict2.get(state, 0)) for state, val in states1]
+    return [(state, round(val - dict2.get(state, 0), 12)) for state, val in states1]
 
 
 def update_values(p, t):

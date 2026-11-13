@@ -13,6 +13,7 @@ from model_checker.models.model_factory import (
     detect_model_type_from_file,
 )
 from model_checker.parsers.game_structures.cgs import cgs_parser
+from model_checker.parsers.game_structures.fuzzy_cgs.fuzzy_cgs import FuzzyCGS
 
 _PLAIN = (
     "Transition\n*\nName_State\ns0\nInitial_State\ns0\n"
@@ -83,6 +84,17 @@ def test_detection_knows_every_header_the_cgs_parser_knows():
     """The factory keeps its own header list; a header missing there would end the Transition scan early or late."""
     assert model_factory._MODEL_SECTION_HEADERS == (
         cgs_parser.SECTION_HEADERS | cgs_parser.EXTENSION_SECTION_HEADERS
+    )
+
+
+@pytest.mark.unit
+def test_atlf_reads_its_model_as_fuzzy_cgs(tmp_path):
+    """A fuzzyCGS file has only CGS headers, so the logic, not detection, picks it."""
+    path = tmp_path / "model.txt"
+    path.write_text(_PLAIN.format(props="p"))
+    assert detect_model_type_from_content(path.read_text()) == "CGS"
+    assert isinstance(
+        model_factory.create_model_parser_for_logic(str(path), "ATLF"), FuzzyCGS
     )
 
 

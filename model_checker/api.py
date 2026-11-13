@@ -21,6 +21,7 @@ from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
+from model_checker.parsers.game_structures.fuzzy_cgs.fuzzy_cgs import FuzzyCGS
 from model_checker.utils.error_handler import create_error_response
 
 __all__ = [
@@ -35,6 +36,7 @@ __all__ = [
     "CGS",
     "CostCGS",
     "CapCGS",
+    "FuzzyCGS",
     "ModuleManifest",
     "check_parser_conformance",
     "check_checker_conformance",

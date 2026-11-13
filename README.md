@@ -33,7 +33,7 @@ print(result)
 
 Most logics expose the same `model_checking(formula, filename)` entry point and
 return a plain dict suitable for serialization. The exceptions are listed in
-[Engine Layer](docs/guides/architecture.md#engine-layer).
+[Engine layer](docs/guides/architecture.md#engine-layer).
 
 Higher-level helpers are available from the public API:
 
@@ -48,8 +48,8 @@ parser = FormulaParserFactory.get_parser_instance("CTL")
 
 Built-in formula logics include ATL, ATLF, ATL_STAR, CapATL, COTL, CTL, IATL,
 ICTL, LTL, NatATL, NatATLF, NatSL, OATL, OL, RABATL, RBATL, TCTL, TOL, and
-Wallet_ATL, plus `NatATL_Recall`, the recall variant of NatATL. The 8 model types, by registry name, are CGS, BCGS, costCGS,
-capCGS, WalletCGS, timedCGS, BirelationalMatrix and ObstructionModel. See
+Wallet_ATL, plus `NatATL_Recall`, the recall variant of NatATL. The 9 model types, by registry name, are CGS, BCGS, costCGS,
+capCGS, fuzzyCGS, WalletCGS, timedCGS, BirelationalMatrix and ObstructionModel. See
 `pyproject.toml` entry points (`vitamin.parsers`, `vitamin.models`,
 `vitamin.benchmarks`, `vitamin.metadata`) for the full registry.
 

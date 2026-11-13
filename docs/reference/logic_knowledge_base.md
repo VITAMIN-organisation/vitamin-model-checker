@@ -985,7 +985,7 @@ only on a 1-agent model (see [NatSL](#natsl---natural-strategy-logic)).
 | ICTL | `A`, `E` | as CTL, plus `R` in `A[p R q]`, `E[p R q]` | BirelationalMatrix | `E[p R q]` |
 | TCTL | `A`, `E`; clock constraint `phi : x<5`; freeze `x.phi` | `AF`, `AG`, `EF`, `EG`, `A(p U q)`, `E(p U q)` (no brackets) | timedCGS | `AF p : x<5` |
 | ATL | `<1,2>` | `X`, `F`, `G`, `U` | CGS | `<1,2>F p` |
-| ATLF | `<1,2>` | `X`, `F`, `G`, `U` | CGS | `<1>(p U q)` |
+| ATLF | `<1,2>` | `X`, `F`, `G`, `U` | fuzzyCGS | `<1>(p U q)` |
 | IATL | `<1,2>` exists, `[1,2]` for all | `X`, `F`, `G`, `U`, `R` | BCGS | `[1,2]F goal` |
 | ATL_STAR | `<<1,2>>` | `X`, `F`, `G`, `U`, nested path formulas | CGS | `<<1>> (F p && G q)` |
 | Wallet_ATL | `<<1>>`, `<<1:wallet(1,>=10)>>` | `X`, `F`, `G`, `U` | WalletCGS | `<<1:wallet(1,>=10)>>F p` |
@@ -1047,6 +1047,8 @@ sections of every model type, how a loader detects the type, and examples are in
 - [CGS](file_formats.md#cgs-sections): the base concurrent game structure.
 - [costCGS](file_formats.md#costcgs-sections): CGS with action or edge costs.
 - [capCGS](file_formats.md#capcgs-sections): CGS with capacities.
+- [fuzzyCGS](file_formats.md#fuzzycgs-sections): CGS whose labels are numbers
+  between 0 and 1.
 - [WalletCGS](file_formats.md#walletcgs-sections): CGS with one wallet per agent.
 - [BirelationalMatrix](file_formats.md#birelationalmatrix-sections-ictl): ICTL's
   relation matrix.

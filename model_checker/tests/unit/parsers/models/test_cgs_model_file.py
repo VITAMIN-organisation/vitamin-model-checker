@@ -217,9 +217,10 @@ def test_declared_propositions_need_a_labelling(temp_file):
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("value", ["2", "abc"])
+@pytest.mark.parametrize("value", ["2", "abc", "0.5"])
 def test_non_binary_label_is_refused_with_its_position(temp_file, value):
-    """A label must be 0 or 1; the message gives the value, row and column."""
+    """A label must be 0 or 1 (0.5 is for fuzzyCGS only, since the Boolean checkers
+    test labels against 1); the message gives the value, row and column."""
     content = _two_state().replace("Labelling\n1\n0", f"Labelling\n1\n{value}")
     with pytest.raises(
         ValueError,

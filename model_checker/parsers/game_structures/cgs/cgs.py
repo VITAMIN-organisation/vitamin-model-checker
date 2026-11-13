@@ -65,6 +65,21 @@ class CGS:
         self._reset_state()
         cgs_parser.parse_cgs_file(lines, self)
 
+    def parse_labelling_row(self, row: list[str], row_index: int) -> list:
+        """One Labelling row as values; a CGS accepts only 0 and 1 because the
+        Boolean checkers test labels for equality with 1."""
+        labels = {"0": 0, "1": 1}
+        for col_index, item in enumerate(row):
+            if item not in labels:
+                raise cgs_parser.invalid_label_error(
+                    item,
+                    row_index,
+                    col_index,
+                    "Labelling matrix must contain only binary values (0 or 1). "
+                    "Labels between 0 and 1 need a fuzzyCGS model.",
+                )
+        return [labels[item] for item in row]
+
     # --- Cached Properties for Performance ---
 
     @property

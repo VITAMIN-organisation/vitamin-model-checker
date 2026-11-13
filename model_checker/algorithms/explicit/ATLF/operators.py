@@ -18,7 +18,7 @@ from model_checker.utils.literals import parse_tuple_list_literal
 
 def _compute_coalition_globally_fixpoint(cgs, phi_states, trans_cache):
     """Greatest fixpoint of <A>G phi on real values, starting from 1 everywhere."""
-    current_value = set_value_tuple_list(cgs, 1)
+    current_value = set_value_tuple_list(cgs, 1.0)
     candidate = phi_states
     while not first_included_in_second(current_value, candidate):
         current_value = candidate
@@ -29,7 +29,7 @@ def _compute_coalition_globally_fixpoint(cgs, phi_states, trans_cache):
 
 def _compute_coalition_eventually_fixpoint(cgs, phi_states, trans_cache):
     """Least fixpoint of <A>F phi on real values, starting from 0 everywhere."""
-    current_value = set_value_tuple_list(cgs, 0)
+    current_value = set_value_tuple_list(cgs, 0.0)
     candidate = phi_states
     while not first_included_in_second(candidate, current_value):
         current_value = update_values(current_value, candidate)
@@ -39,7 +39,7 @@ def _compute_coalition_eventually_fixpoint(cgs, phi_states, trans_cache):
 
 def _compute_coalition_until_fixpoint(cgs, phi_states, psi_states, trans_cache):
     """Least fixpoint of <A>(phi U psi) on real values, starting from 0 everywhere."""
-    current_value = set_value_tuple_list(cgs, 0)
+    current_value = set_value_tuple_list(cgs, 0.0)
     candidate = psi_states
     while not first_included_in_second(candidate, current_value):
         current_value = update_values(current_value, candidate)
@@ -58,7 +58,7 @@ def _parse_real_values(value):
 def handle_not(cgs, node):
     """Handle NOT operator: not phi := 1 - phi."""
     states = _parse_real_values(node.left.value)
-    ris = difference_values(set_value_tuple_list(cgs, 1), states)
+    ris = difference_values(set_value_tuple_list(cgs, 1.0), states)
     node.value = str(ris)
 
 
@@ -109,7 +109,7 @@ def handle_implies(cgs, node):
     """Handle IMPLIES operator: phi -> psi = not phi or psi."""
     states1 = _parse_real_values(node.left.value)
     states2 = _parse_real_values(node.right.value)
-    not_states1 = difference_values(set_value_tuple_list(cgs, 1), states1)
+    not_states1 = difference_values(set_value_tuple_list(cgs, 1.0), states1)
     ris = union_values(not_states1, states2)
     node.value = str(ris)
 

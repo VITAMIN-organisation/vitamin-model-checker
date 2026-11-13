@@ -62,7 +62,7 @@ def validate_labelling_matrix_dimensions(
             names = ", ".join(f"'{p}'" for p in props)
             errors.append(
                 f"Labelling section is missing or empty but Atomic_propositions "
-                f"declares {names}. Give one row per state with one 0/1 per proposition."
+                f"declares {names}. Give one row per state with one label per proposition."
             )
         return errors
 

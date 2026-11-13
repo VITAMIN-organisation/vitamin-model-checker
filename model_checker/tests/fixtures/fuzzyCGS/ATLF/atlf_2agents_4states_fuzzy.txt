@@ -1,0 +1,28 @@
+# MODEL: Two-agent fuzzyCGS with 4 states (s0-s3)
+
+# PURPOSE: ATLF on labels between 0 and 1.
+
+# LOGIC: ATLF
+
+# DESCRIPTION: In s0 agent 1 has only action A and agent 2 picks C (to s1) or
+# D (to s2); in s1 agent 1 has only B and agent 2 picks C (stay) or D (to s3);
+# s2 and s3 loop. p has value 0 in s0, 0.2 in s1, 0.7 in s2 and 0.4 in s3.
+
+Transition
+0 AC AD 0
+0 BC 0 BD
+0 0 * 0
+0 0 0 *
+Name_State
+s0 s1 s2 s3
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+0
+0.2
+0.7
+0.4
+Number_of_agents
+2

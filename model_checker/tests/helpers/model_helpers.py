@@ -8,6 +8,7 @@ import pytest
 from model_checker.models.model_factory import create_model_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
+from model_checker.parsers.game_structures.fuzzy_cgs.fuzzy_cgs import FuzzyCGS
 from model_checker.tests.helpers.synthetic_models import (
     build_cgs_model_content,
     generate_cost_cgs_linear_chain_content,
@@ -67,6 +68,13 @@ def load_costcgs_from_content(temp_file, content):
     parser = CostCGS()
     file_path = temp_file(content)
     parser.read_file(file_path)
+    return parser
+
+
+def load_fuzzycgs_from_content(temp_file, content):
+    """Load fuzzyCGS from string content via a temp file."""
+    parser = FuzzyCGS()
+    parser.read_file(temp_file(content))
     return parser
 
 

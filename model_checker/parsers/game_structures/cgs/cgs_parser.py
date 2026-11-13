@@ -78,23 +78,15 @@ def _check_rectangular_rows(rows, section_name):
             )
 
 
-def process_labelling_row(row, row_index=None):
-    """Parse a labelling row (0 or 1). row_index only affects error text."""
-    processed_row = []
-    for col_index, item in enumerate(row):
-        if item == "0":
-            processed_row.append(0)
-        elif item == "1":
-            processed_row.append(1)
-        else:
-            location = ""
-            if row_index is not None:
-                location = f" at row {row_index}, column {col_index}"
-            raise ValueError(
-                f"Invalid labelling matrix value: '{item}'{location}. "
-                "Labelling matrix must contain only binary values (0 or 1)."
-            )
-    return processed_row
+def invalid_label_error(
+    item: str, row_index: int, col_index: int, rule: str
+) -> ValueError:
+    """The error for a Labelling cell the model type does not accept; `rule` says
+    which values it does accept."""
+    return ValueError(
+        f"Invalid labelling matrix value: '{item}' at row {row_index}, "
+        f"column {col_index}. {rule}"
+    )
 
 
 # --- Section Filtering and Extraction Helpers ---
@@ -338,13 +330,13 @@ def _apply_graph_and_actions(instance, rows_graph, actions):
 
 
 def _apply_labelling(instance, rows_prop):
-    """Labelling matrix on instance.matrix_prop."""
+    """Labelling matrix on instance.matrix_prop; the model type parses each row."""
     if not rows_prop:
         instance.matrix_prop = np.array([])
         return
     _check_rectangular_rows(rows_prop, "Labelling")
     instance.matrix_prop = [
-        process_labelling_row(row, i) for i, row in enumerate(rows_prop)
+        instance.parse_labelling_row(row, i) for i, row in enumerate(rows_prop)
     ]
 
 

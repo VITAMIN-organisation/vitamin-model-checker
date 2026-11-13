@@ -24,18 +24,9 @@ def get_tuple_list_prop(cgs, prop):
     matrix = cgs.matrix_prop
 
     for index, source in enumerate(matrix):
-        state_value = (states[index], float(source[i]))
+        state_value = (states[index], source[i])
         values_for_states.append(state_value)
     return values_for_states
-
-
-def get_value_initial_state(initial_state, string):
-    """Return the real-valued result at the initial state."""
-    list_tuple = parse_tuple_list_literal(string)
-    for element in list_tuple:
-        if element[0] == initial_state:
-            return element[1]
-    return 0.0  # Default value if not found
 
 
 def _core_atlf_checking(cgs, formula):
@@ -55,14 +46,11 @@ def _core_atlf_checking(cgs, formula):
         )
     solve_tree(cgs, root)
     initial_state = cgs.initial_state
-    value_initial_state = get_value_initial_state(initial_state, root.value)
-    result = {
-        "res": "Result: " + str(root.value),
-        "initial_state": (
-            "Initial state " + str(initial_state) + ": " + str(value_initial_state)
-        ),
+    value_initial_state = dict(parse_tuple_list_literal(root.value))[initial_state]
+    return {
+        "res": f"Result: {root.value}",
+        "initial_state": f"Initial state {initial_state}: {value_initial_state}",
     }
-    return result
 
 
 def _resolve_atom(cgs, atom):

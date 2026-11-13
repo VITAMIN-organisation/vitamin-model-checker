@@ -2,7 +2,8 @@
 
 Detects game structure type (CGS, costCGS, capCGS, WalletCGS, timedCGS,
 BCGS, BirelationalMatrix, ObstructionModel) from files and instantiates the
-correct parser.
+correct parser. A fuzzyCGS file has the CGS headers, so it is chosen by the logic
+(ATLF), never by detection.
 """
 
 import os
@@ -17,6 +18,7 @@ from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs import cgs_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
+from model_checker.parsers.game_structures.fuzzy_cgs.fuzzy_cgs import FuzzyCGS
 from model_checker.parsers.game_structures.obstruction_model.obstruction_model import (
     ObstructionModel,
 )
@@ -122,6 +124,7 @@ _MODEL_TYPE_CONSTRUCTORS: dict[
 ] = {
     "CGS": CGS,
     "costCGS": CostCGS,
+    "fuzzyCGS": FuzzyCGS,
     "capCGS": CapCGS,
     "WalletCGS": WalletCGS,
     "timedCGS": TimedCGS,
@@ -159,7 +162,7 @@ def create_model_parser(
 def create_model_parser_for_logic(
     filename: str, logic_type: str = None
 ) -> BCGS | CGS | CostCGS | CapCGS | BirelationalMatrix | TimedCGS | WalletCGS:
-    """The model parser (CGS, costCGS or capCGS) that `logic_type`, such as "OATL",
+    """The model parser (CGS, costCGS, fuzzyCGS, ...) that `logic_type`, such as "OATL",
     needs for the file `filename`."""
     from model_checker.registries import get_expected_model_type
 

@@ -30,8 +30,10 @@ def test_fixture_folder_is_not_empty():
 @pytest.mark.parametrize("path", _FIXTURES, ids=lambda p: str(p.relative_to(_TESTS)))
 def test_fixture_loads_and_its_initial_state_is_a_state(path):
     """The file parses, passes structure validation, and its initial state is listed."""
+    # A fuzzyCGS file has only CGS headers: its logic picks the parser, not detection.
+    expected_type = "fuzzyCGS" if "fuzzyCGS" in path.parts else None
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        model = create_model_parser(str(path))
+        model = create_model_parser(str(path), expected_type)
         model.read_file(str(path))
     assert model.initial_state in list(model.states)

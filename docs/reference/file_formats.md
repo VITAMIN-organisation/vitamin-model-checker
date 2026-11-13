@@ -13,6 +13,7 @@ bundles. It does not define operator denotations; those live in
 - [CGS sections](#cgs-sections)
 - [costCGS sections](#costcgs-sections)
 - [capCGS sections](#capcgs-sections)
+- [fuzzyCGS sections](#fuzzycgs-sections)
 - [WalletCGS sections](#walletcgs-sections)
 - [BirelationalMatrix sections (ICTL)](#birelationalmatrix-sections-ictl)
 - [BCGS sections (IATL)](#bcgs-sections-iatl)
@@ -56,9 +57,10 @@ line, spaces around it ignored:
 | [`BCGS`](#bcgs-sections-iatl) | IATL | CGS transitions plus a boolean `Preorder` section. | A `Preorder` header |
 | [`BirelationalMatrix`](#birelationalmatrix-sections-ictl) | ICTL | Same sections as CGS; `Transition` cells are `0`/`R`/`P`/`P,R`. | Every `Transition` cell is one of those four and at least one is `P` or `P,R` |
 | [`CGS`](#cgs-sections) | ATL, CTL, LTL, NatATL, NatSL, ... | Standard concurrent game structure. | No row above matches |
+| [`fuzzyCGS`](#fuzzycgs-sections) | ATLF | `Labelling` cells between 0 and 1. | Never by headers, which are those of CGS; ATLF's `model_type` selects it |
 
 When checking a formula, the logic's `model_type` metadata also sets the type, so
-ICTL always loads a `BirelationalMatrix`.
+ICTL always loads a `BirelationalMatrix` and ATLF a `fuzzyCGS`.
 
 ## CGS Sections
 
@@ -152,7 +154,9 @@ universal next can hold vacuously. A self-loop models a terminal situation as
 - `Name_State`: space-separated state names.
 - `Initial_State`: exactly one state from `Name_State`.
 - `Atomic_propositions`: proposition names.
-- `Labelling`: binary matrix showing which propositions hold in each state.
+- `Labelling`: one row per state, one column per proposition; a cell is `1` when
+  the proposition holds in that state and `0` otherwise. A
+  [fuzzyCGS](#fuzzycgs-sections) also accepts numbers between 0 and 1.
 
 `Initial_State` cannot be `*`.
 
@@ -220,6 +224,33 @@ cop B
   listing the actions that capacity enables (`CapATL/combinatorics.py`).
 
 Use this format for CapATL-style capability reasoning.
+
+## fuzzyCGS Sections
+
+`fuzzyCGS` is the model type of ATLF. It has the [CGS sections](#cgs-sections)
+and no others; only the `Labelling` cells differ. Each cell is the truth degree
+of a proposition in a state, a number between 0 and 1, such as `0.7`. The last
+sections of a fuzzyCGS file with one proposition and four states:
+
+```text
+Atomic_propositions
+p
+Labelling
+0
+0.2
+0.7
+0.4
+```
+
+- A cell is any number Python's `float` reads (`0`, `1`, `0.25`, `1.0`) in the range
+  0 to 1. A value outside that range, a word or `nan` (not a number) is an error
+  naming the value, its row and its column, both counted from 0, because ATLF
+  computes `!p` as `1 - p` and a label of 1.5 would give -0.5.
+- A CGS file with only `0` and `1` labels is also a valid fuzzyCGS file.
+- The loader cannot tell a fuzzyCGS file from a CGS file, as the headers are the
+  same. ATLF's `model_type` metadata loads it as fuzzyCGS; every other logic reads
+  it as CGS and rejects a label other than 0 or 1, for example with
+  `Invalid labelling matrix value: '0.2' at row 1, column 0`.
 
 ## WalletCGS Sections
 

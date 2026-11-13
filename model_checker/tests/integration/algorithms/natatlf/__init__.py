@@ -1,1 +1,1 @@
-"""NatATLF (fuzzy NatATL) integration tests."""
+"""NatATLF integration tests (Boolean results, as memoryless NatATL)."""

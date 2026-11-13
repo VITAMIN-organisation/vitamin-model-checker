@@ -1,6 +1,9 @@
-# NatSL Experiments
+# NatSL experiments
 
-Reproducible scalability experiments are available under `experiments/natsl/`.
+This page is for anyone who reruns or extends the NatSL scalability benchmark in
+`experiments/natsl/`: how to start a short run, what the benchmark varies and
+records, and what the recorded run in the repository contains. The checker it
+measures is described in [NatSL algorithm](../algorithms/natsl.md).
 
 ## Quick smoke run
 
@@ -11,38 +14,42 @@ python -m experiments.natsl.run --quick --no-plots \
   --output experiments/natsl/results/smoke
 ```
 
-The quick configuration is intended for integration checking rather than publication.
-
-Local runs under `experiments/natsl/results/` are ignored by Git.
+`--quick` shrinks the grid to 2 agents, universal bounds 1-2, one model scale
+(6 states, 3 propositions), one repetition and a timeout of at most 60 s
+(`experiments/natsl/run.py`), so it checks that the pipeline runs in a short
+time. Local runs under `experiments/natsl/results/` are ignored by Git.
 
 ## Benchmark parameters
 
 The benchmark can vary:
 
-- number of agents;
-- universal natural-strategy bound;
-- model scale;
-- number of atomic propositions;
-- number of repetitions;
-- per-point timeout.
+- the number of agents
+- the universal natural-strategy bound
+- the model scale (states and atomic propositions)
+- the number of repetitions
+- the timeout per repetition
 
-Each point is executed in a separate process so that timeouts and peak-memory measurements can be recorded independently.
+The default grid and the factors held fixed are in `experiments/natsl/README.md`.
+A point is
+one combination of agents, bound and scale, run once per repetition; each
+repetition runs in a separate process so that its timeout and peak memory are
+recorded on their own.
 
 ## Recorded metrics
 
-The benchmark records, among other fields:
+The benchmark records these fields, among others:
 
-- wall-clock runtime;
+- wall-clock runtime
 - peak memory (`peak_rss_mb`): the peak working set from `psutil` on Windows,
-  the maximum resident set size (`ru_maxrss`) elsewhere;
-- satisfiability status;
-- completed repetitions;
-- universal profiles checked;
-- raw universal strategy-domain size.
+  the maximum resident set size (`ru_maxrss`) elsewhere
+- satisfiability status
+- completed repetitions
+- universal profiles checked
+- raw universal strategy-domain size
 
 ## Published artefacts
 
-A curated recorded run is stored under:
+A recorded run is stored under:
 
 ```text
 experiments/natsl/published/scalability/
