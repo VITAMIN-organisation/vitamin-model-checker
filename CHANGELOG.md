@@ -25,6 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - RBATL and RABATL accept a bound of 0 (`<1><0,5>F p`): that resource then allows
   only moves of cost 0. Before, any 0 was an error, so a formula that nests
   `<1><0,0>`, such as the rover mission test, could not run.
+- TOL accepts the grade `{J0}`: the Demon then disables only edges of cost 0.
+  Before, `{J0}` was a syntax error. `{J01}` is rejected with a message that names
+  it, as OL does for `<J01>`. See [grade 0](docs/algorithms/tol.md#grade-0).
 
 ### Fixed
 

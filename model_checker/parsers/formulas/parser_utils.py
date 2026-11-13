@@ -183,6 +183,18 @@ def coalition_bound_error(formula: str, missing_message: str) -> str | None:
     return None
 
 
+def demonic_leading_zero_error(
+    formula: str, leading_zero_re: re.Pattern[str]
+) -> str | None:
+    """The error for a Demon grade with a leading zero (`<J01>`, `{J01}`), else None."""
+    leading_zero = leading_zero_re.search(formula)
+    if leading_zero is None:
+        return None
+    bound, digits = leading_zero.group(0), leading_zero.group(1)
+    fixed = bound.replace(digits, str(int(digits)))
+    return f"Bound '{bound}' has a leading zero; write {fixed}"
+
+
 def validate_release_weak_rejected(
     formula: str, logic_name: str
 ) -> tuple[bool, str | None]:

@@ -126,3 +126,11 @@ def test_tctl_has_no_next_operator(formula, named):
     assert parser.parse(formula) is None
     [error] = parser.errors
     assert error.startswith(f"TCTL has no next operator ({named})"), error
+
+
+@pytest.mark.unit
+def test_tol_leading_zero_grade_is_named():
+    """`{J01}` is refused with a message that names it, as OL does for `<J01>`."""
+    parser = FormulaParserFactory.get_parser_instance("TOL")
+    assert parser.parse("{J01} F p") is None
+    assert parser.errors == ["Bound '{J01}' has a leading zero; write {J1}"]

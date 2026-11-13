@@ -326,6 +326,9 @@ inside `Preorder` is an error, unlike in the other sections (for a `#` line:
 - `Clock_constraints`: per-transition clock resets and bounds.
 - `Invariants`: clock invariants per state.
 
+What each `Transition_With_Costs` cell costs in TOL, including the edge of cost 0
+written `0:0`, is listed under [TOL edge costs](../algorithms/tol.md#obstruction-step).
+
 `Clock_constraints` is a states x states matrix like `Transition`: the cell in row `s`,
 column `t` constrains the transition from `s` to `t`. Cells are separated by spaces.
 A cell holds `<clock><op><integer>` tokens separated by commas, with

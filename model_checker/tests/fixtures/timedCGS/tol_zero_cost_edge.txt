@@ -1,0 +1,31 @@
+# MODEL: Two-state timedCGS with one edge of cost 0 for TOL grade 0
+
+# PURPOSE: Show that {J0} can still disable a 0:0 edge, so it differs from TCTL A.
+
+# LOGIC: TOL
+
+# GRAPH: s0 --5--> s0, s0 --0:0--> s1, s1 --1--> s1, no clock constraints.
+# p at s1. Initial s0.
+
+Transition_With_Costs
+5 0:0
+0 1
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+0
+1
+Number_of_agents
+1
+Clocks
+x
+Clock_constraints
+0 0
+0 0
+Invariants
+0
+0

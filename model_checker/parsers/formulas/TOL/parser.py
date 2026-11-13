@@ -3,6 +3,7 @@
 import re
 
 from model_checker.parsers.formulas.parser_utils import (
+    demonic_leading_zero_error,
     normalize_formula_text,
     run_common_prechecks,
     until_operands,
@@ -11,7 +12,11 @@ from model_checker.parsers.formulas.shared_parser import (
     BaseLogicParser,
     word_rule,
 )
-from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
+from model_checker.parsers.syntax_patterns import (
+    TCTL_TOL_PROPOSITION_TOKEN,
+    TOL_DEMONIC_LEADING_ZERO_RE,
+    TOL_DEMONIC_TOKEN,
+)
 
 
 # --- AST nodes ---
@@ -168,7 +173,7 @@ class TOLParser(BaseLogicParser):
     t_TIME_SEP = word_rule("TIME_SEP", ":|,")
 
     t_PROP = TCTL_TOL_PROPOSITION_TOKEN
-    t_DEMONIC = r"{J[1-9]\d*}"
+    t_DEMONIC = TOL_DEMONIC_TOKEN
     t_GEQ = r"\>\="
     t_LEQ = r"\<\="
     t_GREATER = r"\>"
@@ -256,6 +261,9 @@ class TOLParser(BaseLogicParser):
         return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
+        leading_zero = demonic_leading_zero_error(formula, TOL_DEMONIC_LEADING_ZERO_RE)
+        if leading_zero:
+            return False, leading_zero
         return run_common_prechecks(
             formula,
             allow_hash_at=True,

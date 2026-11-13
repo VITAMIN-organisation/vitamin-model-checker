@@ -713,8 +713,10 @@ outgoing transitions of total cost at most `k`, can make every remaining path
 satisfy `phi`. The Demon is the player that disables moves or edges at a cost
 ([algorithm design](../algorithms/index.md#overview)).
 
-The demonic prefix is `{Jk}`, where `k` is a positive integer (paper notation `<k>`).
-The paper allows `k = 0` (AAMAS 2025, Def. 10); VITAMIN rejects `{J0}`.
+The demonic prefix is `{Jk}` (paper notation `<k>`), where `k` is a non-negative
+integer written without leading zeros: `{J0}` is valid and `{J01}` is rejected. With
+`k = 0` the Demon can still disable edges of cost 0, so `{J0}` can differ from TCTL
+`A` ([grade 0](../algorithms/tol.md#grade-0)).
 For example:
 
 ```text

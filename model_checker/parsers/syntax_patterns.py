@@ -121,6 +121,11 @@ NEGATIVE_AGENT_IN_COALITION_RE = re.compile(r"(?<!\d>)<-\d+>")
 # OL: <J5>; <J0> is valid (ECAI 2023 takes k in N0).
 OL_DEMONIC_TOKEN = rf"<J{NON_NEGATIVE_INT}>"
 OL_DEMONIC_BOUND_PREFIX_RE = re.compile(rf"^<J({NON_NEGATIVE_INT})>")
+OL_DEMONIC_LEADING_ZERO_RE = re.compile(r"<J(0\d+)>")
+
+# TOL: {J5}; {J0} is valid (AAMAS 2025 Def. 10 takes n in N>=0).
+TOL_DEMONIC_TOKEN = rf"\{{J{NON_NEGATIVE_INT}\}}"
+TOL_DEMONIC_LEADING_ZERO_RE = re.compile(r"\{J(0\d+)\}")
 
 # Wallet_ATL: <<1,2:wallet(1, >= 5)>>
 _WALLET_ATOM = rf"wallet\(\s*\d+\s*,\s*(?:{COMPARISON_OPS_ALT})\s*\d+\s*\)"

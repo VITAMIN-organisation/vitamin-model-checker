@@ -4,18 +4,18 @@ The prefix is required, so `F p` is rejected. Its budget is any natural number,
 0 included, as in ECAI 2023 ("n is any number in N0").
 """
 
-import re
-
-from model_checker.parsers.syntax_patterns import OL_DEMONIC_TOKEN
+from model_checker.parsers.syntax_patterns import (
+    OL_DEMONIC_LEADING_ZERO_RE,
+    OL_DEMONIC_TOKEN,
+)
 
 from ..parser_utils import (
     PROPOSITION_TOKEN_PATTERN,
+    demonic_leading_zero_error,
     run_common_prechecks,
     until_operands,
 )
 from ..shared_parser import BaseLogicParser, word_rule
-
-_LEADING_ZERO_BOUND_RE = re.compile(r"<J(0\d+)>")
 
 
 class OLParser(BaseLogicParser):
@@ -67,13 +67,9 @@ class OLParser(BaseLogicParser):
     # === Validation ===
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
-        leading_zero = _LEADING_ZERO_BOUND_RE.search(formula)
+        leading_zero = demonic_leading_zero_error(formula, OL_DEMONIC_LEADING_ZERO_RE)
         if leading_zero:
-            return (
-                False,
-                f"Bound '{leading_zero.group(0)}' has a leading zero; write "
-                f"<J{int(leading_zero.group(1))}>",
-            )
+            return False, leading_zero
         return run_common_prechecks(
             formula,
             allow_hash_at=True,
