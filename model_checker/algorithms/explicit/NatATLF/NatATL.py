@@ -23,31 +23,13 @@ def model_checking(formula: str, model: str) -> dict[str, Any]:
         return create_error_response("validation", "Model file not specified")
 
     try:
-        k, agent_actions, actions_list, atomic_propositions, CTLformula, agents, cgs = (
-            initialize(model, formula)
-        )
+        k, ctl_formula, agents, cgs = initialize(model, formula)
 
         from model_checker.algorithms.explicit.NatATL.Memoryless.solver import (
             solve_natatl_memoryless,
         )
 
-        result = solve_natatl_memoryless(
-            k,
-            agent_actions,
-            actions_list,
-            atomic_propositions,
-            CTLformula,
-            agents,
-            cgs,
-            model,
-        )
-
-        # NatATLF result fields align with memoryless NatATL (not literal state placeholders).
-        is_satisfied = result.get("Satisfiability", False)
-        result["res"] = f"Result: {is_satisfied}"
-        result["initial_state"] = f"Initial state {cgs.initial_state}: {is_satisfied}"
-
-        return result
+        return solve_natatl_memoryless(k, ctl_formula, agents, cgs, model)
     except FileNotFoundError:
         return create_error_response("system", f"Model file not found: {model}")
     except ValueError as e:

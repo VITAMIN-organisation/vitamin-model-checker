@@ -558,26 +558,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/NatATL/Memoryless/solver.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 16,
-                    "endColumn": 19,
-                    "lineCount": 1
-                }
-            }
-        ],
-        "./model_checker/algorithms/explicit/NatATL/Memoryless/strategies.py": [
-            {
-                "code": "reportReturnType",
-                "range": {
-                    "startColumn": 43,
-                    "endColumn": 62,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/algorithms/explicit/NatATL/Recall/natatl_recall.py": [
             {
                 "code": "reportAttributeAccessIssue",

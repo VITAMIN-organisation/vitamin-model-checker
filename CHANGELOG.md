@@ -22,6 +22,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: NatATL (memoryless) and NatATLF use the natural strategies of AIJ 2019
+  (section 4.1). See [NatATL strategies](docs/algorithms/natatl.md#strategies).
+  - A strategy ends with a `(true, action)` rule, and each rule's action must be
+    available wherever that rule is the first to hold.
+  - A member plays exactly its rule's action. Before, it could also idle, and it
+    idled in states no rule covered.
+  - Conditions are any Boolean formula with `!`, `&&` and `||`. Rules may share an
+    action, and their order matters.
+  - `k` bounds the total size of the coalition's profile, `true` rules included; a
+    `k` below the coalition size is a validation error. Before, each member's
+    strategy had size exactly `i` at step `i`. `Complexity Bound` is the total
+    size of the profile found.
+  - A profile that leaves a state with no move is skipped.
+  - The same `k` can give a different answer: `<{1}, 1>F p` on a model whose two
+    states offer different actions is now false.
 - Breaking: RBATL and RABATL bound the summed cost of the coalition's moves
   along a path, per resource, as PRIMA 2024 defines it (Def. 4). Before, the bound
   applied to each step on its own: on the chain test model `<1><1>F p` held at

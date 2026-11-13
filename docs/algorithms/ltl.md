@@ -8,22 +8,27 @@ file in [CGS sections](../reference/file_formats.md#cgs-sections).
 
 ## How a check runs
 
-LTL uses the strategies and the search of [NatATL](natatl.md#strategies), with
-these settings and differences:
+LTL uses its own rule lists, which differ from the [NatATL](natatl.md#strategies)
+strategies. A strategy of one agent is an ordered list of rules
+`(condition, action)` with no `true` rule and no two rules with the same action;
+a condition is one atom or atoms joined by `and` (a negated form puts `!` on the
+first atom), and its size is its number of words, plus 1 if it contains `!`.
 
 1. Each agent of the coalition gets a strategy, and sizes `i = 1, ..., k` are
    tried, each agent's strategy having size exactly `i`. Agents outside the
    coalition get no rule, so pruning leaves their moves open.
-2. A [profile](index.md#overview) prunes the model as in NatATL, except that in a state no rule covers
-   the agent is not restricted (NatATL makes it idle there).
+2. A [profile](index.md#overview) prunes the model: in each state a rule covers
+   first, the agent keeps the joint actions where it plays the rule's action or
+   idles (`I` or `IDLE`). In a state no rule covers, the agent is not restricted.
 3. A profile that leaves some state with no transition is not admissible and is
    skipped.
 4. The formula is rewritten for CTL by putting `A` before each temporal operator:
    `F p` becomes `AF p` and `p U q` becomes `A(p U q)`. The
    [CTL checker](ctl.md) checks it at the initial state of the pruned model.
 
-The coalition and the strategy size bound `k` (the same bound as in
-[NatATL](natatl.md)) are inputs of the check, as in the SureWin problem of the
+The coalition and the bound `k` (here the size of each agent's strategy, unlike
+the total over the coalition in [NatATL](natatl.md#strategies)) are inputs of the
+check, as in the SureWin problem of the
 LTL paper (PAAMS 2025, Algorithm 1, p. 4). The keyword
 arguments `agents` (agent numbers between 1 and the number of agents, default
 all) and `k` (default 5) of `model_checking` set them:

@@ -27,20 +27,8 @@ def model_checking(formula: str, model_path: str) -> dict[str, Any]:
         return create_error_response("validation", "Model file not specified")
 
     try:
-        k, agent_actions, actions_list, atomic_propositions, CTLformula, agents, cgs = (
-            initialize(model_path, formula)
-        )
-
-        return solve_natatl_memoryless(
-            k,
-            agent_actions,
-            actions_list,
-            atomic_propositions,
-            CTLformula,
-            agents,
-            cgs,
-            model_path,
-        )
+        k, ctl_formula, agents, cgs = initialize(model_path, formula)
+        return solve_natatl_memoryless(k, ctl_formula, agents, cgs, model_path)
 
     except FileNotFoundError:
         return create_error_response("system", f"Model file not found: {model_path}")

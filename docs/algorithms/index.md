@@ -26,9 +26,12 @@ on every page:
 - Budget and bound: a budget limits what the Demon or a legion pays in one step
   (OATL, OL, COTL, TOL). A bound limits the players being checked: in RBATL and
   RABATL it limits the summed cost of the coalition's moves along a path, one
-  value per resource (see [RBATL operators](rbatl.md#operators)); in NatATL, NatATLF and LTL each strategy's size is at most `k`.
-- Strategy: a rule that tells an agent which action to play; a profile is one
-  strategy per agent.
+  value per resource (see [RBATL operators](rbatl.md#operators)); in NatATL and
+  NatATLF the total size of the coalition's strategies is at most `k`; in LTL each
+  strategy's size is at most `k`.
+- Strategy: an ordered list of rules `(condition, action)` that tells an agent
+  which action to play (see [NatATL strategies](natatl.md#strategies)); a profile
+  is one strategy per agent.
 - Pre-image: the states from which one step can be forced into a given set `Z`.
   Each page defines who forces the step and at what cost; the page writes it
   `Pre(Z)` or a variant named after its rule.
@@ -86,5 +89,5 @@ result.
 | Subformula memo | RBATL, RABATL, OATL, OL | A subformula that appears twice is computed once |
 | Per-check caches | CapATL | Capacity lookups are cached within one check and cleared before the next |
 | Upset table | ICTL, IATL | The [upset](ictl.md#overview) of each state (the states above it in the preorder `P`) is computed once per check, not on every round |
-| Condition cache | NatATL | The states where a rule's condition holds are computed once and reused across strategies; LTL rebuilds the model for each candidate, so its cache lasts one candidate |
+| Condition sets | NatATL, LTL | NatATL computes the states where each condition holds once per check, from the labels; LTL runs a CTL check per condition and rebuilds the model for each candidate, so its cache lasts one candidate |
 | Curse grouping | COTL | Legion actions that no listed [curse](cotl.md#model) extends are merged into the cheapest one, so the work grows with the listed curses, not with all joint demon actions |
