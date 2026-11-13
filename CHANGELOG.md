@@ -36,6 +36,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Transition_With_Costs` was already an error; the message now ends with "write
   a self-loop as a cost on the diagonal". See
   [OL algorithm](docs/algorithms/ol.md#how-a-check-runs).
+- OL checks a model with no `Initial_State` section and returns the states where
+  the formula holds, with an empty `initial_state` field. Before, such a model was
+  rejected with "Initial_State section is missing or empty". Other logics still
+  require the section. A logic opts out through `"initial_state_required": False`
+  in the `METADATA` of its formula package
+  (`model_checker/parsers/formulas/OL/__init__.py`).
 
 ### Fixed
 

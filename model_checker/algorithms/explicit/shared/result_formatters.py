@@ -50,10 +50,8 @@ def format_model_checking_result(
     if isinstance(result_states, str):
         result_states = parse_state_set_literal(result_states)
     states = state_set_literal(result_states)
-    return {
-        "res": f"Result: {states}",
-        "initial_state": f"Initial state {initial_state}: {is_satisfied}",
-    }
+    verdict = f"Initial state {initial_state}: {is_satisfied}" if initial_state else ""
+    return {"res": f"Result: {states}", "initial_state": verdict}
 
 
 def format_verification_result(

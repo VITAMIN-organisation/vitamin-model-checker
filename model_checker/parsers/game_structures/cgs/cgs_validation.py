@@ -166,7 +166,7 @@ def collect_state_errors(model) -> list[str]:
                 )
         else:
             errors.append("Cannot validate initial state: no states defined")
-    else:
+    elif model.initial_state_required:
         errors.append("Initial_State section is missing or empty")
     return errors
 

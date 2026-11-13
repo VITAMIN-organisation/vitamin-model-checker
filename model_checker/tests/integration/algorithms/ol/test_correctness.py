@@ -7,14 +7,21 @@ Theorem 1, not copied from the checker.
 
 import pytest
 
+from model_checker.algorithms.explicit.OATL.OATL import (
+    model_checking as oatl_model_checking,
+)
 from model_checker.algorithms.explicit.OL.OL import model_checking
 from model_checker.utils.literals import parse_state_set_literal
 
 
-def _states(test_data_dir, fixture, formula):
-    result = model_checking(formula, str(test_data_dir / "costCGS" / "OL" / fixture))
+def _result_states(result):
     assert "error" not in result, result
     return parse_state_set_literal(result["res"].removeprefix("Result: "))
+
+
+def _states(test_data_dir, fixture, formula):
+    model_file = test_data_dir / "costCGS" / "OL" / fixture
+    return _result_states(model_checking(formula, str(model_file)))
 
 
 @pytest.mark.unit
@@ -147,3 +154,27 @@ def test_every_path_reaches_r_without_budget(test_data_dir):
     """The longest path avoiding r is s0 -> s2 -> s4, whose successors are all r, so AF r holds everywhere."""
     fixture = "ol_2agents_medium_6states_costs.txt"
     assert _states(test_data_dir, fixture, "<J0> F r") == {f"s{i}" for i in range(6)}
+
+
+_NO_INITIAL_STATE = (
+    "Transition_With_Costs\n0 3 2 0 0 0\n0 0 2 1 0 0\n0 3 0 1 4 0\n"
+    "0 0 0 0 3 5\n0 0 0 4 0 6\n0 0 0 0 0 1\n"
+    "Name_State\ns0 s1 s2 s3 s4 s5\nAtomic_propositions\nr a\n"
+    "Labelling\n0 0\n1 0\n0 0\n1 0\n0 0\n1 1\nNumber_of_agents\n2\n"
+)
+
+
+@pytest.mark.semantic
+@pytest.mark.model_checking
+def test_model_without_initial_state_is_checked(temp_file):
+    """An OL model has no initial state; with budget 2 the Demon cannot pay to block s2 -> s4 or s3 -> s4."""
+    result = model_checking("<J2> X r", temp_file(_NO_INITIAL_STATE))
+    assert _result_states(result) == {"s0", "s1", "s4", "s5"}
+    assert result["initial_state"] == ""
+
+
+@pytest.mark.model_checking
+def test_other_cost_logics_still_need_an_initial_state(temp_file):
+    """Only OL drops the initial state; OATL on the same file still reports it missing."""
+    error = oatl_model_checking("<1><2>X r", temp_file(_NO_INITIAL_STATE))["error"]
+    assert "Initial_State section is missing" in error["message"]

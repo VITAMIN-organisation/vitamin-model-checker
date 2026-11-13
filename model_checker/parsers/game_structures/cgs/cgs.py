@@ -32,6 +32,8 @@ class CGS:
 
     def __init__(self):
         """Create an empty CGS; load data with read_file."""
+        # Set per logic before read_file, so _reset_state must not clear it.
+        self.initial_state_required = True
         self._reset_state()
 
     def _reset_state(self):

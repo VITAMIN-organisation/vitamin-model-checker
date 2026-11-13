@@ -142,7 +142,7 @@ def _create_parser_direct(model_type: str):
 
 
 def create_model_parser(
-    filename: str, expected_type: str = None
+    filename: str, expected_type: str | None = None
 ) -> BCGS | CGS | CostCGS | CapCGS | BirelationalMatrix | TimedCGS | WalletCGS:
     """The model parser for the file's model type, or for the expected type."""
     actual_type = expected_type or detect_model_type_from_file(filename)
@@ -164,8 +164,13 @@ def create_model_parser_for_logic(
 ) -> BCGS | CGS | CostCGS | CapCGS | BirelationalMatrix | TimedCGS | WalletCGS:
     """The model parser (CGS, costCGS, fuzzyCGS, ...) that `logic_type`, such as "OATL",
     needs for the file `filename`."""
-    from model_checker.registries import get_expected_model_type
+    from model_checker.registries import (
+        get_expected_model_type,
+        initial_state_required,
+    )
 
     expected_type = get_expected_model_type(logic_type)
 
-    return create_model_parser(filename, expected_type)
+    parser = create_model_parser(filename, expected_type)
+    parser.initial_state_required = initial_state_required(logic_type)
+    return parser

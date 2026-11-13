@@ -62,6 +62,7 @@ pages describe only their own operators:
 3. `!`, `&&` and `||` are complement, intersection and union on these sets;
    `phi -> psi` is the union of the complement of `[[phi]]` with `[[psi]]`.
 4. The formula holds in the model when the initial state is in the final set.
+   An OL model may have no initial state ([OL](ol.md#how-a-check-runs)).
 
 The result has four text fields: `res`, `Result: ` followed by the tuple of
 states of the final set in natural order (`s2` before `s10`), as in

@@ -36,6 +36,12 @@ def get_expected_model_type(logic_type: str) -> str | None:
     return "CGS"
 
 
+def initial_state_required(logic_type: str) -> bool:
+    """True unless the logic's metadata says its models may omit Initial_State."""
+    metadata = _load_logic_metadata(logic_type)
+    return (metadata or {}).get("initial_state_required", True)
+
+
 def get_benchmark_group(logic_type: str) -> str:
     """Return the model family used for synthetic model generation.
 

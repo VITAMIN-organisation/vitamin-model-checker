@@ -42,3 +42,11 @@ a cost, a formula whose grades are all 0 (the fragment OL0) holds exactly where
 the CTL formula with `A` (on all paths) in place of each `<J0>` holds (ECAI
 2023, Theorem 3, p. 5). Edges with no cost are handled as in
 [OATL](oatl.md#demon-pre-image).
+
+`Initial_State` is optional for OL: the paper's obstruction model is a tuple
+`<S, R, L, C>` with no initial state (ECAI 2023, Def. 2, p. 2), and the answer
+is the set of states where the formula holds. Without `Initial_State`, the
+[result](index.md#steps-shared-by-the-set-based-checkers) field `initial_state`
+is the empty string `""`. With it, the state must be in `Name_State`, and the
+field says whether the formula holds there. OATL and the other logics still
+need `Initial_State`.

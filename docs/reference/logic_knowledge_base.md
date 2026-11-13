@@ -369,6 +369,7 @@ The paper writes `<n> X phi`, `<n> (phi U psi)` and `<n> (phi R psi)`, where `n`
 - Budget requirement: every temporal operator must be prefixed with `<Jk>`.
 - Budget value: `k >= 0` with no leading zero; `<J0>` is valid and `<J01>` is rejected.
 - Edge costs: every edge that has a cost must cost at least 1 (ECAI 2023, p. 2); a cost of 0 or less is a model error. See [OL algorithm](../algorithms/ol.md#how-a-check-runs).
+- Initial state: `Initial_State` is optional; see [OL algorithm](../algorithms/ol.md#how-a-check-runs).
 
 #### Formula examples
 

@@ -70,7 +70,8 @@ A CGS model has these sections:
 2. `Unknown_Transition_by` (optional; the loader reads it into
    `unknown_transition_matrix`, and no checker uses it)
 3. `Name_State`
-4. `Initial_State`
+4. `Initial_State` (optional for OL only; see
+   [OL algorithm](../algorithms/ol.md#how-a-check-runs))
 5. `Atomic_propositions`
 6. `Labelling`
 7. `Number_of_agents`
@@ -151,7 +152,8 @@ universal next can hold vacuously. A self-loop models a terminal situation as
 ### State and label sections
 
 - `Name_State`: space-separated state names.
-- `Initial_State`: exactly one state from `Name_State`, not `*`.
+- `Initial_State`: exactly one state from `Name_State`, not `*`. OL models may
+  leave the section out.
 - `Atomic_propositions`: proposition names, which follow the
   [name rule](logic_knowledge_base.md#names-and-keywords) (`goal_reached`,
   `goalA`; `Goal` is an error).
