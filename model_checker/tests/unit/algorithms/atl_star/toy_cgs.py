@@ -8,17 +8,7 @@ profiles with `|` between the agents' actions, as in a CGS file.
 
 from __future__ import annotations
 
-
-def _get_edges(graph: list[list], states: list[str]) -> list[tuple[str, str]]:
-    """One (source, target) per nonzero cell; a `*` cell is a self-loop, as in cgs_utils.get_edges."""
-    edges: list[tuple[str, str]] = []
-    for i, row in enumerate(graph):
-        source = states[i]
-        for j, element in enumerate(row):
-            if element == 0:
-                continue
-            edges.append((source, source if element == "*" else states[j]))
-    return edges
+from model_checker.parsers.game_structures.cgs.cgs_utils import get_edges
 
 
 class ToyCGS:
@@ -42,7 +32,7 @@ class ToyCGS:
         return self.states.index(state)
 
     def get_edges(self) -> list[tuple[str, str]]:
-        return _get_edges(self.graph, self.states)
+        return get_edges(self.graph, self.states)
 
     def build_action_list(self, action_string: object) -> list[str]:
         return str(action_string).split(",")
@@ -68,7 +58,7 @@ class AllWildcardToyCGS:
         return self.states.index(state)
 
     def get_edges(self) -> list[tuple[str, str]]:
-        return _get_edges(self.graph, self.states)
+        return get_edges(self.graph, self.states)
 
     def build_action_list(self, action_string: object) -> list[str]:
         if action_string == "*":
@@ -137,7 +127,7 @@ class CompactActionCGS:
         return self.states.index(state)
 
     def get_edges(self) -> list[tuple[str, str]]:
-        return _get_edges(self.graph, self.states)
+        return get_edges(self.graph, self.states)
 
     def build_action_list(self, action_string: object) -> list[str]:
         return str(action_string).split(",")

@@ -51,10 +51,10 @@ def default_agent_labels(number_of_agents: int) -> list[str]:
 def get_edges(graph: list[list], states) -> list[tuple[str, str]]:
     """Build the list of (source_state, target_state) edges from the transition matrix."""
     return [
-        (states[i], states[i] if element == "*" else states[j])
+        (states[i], states[j])
         for i, row in enumerate(graph)
         for j, element in enumerate(row)
-        if element == "*" or element != 0
+        if element != 0
     ]
 
 

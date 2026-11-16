@@ -1,12 +1,6 @@
 """Turn a VITAMIN CGS into an `automata.TransitionSystem`.
 
-- Joint actions: `|`-separated or one character per agent, as in
-  `cgs_actions.parse_joint_action_cell`, which requires one token per agent. `I`
-  and `IDLE` are the same idle action.
-- Wildcard `*`: a self-loop for every action the CGS uses elsewhere, except the
-  actions the state already has. A CGS with only `*` cells gets one all-`*` action.
-- Edges come from `get_edges()` instead of a full matrix scan. Its self-edges can
-  mean a diagonal entry or a wildcard, so those rows are scanned in full.
+A `*` cell stands for every action the state does not list elsewhere.
 """
 
 from __future__ import annotations
@@ -58,43 +52,26 @@ def adapt(cgs: CGSProtocol) -> AdaptedCGS:
 
     known_actions: set[JointAction] = set()
     explicit_actions_by_source: dict[str, set[JointAction]] = {}
-    wildcard_sources: list[str] = []
+    wildcard_edges: list[tuple[str, str]] = []
 
-    edges = cgs.get_edges()
-    self_referencing_sources = {source for source, target in edges if source == target}
-
-    def _record(source: str, target: str, mask: object) -> None:
+    for raw_source, raw_target in cgs.get_edges():
+        source_index = cgs.get_index_by_state_name(raw_source)
+        target_index = cgs.get_index_by_state_name(raw_target)
+        source, target = state_names[source_index], state_names[target_index]
+        mask = cgs.graph[source_index][target_index]
         if mask == WILDCARD:
-            wildcard_sources.append(source)
-            return
+            wildcard_edges.append((source, target))
+            continue
         for action in _joint_actions(mask, num_agents):
             known_actions.add(action)
             explicit_actions_by_source.setdefault(source, set()).add(action)
             ts.add_transition(source, action, target)
 
-    for raw_source, raw_target in edges:
-        if raw_source == raw_target:
-            continue
-        source_index = cgs.get_index_by_state_name(raw_source)
-        target_index = cgs.get_index_by_state_name(raw_target)
-        _record(
-            state_names[source_index],
-            state_names[target_index],
-            cgs.graph[source_index][target_index],
-        )
-
-    for source in self_referencing_sources:
-        source_index = cgs.get_index_by_state_name(source)
-        for target_index, mask in enumerate(cgs.graph[source_index]):
-            if mask == 0:
-                continue
-            _record(state_names[source_index], state_names[target_index], mask)
-
     wildcard_action = frozenset((agent, WILDCARD) for agent in range(1, num_agents + 1))
-    for source in wildcard_sources:
+    for source, target in wildcard_edges:
         already_explicit = explicit_actions_by_source.get(source, set())
         for action in (known_actions or {wildcard_action}) - already_explicit:
-            ts.add_transition(source, action, source)
+            ts.add_transition(source, action, target)
 
     props = list(cgs.atomic_propositions)
     labels = {

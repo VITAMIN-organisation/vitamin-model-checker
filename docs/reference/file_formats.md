@@ -125,8 +125,9 @@ Accepted cell values:
 - `0`: no transition,
 - a joint action profile for all agents (see formats below),
 - a comma-separated list of joint profiles such as `AC,AD` or `A|C,A|D`,
-- `*`: wildcard, meaning any joint action allows the transition; it is read as a
-  profile with `*` in every agent position.
+- `*`: wildcard, meaning any joint action allows the transition to the cell's
+  column; it is read as a profile with `*` in every agent position. On the
+  diagonal it is a self-loop.
 
 Table 2 shows the two joint action formats. They are equivalent: both encode one
 move per agent, in agent order 1..n.
@@ -193,7 +194,7 @@ any of these three sections:
   only edge costs; use Transition with Costs_for_actions"
   (`model_checker/algorithms/explicit/OATL/preimage.py`). In OL and OATL a cell
   whose costs add up to 0 or less, such as `0:0`, `00` or `-1`, is an error, and
-  so is `*`; TOL reads `*` as a self-loop of cost 0
+  so is `*`; TOL reads `*` as an edge of cost 0
   ([TOL grade 0](../algorithms/tol.md#grade-0)). See
   [OL](../algorithms/ol.md#how-a-check-runs).
 

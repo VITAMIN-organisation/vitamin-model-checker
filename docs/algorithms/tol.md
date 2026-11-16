@@ -36,7 +36,7 @@ region `r` when all of these hold:
 An edge's cost comes from its cell in the `Transition_With_Costs` matrix:
 
 - `0`: no edge.
-- `*`: a self-loop of cost 0 on the row's state, whatever the column.
+- `*`: an edge of cost 0 to the cell's column (a self-loop on the diagonal).
 - `a:b`: an edge of cost `a + b`, so `0:0` is an edge of cost 0.
 - any other cell: an edge whose cost is that number.
 
@@ -57,7 +57,7 @@ grade of the strategic operator). AAMAS 2025 allows `n = 0` (Def. 10, p. 4) and
 edges of cost 0 (Def. 4, `W : T -> N>=0`, p. 3, where N>=0 is the non-negative
 integers), so `{J0} phi` is valid. The Demon never disables every edge of a state:
 it removes a strict subset of the state's outgoing edges (Def. 6, p. 3). With
-`n = 0` it can still remove edges of cost 0, including `*` self-loops.
+`n = 0` it can still remove edges of cost 0, including `*` cells.
 
 Theorem 2 (p. 6) states that the fragment of TOL whose grades are all 0 is TCTL.
 That holds only when the model has no edge of cost 0; the paper does not mention

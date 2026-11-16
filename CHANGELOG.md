@@ -165,6 +165,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- CTL, TCTL, TOL and ATL* read a `*` cell of `Transition` as a transition to the
+  cell's column, as ATL and the [file format](docs/reference/file_formats.md#transition)
+  do. Before, they read a `*` off the diagonal as a self-loop on the row's state.
+  In the train controller example, `*` from `s7` to `sI` made `s7` a trap:
+  `AG hazard` held there and now holds nowhere.
 - NatATL_Recall accepts a rule whose action is idle: it compared the model's `I`
   with the rule's `IDLE` and never matched, and it treated the tree's cut-off leaves
   as states with no action, so every rule failed (`<{1},1>G !r` was false on a model
