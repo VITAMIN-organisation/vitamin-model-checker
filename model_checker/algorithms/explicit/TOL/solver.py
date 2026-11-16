@@ -22,18 +22,17 @@ from model_checker.algorithms.explicit.TOL.operators import (
     handle_weak,
 )
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.parsers.formulas.TOL.parser import (
+from model_checker.parsers.formulas.timed_ast import (
     AtomicProp,
     Binary,
     BooleanConst,
     ClockExpr,
-    DemonicBinary,
-    DemonicOp,
     Expr,
     FreezeExpr,
     SimpleTimeExpr,
     Unary,
 )
+from model_checker.parsers.formulas.TOL.parser import DemonicBinary, DemonicOp
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS

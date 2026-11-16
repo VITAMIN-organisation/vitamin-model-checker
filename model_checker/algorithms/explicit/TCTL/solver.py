@@ -23,14 +23,14 @@ from model_checker.algorithms.explicit.TCTL.operators import (
     handle_eu,
 )
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.parsers.formulas.TCTL import (
+from model_checker.parsers.formulas.TCTL import QuantifiedPath
+from model_checker.parsers.formulas.timed_ast import (
     AtomicProp,
     Binary,
     BooleanConst,
     ClockExpr,
     Expr,
     FreezeExpr,
-    QuantifiedPath,
     SimpleTimeExpr,
     Unary,
 )
