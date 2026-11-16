@@ -32,6 +32,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: CapATL rejects a `Capacities_assignment` cell other than `0` or `1`,
+  with an error that names it. Before, a value such as `2` loaded and was read
+  as `0`.
 - Breaking: RBATL and RABATL keep a coalition move in the bounded pre-image only
   when every joint action that contains it lands in the target and costs at most
   the bound, as `Pre(C, X, b)` of Catta et al. (PRIMA 2024, p. 9) asks. Before,

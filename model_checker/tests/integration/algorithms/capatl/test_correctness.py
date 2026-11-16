@@ -73,6 +73,13 @@ class TestCapATLErrorHandling:
         result = _core_capatl_checking(capatl_model, "<>F p")
         assert "error" in result
 
+    def test_capatl_assignment_cell_other_than_0_or_1(self, test_data_dir, temp_file):
+        """A 2 in Capacities_assignment is named, not read as 0."""
+        fixture = test_data_dir / "capCGS/CAPATL/capatl_3agents_3states_example.txt"
+        content = fixture.read_text().replace("0 1 1\n", "0 2 1\n")
+        result = model_checking("<{1}>X g", temp_file(content))
+        assert "'2'" in result["error"]["message"]
+
 
 @pytest.mark.integration
 @pytest.mark.model_checking

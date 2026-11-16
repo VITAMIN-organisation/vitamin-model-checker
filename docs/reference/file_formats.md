@@ -258,6 +258,7 @@ cop B
   CapATL reads as its knowledge operator.
 - `Capacities_assignment`: `agents x capacities` matrix of `0`/`1` values.
   Row `i` is agent `i`; column `j` is capacity `j` (same order as `Capacities`).
+  Any other value is a load error that names it.
 - `Actions_for_capacities`: one line per capacity, `capacity_name action1 action2 ...`,
   listing the actions that capacity enables
   (`model_checker/algorithms/explicit/CapATL/game.py`).
