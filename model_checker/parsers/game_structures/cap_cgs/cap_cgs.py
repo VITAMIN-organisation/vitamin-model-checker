@@ -73,10 +73,12 @@ class CapCGS(CGS):
         def process_capacities_assignment(line):
             if line:
                 values = line.split()
-                for value in values:
+                agent = len(self.capacities_assignment) + 1
+                for column, value in enumerate(values, start=1):
                     if value not in ("0", "1"):
                         raise ValueError(
-                            f"Capacities_assignment cell {value!r} is not 0 or 1."
+                            f"Capacities_assignment cell {value!r} (agent {agent}, "
+                            f"column {column}) is not 0 or 1."
                         )
                 if values:
                     self.capacities_assignment.append(values)
