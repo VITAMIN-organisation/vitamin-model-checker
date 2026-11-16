@@ -149,6 +149,13 @@ Use a self-loop such as `*` on terminal states. Models that leave a row entirely
 universal next can hold vacuously. A self-loop models a terminal situation as
 "remain forever."
 
+A row does not need a profile for every combination of the agents' actions. A
+combination that no cell of the row lists is not available in that state: no
+player can choose it, and the pre-image of every checker skips it. This keeps
+models such as Example 1 of PRIMA 2024 (RBATL), which lists no `(IDLE, IDLE)` move
+in `s0`, valid. The concurrent game structures of JACM 2002 (Def. 2.1, p. 677)
+instead have a transition for every combination of available actions.
+
 ### State and label sections
 
 - `Name_State`: space-separated state names.

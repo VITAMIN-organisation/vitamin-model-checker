@@ -95,6 +95,10 @@ puts no condition on `phi` at the position where `psi` holds:
 
 The cost of an Until counts the moves until `psi` holds, as in Algorithm 2.
 
+A joint action that the `Transition` row of a state does not list is not available
+there (see [Transition](../reference/file_formats.md#transition)), so Example 1 of
+the paper, which has no `(IDLE, IDLE)` move in `s0`, loads and checks as drawn.
+
 WOA 2024 (Table 1) reports its rover mission formula true with bound `(5,1)` and
 false with `(2,2)`. The test `test_rover_mission_formula_runs` writes the formula as
 `<1,2><5,1>F(oc && rm && <1><0,0>F((pl || pr) && <1><0,0>F(oc && rm)))` on
