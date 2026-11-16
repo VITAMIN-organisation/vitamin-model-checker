@@ -31,7 +31,7 @@ class TestRABATLVsRBATLDivergence:
     def test_split_matrix_coalition_sum_differs_from_flat_costs(
         self, rabatl_fixture, rbatl_fixture
     ):
-        formula = "<1><1,1,1>X r"
+        formula = "<1><1,1>X r"
         rab_states = extract_states_from_result(
             _core_rabatl_checking(rabatl_fixture, formula)
         )

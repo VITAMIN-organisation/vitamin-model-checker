@@ -145,6 +145,13 @@ class TestRBATLCumulativeBound:
         assert error["type"] == "validation"
         assert "Bound [1000000] needs 1000001 budgets" in error["message"]
 
+    @pytest.mark.parametrize("formula", ["<1,2><3,1,5>F p", "<1,2><3,1,5>X p"])
+    def test_bound_longer_than_the_costs_is_an_error(self, sensor_model, formula):
+        """The sensor model has two resources, so a third bound component is named."""
+        error = model_checking(formula, sensor_model.filename)["error"]
+        assert error["type"] == "validation"
+        assert "[3, 1, 5]" in error["message"]
+
     def test_globally_is_larger_than_the_seeded_least_fixpoint(self, loop_model):
         """s holds: every path stays at s for free or pays 1 once on t -> u. The seed
         of the paper's least fixpoint is {t, u}, and no free move from s stays in it."""

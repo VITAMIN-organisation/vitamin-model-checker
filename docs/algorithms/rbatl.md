@@ -27,6 +27,7 @@ has a move `m` (one action per member) such that every joint action that contain
 1. leads into `Z`;
 2. has a cost vector at `s` within `c`: `cost_i <= c_i` for each resource `i` that
    `c` covers (with `c` of length 1, the second cost value is not limited).
+   A bound longer than the model's cost vectors is a validation error.
 
 This is `Pre(C, X, b)` of Catta et al. (PRIMA 2024, p. 9), which asks for the cost
 of every completion of the move. Two consequences follow:

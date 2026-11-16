@@ -11,6 +11,7 @@ from model_checker.algorithms.explicit.shared.bounded_atl_preimage import (
     CostFilter,
     build_transition_cache,
     compute_pre_states,
+    require_bound_fits,
 )
 from model_checker.algorithms.explicit.shared.fixpoint_iter import (
     greatest_fixpoint,
@@ -38,6 +39,7 @@ def _solve_with_cumulative_bound(
             f"b_i + 1); the checker solves at most {MAX_BUDGETS}."
         )
     trans_cache = build_transition_cache(cgs, coalition, cost_filter)
+    require_bound_fits(bound, trans_cache)
     zero = [0] * len(bound)
     # The cost-0 pre-image does not depend on the budget, and fixpoints of
     # different budgets meet the same sets.
@@ -110,6 +112,7 @@ def handle_coalition_next(cgs, node, cost_filter: CostFilter) -> None:
     coalition, bound = extract_coalition_and_bound(node.value)
     target_states = parse_state_set_literal(node.left.value)
     trans_cache = build_transition_cache(cgs, coalition, cost_filter)
+    require_bound_fits(bound, trans_cache)
     result = compute_pre_states(cgs, target_states, bound, trans_cache)
     node.value = state_set_literal(result)
 
