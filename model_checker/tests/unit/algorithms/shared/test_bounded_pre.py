@@ -22,8 +22,8 @@ _MODEL = (
 def _pre(temp_file, header, costs, coalition, bound, cost_filter):
     model = CostCGS()
     model.read_file(temp_file(_MODEL.format(header=header, costs=costs)))
-    cache = build_transition_cache(model, coalition)
-    return compute_pre_states(model, coalition, {"s1"}, bound, cache, cost_filter)
+    cache = build_transition_cache(model, coalition, cost_filter)
+    return compute_pre_states(model, {"s1"}, bound, cache)
 
 
 @pytest.mark.unit
@@ -73,13 +73,9 @@ def test_wildcard_cell_to_two_states_does_not_force_either(temp_file):
             "Number_of_agents\n2\n"
         )
     )
-    cache = build_transition_cache(model, "1")
-    assert compute_pre_states(model, "1", {"s1"}, [5], cache, "rbatl") == {"s1"}
-    assert compute_pre_states(model, "1", {"s1", "s2"}, [5], cache, "rbatl") == {
-        "s0",
-        "s1",
-        "s2",
-    }
+    cache = build_transition_cache(model, "1", "rbatl")
+    assert compute_pre_states(model, {"s1"}, [5], cache) == {"s1"}
+    assert compute_pre_states(model, {"s1", "s2"}, [5], cache) == {"s0", "s1", "s2"}
 
 
 @pytest.mark.unit
@@ -95,11 +91,11 @@ def test_move_that_also_reaches_a_state_outside_the_target_does_not_force(
     cgs = load_test_model(
         test_data_dir, f"costCGS/{logic}/{cost_filter}_3agents_medium_6states_costs.txt"
     )
-    cache = build_transition_cache(cgs, "1")
+    cache = build_transition_cache(cgs, "1", cost_filter)
     bound = [100, 100, 100]
-    assert compute_pre_states(cgs, "1", {"s0", "s1"}, bound, cache, cost_filter) == {
-        "s1"
+    assert compute_pre_states(cgs, {"s0", "s1"}, bound, cache) == {"s1"}
+    assert compute_pre_states(cgs, {"s0", "s1", "s3"}, bound, cache) == {
+        "s0",
+        "s1",
+        "s3",
     }
-    assert compute_pre_states(
-        cgs, "1", {"s0", "s1", "s3"}, bound, cache, cost_filter
-    ) == {"s0", "s1", "s3"}

@@ -158,7 +158,7 @@ class TestNatATLRecallCritical:
         assert result["Satisfiability"] is True
 
     @pytest.mark.parametrize(("k", "holds"), [(1, False), (3, False), (4, True)])
-    def test_bound_below_the_coalition_size_is_false(self, temp_file, k, holds):
+    def test_bound_counts_the_idle_rule_of_each_member(self, temp_file, k, holds):
         """Two members need two idle rules, so k = 1 admits no profile; reaching p
         takes (true, A) and (true, B) on top of them, size 4."""
         content = build_cgs_model_content(
