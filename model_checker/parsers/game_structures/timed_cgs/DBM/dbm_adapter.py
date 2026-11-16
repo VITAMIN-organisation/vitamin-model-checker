@@ -7,11 +7,6 @@ from .DBM import DBM
 
 # Bridges timedCGS models and DBM zone operations.
 
-FormulaInput = str | tuple[str, ...]
-_AND_OPS = frozenset({"&", "and"})
-_OR_OPS = frozenset({"|", "or"})
-_COMBINATORS = _AND_OPS | _OR_OPS
-
 
 def apply_bounds(dbm: DBM, bounds) -> None:
     for clock_index, op, bound in bounds:
@@ -149,103 +144,6 @@ def forward_transition_zone(
     if tcgs.invariants_arr[target_idx]:
         apply_location_invariants(successor, tcgs, target_idx)
     return successor if not successor.is_empty() else None
-
-
-def _zone_at_target(tcgs: TimedCGS, target: str, formula_parts: list[str]) -> DBM:
-    if not formula_parts:
-        raise ValueError("There are no real-time formulas")
-    dbm = DBM(len(tcgs.clocks))
-    target_idx = tcgs.get_index_by_state_name(target)
-    if tcgs.invariants_arr[target_idx]:
-        apply_location_invariants(dbm, tcgs, target_idx)
-    for part in formula_parts:
-        bounds, _ = parse_constraints([part], tcgs.clocks_dict)
-        apply_bounds(dbm, bounds)
-    return dbm
-
-
-def _backward_step_zone(tcgs: TimedCGS, source: str, target: str, dbm: DBM) -> DBM:
-    source_idx = tcgs.get_index_by_state_name(source)
-    target_idx = tcgs.get_index_by_state_name(target)
-    bounds, resets = parse_constraints(
-        [
-            part.strip()
-            for part in tcgs.clock_constraint_struct[source_idx][target_idx].split(",")
-            if part.strip()
-        ],
-        tcgs.clocks_dict,
-    )
-    for clock_index, _ in resets:
-        dbm.free(clock_index)
-    apply_bounds(dbm, bounds)
-    if tcgs.invariants_arr[source_idx]:
-        apply_location_invariants(dbm, tcgs, source_idx)
-    dbm.down()
-    return dbm
-
-
-def _atomic_formula_parts(formula: FormulaInput) -> list[str]:
-    if isinstance(formula, str):
-        return [formula]
-    if isinstance(formula, tuple):
-        if not formula:
-            raise ValueError("There are no real-time formulas")
-        if formula[0] in _COMBINATORS:
-            raise ValueError("Expected an atomic clock formula")
-        return [str(part) for part in formula]
-    raise TypeError(f"Unsupported formula type: {type(formula)!r}")
-
-
-def _flatten_and_parts(subformulas: tuple) -> list[str]:
-    parts: list[str] = []
-    for item in subformulas:
-        if isinstance(item, tuple) and item and item[0] in _AND_OPS:
-            parts.extend(_flatten_and_parts(item[1:]))
-        elif isinstance(item, str):
-            parts.append(item)
-        elif isinstance(item, tuple) and item:
-            parts.append(str(item[0]))
-    return parts
-
-
-def compute_predecessors(
-    tcgs: TimedCGS,
-    source: str,
-    target: str,
-    formulas: FormulaInput,
-) -> list[DBM]:
-    """Zone predecessors along source->target for the given clock formulas."""
-    if formulas is None:
-        raise ValueError("There are no real-time formulas")
-    if isinstance(formulas, str):
-        if not formulas:
-            raise ValueError("There are no real-time formulas")
-        if formulas[0] in _COMBINATORS:
-            raise ValueError(f"Unsupported formula prefix: {formulas[0]!r}")
-        zone = _zone_at_target(tcgs, target, [formulas])
-        return [_backward_step_zone(tcgs, source, target, zone)]
-
-    if not isinstance(formulas, tuple) or not formulas:
-        raise ValueError("There are no real-time formulas")
-
-    operator = formulas[0]
-    if operator not in _COMBINATORS:
-        zone = _zone_at_target(tcgs, target, _atomic_formula_parts(formulas))
-        return [_backward_step_zone(tcgs, source, target, zone)]
-
-    branches = formulas[1:]
-    if operator in _AND_OPS:
-        parts = _flatten_and_parts(branches)
-        if not parts:
-            raise ValueError("There are no real-time formulas")
-        zone = _zone_at_target(tcgs, target, parts)
-        return [_backward_step_zone(tcgs, source, target, zone)]
-
-    result: list[DBM] = []
-    for branch in branches:
-        branch_input: FormulaInput = branch if isinstance(branch, tuple) else (branch,)
-        result.extend(compute_predecessors(tcgs, source, target, branch_input))
-    return result
 
 
 def parse_constraints(constraints: list[str], clocks_dict):

@@ -82,21 +82,6 @@ def test_reachable_regions_stop_at_the_invariant(minimal_tcgs):
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    ("bounds", "reachable"),
-    [
-        ([(1, ">=", 0)], True),
-        ([(1, ">=", 2)], True),
-        ([(1, ">", 2)], False),
-        ([(1, ">", 200)], False),
-    ],
-)
-def test_path_exists_only_inside_the_invariant(minimal_tcgs, bounds, reachable):
-    """x >= 2 is reachable at the invariant's edge; x > 2 is not."""
-    assert ZoneGraph(minimal_tcgs).has_path_from("s0", bounds) is reachable
-
-
-@pytest.mark.unit
-@pytest.mark.parametrize(
     ("constraint", "states"),
     [("x>=0", {"s0"}), ("x==2", {"s0"}), ("x>2", set()), ("x>10", set())],
 )
@@ -131,25 +116,27 @@ def test_unbounded_clock_has_no_dead_ends(tmp_path):
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    ("invariant", "bounds", "reachable"),
+    ("invariant", "constraint", "reachable"),
     [
         # x<3: time stops before 3, so x==3 and x>=3 are out, x>2 (e.g. 2.5) is in.
-        ("x<3", [(1, "==", 3)], False),
-        ("x<3", [(1, ">=", 3)], False),
-        ("x<3", [(1, ">", 2)], True),
+        ("x<3", "x==3", False),
+        ("x<3", "x>=3", False),
+        ("x<3", "x>2", True),
         # x<=3: x reaches 3 exactly.
-        ("x<=3", [(1, "==", 3)], True),
-        ("x<=3", [(1, ">", 3)], False),
+        ("x<=3", "x==3", True),
+        ("x<=3", "x>3", False),
     ],
 )
-def test_strict_invariant_excludes_its_bound(tmp_path, invariant, bounds, reachable):
+def test_strict_invariant_excludes_its_bound(
+    tmp_path, invariant, constraint, reachable
+):
     tcgs = _load(
         tmp_path,
         "Transition\n*\nName_State\ns0\nInitial_State\ns0\nAtomic_propositions\np\n"
         "Labelling\n1\nNumber_of_agents\n1\nClocks\nx\nClock_constraints\n0\n"
         f"Invariants\n{invariant}\n",
     )
-    assert ZoneGraph(tcgs).has_path_from("s0", bounds) is reachable
+    assert ("s0" in _locations_meeting(tcgs, constraint)) is reachable
 
 
 _TWO_STATES = (
@@ -197,7 +184,7 @@ def test_two_invariants_in_one_cell_both_apply(tmp_path, invariants, reachable):
         "Labelling\n1\nNumber_of_agents\n1\nClocks\nx y\nClock_constraints\n0\n"
         f"Invariants\n{invariants}\n",
     )
-    assert ZoneGraph(tcgs).has_path_from("s0", [(1, "==", 3)]) is reachable
+    assert ("s0" in _locations_meeting(tcgs, "x==3")) is reachable
 
 
 @pytest.mark.unit

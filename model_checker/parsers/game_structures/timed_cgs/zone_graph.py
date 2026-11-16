@@ -1,11 +1,7 @@
 from collections import deque
 from itertools import chain, pairwise
 
-from model_checker.algorithms.explicit.shared.trace_utils import (
-    any_backward_path,
-    collect_backward_paths,
-    reverse_adjacency,
-)
+from model_checker.algorithms.explicit.shared.trace_utils import reverse_adjacency
 
 from .DBM import DBMAdapter
 from .DBM.DBM import DBM
@@ -223,59 +219,3 @@ class ZoneGraph:
         self.graph = _successor_lists(self.delay_successors, self.discrete_successors)
         self.states = set(self.graph)
         self.reverse_graph = reverse_adjacency(self.graph, self.states)
-
-    def _backward_path_starts(self, target_location: str) -> list[TimeState]:
-        return sorted(
-            (state for state in self.states if state.location == target_location),
-            key=lambda item: item.location,
-        )
-
-    def _allows_node(self, node: TimeState, constraints: list | None) -> bool:
-        """Whether a path may pass ``node``: a region that time and edge steps
-        reach, meeting ``constraints`` if given."""
-        if node not in self.reachable_states:
-            return False
-        if not constraints:
-            return True
-        return DBMAdapter.zone_satisfies_guards(
-            self.tcgs, node.location, node.zone, constraints
-        )
-
-    def has_path_from(
-        self, target_location: str, constraints: list | None = None
-    ) -> bool:
-        """True if a backward path exists from target_location to the initial location."""
-        starts = self._backward_path_starts(target_location)
-        if not self.states or not starts:
-            return False
-
-        initial_loc = self.tcgs.initial_state
-        return any_backward_path(
-            starts,
-            self.reverse_graph,
-            is_goal=lambda node: node.location == initial_loc,
-            allows_node=lambda node: self._allows_node(node, constraints),
-            sort_neighbors=lambda neighbors: sorted(
-                neighbors, key=lambda item: item.location
-            ),
-        )
-
-    def find_path_from(
-        self, target_location: str, constraints: list | None = None
-    ) -> list[list[TimeState]]:
-        """All backward paths from `target_location` to the initial location; with
-        `constraints`, each step must meet the clock guard and the invariant."""
-        starts = self._backward_path_starts(target_location)
-        if not self.states or not starts:
-            return []
-
-        initial_loc = self.tcgs.initial_state
-        return collect_backward_paths(
-            starts,
-            self.reverse_graph,
-            is_goal=lambda node: node.location == initial_loc,
-            allows_node=lambda node: self._allows_node(node, constraints),
-            sort_neighbors=lambda neighbors: sorted(
-                neighbors, key=lambda item: item.location
-            ),
-        )

@@ -50,11 +50,8 @@ def reconstruct_trace_bfs(
 
 
 def _states_on_a_cycle(adjacency: dict[str, list[str]], start: str) -> set[str]:
-    """The states reachable from start that lie on a cycle.
-
-    Iterative Tarjan over strongly connected components, so a long chain does
-    not hit the recursion limit.
-    """
+    """The states reachable from start that lie on a cycle; iterative, so a long
+    chain does not hit the recursion limit."""
     index: dict[str, int] = {}
     low: dict[str, int] = {}
     stack: list[str] = []
@@ -128,11 +125,8 @@ def find_lasso(
     start: str,
     allowed: set[str],
 ) -> tuple[list[str], int] | None:
-    """Return the shortest lasso from start inside allowed, or None.
-
-    The lasso is its states, each once, and the index its last state steps back
-    to. None when no lasso has at most MAX_TRACE_LENGTH states.
-    """
+    """The shortest lasso from start inside allowed (its states and the index its
+    last state steps back to), or None when none has at most MAX_TRACE_LENGTH states."""
     if start not in allowed:
         return None
 
@@ -171,63 +165,6 @@ def reverse_adjacency(graph: dict, nodes: set | None = None) -> dict:
         for target in successors:
             reverse[target].append(source)
     return reverse
-
-
-def any_backward_path(
-    starts,
-    reverse_graph: dict,
-    *,
-    is_goal,
-    allows_node,
-    sort_neighbors=None,
-) -> bool:
-    """True if some backward path from starts reaches a goal node."""
-
-    def dfs(node, on_path: frozenset) -> bool:
-        if not allows_node(node):
-            return False
-        if is_goal(node):
-            return True
-        extended = on_path | {node}
-        neighbors = reverse_graph.get(node, [])
-        if sort_neighbors is not None:
-            neighbors = sort_neighbors(neighbors)
-        for predecessor in neighbors:
-            if predecessor not in extended and dfs(predecessor, extended):
-                return True
-        return False
-
-    return any(dfs(start, frozenset()) for start in starts)
-
-
-def collect_backward_paths(
-    starts,
-    reverse_graph: dict,
-    *,
-    is_goal,
-    allows_node,
-    sort_neighbors=None,
-) -> list[list]:
-    """All simple backward paths from starts to goal nodes."""
-    paths: list[list] = []
-
-    def dfs(node, path: list) -> None:
-        if not allows_node(node):
-            return
-        new_path = path + [node]
-        if is_goal(node):
-            paths.append(new_path)
-            return
-        neighbors = reverse_graph.get(node, [])
-        if sort_neighbors is not None:
-            neighbors = sort_neighbors(neighbors)
-        for predecessor in neighbors:
-            if predecessor not in path:
-                dfs(predecessor, new_path)
-
-    for start in starts:
-        dfs(start, [])
-    return paths
 
 
 def format_trace_with_properties(
