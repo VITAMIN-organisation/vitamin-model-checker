@@ -95,9 +95,12 @@ puts no condition on `phi` at the position where `psi` holds:
 
 The cost of an Until counts the moves until `psi` holds, as in Algorithm 2.
 
-A joint action that the `Transition` row of a state does not list is not available
-there (see [Transition](../reference/file_formats.md#transition)), so Example 1 of
-the paper, which has no `(IDLE, IDLE)` move in `s0`, loads and checks as drawn.
+PRIMA 2024 gives every agent the idle action at cost 0 in every state (p. 4) and
+leaves the idle self-loops out of Fig. 1 (p. 5). The checker adds no move that a
+`Transition` row does not list ([Transition](../reference/file_formats.md#transition)).
+The sensor fixture `rbatl_2agents_8states_sensor.txt`, which writes idle as `I`,
+lists `II` only in `s6`: `<1,2><0,0>G !p` is false at `s0` there and true once
+`II` is added to the `s0` row.
 
 WOA 2024 (Table 1) reports its rover mission formula true with bound `(5,1)` and
 false with `(2,2)`. The test `test_rover_mission_formula_runs` writes the formula as

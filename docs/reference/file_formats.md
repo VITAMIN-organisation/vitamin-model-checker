@@ -144,7 +144,7 @@ Algorithms normalize every profile to the explicit `|`-separated form before coa
 A profile with too few or too many actions still loads. It fails when a checker reads the actions. For example, with 2 agents and the too-short cell `A`, ATL reports "Action joint 'A' in cell 'A' has 1 action(s); expected 2 (one per agent).". CTL does not read actions, so on such a file it returns a result.
 
 Every state must have at least one outgoing transition (total / serial relation).
-Use a self-loop such as `*` on terminal states. Models that leave a row entirely
+Use a self-loop on terminal states, for example `*` on the diagonal. Models that leave a row entirely
 `0` are rejected at load time. CTL/ATL-style operators assume infinite paths
 (Baier/Katoen); without a successor, next-time modalities are ill-defined and
 universal next can hold vacuously. A self-loop models a terminal situation as
@@ -152,10 +152,10 @@ universal next can hold vacuously. A self-loop models a terminal situation as
 
 A row does not need a profile for every combination of the agents' actions. A
 combination that no cell of the row lists is not available in that state: no
-player can choose it, and the pre-image of every checker skips it. This keeps
-models such as Example 1 of PRIMA 2024 (RBATL), which lists no `(IDLE, IDLE)` move
-in `s0`, valid. The concurrent game structures of JACM 2002 (Def. 2.1, p. 677)
-instead have a transition for every combination of available actions.
+player can choose it. ATL and ATL* skip it; CTL, TCTL and TOL do not read actions.
+The concurrent game structures of JACM 2002 (Def. 2.1, pp. 677-678) and of
+PRIMA 2024 (Def. 1, p. 3) instead have a transition for every combination of
+available actions.
 
 ### State and label sections
 

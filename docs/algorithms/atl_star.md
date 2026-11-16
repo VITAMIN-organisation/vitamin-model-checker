@@ -26,8 +26,9 @@ formula `<<A>> psi` is solved for all states at once in four steps:
 4. The parity game is solved. A state satisfies `<<A>> psi` when the coalition
    wins the game that starts there with the automaton in its initial state.
 
-A cell `*` in the model becomes an edge to the cell's column for every action the
-model uses elsewhere and the state does not already list. The result has the usual `res` and
+A cell `*` becomes an edge to the cell's column for every joint action that some
+row lists and this row does not; a model with only `*` cells gets one action with
+`*` for every agent. The result has the usual `res` and
 `initial_state` fields (see the
 [shared steps](index.md#steps-shared-by-the-set-based-checkers)).
 
