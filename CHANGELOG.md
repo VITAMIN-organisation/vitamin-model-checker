@@ -41,6 +41,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   because their papers make the transition function partial. NatSL reports the
   error at load time instead of its own "Non-total local joint-action table"
   message. See [Transition](docs/reference/file_formats.md#transition).
+- NatATL and NatATLF report a formula error without the prefix "Invalid NatATL
+  formula format:", as NatATL_Recall does: `<{1}, 1>F` gives "Invalid NatATL
+  formula: Syntax error at end of input". The error type stays `syntax`.
 - Test fixtures gained the missing combinations: the RBATL sensor fixture has the
   idle self-loops and `CC` of PRIMA 2024 Fig. 1, and in the three-agent RBATL and
   RABATL fixtures the added combinations keep the state at cost 0, so

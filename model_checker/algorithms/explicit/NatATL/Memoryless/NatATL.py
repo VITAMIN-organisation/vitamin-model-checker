@@ -4,11 +4,9 @@ k until a strategy wins."""
 import logging
 from typing import Any
 
+from model_checker.algorithms.explicit.NatATL.initialization import initialize
 from model_checker.algorithms.explicit.NatATL.Memoryless.solver import (
     solve_natatl_memoryless,
-)
-from model_checker.algorithms.explicit.NatATL.Memoryless.strategies import (
-    initialize,
 )
 from model_checker.utils.error_handler import (
     create_error_response,

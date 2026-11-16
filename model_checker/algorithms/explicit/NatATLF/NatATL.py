@@ -1,9 +1,7 @@
 import logging
 from typing import Any
 
-from model_checker.algorithms.explicit.NatATL.Memoryless.strategies import (
-    initialize,
-)
+from model_checker.algorithms.explicit.NatATL.initialization import initialize
 
 logger = logging.getLogger(__name__)
 

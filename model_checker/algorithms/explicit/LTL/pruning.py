@@ -1,14 +1,11 @@
 """Matrix-based pruning for the LTL solution concepts, reusing the rule application
 of NatATL Memoryless."""
 
-from model_checker.algorithms.explicit.CTL.CTL import model_checking
 from model_checker.algorithms.explicit.NatATL.Memoryless.pruning import (
     apply_first_matching_rules,
 )
-from model_checker.algorithms.explicit.shared.result_formatters import (
-    initial_state_holds,
-)
-from model_checker.parsers.game_structures.cgs import CGS, cgs_validation
+from model_checker.algorithms.explicit.shared.natural_strategies import goal_holds_on
+from model_checker.parsers.game_structures.cgs import CGS
 
 
 def process_transition_matrix_data(cgs, model, agents, *strategies):
@@ -53,10 +50,4 @@ def pruning(cgs, model, agents, formula, current_agents):
     cgs1.actions = cached_cgs.actions[:] if cached_cgs.actions else []
 
     cgs1.graph = process_transition_matrix_data(cgs1, model, agents, *current_agents)
-    # The model has a successor for every state, so a state without one was cut off by
-    # the profile: the profile leaves the agent no move there and is not admissible.
-    if cgs_validation.validate_total_transitions(cgs1.graph, cgs1.states):
-        return False
-    return initial_state_holds(
-        model_checking(formula, model, preloaded_model=cgs1), formula
-    )
+    return goal_holds_on(cgs1, formula, model)
