@@ -725,9 +725,9 @@ Clocks and clock guards:
 
 - Automaton clocks `X` from the model `Clocks` section.
 - Formula clocks `J` via freeze `j.phi` (reset `j` to `0`). A freeze on a clock
-  of the model, such as `x.EF (x>=2)` when the model declares `x`, is a
-  `semantic` error that names the clock (AAMAS 2025 Def. 10, p. 4, keeps `X`
-  and `J` disjoint).
+  declared in the model `Clocks` section, such as `x.EF (x>=2)` when the model
+  declares `x`, is a `semantic` error that names the clock (AAMAS 2025 Def. 10,
+  p. 4, requires `X` and `J` to be disjoint).
 - Guards: standalone `x <= 5` or attachment `phi : x <= c` on subformulas.
 
 For example:
@@ -777,7 +777,8 @@ same way.
 
 The freeze `j.phi` resets formula clock `j` to `0` at the current state and
 evaluates `phi` from there (AAMAS 2025 Def. 11, p. 4); see
-[TCTL freezes](../algorithms/tctl.md#overview).
+[TCTL freezes](../algorithms/tctl.md#overview). A freeze on a clock declared in
+the model `Clocks` section is a `semantic` error, as in TCTL.
 
 The model type is `timedCGS`, the same as TCTL. How the checker computes each
 operator: [TOL algorithm](../algorithms/tol.md).

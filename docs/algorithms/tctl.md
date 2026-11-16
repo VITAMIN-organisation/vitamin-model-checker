@@ -23,8 +23,10 @@ follows:
 1. Clocks named in the formula, by a freeze `j.phi` (which sets the formula
    clock `j` to 0 and then checks `phi`, see the [overview](#overview)) or a
    guard such as `phi : x<=3`, are added to the model's clocks if new. A freeze
-   on a clock the model declares is a `semantic` error that names the clock:
-   AAMAS 2025 (Def. 10, p. 4) keeps the model's clocks and the formula's apart.
+   on a clock declared in the model's `Clocks` section is a
+   [`semantic`](../reference/logic_knowledge_base.md#operators-and-names) error
+   that names the clock: AAMAS 2025 (Def. 10, p. 4) requires the model's clocks
+   and the formula's clocks to be disjoint sets.
 2. Each clock's largest constant is computed; the formula `AG (p : x<=3)`
    contributes 3 for `x`.
 3. The initial region is the initial location with every clock at 0, restricted to
