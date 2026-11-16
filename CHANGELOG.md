@@ -22,6 +22,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: NatATL_Recall follows natural strategies with recall of AIJ 2019
+  (section 6.1, p. 21). A rule's condition is a pattern over the history (the
+  states visited so far). A plain condition `p` matches only the one-state history
+  of a `p` state; `true* . p` matches every history ending in a `p` state, at the
+  same size. Every rule list ends in `(true*, IDLE)`, which counts 1, and `k`
+  bounds the sum over the coalition, as for NatATL; before, each member's list had
+  size exactly `i` for `i = 1, ..., k`. Goals more than four steps away are found
+  (the search was cut at depth 4), and a pattern applies on every history it
+  matches (before, on one). See [Recall](docs/algorithms/natatl.md#recall).
 - Breaking: TCTL and TOL split each zone of the
   [zone graph](docs/algorithms/tctl.md#zone-graph) (pairs of a location and a set
   of clock values, called regions) on the formula's clock bounds, so a clock

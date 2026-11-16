@@ -1,0 +1,131 @@
+"""History patterns of NatATL Recall rules: Boolean letters joined by `.`, each
+letter optionally repeated with `*`, optionally after a leading `true* .`.
+
+A history matches a pattern when it has the length of a word of the pattern and
+each state satisfies the letter at its position. See docs/algorithms/natatl.md.
+"""
+
+import itertools
+from collections.abc import Iterable
+from dataclasses import dataclass, field
+
+from model_checker.algorithms.explicit.shared.natural_strategies import (
+    TRUE_CONDITION,
+    Condition,
+    condition_text,
+)
+
+ANY_PREFIX_TEXT = "true*"
+_SEQUENCE = " . "
+
+# One letter of a pattern and whether it carries `*`.
+Item = tuple[Condition, bool]
+
+
+def true_letter(states: Iterable[str]) -> Condition:
+    """The letter true, which every state satisfies."""
+    return Condition(TRUE_CONDITION, frozenset(str(s) for s in states), 1)
+
+
+@dataclass(frozen=True)
+class Pattern:
+    """A history pattern; ``any_prefix`` puts `true* .` in front of the letters."""
+
+    letters: tuple[Item, ...]
+    any_prefix: bool = False
+    # Position i of a match means the first i items are matched.
+    _items: tuple[tuple[frozenset[str] | None, bool], ...] = field(
+        init=False, repr=False, compare=False
+    )
+    # Every profile's product steps the same patterns, so steps are computed once.
+    _steps: dict[tuple[frozenset[int], str], frozenset[int]] = field(
+        init=False, repr=False, compare=False
+    )
+
+    def __post_init__(self) -> None:
+        if not self.letters and not self.any_prefix:
+            raise ValueError("A pattern needs a letter or the true* prefix.")
+        # None stands for the true* prefix, which every state satisfies.
+        items = ((None, True),) if self.any_prefix else ()
+        items += tuple((letter.states, star) for letter, star in self.letters)
+        object.__setattr__(self, "_items", items)
+        object.__setattr__(self, "_steps", {})
+
+    @property
+    def text(self) -> str:
+        """The pattern as written in a strategy, such as `true* . p . q*`."""
+        parts = [ANY_PREFIX_TEXT] if self.any_prefix else []
+        parts += [_letter_text(letter, star) for letter, star in self.letters]
+        return _SEQUENCE.join(parts)
+
+    @property
+    def size(self) -> int:
+        """Symbols in the pattern; a leading `true* .` is free and `true*` alone is 1."""
+        if not self.letters:
+            return 1
+        symbols = sum(letter.size + star for letter, star in self.letters)
+        return symbols + len(self.letters) - 1
+
+    def start(self, state: str) -> frozenset[int]:
+        """Positions after reading the one-state history `state`."""
+        return self.step(self._closure({0}), state)
+
+    def step(self, positions: frozenset[int], state: str) -> frozenset[int]:
+        """Positions after reading `state` from `positions`; empty when no match is
+        possible any more."""
+        key = (positions, state)
+        if key not in self._steps:
+            moved = set()
+            for i in positions:
+                if i == len(self._items):
+                    continue
+                states, star = self._items[i]
+                if states is None or state in states:
+                    moved.add(i if star else i + 1)
+            self._steps[key] = self._closure(moved)
+        return self._steps[key]
+
+    def accepts(self, positions: frozenset[int]) -> bool:
+        """Whether the history read so far matches the pattern."""
+        return len(self._items) in positions
+
+    def _closure(self, positions: Iterable[int]) -> frozenset[int]:
+        """`positions` plus every position reached by skipping starred items."""
+        closed = set(positions)
+        todo = list(closed)
+        while todo:
+            i = todo.pop()
+            if i < len(self._items) and self._items[i][1] and i + 1 not in closed:
+                closed.add(i + 1)
+                todo.append(i + 1)
+        return frozenset(closed)
+
+
+ANY_HISTORY = Pattern((), any_prefix=True)
+
+
+def _letter_text(letter: Condition, star: bool) -> str:
+    text = condition_text(letter)
+    return f"{text}*" if star else text
+
+
+def enumerate_patterns(letters: list[Condition], max_size: int) -> list[Pattern]:
+    """Every pattern over `letters` of size 1 to `max_size`, with and without the
+    `true* .` prefix, smallest first and then by text."""
+    found: list[Pattern] = []
+
+    def extend(items: tuple[Item, ...], size: int) -> None:
+        for any_prefix in (False, True):
+            found.append(Pattern(items, any_prefix))
+        for letter, star in itertools.product(letters, (False, True)):
+            # A letter after the first also costs its `.`.
+            new_size = size + letter.size + star + 1
+            if new_size <= max_size:
+                extend(items + ((letter, star),), new_size)
+
+    for letter, star in itertools.product(letters, (False, True)):
+        # A leading true* is the free prefix, generated by any_prefix.
+        leading_true_star = star and letter.text == TRUE_CONDITION
+        if letter.size + star <= max_size and not leading_true_star:
+            extend(((letter, star),), letter.size + star)
+    return sorted(found, key=lambda p: (p.size, p.text))

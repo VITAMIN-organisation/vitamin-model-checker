@@ -1019,7 +1019,7 @@ holds at a state:
 | ATLF | Branching | Coalition pre-image and fixpoints | Per-state values, not a set of states ([ATLF](../algorithms/atlf.md)) |
 | ATL* | Branching | LTL to deterministic parity automaton, product with the model, two-player game | Nested path formulas and coalitions inside `<<A>>`; no wallet guards |
 | NatATL | Branching | Strategy search and pruning | Memoryless natural strategies; `k` bounds the coalition's total strategy size, `true` rules included |
-| NatATL_Recall | Branching | Strategy search and pruning | Recall strategies with the earlier rule lists (see [Recall](../algorithms/natatl.md#recall)) |
+| NatATL_Recall | Branching | Strategy search and product model | Rules whose conditions are patterns over the history (see [Recall](../algorithms/natatl.md#recall)) |
 | NatATLF | Branching | Strategy search and pruning | Delegates to the memoryless NatATL solver |
 | NatSL | Branching | Strategy search and pruning | Schedule `space` (default) or `time` |
 | OATL | Branching | Budget-aware coalition pre-image and fixpoints | Demon budget per step |

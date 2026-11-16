@@ -1,108 +1,78 @@
-"""NatATL Recall solver: enumerate recall strategies, prune the tree for each, and
-return the first one that wins."""
+"""Strategy search for NatATL Recall: recall strategy profiles of the coalition,
+smallest total size first, each checked on the model restricted to it."""
 
-import copy
 import logging
-import time
 from typing import Any
 
-from model_checker.algorithms.explicit.NatATL.Recall.condition_generation import (  # noqa: E501
-    create_reg_exp,
+from model_checker.algorithms.explicit.NatATL.Recall.patterns import (
+    enumerate_patterns,
+    true_letter,
 )
-from model_checker.algorithms.explicit.NatATL.Recall.pruning_core import (
-    pruning,
+from model_checker.algorithms.explicit.NatATL.Recall.product import build_product
+from model_checker.algorithms.explicit.NatATL.Recall.strategies import (
+    RecallStrategy,
+    agent_strategies,
+    valid_rules,
 )
-from model_checker.algorithms.explicit.NatATL.Recall.strategy_generation import (  # noqa: E501
-    generate_guarded_action_pairs,
-    generate_strategies,
+from model_checker.algorithms.explicit.NatATL.Recall.validity import (
+    last_states,
+    successors,
 )
-from model_checker.algorithms.explicit.NatATL.Recall.tree_building import (
-    build_tree_from_CGS,
+from model_checker.algorithms.explicit.shared.natural_strategies import (
+    available_actions,
+    enumerate_conditions,
+    goal_holds_on,
+    parse_rows,
+    require_bound_covers_coalition,
+    smallest_winning_profile,
 )
+from model_checker.parsers.game_structures.cgs import CGSProtocol
 
 logger = logging.getLogger(__name__)
-
-INITIAL_HEIGHT = 4
 
 
 def solve_natatl_recall(
     k: int,
-    agent_actions: dict[str, list[str]],
-    actions_list: list[list[str]],
-    atomic_propositions: list[str],
-    CTLformula: str,
+    ctl_formula: str,
     agents: list[int],
-    model_parser: Any,
-    filename: str,
+    cgs: CGSProtocol,
+    model_path: str,
 ) -> dict[str, Any]:
-    """Try recall strategies for bounds 1 to `k` and return the first winning one, as
-    a dict with Satisfiability, Complexity Bound and Winning Strategy."""
-    start_time = time.time()
-    found_solution = False
-    result: dict[str, Any] = {}
+    """Whether the coalition has a recall strategy profile of total size at most k
+    that enforces the goal, with the smallest such profile."""
+    require_bound_covers_coalition(k, agents, "idle")
+    # Every other member needs at least its idle rule, so one member's rules other
+    # than the idle rule have at most k - len(agents) symbols.
+    budget = k - len(agents)
+    letters = enumerate_conditions(cgs, budget) + [true_letter(cgs.states)]
+    parsed_rows = parse_rows(cgs)
+    succ = successors(cgs.states, parsed_rows)
+    ends = {
+        pattern: last_states(pattern, succ)
+        for pattern in enumerate_patterns(letters, budget)
+    }
+    per_agent = [
+        agent_strategies(
+            valid_rules(ends, available_actions(cgs.states, parsed_rows, agent)),
+            budget + 1,
+        )
+        for agent in agents
+    ]
+    # Many profiles restrict the model the same way, and CTL reads only the graph
+    # and the labels of the product.
+    verdicts: dict[tuple, bool] = {}
 
-    i = 1
-    height = INITIAL_HEIGHT
+    def wins(profile: tuple[RecallStrategy, ...]) -> bool:
+        product = build_product(cgs, parsed_rows, agents, profile)
+        key = (
+            tuple(map(tuple, product.graph)),
+            tuple(map(tuple, product.matrix_prop)),
+        )
+        if key not in verdicts:
+            verdicts[key] = goal_holds_on(product, ctl_formula, model_path)
+        return verdicts[key]
 
     logger.info("Starting NatATL Recall verification (Bound k=%d)", k)
-
-    while not found_solution and i <= k:
-        logger.debug("Checking strategies at complexity level %d", i)
-
-        # One tree per complexity level, deep-copied per strategy: pruning changes it.
-        if i == 1:
-            states = model_parser.states
-            base_tree = build_tree_from_CGS(model_parser, states, height)
-
-        # Generate regex conditions for this complexity level
-        # Sorted, so the same strategy is found first on every run.
-        conditions = sorted(create_reg_exp(i, atomic_propositions))
-        actions = [sorted(agent_actions) for agent_actions in actions_list]
-        cartesian_products = generate_guarded_action_pairs(conditions, actions)
-
-        # Generate strategies for this complexity level
-        strategies_iterator = generate_strategies(
-            cartesian_products, i, agents, found_solution
-        )
-
-        # Check each strategy via tree-based pruning & model checking
-        for collective_strategy in strategies_iterator:
-            # Deep copy crucial here as pruning mutates tree
-            tree_copy = copy.deepcopy(base_tree)
-
-            if pruning(
-                model_parser,
-                tree_copy,
-                height,
-                filename,
-                CTLformula,
-                agents,
-                *collective_strategy,
-            ):
-                logger.info("Solution found with strategy: %s", collective_strategy)
-                found_solution = True
-                result["Satisfiability"] = True
-                result["Complexity Bound"] = i
-                result["Winning Strategy per agent"] = collective_strategy
-                break
-
-        i += 1
-
-    if not found_solution:
-        logger.info("No solution found after checking bound k=%d", k)
-        result["Satisfiability"] = False
-        result["Complexity Bound"] = k
-
-    # Add standard result fields for backend compatibility
-    initial_state = (
-        model_parser.initial_state if hasattr(model_parser, "initial_state") else "s0"
+    return smallest_winning_profile(
+        per_agent, k, wins, RecallStrategy.as_pairs, cgs.initial_state
     )
-    is_sat = result.get("Satisfiability", False)
-    result["res"] = f"Result: {is_sat}"
-    result["initial_state"] = f"Initial state {initial_state}: {is_sat}"
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    logger.info("Total verification time: %.3f seconds", elapsed_time)
-
-    return result
