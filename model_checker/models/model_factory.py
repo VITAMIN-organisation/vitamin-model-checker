@@ -167,10 +167,12 @@ def create_model_parser_for_logic(
     from model_checker.registries import (
         get_expected_model_type,
         initial_state_required,
+        partial_transitions_allowed,
     )
 
     expected_type = get_expected_model_type(logic_type)
 
     parser = create_model_parser(filename, expected_type)
     parser.initial_state_required = initial_state_required(logic_type)
+    parser.partial_transitions_allowed |= partial_transitions_allowed(logic_type)
     return parser

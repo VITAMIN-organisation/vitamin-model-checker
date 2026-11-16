@@ -31,7 +31,7 @@ A state `s` is in `Pre(Z)` when these steps succeed:
 The unmarked moves each have at least one successor in `Z`. The budget applies to
 each step on its own; costs do not add up along a path. Every joint action that
 has a cost must cost at least 1: in AAMAS 2024 the cost of a state and joint
-action is "a positive natural number" (p. 2). A joint action of cost 0 could be
+action is "a positive natural number" (p. 272). A joint action of cost 0 could be
 disabled with a budget of 0, so a cost that adds up to 0 or less is a model
 error that names the joint action and the state. With `n = 0` the Demon
 therefore cannot disable a joint action that has a cost.
@@ -42,6 +42,13 @@ they were free. If the two results differ, the check fails with an error of type
 `model` that names the operator (such as `<1><0>X`), the states and the joint
 actions; otherwise the missing costs do not matter. The only joint action of a
 state is never disabled, so its cost is not needed.
+
+Step 1 groups only the joint actions that the row of `s` lists. AAMAS 2024 makes
+the transition function partial (Def. 2, p. 272). In its Fig. 1 (p. 274), Alice
+and Bob each attack or do nothing (★) and David requests or does nothing, eight
+combinations, and `s0` has edges for three of them. The loader therefore accepts
+such a row for OATL, while it rejects it for every logic whose models are not
+exempt ([Transition](../reference/file_formats.md#transition)).
 
 ## Operators
 

@@ -307,8 +307,7 @@ class RestrictedNatSL1GEvaluator:
         number_of_agents = self.cgs.get_number_of_agents()
         action_sets = {agent: set() for agent in range(1, number_of_agents + 1)}
         for row_index, row in enumerate(self.cgs.graph):
-            destination_by_joint_action: dict[str, int] = {}
-            for destination, cell in enumerate(row):
+            for cell in row:
                 if cell == 0:
                     continue
                 for joint_action in str(cell).split(","):
@@ -318,26 +317,8 @@ class RestrictedNatSL1GEvaluator:
                             f"Joint action {joint_action!r} in row {row_index} must contain "
                             "exactly one action symbol per agent"
                         )
-                    # A joint action may have several successors (pruning keeps them
-                    # all); this map only serves as the row's set of joint actions.
-                    destination_by_joint_action.setdefault(joint_action, destination)
                     for agent, action in enumerate(joint_action, start=1):
                         action_sets[agent].add(action)
-
-            row_joint_actions = set(destination_by_joint_action)
-            local_actions = [
-                sorted({joint_action[index] for joint_action in row_joint_actions})
-                for index in range(number_of_agents)
-            ]
-            expected_joint_actions = {
-                "".join(profile) for profile in itertools.product(*local_actions)
-            }
-            if row_joint_actions != expected_joint_actions:
-                missing = sorted(expected_joint_actions - row_joint_actions)
-                raise ValueError(
-                    f"Non-total local joint-action table in state "
-                    f"{self.cgs.states[row_index]!r}; missing profiles: {missing}"
-                )
         return {agent: tuple(sorted(actions)) for agent, actions in action_sets.items()}
 
     def _raw_domain(self, quantifier: Quantifier) -> Iterator[Strategy]:

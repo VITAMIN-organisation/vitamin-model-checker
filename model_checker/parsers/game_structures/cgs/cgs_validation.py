@@ -3,6 +3,8 @@
 Checks states, agents, transition matrix, labelling matrix, and NatATL/tree rules.
 """
 
+import itertools
+import math
 from collections.abc import Collection
 
 from . import cgs_actions
@@ -141,6 +143,65 @@ def validate_total_transitions(graph: list[list], states) -> list[str]:
     return errors
 
 
+_MISSING_EXAMPLES_SHOWN = 3
+
+
+def _row_joint_actions(row: list, n_agents: int) -> list[tuple[str, ...]]:
+    """The joint actions of one row; a `*` cell is `*` for every agent."""
+    return [
+        tuple(profile.split(cgs_actions.AGENT_ACTION_SEPARATOR))
+        for elem in row
+        if elem not in _EMPTY_TRANSITION_CELLS
+        for profile in cgs_actions.build_action_list(str(elem), n_agents)
+    ]
+
+
+def validate_complete_joint_actions(
+    graph: list[list], states, n_agents: int
+) -> list[str]:
+    """One error per state that lacks a transition for some combination of the actions
+    each agent plays in its row; `*` in an agent's position covers all its actions."""
+    errors = []
+    for i, row in enumerate(graph):
+        try:
+            joints = _row_joint_actions(row, n_agents)
+        except ValueError:
+            # A profile of the wrong length is reported by the checker that reads it.
+            continue
+        if not joints:
+            # A row with no transition is reported by validate_total_transitions.
+            continue
+        available = [
+            sorted({j[k] for j in joints if j[k] != "*"}) or ["*"]
+            for k in range(n_agents)
+        ]
+        listed = set(joints)
+        with_star = [j for j in listed if "*" in j]
+        if not with_star and len(listed) == math.prod(len(a) for a in available):
+            continue
+        missing = [
+            combo
+            for combo in itertools.product(*available)
+            if combo not in listed
+            and not any(
+                all(j[k] in ("*", combo[k]) for k in range(n_agents)) for j in with_star
+            )
+        ]
+        if not missing:
+            continue
+        examples = ", ".join(
+            cgs_actions.AGENT_ACTION_SEPARATOR.join(c)
+            for c in missing[:_MISSING_EXAMPLES_SHOWN]
+        )
+        errors.append(
+            f"State '{states[i]}' has no transition for {len(missing)} combination(s) "
+            f"of available actions, such as {examples}. Every combination of the "
+            "actions the agents play in a row needs a transition: add each one to "
+            "the cell of the state it leads to."
+        )
+    return errors
+
+
 def raise_structure_errors(errors: list[str]) -> None:
     """Raise one ValueError listing every structure error, if there is any."""
     if errors:
@@ -176,6 +237,7 @@ def collect_model_structure_errors(cgs) -> list[str]:
     labelling); an empty list means it is valid."""
     errors = collect_state_errors(cgs)
 
+    num_agents = 0
     try:
         num_agents = cgs.get_number_of_agents()
         if num_agents <= 0:
@@ -186,8 +248,19 @@ def collect_model_structure_errors(cgs) -> list[str]:
     num_states = (
         len(cgs.states) if hasattr(cgs.states, "__len__") and len(cgs.states) > 0 else 0
     )
-    errors.extend(validate_transition_matrix_dimensions(cgs.graph, num_states))
+    shape_errors = validate_transition_matrix_dimensions(cgs.graph, num_states)
+    errors.extend(shape_errors)
     errors.extend(validate_total_transitions(cgs.graph, cgs.states))
+    # Edge-cost cells (Transition_With_Costs) hold no actions to combine.
+    if (
+        not shape_errors
+        and num_agents > 0
+        and not cgs.partial_transitions_allowed
+        and not getattr(cgs, "usesCostsInsteadOfActions", False)
+    ):
+        errors.extend(
+            validate_complete_joint_actions(cgs.graph, cgs.states, num_agents)
+        )
 
     errors.extend(
         validate_labelling_matrix_dimensions(

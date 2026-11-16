@@ -115,19 +115,6 @@ class TestNaturalStrategies:
         """a is missing at s2 and s3, so (p, a); (q, a); (true, idle) of size 3 is needed."""
         assert _satisfied(temp_file, _TWO_STEPS_THEN_IDLE, f"<{{1}},{k}>F r") is holds
 
-    def test_profile_that_removes_every_move_does_not_win(self, temp_file):
-        """a and d are each available but never played together, so (true, a), (true, d)
-        leaves no move; that dead end must not count as reaching g."""
-        content = build_cgs_model_content(
-            transitions=[["0", "ac,bd"], ["0", "ac,bd"]],
-            state_names=["s0", "s1"],
-            initial_state="s0",
-            labelling=[["0"], ["0"]],
-            num_agents=2,
-            prop_names=["g"],
-        )
-        assert _satisfied(temp_file, content, "<{1,2},2>F g") is False
-
     def test_bound_below_the_coalition_size_is_an_error(self, temp_file):
         """Each member needs its true rule, so k = 1 cannot cover two agents."""
         error = model_checking("<{1,2},1>F g", temp_file(_UNEVEN_COALITION))["error"]

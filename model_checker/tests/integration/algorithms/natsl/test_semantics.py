@@ -77,11 +77,13 @@ def test_formula_outside_the_supported_fragment_is_an_error(formula, model, mess
 
 @pytest.mark.integration
 def test_model_with_missing_joint_actions_is_an_error(temp_file):
-    """s0 lists AA, AB and BA but not BB, so the opponent's reply table is not total."""
+    """s0 lists AA, AB and BA but not BB, so the model is refused when it loads."""
     model = temp_file(
         "Transition\nAA AB BA 0\n0 AA,AB,BA,BB 0 0\n0 0 AA,AB,BA,BB 0\n0 0 0 AA,AB,BA,BB\n"
         "Name_State\ns0 s1 s2 s3\nInitial_State\ns0\nAtomic_propositions\ngoal\n"
         "Labelling\n0\n1\n0\n0\nNumber_of_agents\n2\n"
     )
     result = model_checking("E{1}x A{1}y: (x, 1)(y, 2) F goal", model, mode="space")
-    assert "Non-total local joint-action" in result["error"]["message"]
+    assert "State 's0' has no transition for 1 combination(s)" in (
+        result["error"]["message"]
+    )

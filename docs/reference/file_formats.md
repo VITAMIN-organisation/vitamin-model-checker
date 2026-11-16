@@ -150,12 +150,31 @@ Use a self-loop on terminal states, for example `*` on the diagonal. Models that
 universal next can hold vacuously. A self-loop models a terminal situation as
 "remain forever."
 
-A row does not need a profile for every combination of the agents' actions. A
-combination that no cell of the row lists is not available in that state: no
-player can choose it. ATL and ATL* skip it; CTL, TCTL and TOL do not read actions.
-The concurrent game structures of JACM 2002 (Def. 2.1, pp. 677-678) and of
-PRIMA 2024 (Def. 1, p. 3) instead have a transition for every combination of
-available actions.
+Every combination of the agents' available actions needs a transition. An agent's
+available actions in a state are the actions it plays in some cell of the state's
+row. A `*` cell, or a `*` in one agent's position of a profile (in `*N`, agent 1
+plays anything and agent 2 plays `N`), covers every action of that agent. For
+example, a row that lists only `AC` and `BD` makes `A` and `B` available to agent 1
+and `C` and `D` to agent 2, so `AD` and `BC` need a cell too. The loader rejects a
+row that misses one, naming the state, the number of combinations missing and up
+to three of them, such as `A|D, B|C`. It does not add a self-loop for them: which
+successor a combination has belongs to the model. Rows whose cells are edge costs
+(`Transition_With_Costs`) are not checked, and a row that is all `0` gets only the
+"no outgoing transitions" error above.
+
+The rule follows the concurrent game structures of JACM 2002 (Def. 2.1, pp.
+677-678), PRIMA 2024 (Def. 1, p. 3) and AAMAS 2024 for CapATL (Def. 2.1, p. 124),
+which give a transition for every combination of available actions. Without it,
+a row is not a game: with `AC` leading to a state where `g` holds and `BD` to one
+where it does not, `<1>X g` and `<2>X !g` would both hold.
+
+OATL and IATL accept such rows, because their papers make the transition function
+partial: AAMAS 2024 for OATL (Def. 2, p. 272) and KR 2025 for IATL (p. 187). There,
+a combination that no cell lists is not available in that state. A BCGS model,
+which only IATL uses, is never checked. A costCGS model is exempt only when it is
+loaded for OATL (`partial_transitions` in the logic's metadata, read by
+`create_model_parser_for_logic`); loaded for RBATL, RABATL or with no logic, it is
+checked.
 
 ### State and label sections
 

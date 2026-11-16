@@ -9,7 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from model_checker.models.model_factory import create_model_parser
+from model_checker.models.model_factory import (
+    create_model_parser,
+    create_model_parser_for_logic,
+)
 
 _TESTS = Path(__file__).resolve().parents[2]
 # fixtures/tests/ holds the deliberately broken files.
@@ -34,6 +37,10 @@ def test_fixture_loads_and_its_initial_state_is_a_state(path):
     expected_type = "fuzzyCGS" if "fuzzyCGS" in path.parts else None
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        model = create_model_parser(str(path), expected_type)
+        # An OATL model may lack combinations of actions, which only OATL allows.
+        if "OATL" in path.parts:
+            model = create_model_parser_for_logic(str(path), "OATL")
+        else:
+            model = create_model_parser(str(path), expected_type)
         model.read_file(str(path))
     assert model.initial_state in list(model.states)

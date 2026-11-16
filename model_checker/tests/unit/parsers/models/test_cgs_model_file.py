@@ -11,6 +11,7 @@ from model_checker.tests.helpers.model_helpers import (
     build_cgs_model_content,
     load_cgs_from_content,
     load_costcgs_from_content,
+    load_test_model,
 )
 
 
@@ -176,12 +177,39 @@ def test_agent_label_count_must_match_the_agents():
         ),
         ("invalid/malformed_labelling.txt", "Labelling row 0 has 1 column"),
         ("invalid/wrong_transition_dimensions.txt", "Transition row 0 has 2 column"),
+        (
+            "invalid/missing_joint_action.txt",
+            r"State 's0' has no transition for 2 combination\(s\) .* A\|D, B\|C",
+        ),
     ],
 )
 def test_broken_file_is_refused_on_load(test_data_dir, file_name, message):
     """Each missing section, unknown initial state or ragged matrix gives its own message."""
     with pytest.raises(ValueError, match=message):
         CGS().read_file(str(test_data_dir / "tests" / file_name))
+
+
+@pytest.mark.unit
+def test_oatl_accepts_a_state_without_every_combination(test_data_dir):
+    """OATL allows a partial transition function, so the same file loads for it."""
+    model = load_test_model(
+        test_data_dir, "tests/invalid/missing_joint_action.txt", "OATL"
+    )
+    assert list(model.states) == ["s0", "s1", "s2"]
+
+
+@pytest.mark.unit
+def test_star_in_one_position_covers_that_agents_actions(temp_file):
+    """`*N` stands for AN and BN, so with AO and BO every combination of s0 is there."""
+    content = build_cgs_model_content(
+        transitions=[["0", "AO,BO", "*N"], ["0", "*", "0"], ["0", "0", "*"]],
+        state_names=["s0", "s1", "s2"],
+        initial_state="s0",
+        labelling=[["0"], ["1"], ["0"]],
+        num_agents=2,
+        prop_names=["g"],
+    )
+    CGS().read_file(temp_file(content))
 
 
 @pytest.mark.unit

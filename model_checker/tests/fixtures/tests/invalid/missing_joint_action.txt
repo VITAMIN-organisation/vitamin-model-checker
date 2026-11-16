@@ -1,0 +1,18 @@
+# s0 lists AC and BD but not AD or BC, although agent 1 plays A and B and
+# agent 2 plays C and D there.
+Transition
+0 AC BD
+0 * 0
+0 0 *
+Name_State
+s0 s1 s2
+Initial_State
+s0
+Atomic_propositions
+g
+Labelling
+0
+1
+0
+Number_of_agents
+2

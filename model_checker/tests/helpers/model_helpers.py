@@ -5,7 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from model_checker.models.model_factory import create_model_parser
+from model_checker.models.model_factory import (
+    create_model_parser,
+    create_model_parser_for_logic,
+)
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.game_structures.cost_cgs.cost_cgs import CostCGS
 from model_checker.parsers.game_structures.fuzzy_cgs.fuzzy_cgs import FuzzyCGS
@@ -26,23 +29,25 @@ def assert_parse_structure(result, expected_structure=None, description=""):
     if isinstance(result, str):
         return
 
-    assert isinstance(result, tuple), (
-        f"Parse result should be a tuple, got {type(result).__name__}: {description}"
-    )
+    assert isinstance(
+        result, tuple
+    ), f"Parse result should be a tuple, got {type(result).__name__}: {description}"
 
-    assert len(result) >= 2, (
-        f"Parse result tuple should have at least 2 elements, got {len(result)}: {description}"
-    )
+    assert (
+        len(result) >= 2
+    ), f"Parse result tuple should have at least 2 elements, got {len(result)}: {description}"
 
 
-def load_test_model(test_data_dir, model_path: str):
-    """Load fixtures/<model_path> with the parser the factory picks; fail the test if it does not load.
-
-    The parser's .filename is set, for entry points that take a path.
-    """
+def load_test_model(test_data_dir, model_path: str, logic: str | None = None):
+    """Load fixtures/<model_path> with the parser the factory picks, or the one `logic`
+    needs; fail the test if it does not load. The parser's .filename is set."""
     path_str = str(test_data_dir / Path(*model_path.split("/")))
     try:
-        parser = create_model_parser(path_str)
+        parser = (
+            create_model_parser_for_logic(path_str, logic)
+            if logic
+            else create_model_parser(path_str)
+        )
         parser.read_file(path_str)
         parser.filename = path_str
         return parser

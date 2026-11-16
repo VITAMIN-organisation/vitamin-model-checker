@@ -32,6 +32,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: the loader rejects a model where a state has no transition for some
+  combination of the agents' available actions (the actions each agent plays in
+  the state's row). The message names the state and up to three missing
+  combinations. Before, a combination with no cell was treated as not available:
+  in a row that lists only `AC` (to a `g` state) and `BD` (to a `!g` state), both
+  `<1>X g` and `<2>X !g` held. OATL models and IATL (BCGS) models are exempt,
+  because their papers make the transition function partial. NatSL reports the
+  error at load time instead of its own "Non-total local joint-action table"
+  message. See [Transition](docs/reference/file_formats.md#transition).
+- Test fixtures gained the missing combinations: the RBATL sensor fixture has the
+  idle self-loops and `CC` of PRIMA 2024 Fig. 1, and in the three-agent RBATL and
+  RABATL fixtures the added combinations keep the state at cost 0, so
+  `<1><2>F r` gives `s1, s3, s4` (before `s0` to `s4`).
 - Breaking: CapATL follows AAMAS 2024 (Def. 2.5, 2.9, 3.2). The coalition keeps
   one capacity per member for the whole strategy and does not see the opponents'
   moves; each opponent may play any of its capacities, one per play. Before, the

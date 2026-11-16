@@ -19,6 +19,11 @@ condition, unless:
   `P`) and C2 (the dual, backward) hold;
 - labelling is monotone: `s <=_P s'` implies that `s'` has every atom of `s`.
 
+A state need not have a transition for every combination of the agents' actions:
+KR 2025 lets the transition function be undefined on some of them and asks only
+that each state has a successor (p. 187). A combination that no cell lists is not
+available there ([Transition](../reference/file_formats.md#transition)).
+
 ## Overview
 
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers),

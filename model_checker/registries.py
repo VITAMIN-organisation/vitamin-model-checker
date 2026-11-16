@@ -36,10 +36,20 @@ def get_expected_model_type(logic_type: str) -> str | None:
     return "CGS"
 
 
+def _metadata_flag(logic_type: str, key: str, default: bool) -> bool:
+    """The boolean `key` of the logic's metadata, or `default` when it is absent."""
+    return (_load_logic_metadata(logic_type) or {}).get(key, default)
+
+
 def initial_state_required(logic_type: str) -> bool:
     """True unless the logic's metadata says its models may omit Initial_State."""
-    metadata = _load_logic_metadata(logic_type)
-    return (metadata or {}).get("initial_state_required", True)
+    return _metadata_flag(logic_type, "initial_state_required", True)
+
+
+def partial_transitions_allowed(logic_type: str) -> bool:
+    """True when the logic's metadata lets a state lack a transition for some
+    combination of the agents' available actions."""
+    return _metadata_flag(logic_type, "partial_transitions", False)
 
 
 def get_benchmark_group(logic_type: str) -> str:

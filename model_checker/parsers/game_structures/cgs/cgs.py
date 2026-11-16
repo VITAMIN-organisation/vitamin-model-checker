@@ -22,6 +22,10 @@ class CGS:
     # only uses that logic's words (CapCGS: CapATL).
     RESERVED_WORDS = FORMULA_RESERVED_WORDS
 
+    # Whether a state may lack a transition for some combination of available
+    # actions; a model type or the logic (create_model_parser_for_logic) allows it.
+    partial_transitions_allowed = False
+
     def validate_name(self, name: str, kind: str) -> None:
         """Reject a proposition or capacity name that no formula could reference."""
         cgs_utils.validate_model_name(

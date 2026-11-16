@@ -12,6 +12,9 @@ from model_checker.parsers.game_structures.cgs.cgs import CGS
 class BCGS(CGS):
     """Parser and in-memory representation for an IATL BCGS model file."""
 
+    # The IATL transition function is partial: a state may lack some combinations.
+    partial_transitions_allowed = True
+
     def _reset_state(self) -> None:
         super()._reset_state()
         self.preorder = np.array([])
