@@ -1,16 +1,6 @@
-"""Brute-force CapATL checker for tests; it uses the model and formula parsers
-but no solver code.
+"""Brute-force CapATL checker for tests; it uses no solver code.
 
-Paths are explicit, the capacity assignments a path allows and the paths an
-agent cannot tell apart are enumerated, and strategies are searched on the
-tree of state sequences up to a depth bound. A coalition member's own actions
-are a function of the state sequence, so a strategy that picks one joint
-coalition move per state sequence is one an agent can play without seeing
-the other agents' actions.
-
-Answers are three-valued: True or False only when the bounded search settles
-the question, None otherwise. `<Y>F` and `<Y>U` can be proved True, `<Y>G`
-and `<Y>R` can be proved False, and `<Y>X` is always settled.
+Searches strategies up to a depth bound; None means the bound did not settle it.
 """
 
 from __future__ import annotations
@@ -252,11 +242,8 @@ class CapATLReference:
         histories: list[Path],
         depth: int,
     ) -> bool | None:
-        """Can one move per state sequence make every outcome of `histories` win?
-
-        All histories share their state sequence. An outcome must be allowed by
-        some complete capacity assignment; the coalition plays inside its capacities.
-        """
+        """Whether one coalition move per state sequence wins every history."""
+        # The coalition sees only states and its own moves, so these histories share a move.
         open_histories = []
         unknown = False
         for path in histories:

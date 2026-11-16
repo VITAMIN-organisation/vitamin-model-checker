@@ -46,11 +46,7 @@ CASES = [
 def test_reference_matches_hand_computation(
     test_data_dir, model_path, formula, expected
 ):
-    """Hand results; in q1, 2 learns 3's capacity from AAA (cap) or AAB (cop).
-
-    In the one-capacity model agent 2 must win in sL with A and in sR with B,
-    which no single capacity allows.
-    """
+    """The brute-force search gives the hand-computed states on both models."""
     cgs = load_test_model(test_data_dir, model_path)
     tree = FormulaParserFactory.get_parser_instance("CapATL").parse(
         formula, n_agent=cgs.get_number_of_agents()

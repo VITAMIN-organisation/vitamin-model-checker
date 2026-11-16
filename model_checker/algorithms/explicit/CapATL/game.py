@@ -1,18 +1,4 @@
-"""Coalition games of CapATL on a capCGS model.
-
-A complete capacity assignment gives one capacity to every agent. Sets of
-assignments are bitmasks over `CapModel.assignments`.
-
-The coalition picks one capacity per member before play and keeps it. It sees
-the states and its own moves, not the opponents' moves, so it cannot tell
-apart plays that differ only there. A game node is (state, plays): `plays`
-holds one entry per such play still undecided. An entry keeps the assignments
-the play allows (an opponent must keep one capacity along a play, so a play
-needs at least one) and, per agent, the assignments that agent still
-considers possible: those that allow some play with the same states and the
-same moves of that agent. The coalition picks one move per node, which is a
-strategy that depends only on what it has seen.
-"""
+"""CapATL coalition games; sets of capacity assignments are bitmasks."""
 
 from __future__ import annotations
 
@@ -27,22 +13,16 @@ from model_checker.parsers.game_structures.cgs.cgs_actions import (
 )
 
 Move = tuple[str, ...]  # one action per agent, agent 1 first
-Knowledge = tuple[
-    int, ...
-]  # per agent, agent 1 first, the assignments it considers possible
-Play = tuple[int, Knowledge]  # the assignments the play allows, and the knowledge
+Knowledge = tuple[int, ...]  # assignments each agent still thinks possible
+Play = tuple[int, Knowledge]  # assignments the play allows, and knowledge
+# The coalition sees only states and its own moves, so a node holds every play it can't tell apart.
 Node = tuple[str, frozenset[Play]]
 StateTest = Callable[[str, Knowledge], bool]
-# Per node, one list per coalition move of the nodes it leads to; None is a lost play.
-Graph = dict[Node, list[list[Node | None]]]
+Graph = dict[Node, list[list[Node | None]]]  # per coalition move; None is a lost play
 
 
 class CapModel:
-    """Transitions with `*` expanded, and the assignments each joint move allows.
-
-    The capCGS loader has checked that every agent has a capacity and that
-    every assigned capacity has an action line.
-    """
+    """Transitions with `*` expanded, and the assignments each joint move allows."""
 
     def __init__(self, cgs: Any):
         self.agents = range(1, cgs.get_number_of_agents() + 1)
@@ -57,7 +37,6 @@ class CapModel:
             itertools.product(*(self.capacities[a] for a in self.agents))
         )
         self.all_assignments = (1 << len(self.assignments)) - 1
-        # Before any move, every agent considers every assignment possible.
         self.initial_knowledge: Knowledge = tuple(
             self.all_assignments for _ in self.agents
         )
@@ -104,8 +83,7 @@ class CapModel:
         return self._allowed[move]
 
     def learned(self, state: str, target: str, agent: int, action: str) -> int:
-        """Assignments that allow some step from `state` to `target` in which
-        `agent` plays `action`: what the agent may still believe after it."""
+        """Assignments `agent` still thinks possible after this step and its own action."""
         key = (state, target, agent, action)
         if key not in self._learned:
             mask = 0
@@ -126,8 +104,7 @@ class CoalitionGame:
         capacities: tuple[str, ...],
         observed: frozenset[int],
     ):
-        """`observed`: the agents whose knowledge the formula asks about; the
-        others keep every assignment, so fewer nodes are built."""
+        """`observed`: agents named by a K; only their knowledge is tracked."""
         self.model = model
         self.coalition = coalition
         self.observed = observed
@@ -142,8 +119,7 @@ class CoalitionGame:
         return (state, frozenset({(model.all_assignments, model.initial_knowledge)}))
 
     def _choices_at(self, state: str) -> list[list[tuple[Move, int, str]]]:
-        """Per coalition move allowed by the member capacities, the (joint move,
-        allowed assignments, target) of each joint move that extends it."""
+        """Joint moves at `state`, grouped by coalition move within the member capacities."""
         if state not in self._choices:
             grouped: dict[Move, list[tuple[Move, int, str]]] = {}
             for move, target in self.model.moves[state]:
@@ -193,8 +169,7 @@ class CoalitionGame:
 def _explore(
     game: CoalitionGame, starts: Iterable[Node], settle: Callable[[Node], Node | None]
 ) -> Graph:
-    """Nodes reachable from the settled `starts` through `settle`, which drops
-    decided plays (None: lost)."""
+    """Graph of the nodes reachable from `starts`; `settle` drops decided plays."""
     graph: Graph = {}
     stack = list(starts)
     while stack:
@@ -212,13 +187,7 @@ def _explore(
 
 
 def _winning_nodes(graph: Graph, reach: bool) -> set[Node]:
-    """A node with no plays left has won. With `reach`, the nodes from which
-    the coalition can force such a node (least fixpoint); otherwise those from
-    which it can avoid every lost play forever (greatest fixpoint).
-
-    Worklist form: each coalition move counts its targets not yet decided, so
-    every edge is visited once.
-    """
+    """Winning nodes: reach a node with no plays (`reach`), or never lose a play."""
     usable: dict[Node, int] = {}  # moves with no lost target, per node
     waiting: dict[tuple[Node, int], int] = {}  # per move, targets still undecided
     predecessors: dict[Node, list[tuple[Node, int]]] = defaultdict(list)
@@ -285,8 +254,7 @@ def until_states(
 def release_states(
     game: CoalitionGame, states: Iterable[str], release: StateTest, keep: StateTest
 ) -> set[str]:
-    """States from which the coalition can keep `keep` up to and including a
-    `release` state, or forever."""
+    """States from which the coalition can keep `keep` until it holds with `release`."""
 
     def settle(node: Node) -> Node | None:
         state, plays = node

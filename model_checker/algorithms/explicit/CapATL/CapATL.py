@@ -82,8 +82,8 @@ def _capacities_named(node: Any) -> set[str]:
 
 
 def _observed_agents(node: Any) -> frozenset[int]:
-    """Agents of the knowledge operators of a state formula, outside nested
-    strategic operators (those start a fresh play)."""
+    """Agents named by a K, not counting nested strategic operators."""
+    # A nested strategic operator starts its own play.
     if isinstance(node, str) or STRATEGIC_PATTERN.match(node[0]):
         return frozenset()
     if _is_knowledge(node):
@@ -92,11 +92,7 @@ def _observed_agents(node: Any) -> frozenset[int]:
 
 
 class _Evaluator:
-    """Whether a state formula holds at a state, given what each agent knows.
-
-    A strategic formula starts a fresh play at its state, so its value
-    depends only on the state.
-    """
+    """Whether a state formula holds at a state, given what each agent knows."""
 
     def __init__(self, cgs: Any, atoms: dict[str, set[str]]):
         self.model = CapModel(cgs)

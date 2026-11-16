@@ -286,8 +286,7 @@ def generate_capcgs_linear_chain_model(num_states, num_agents=2, prop_names=None
 
 
 def generate_random_capcgs_model(seed, num_states, num_agents):
-    """Random capCGS where every capacity has a move in every state and every
-    combination of the agents' moves has a transition."""
+    """Random capCGS with a move for every capacity and a transition for every joint move."""
     rng = random.Random(seed)
     states = [f"s{i}" for i in range(num_states)]
     capacities = {"ca": ["A", "B"], "cb": ["B", "C"], "cc": ["A", "C"]}

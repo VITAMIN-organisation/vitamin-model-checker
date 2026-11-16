@@ -142,9 +142,7 @@ class CapCGS(CGS):
         self.actions = list(set(actions))
 
     def validate_model_structure(self) -> None:
-        """Also require one Capacities_assignment row per agent, one column per
-        capacity, a capacity for every agent and an Actions_for_capacities line
-        for every assigned capacity."""
+        """Also check the Capacities_assignment and Actions_for_capacities sections."""
         errors = cgs_validation.collect_model_structure_errors(self)
         if not errors:
             rows = self.capacities_assignment

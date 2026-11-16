@@ -143,12 +143,7 @@ class TestCapATLSemantics:
         ],
     )
     def test_capatl_hand_computed_states(self, capatl_model, formula, expected):
-        """Opponents may pick any capacity, so 3 answers AB or BA to 1 and 2 in q1.
-
-        In q1 only AAA reaches q2 directly; in q0 agent 1 reaches q2 with B.
-        Agent 2 playing A in q1 learns 3's capacity (AAA to q2, AAB to q0);
-        agent 1 never does, since each step it sees fits both capacities of 3.
-        """
+        """Hand-computed: agent 3 may answer with either capacity, and only 2 learns which."""
         result = _core_capatl_checking(capatl_model, formula)
         assert extract_states_from_result(result) == expected
 
