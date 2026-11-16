@@ -1,0 +1,47 @@
+# MODEL: A chain s0 -> s1 -> ... -> s6 with a self-loop at s6
+
+# PURPOSE: The run leaves p at s6, so <{2}>G p is False everywhere; q holds only at s1.
+
+# LOGIC: CAPATL
+
+# DESCRIPTION: One capacity c with action A for both agents; every move is AA.
+
+Transition
+0 AA 0 0 0 0 0
+0 0 AA 0 0 0 0
+0 0 0 AA 0 0 0
+0 0 0 0 AA 0 0
+0 0 0 0 0 AA 0
+0 0 0 0 0 0 AA
+0 0 0 0 0 0 AA
+Unknown_Transition_by
+0 0 0 0 0 0 0
+0 0 0 0 0 0 0
+0 0 0 0 0 0 0
+0 0 0 0 0 0 0
+0 0 0 0 0 0 0
+0 0 0 0 0 0 0
+0 0 0 0 0 0 0
+Name_State
+s0 s1 s2 s3 s4 s5 s6
+Initial_State
+s0
+Atomic_propositions
+p q
+Labelling
+1 0
+1 1
+1 0
+1 0
+1 0
+1 0
+0 0
+Capacities
+c
+Capacities_assignment
+1
+1
+Actions_for_capacities
+c A
+Number_of_agents
+2

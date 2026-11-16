@@ -105,8 +105,21 @@ Def. 2.5 and would be true under the reduction.
 
 The tests compare the checker with a brute-force search written from the
 definitions (`model_checker/tests/helpers/capatl_reference.py`) on small random
-models. The search enumerates paths and strategies up to a depth bound and
-answers only where that bound settles the question.
+models. The search enumerates paths and strategies up to a depth bound. A play
+is decided when it wins, loses, or comes back to a position it has already
+passed. A position is the state, with the set of still-possible capacity
+assignments for each history the coalition cannot tell apart.
+
+Without `K`, the future of a play depends only on its position, so a play that
+returns to one repeats forever: `G` and `R` hold on it and `F` and `U` fail. The
+search skips this rule when an operand of the strategic operator contains `K`
+outside any nested strategic operator (see [knowledge
+operator](#knowledge-operator)), since `K` looks at the whole history.
+
+A play the depth bound cuts, and a nested strategic operator the bound leaves
+open, are read once as false and once as true. When both readings agree, the
+search returns that answer; otherwise it returns unknown and the tests skip that
+state.
 
 ## Knowledge operator
 

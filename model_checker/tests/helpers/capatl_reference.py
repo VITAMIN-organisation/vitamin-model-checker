@@ -1,14 +1,12 @@
-"""Brute-force CapATL checker for tests; it uses no solver code.
-
-Searches strategies up to a depth bound; None means the bound did not settle it.
-"""
+"""Brute-force CapATL checker for tests, searching strategies up to a depth bound:
+None means the bound cut a play, here or in a nested operator, before it settled."""
 
 from __future__ import annotations
 
 import itertools
 import re
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, NamedTuple
 
 from model_checker.algorithms.explicit.shared.atom_utils import (
     boolean_constant,
@@ -28,8 +26,19 @@ STRATEGIC_PATTERN = re.compile(rf"^{CAPATL_COALITION_TOKEN}([XFGUR])$")
 
 Path = tuple[tuple[str, ...], tuple[tuple[str, ...], ...]]  # states, joint actions
 Assignment = tuple[str, ...]  # capacity of agent 1..n
+Position = tuple[str, frozenset[frozenset[Assignment]]]  # state, C(h) per history
 
 WIN, LOSE, OPEN = "win", "lose", "open"
+
+
+class _Game(NamedTuple):
+    """One strategic operator: its node, temporal operator, coalition, and whether a
+    repeated position settles it (no K reads the play)."""
+
+    node: Any
+    op: str
+    coalition: list[int]
+    tracks_positions: bool
 
 
 def _and3(values: Iterable[bool | None]) -> bool | None:
@@ -54,6 +63,19 @@ def _or3(values: Iterable[bool | None]) -> bool | None:
 
 def _not3(v: bool | None) -> bool | None:
     return None if v is None else not v
+
+
+def _reads_knowledge(node: Any) -> bool:
+    """Whether node has a K outside any nested strategic operator, which starts its
+    own play and so does not read this one."""
+    if isinstance(node, str):
+        return False
+    op = node[0]
+    if op.startswith("K"):
+        return True
+    if op.startswith("<{"):
+        return False
+    return any(_reads_knowledge(child) for child in node[1:])
 
 
 class CapATLReference:
@@ -187,80 +209,97 @@ class CapATLReference:
             return self._strategic_memo[key]
         raise ValueError(f"unknown operator {op!r}")
 
-    def _status(self, node: Any, path: Path) -> str | None:
-        """Whether an outcome prefix already satisfies or violates the temporal part."""
-        match = STRATEGIC_PATTERN.match(node[0])
-        assert match is not None, node[0]
-        op = match.group(2)
+    def _status(self, op: str, node: Any, path: Path, assume: bool) -> str:
+        """Whether an outcome prefix already satisfies or violates the temporal part,
+        reading an operand the depth bound left open as `assume`."""
+
+        def holds(operand: Any) -> bool:
+            value = self.state_formula(operand, path)
+            return assume if value is None else value
+
         if op == "X":
             if len(path[0]) == 1:
                 return OPEN
-            value = self.state_formula(node[1], path)
-            return None if value is None else (WIN if value else LOSE)
+            return WIN if holds(node[1]) else LOSE
         if op in ("F", "U"):
-            left = "true" if op == "F" else node[1]
-            goal = self.state_formula(node[-1], path)
-            if goal is True:
+            if holds(node[-1]):
                 return WIN
-            stay = self.state_formula(left, path)
-            if goal is False and stay is False:
-                return LOSE
-            return OPEN if goal is False and stay is True else None
+            return OPEN if op == "F" or holds(node[1]) else LOSE
         if op in ("G", "R"):
-            release = "false" if op == "G" else node[1]
-            keep = self.state_formula(node[-1], path)
-            if keep is False:
+            if not holds(node[-1]):
                 return LOSE
-            stop = self.state_formula(release, path)
-            if keep is True and stop is True:
-                return WIN
-            return OPEN if keep is True and stop is False else None
+            return WIN if op == "R" and holds(node[1]) else OPEN
         raise ValueError(f"unknown temporal operator {op!r}")
 
     def strategic(self, node: Any, state: str) -> bool | None:
         """<Y>psi at state: some capacity per member, fixed for the whole strategy, wins."""
+        # Temporal operators are monotone, so open values read as false or as true bound it.
         match = STRATEGIC_PATTERN.match(node[0])
         assert match is not None, node[0]
         coalition = sorted(int(a) for a in match.group(1).split(","))
-        start: Path = ((state,), ())
-        return _or3(
-            self._search(
-                node,
-                coalition,
-                dict(zip(coalition, caps, strict=True)),
-                [start],
-                self.depth,
-            )
-            for caps in itertools.product(*(self.capacities[a] for a in coalition))
+        game = _Game(
+            node,
+            match.group(2),
+            coalition,
+            not any(_reads_knowledge(operand) for operand in node[1:]),
         )
+        start: Path = ((state,), ())
+
+        def wins(assume: bool) -> bool:
+            return any(
+                self._search(
+                    game,
+                    dict(zip(coalition, caps, strict=True)),
+                    [start],
+                    self.depth,
+                    assume,
+                    (),
+                )
+                for caps in itertools.product(*(self.capacities[a] for a in coalition))
+            )
+
+        if wins(False):
+            return True
+        return None if wins(True) else False
 
     def _search(
         self,
-        node: Any,
-        coalition: list[int],
+        game: _Game,
         caps: dict[int, str],
         histories: list[Path],
         depth: int,
-    ) -> bool | None:
-        """Whether one coalition move per state sequence wins every history."""
+        assume: bool,
+        trail: tuple[Position, ...],
+    ) -> bool:
+        """Whether one coalition move per state sequence wins every history; `trail`
+        holds the positions of the play so far."""
+        coalition = game.coalition
         # The coalition sees only states and its own moves, so these histories share a move.
         open_histories = []
-        unknown = False
         for path in histories:
-            status = self._status(node, path)
+            status = self._status(game.op, game.node, path, assume)
             if status == LOSE:
                 return False
             if status == OPEN:
                 open_histories.append(path)
-            elif status is None:
-                unknown = True
-                open_histories.append(path)
         if not open_histories:
-            return None if unknown else True
-        if depth == 0:
-            return None
+            return True
 
         state = open_histories[0][0][-1]
+        # Without K the future depends only on the state and the assignments still
+        # allowed, so a repeated position loops forever: G and R win, F and U lose.
+        if game.tracks_positions:
+            position = (
+                state,
+                frozenset(
+                    frozenset(self.compatible_assignments(h)) for h in open_histories
+                ),
+            )
+            if position in trail:
+                return game.op in ("G", "R")
+            trail = trail + (position,)
+        if depth == 0:
+            return assume
         moves = self.transitions[state]
         allowed = [
             sorted({al[a - 1] for al, _ in moves} & self.gamma[caps[a]])
@@ -280,9 +319,9 @@ class CapATLReference:
                         successors.setdefault(target, []).append(path)
             return successors
 
-        return _or3(
-            _and3(
-                self._search(node, coalition, caps, group, depth - 1)
+        return any(
+            all(
+                self._search(game, caps, group, depth - 1, assume, trail)
                 for group in successors.values()
             )
             for successors in map(outcomes, itertools.product(*allowed))
