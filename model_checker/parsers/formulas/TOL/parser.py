@@ -13,51 +13,21 @@ from model_checker.parsers.formulas.shared_parser import (
     BaseLogicParser,
     word_rule,
 )
+from model_checker.parsers.formulas.timed_ast import (
+    AtomicProp,
+    Binary,
+    BooleanConst,
+    ClockExpr,
+    Expr,
+    FreezeExpr,
+    SimpleTimeExpr,
+    Unary,
+)
 from model_checker.parsers.syntax_patterns import (
     TCTL_TOL_PROPOSITION_TOKEN,
     TOL_DEMONIC_LEADING_ZERO_RE,
     TOL_DEMONIC_TOKEN,
 )
-
-
-# --- AST nodes ---
-class Expr:
-    def __init__(self):
-        self.satisfying_regions: set = set()
-        self.constraints = None
-
-
-class Unary(Expr):
-    def __init__(self, op: str, operand: Expr):
-        super().__init__()
-        self.op = op
-        self.operand = operand
-
-    def __repr__(self):
-        return f"{self.op}({self.operand})"
-
-
-class Binary(Expr):
-    def __init__(self, op: str, left: Expr, right: Expr):
-        super().__init__()
-        self.op = op
-        self.left = left
-        self.right = right
-
-    def __repr__(self):
-        return f"{self.op} {self.left},{self.right}"
-
-
-class AtomicProp(Expr):
-    def __init__(self, name: str):
-        super().__init__()
-        self.name = name
-
-    def __repr__(self):
-        return self.name
-
-    def __str__(self):
-        return self.name
 
 
 class DemonicOp(Expr):
@@ -81,50 +51,6 @@ class DemonicBinary(Expr):
 
     def __repr__(self):
         return f"{self.demonic_cost}{self.op}({self.left},{self.right})"
-
-
-class FreezeExpr(Expr):
-    def __init__(self, clock: str, operand: Expr):
-        super().__init__()
-        self.clock = clock
-        self.operand = operand
-
-    def __repr__(self):
-        return f"{self.clock}.({self.operand})"
-
-
-class ClockExpr(Expr):
-    def __init__(self, subject: Expr, constraints: Expr):
-        super().__init__()
-        self.subject = subject
-        self.constraints = str(constraints)
-
-    def __repr__(self):
-        return f"{self.subject}: {self.constraints}"
-
-    def __str__(self):
-        return f"{self.subject}: {self.constraints}"
-
-
-class SimpleTimeExpr(Expr):
-    def __init__(self, constraints: str):
-        super().__init__()
-        self.constraints = constraints
-
-    def __repr__(self):
-        return self.constraints
-
-    def __str__(self):
-        return self.constraints
-
-
-class BooleanConst(Expr):
-    def __init__(self, value: bool):
-        super().__init__()
-        self.value = value
-
-    def __repr__(self):
-        return "true" if self.value else "false"
 
 
 class DemonicValueError(Exception):
