@@ -183,6 +183,24 @@ def coalition_bound_error(formula: str, missing_message: str) -> str | None:
     return None
 
 
+# `X` alone is never a TCTL or TOL name (a name starts lowercase), so this cannot
+# reject a valid formula; `xray` and `nextstate` stay names.
+_DENSE_TIME_NEXT_RE = re.compile(
+    _MODAL_TOKEN_PREFIX + r"(?:[AE]\s*)?(?:X|next)" + _MODAL_TOKEN_SUFFIX
+)
+
+
+def dense_time_next_error(formula: str, logic: str) -> str | None:
+    """The error for a next operator in a dense-time logic such as TCTL, else None."""
+    next_op = _DENSE_TIME_NEXT_RE.search(formula)
+    if next_op is None:
+        return None
+    return (
+        f"{logic} has no next operator ('{next_op.group(0)}' at position "
+        f"{next_op.start() + 1}): time is dense, so there is no unique next state"
+    )
+
+
 def demonic_leading_zero_error(
     formula: str, leading_zero_re: re.Pattern[str]
 ) -> str | None:

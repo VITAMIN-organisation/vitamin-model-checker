@@ -36,4 +36,3 @@ RESET_RE = re.compile(rf"{_CLOCK}{_RESET}(\d+)")
 MAX_CONSTRAINT_RE = re.compile(rf"{_CLOCK}\s*(?:{COMPARISON_OPS_ALT})\s*(\d+)")
 
 CLOCK_BOUND_PREFIX_RE = re.compile(rf"^{_FORMULA_CLOCK}(?:{_FORMULA_PREFIX_OPS})")
-BOUND_CONSTANT_RE = re.compile(rf"{_FORMULA_CLOCK}\s*(?:{COMPARISON_OPS_ALT})\s*(\d+)")

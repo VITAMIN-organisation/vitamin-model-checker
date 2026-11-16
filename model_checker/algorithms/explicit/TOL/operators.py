@@ -9,9 +9,7 @@ from model_checker.algorithms.explicit.shared.fixpoint_iter import (
 )
 from model_checker.algorithms.explicit.TOL.preimage import triangle_down
 from model_checker.parsers.formulas.TOL.parser import DemonicBinary, DemonicOp
-from model_checker.parsers.game_structures.timed_cgs.semantics import (
-    extract_closest_constraint,
-)
+from model_checker.parsers.game_structures.timed_cgs.regions import all_regions
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
@@ -21,38 +19,25 @@ _DEMONIC_COST_DIGITS = re.compile(r"\d+")
 
 
 def handle_globally(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: DemonicOp) -> None:
-    all_states = set(tcgs.states)
     bound = int(_DEMONIC_COST_DIGITS.findall(node.demonic_cost)[0])
-    constraint = extract_closest_constraint(node.operand)
-    operand_states = node.operand.satisfying_states
-    node.satisfying_states = greatest_fixpoint(
-        all_states,
-        lambda states: (
-            operand_states & triangle_down(tcgs, zone_graph, bound, states, constraint)
+    operand_regions = node.operand.satisfying_regions
+    node.satisfying_regions = greatest_fixpoint(
+        all_regions(zone_graph),
+        lambda regions: (
+            operand_regions & triangle_down(tcgs, zone_graph, bound, regions)
         ),
-    )
-
-
-def handle_next(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: DemonicOp) -> None:
-    bound = int(_DEMONIC_COST_DIGITS.findall(node.demonic_cost)[0])
-    constraint = extract_closest_constraint(node.operand)
-    node.satisfying_states = triangle_down(
-        tcgs, zone_graph, bound, node.operand.satisfying_states, constraint
     )
 
 
 def handle_eventually(
     tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: DemonicOp
 ) -> None:
-    all_states = set(tcgs.states)
     bound = int(_DEMONIC_COST_DIGITS.findall(node.demonic_cost)[0])
-    constraint = extract_closest_constraint(node.operand)
-    operand_states = node.operand.satisfying_states
-    node.satisfying_states = least_fixpoint(
-        operand_states,
-        lambda states: (
-            operand_states
-            | (all_states & triangle_down(tcgs, zone_graph, bound, states, constraint))
+    operand_regions = node.operand.satisfying_regions
+    node.satisfying_regions = least_fixpoint(
+        operand_regions,
+        lambda regions: (
+            operand_regions | triangle_down(tcgs, zone_graph, bound, regions)
         ),
     )
 
@@ -61,14 +46,12 @@ def handle_until(
     tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: DemonicBinary
 ) -> None:
     bound = int(_DEMONIC_COST_DIGITS.findall(node.demonic_cost)[0])
-    constraint = extract_closest_constraint(node.right)
-    states1 = node.left.satisfying_states
-    states2 = node.right.satisfying_states
-    node.satisfying_states = least_fixpoint(
-        states2,
-        lambda states: (
-            states2
-            | (states1 & triangle_down(tcgs, zone_graph, bound, states, constraint))
+    regions1 = node.left.satisfying_regions
+    regions2 = node.right.satisfying_regions
+    node.satisfying_regions = least_fixpoint(
+        regions2,
+        lambda regions: (
+            regions2 | (regions1 & triangle_down(tcgs, zone_graph, bound, regions))
         ),
     )
 
@@ -76,31 +59,25 @@ def handle_until(
 def handle_release(
     tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: DemonicBinary
 ) -> None:
-    all_states = set(tcgs.states)
     bound = int(_DEMONIC_COST_DIGITS.findall(node.demonic_cost)[0])
-    constraint = extract_closest_constraint(node.right)
-    states1 = node.left.satisfying_states
-    states2 = node.right.satisfying_states
-    node.satisfying_states = greatest_fixpoint(
-        all_states,
-        lambda states: (
-            states2
-            & (states1 | triangle_down(tcgs, zone_graph, bound, states, constraint))
+    regions1 = node.left.satisfying_regions
+    regions2 = node.right.satisfying_regions
+    node.satisfying_regions = greatest_fixpoint(
+        all_regions(zone_graph),
+        lambda regions: (
+            regions2 & (regions1 | triangle_down(tcgs, zone_graph, bound, regions))
         ),
     )
 
 
 def handle_weak(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node: DemonicBinary) -> None:
-    all_states = set(tcgs.states)
     bound = int(_DEMONIC_COST_DIGITS.findall(node.demonic_cost)[0])
-    constraint = extract_closest_constraint(node.left)
-    states1 = node.left.satisfying_states
-    states2 = node.right.satisfying_states
-    states_weak = states1 | states2
-    node.satisfying_states = greatest_fixpoint(
-        all_states,
-        lambda states: (
-            states_weak
-            & (states2 | triangle_down(tcgs, zone_graph, bound, states, constraint))
+    regions1 = node.left.satisfying_regions
+    regions2 = node.right.satisfying_regions
+    regions_weak = regions1 | regions2
+    node.satisfying_regions = greatest_fixpoint(
+        all_regions(zone_graph),
+        lambda regions: (
+            regions_weak & (regions2 | triangle_down(tcgs, zone_graph, bound, regions))
         ),
     )

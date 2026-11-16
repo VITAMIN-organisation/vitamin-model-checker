@@ -1,11 +1,14 @@
-"""TOL cost-bounded pre-images."""
+"""TOL cost-bounded pre-image on zone-graph regions."""
 
-from model_checker.parsers.game_structures.timed_cgs.semantics import (
-    discrete_pre_image_states,
-    zone_graph_pre_image_states,
+from model_checker.parsers.game_structures.timed_cgs.regions import (
+    RegionSet,
+    timed_predecessors,
 )
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
-from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
+from model_checker.parsers.game_structures.timed_cgs.zone_graph import (
+    TimeState,
+    ZoneGraph,
+)
 
 
 def _transition_cost(tcgs: TimedCGS, source_idx: int, target_idx: int) -> int:
@@ -17,46 +20,41 @@ def _transition_cost(tcgs: TimedCGS, source_idx: int, target_idx: int) -> int:
     return int(value)
 
 
-def pre_indices(tcgs: TimedCGS, state_indices: set[int]) -> set[int]:
-    target_names = {str(tcgs.get_state_name_by_index(idx)) for idx in state_indices}
-    pre_names = discrete_pre_image_states(tcgs, target_names)
-    return {int(tcgs.get_index_by_state_name(name)) for name in pre_names}
-
-
-def pre_timed_indices(
+def _demon_keeps_inside(
     tcgs: TimedCGS,
     zone_graph: ZoneGraph,
-    state_indices: set[int],
-    constraints,
-) -> set[int]:
-    target_names = {str(tcgs.get_state_name_by_index(idx)) for idx in state_indices}
-    pre_names = zone_graph_pre_image_states(tcgs, zone_graph, target_names, constraints)
-    return {int(tcgs.get_index_by_state_name(name)) for name in pre_names}
-
-
-def triangle(
-    tcgs: TimedCGS, source_idx: int, bound: int, inside_indices: set[int]
+    region: TimeState,
+    bound: int,
+    inside: RegionSet,
 ) -> bool:
-    """True when deactivation cost to block all edges leaving inside_indices is <= bound."""
-    total = 0
-    for target_idx, _ in enumerate(tcgs.graph[source_idx]):
-        if target_idx in inside_indices:
-            continue
-        total += _transition_cost(tcgs, source_idx, target_idx)
-    return total <= bound
+    """True when the Demon, within ``bound``, can disable every edge from ``region``
+    that may leave ``inside`` and a step into ``inside`` remains."""
+    delay_targets = zone_graph.delay_successors[region]
+    if not delay_targets <= inside:
+        return False  # time passing cannot be disabled
+    edges = zone_graph.discrete_successors[region]
+    leaving = {
+        target for target, successors in edges.items() if not successors <= inside
+    }
+    if leaving.issuperset(zone_graph.location_targets[region.location]):
+        return False  # the Demon may not disable every edge of the location
+    if not delay_targets and set(edges) <= leaving:
+        return False
+    source_idx = tcgs.get_index_by_state_name(region.location)
+    exit_cost = sum(
+        _transition_cost(tcgs, source_idx, tcgs.get_index_by_state_name(target))
+        for target in leaving
+    )
+    return exit_cost <= bound
 
 
 def triangle_down(
-    tcgs: TimedCGS,
-    zone_graph: ZoneGraph,
-    bound: int,
-    state_names,
-    constraints=None,
-) -> set[str]:
-    state_indices = {int(tcgs.get_index_by_state_name(name)) for name in state_names}
-    if constraints:
-        predecessors = pre_timed_indices(tcgs, zone_graph, state_indices, constraints)
-    else:
-        predecessors = pre_indices(tcgs, state_indices)
-    result = {idx for idx in predecessors if triangle(tcgs, idx, bound, state_indices)}
-    return {str(tcgs.get_state_name_by_index(idx)) for idx in result}
+    tcgs: TimedCGS, zone_graph: ZoneGraph, bound: int, regions: RegionSet
+) -> RegionSet:
+    """Regions from which the Demon, within ``bound``, can force the next step into
+    ``regions``."""
+    return {
+        region
+        for region in timed_predecessors(zone_graph, regions)
+        if _demon_keeps_inside(tcgs, zone_graph, region, bound, regions)
+    }

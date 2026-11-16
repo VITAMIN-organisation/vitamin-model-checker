@@ -706,16 +706,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/TCTL/evaluators.py": [
-            {
-                "code": "reportAttributeAccessIssue",
-                "range": {
-                    "startColumn": 71,
-                    "endColumn": 77,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/algorithms/explicit/TCTL/operators.py": [
             {
                 "code": "reportAttributeAccessIssue",
@@ -768,56 +758,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/TOL/operators.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 44,
-                    "endColumn": 56,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 44,
-                    "endColumn": 56,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 44,
-                    "endColumn": 56,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 44,
-                    "endColumn": 54,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 44,
-                    "endColumn": 54,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 44,
-                    "endColumn": 53,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/algorithms/explicit/shared/atom_utils.py": [
             {
                 "code": "reportArgumentType",
@@ -866,6 +806,16 @@
                 "range": {
                     "startColumn": 49,
                     "endColumn": 55,
+                    "lineCount": 1
+                }
+            }
+        ],
+        "./model_checker/algorithms/explicit/shared/timed_ast_operators.py": [
+            {
+                "code": "reportAttributeAccessIssue",
+                "range": {
+                    "startColumn": 71,
+                    "endColumn": 77,
                     "lineCount": 1
                 }
             }
@@ -1006,16 +956,6 @@
                 "range": {
                     "startColumn": 35,
                     "endColumn": 41,
-                    "lineCount": 1
-                }
-            }
-        ],
-        "./model_checker/parsers/game_structures/timed_cgs/semantics.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 51,
-                    "endColumn": 62,
                     "lineCount": 1
                 }
             }

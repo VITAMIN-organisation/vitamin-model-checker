@@ -37,6 +37,12 @@ _RESET_CYCLE = (
     / "timedCGS"
     / "tctl_reset_cycle.txt"
 )
+_INVARIANT10 = (
+    Path(__file__).resolve().parents[3]
+    / "fixtures"
+    / "timedCGS"
+    / "tctl_tol_invariant10.txt"
+)
 
 
 def _states(result):
@@ -58,7 +64,7 @@ def _initial_satisfied(result):
         ("EG p", {"s0"}, True),
         ("AG p", {"s0"}, True),
         ("EF x<=1", {"s0"}, True),
-        ("AG x<=1", {"s0"}, True),
+        ("AG x<=1", set(), False),
         ("E p U p", {"s0"}, True),
         ("A p U p", {"s0"}, True),
         ("E (p U p)", {"s0"}, True),
@@ -75,7 +81,7 @@ def test_tctl_semantics(formula, expected_locations, initial_ok):
     ("formula", "expected_locations", "initial_ok"),
     [
         ("EF (p : x<=1)", {"s0"}, True),
-        ("AG (p : x<=1)", {"s0"}, True),
+        ("AG (p : x<=1)", set(), False),
         ("E (p : x<=1) U p", {"s0"}, True),
         ("j.p", {"s0"}, True),
         ("E (j<=2) U p", {"s0"}, True),
@@ -84,6 +90,25 @@ def test_tctl_semantics(formula, expected_locations, initial_ok):
 def test_tctl_clock_guards_and_freeze(formula, expected_locations, initial_ok):
     result = model_checking(formula, str(_MINIMAL))
     assert _states(result) == expected_locations
+    assert _initial_satisfied(result) is initial_ok
+
+
+@pytest.mark.parametrize(
+    ("formula", "initial_ok"),
+    [
+        ("AG (p : x<=3)", False),
+        ("EF !(p : x<=3)", True),
+        ("EF (p : x>5)", True),
+        ("AG !(p : x>5)", False),
+        ("p : x<=3", True),
+        ("AG (p && x<=3)", False),
+        ("AG (x<=3)", False),
+        ("j.AG (p : j<=3)", False),
+    ],
+)
+def test_tctl_clock_guard_holds_for_every_clock_value(formula, initial_ok):
+    """Time at s0 runs to x=10, so a guard such as x<=3 fails later on every path."""
+    result = model_checking(formula, str(_INVARIANT10))
     assert _initial_satisfied(result) is initial_ok
 
 

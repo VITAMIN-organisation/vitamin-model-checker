@@ -3,13 +3,10 @@
 from typing import TYPE_CHECKING
 
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
-from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
 from model_checker.utils.error_handler import undeclared_propositions_message
 
 if TYPE_CHECKING:
-    from model_checker.parsers.formulas.TCTL.parser import Expr
     from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
-    from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 
 
 def states_where_prop_holds(tcgs: "TimedCGS", prop: str) -> set[int]:
@@ -25,63 +22,3 @@ def states_where_prop_holds(tcgs: "TimedCGS", prop: str) -> set[int]:
         for state_idx, row in enumerate(tcgs.matrix_prop)
         if row[int(index)] == 1
     }
-
-
-def discrete_pre_image_states(tcgs: "TimedCGS", target_states) -> set[str]:
-    """States with an edge into target_states."""
-    targets = {str(state) for state in target_states}
-    return {source for source, target in tcgs.get_edges() if target in targets}
-
-
-def zone_graph_pre_image_states(
-    tcgs: "TimedCGS",
-    zone_graph: "ZoneGraph",
-    target_states,
-    constraints: tuple | str | None,
-) -> set[str]:
-    """Locations that can move into ``target_states``, under the clock guard when one
-    is given."""
-    # Cycle: regions.py imports this module.
-    from model_checker.parsers.game_structures.timed_cgs.regions import (
-        timed_predecessors,
-    )
-
-    target_names = {str(state) for state in target_states}
-    if not constraints:
-        return discrete_pre_image_states(tcgs, target_names)
-
-    targets = {state for state in zone_graph.states if state.location in target_names}
-    predecessors = timed_predecessors(zone_graph, tcgs, targets, constraints)
-    return {predecessor.location for predecessor in predecessors}
-
-
-def extract_closest_constraint(node: "Expr") -> str | None:
-    """Nearest clock guard on this node or a descendant."""
-    constraints = getattr(node, "constraints", None)
-    if constraints:
-        return constraints
-
-    for attr_name in ("operand", "left", "right", "formula", "subject"):
-        child = getattr(node, attr_name, None)
-        if child is not None:
-            found = extract_closest_constraint(child)
-            if found:
-                return found
-
-    return None
-
-
-def states_with_time_constraints(
-    tcgs: "TimedCGS",
-    zone_graph: "ZoneGraph",
-    constraints: tuple[str, ...] | str,
-) -> set[str]:
-    """States whose zone satisfies the clock guard."""
-    result: set[str] = set()
-    guards, resets = DBMAdapter.parse_constraints([constraints], tcgs.clocks_dict)
-    for state in sorted(zone_graph.states, key=lambda item: item.location):
-        if DBMAdapter.zone_satisfies_guards(
-            tcgs, state.location, state.zone, guards, resets
-        ):
-            result.add(state.location)
-    return result

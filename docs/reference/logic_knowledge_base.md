@@ -761,14 +761,20 @@ For example:
 j.{J5}(j<=7 U goal)
 ```
 
-The temporal operators are `F`, `G`, `U`, `R`, `W` (paper) and `X` (VITAMIN extension).
+The temporal operators are `F`, `G`, `U`, `R`, `W`. The parser rejects `X` and
+`next`, as it does in TCTL. The paper leaves the next operator out because time is
+continuous: "Unlike OL, our logical TOL does not use the next operator. This is
+because the time domain is continuous and there is no unique next time" (AAMAS 2025,
+p. 4).
 
 The budget `k` is spent anew at each step: the Demon may deactivate
 transitions whose costs add up to at most `k`, and the budget does not carry over
 along the path. OL (`<Jk>`) reads its budget the
 same way.
 
-The freeze `j.phi` resets formula clock `j` to `0` at the current state.
+The freeze `j.phi` resets formula clock `j` to `0` at the current state. The
+checker gets this right only where `j` is still 0, such as a freeze at the start
+of the formula; see [TCTL freezes](../algorithms/tctl.md#overview).
 
 The model type is `timedCGS`, the same as TCTL. How the checker computes each
 operator: [TOL algorithm](../algorithms/tol.md).
@@ -909,7 +915,7 @@ the table, because the word carries the agent number; see `kcap` under
 | `and` | `&&` | every logic except NatSL |
 | `or` | `\|\|` | every logic except NatSL |
 | `implies` | `->` | every logic except NatSL |
-| `next` | `X` | every logic except NatSL, TCTL |
+| `next` | `X` | every logic except NatSL, TCTL, TOL |
 | `eventually` | `F` | every logic except NatSL |
 | `globally` | `G` | every logic except NatSL |
 | `always` | `G` | every logic except NatSL |
@@ -988,7 +994,7 @@ only on a 1-agent model (see [NatSL](#natsl---natural-strategy-logic)).
 | NatATLF | `<{1,2}, 5>` | `X`, `F`, `G`, `U` | CGS | `<{1,2}, 5>F p` |
 | CapATL | `<{1,2}>`; knowledge `K1(...)` | `X`, `F`, `G`, `U`, `R` | capCGS | `<{1}>F (g && K1(1 is c))` |
 | OL | `<J5>` | `X`, `F`, `G`, `U`, `R`, `W` | costCGS | `<J5> (p R q)` |
-| TOL | `{J5}`; clock constraint `phi : x<5`; freeze `x.phi` | `X`, `F`, `G`, `U`, `R`, `W` | timedCGS | `{J5}F x.(p : x<5)` |
+| TOL | `{J5}`; clock constraint `phi : x<5`; freeze `x.phi` | `F`, `G`, `U`, `R`, `W` | timedCGS | `{J5}F x.(p : x<5)` |
 | NatSL | `E{1}x A{1}y: (x, 1)(y, 2)` | one goal: `F`, `G` or `X` | CGS | `E{1}x: (x, 1) F goal` |
 
 <a id="summary-logic-comparison-matrix"></a>

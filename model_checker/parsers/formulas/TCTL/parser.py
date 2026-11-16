@@ -5,11 +5,8 @@ is dense then, by definition, there is no unique next time" (Alur, Courcoubetis,
 Dill, Information and Computation 1993, p. 10).
 """
 
-import re
-
 from model_checker.parsers.formulas.parser_utils import (
-    _MODAL_TOKEN_PREFIX,
-    _MODAL_TOKEN_SUFFIX,
+    dense_time_next_error,
     normalize_formula_text,
     run_common_prechecks,
     until_operands,
@@ -19,12 +16,6 @@ from model_checker.parsers.formulas.shared_parser import (
     quantifier_rules,
 )
 from model_checker.parsers.syntax_patterns import TCTL_TOL_PROPOSITION_TOKEN
-
-# `X` alone is never a TCTL name (a name starts lowercase), so this cannot reject a
-# valid formula; `xray` and `nextstate` stay names.
-_NEXT_OPERATOR = re.compile(
-    _MODAL_TOKEN_PREFIX + r"(?:[AE]\s*)?(?:X|next)" + _MODAL_TOKEN_SUFFIX
-)
 
 
 # --- AST nodes ---
@@ -226,14 +217,9 @@ class TCTLParser(BaseLogicParser):
         return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
-        next_op = _NEXT_OPERATOR.search(formula)
-        if next_op:
-            return (
-                False,
-                f"TCTL has no next operator ('{next_op.group(0)}' at position "
-                f"{next_op.start() + 1}): time is dense, so there is no unique "
-                "next state",
-            )
+        next_error = dense_time_next_error(formula, "TCTL")
+        if next_error:
+            return False, next_error
         return run_common_prechecks(
             formula,
             allow_hash_at=False,

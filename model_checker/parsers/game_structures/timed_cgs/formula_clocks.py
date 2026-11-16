@@ -5,9 +5,9 @@ timedCGS before the zone graph is built so freeze quantification can be evaluate
 """
 
 from model_checker.parsers.game_structures.timed_cgs.constraint_syntax import (
-    BOUND_CONSTANT_RE,
     CLOCK_BOUND_PREFIX_RE,
 )
+from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
 
 
 def _clock_from_constraint(text: str) -> str | None:
@@ -32,39 +32,30 @@ def collect_formula_clocks(node, model_clocks: set[str]) -> tuple[str, ...]:
     return tuple(sorted(found))
 
 
-def max_constants_from_formula(node, clocks_dict: dict[str, int]) -> list[int]:
-    """Each clock's largest constant in the formula guards, so zone extrapolation
-    keeps the distinctions the formula needs."""
-    maxima = [0] * len(clocks_dict)
-    if node is None:
-        return maxima
-    _walk_formula_max_constants(node, clocks_dict, maxima)
-    return maxima
+def formula_clock_bounds(
+    node, clocks_dict: dict[str, int]
+) -> list[tuple[int, str, int]]:
+    """The distinct clock bounds ``(DBM clock index, op, constant)`` of the formula's
+    guards, in the order they appear."""
+    bounds: list[tuple[int, str, int]] = []
+    if node is not None:
+        _walk_formula_bounds(node, clocks_dict, bounds)
+    return bounds
 
 
-def _record_constraint_maxima(
-    text: str, clocks_dict: dict[str, int], maxima: list[int]
-) -> None:
-    for clock, value_str in BOUND_CONSTANT_RE.findall(str(text)):
-        if clock in clocks_dict:
-            idx = clocks_dict[clock]
-            maxima[idx] = max(maxima[idx], int(value_str))
-
-
-def _walk_formula_max_constants(
-    node, clocks_dict: dict[str, int], maxima: list[int]
+def _walk_formula_bounds(
+    node, clocks_dict: dict[str, int], bounds: list[tuple[int, str, int]]
 ) -> None:
     constraints = getattr(node, "constraints", None)
     if constraints is not None:
-        if isinstance(constraints, tuple):
-            _record_constraint_maxima("".join(constraints), clocks_dict, maxima)
-        else:
-            _record_constraint_maxima(str(constraints), clocks_dict, maxima)
+        text = "".join(constraints) if isinstance(constraints, tuple) else constraints
+        found, _ = DBMAdapter.parse_constraints([str(text)], clocks_dict)
+        bounds.extend(bound for bound in found if bound not in bounds)
 
     for attr in ("operand", "left", "right", "formula", "subject"):
         child = getattr(node, attr, None)
         if child is not None:
-            _walk_formula_max_constants(child, clocks_dict, maxima)
+            _walk_formula_bounds(child, clocks_dict, bounds)
 
 
 def _walk_formula_clocks(node, model_clocks: set[str], found: set[str]) -> None:

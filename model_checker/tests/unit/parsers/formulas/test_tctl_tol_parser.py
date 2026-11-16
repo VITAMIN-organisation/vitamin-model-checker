@@ -1,7 +1,7 @@
 """TCTL and TOL: clock constraints, freeze, constants, and the errors only they have.
 
 Both lex `x>5` as a clock constraint, so `>` must never be mistaken for the
-rejected implication alias. TCTL has no next operator (IC 1993, p. 10).
+rejected implication alias. Neither has a next operator, since time is dense.
 """
 
 import pytest
@@ -93,7 +93,7 @@ def test_tol_release_and_weak_until_take_optional_parentheses(operator):
         ("TCTL", "AF (p) && q", "AF", "&&", 0),
         ("TCTL", "r && x. p && q", "x.", "&&", 5),
         ("TCTL", "AF p : x<5 && q", "AF", "&&", 0),
-        ("TOL", "{J2}X p || q", "{J2}X", "||", 0),
+        ("TOL", "{J2}F p || q", "{J2}F", "||", 0),
         ("TOL", "j. p && q", "j.", "&&", 0),
     ],
 )
@@ -111,21 +111,22 @@ def test_ambiguity_error_names_the_prefix_and_both_readings(
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
-    ("formula", "named"),
+    ("logic", "formula", "named"),
     [
-        ("AX p", "'AX' at position 1"),
-        ("EX p", "'EX' at position 1"),
-        ("X p", "'X' at position 1"),
-        ("AG (p -> AX q)", "'AX' at position 10"),
-        ("A next p", "'A next' at position 1"),
+        ("TCTL", "AX p", "'AX' at position 1"),
+        ("TCTL", "EX p", "'EX' at position 1"),
+        ("TCTL", "X p", "'X' at position 1"),
+        ("TCTL", "AG (p -> AX q)", "'AX' at position 10"),
+        ("TCTL", "A next p", "'A next' at position 1"),
+        ("TOL", "{J2}X p", "'X' at position 5"),
     ],
 )
-def test_tctl_has_no_next_operator(formula, named):
+def test_dense_time_logics_have_no_next_operator(logic, formula, named):
     """Time is dense, so there is no next state; the error names the operator."""
-    parser = FormulaParserFactory.get_parser_instance("TCTL")
+    parser = FormulaParserFactory.get_parser_instance(logic)
     assert parser.parse(formula) is None
     [error] = parser.errors
-    assert error.startswith(f"TCTL has no next operator ({named})"), error
+    assert error.startswith(f"{logic} has no next operator ({named})"), error
 
 
 @pytest.mark.unit

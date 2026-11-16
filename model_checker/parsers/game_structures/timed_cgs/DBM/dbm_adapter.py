@@ -5,6 +5,7 @@ from .DBM import DBM
 # Bridges timedCGS models and DBM zone operations.
 
 FormulaInput = str | tuple[str, ...]
+_NEGATED_BOUND_OPS = {"<=": ">", "<": ">=", ">=": "<", ">": "<="}
 _AND_OPS = frozenset({"&", "and"})
 _OR_OPS = frozenset({"|", "or"})
 _COMBINATORS = _AND_OPS | _OR_OPS
@@ -48,6 +49,30 @@ def zone_satisfies_guards(
     if tcgs.invariants_arr[loc_idx]:
         apply_location_invariants(candidate, tcgs, loc_idx)
     return not candidate.is_empty()
+
+
+def split_zone(zone: DBM, bounds) -> list[DBM]:
+    """The non-empty parts of ``zone`` that each lie wholly inside or wholly
+    outside every bound ``(clock index, op, constant)``."""
+    parts = [zone]
+    for clock_index, op, constant in bounds:
+        sides = (
+            (clock_index, op, constant),
+            (clock_index, _NEGATED_BOUND_OPS[op], constant),
+        )
+        parts = [
+            piece
+            for part in parts
+            for side in sides
+            if not (piece := _with_bound(part, side)).is_empty()
+        ]
+    return parts
+
+
+def _with_bound(zone: DBM, bound) -> DBM:
+    piece = zone.copy()
+    apply_bounds(piece, [bound])
+    return piece
 
 
 def delay_zone(tcgs: TimedCGS, zone: DBM, location: str) -> DBM | None:

@@ -31,11 +31,6 @@ class TestCostBoundedSemantics:
         [
             ("p", {"s1"}, False),
             ("q", {"s0"}, True),
-            ("{J2}X p", {"s0"}, True),
-            ("{J3}X p", {"s0"}, True),
-            ("{J5}X p", {"s0"}, True),
-            ("{J1}X q", {"s1"}, False),
-            ("{J4}X q", {"s1"}, False),
             ("{J2}F p", {"s0", "s1"}, True),
             ("{J3}F p", {"s0", "s1"}, True),
             ("{J5}F p", {"s0", "s1"}, True),
@@ -75,8 +70,22 @@ class TestGradeZero:
         assert tol_states == tctl_states
 
 
+def test_demon_cannot_stop_time():
+    """Time at s0 runs past x=3 and the Demon can only disable edges, so G fails."""
+    fixture = str(_FIXTURE.with_name("tctl_tol_invariant10.txt"))
+    result = model_checking("{J1}G (p : x<=3)", fixture)
+    assert result["initial_state"] == "Initial state s0: False"
+
+
+def test_demon_cannot_disable_the_only_edge():
+    """The edge s0 -> s1 must stay enabled, so leaving s0 at x=1 never meets p."""
+    fixture = str(_FIXTURE.with_name("tol_only_edge.txt"))
+    result = model_checking("{J1}F (p : x>3)", fixture)
+    assert result["initial_state"] == "Initial state s0: False"
+
+
 def test_syntax_error():
-    result = model_checking("{J2}X p (", str(_FIXTURE))
+    result = model_checking("{J2}F p (", str(_FIXTURE))
     assert "error" in result
     assert result["error"]["type"] == "syntax"
 

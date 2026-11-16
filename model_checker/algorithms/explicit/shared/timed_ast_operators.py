@@ -1,14 +1,18 @@
-"""Boolean and leaf operators for TCTL/TOL AST nodes (satisfying_states sets)."""
+"""Boolean and leaf operators for TCTL/TOL AST nodes (sets of zone-graph regions)."""
 
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from model_checker.algorithms.explicit.shared.boolean_semantics import (
-    compute_boolean_result,
+from model_checker.parsers.game_structures.timed_cgs.formula_clocks import (
+    collect_formula_clocks,
 )
-from model_checker.parsers.game_structures.timed_cgs.semantics import (
-    states_where_prop_holds,
-    states_with_time_constraints,
+from model_checker.parsers.game_structures.timed_cgs.regions import (
+    RegionSet,
+    all_regions,
+    region_matches_label,
+    region_with_clock_reset,
+    regions_where_prop_holds,
+    regions_with_clock_guard,
 )
 
 if TYPE_CHECKING:
@@ -30,78 +34,71 @@ def solve_ast_children(
             solve_tree_fn(tcgs, zone_graph, child)
 
 
-def eval_atomic_prop(tcgs: "TimedCGS", node) -> None:
-    for state_idx in states_where_prop_holds(tcgs, node.name):
-        node.satisfying_states.add(str(tcgs.get_state_name_by_index(state_idx)))
+def eval_atomic_prop(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
+    node.satisfying_regions = regions_where_prop_holds(tcgs, zone_graph, node.name)
 
 
 def eval_simple_time_expr(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
-    node.satisfying_states = states_with_time_constraints(
+    node.satisfying_regions = regions_with_clock_guard(
         tcgs, zone_graph, node.constraints
     )
 
 
-def eval_boolean_const(tcgs: "TimedCGS", node) -> None:
+def eval_boolean_const(zone_graph: "ZoneGraph", node) -> None:
     if node.value:
-        node.satisfying_states = {str(state) for state in tcgs.states}
+        node.satisfying_regions = all_regions(zone_graph)
     else:
-        node.satisfying_states = set()
+        node.satisfying_regions = set()
 
 
-def handle_not(tcgs: "TimedCGS", node) -> None:
-    all_states = set(tcgs.states)
-    node.satisfying_states = compute_boolean_result(
-        "NOT", node.operand.satisfying_states, all_states=all_states
-    )
+def handle_not(zone_graph: "ZoneGraph", node) -> None:
+    universe = all_regions(zone_graph)
+    node.satisfying_regions = universe - node.operand.satisfying_regions
 
 
 def handle_or(node) -> None:
-    node.satisfying_states = compute_boolean_result(
-        "OR", node.left.satisfying_states, right_states=node.right.satisfying_states
+    node.satisfying_regions = (
+        node.left.satisfying_regions | node.right.satisfying_regions
     )
 
 
 def handle_and(node) -> None:
-    node.satisfying_states = compute_boolean_result(
-        "AND", node.left.satisfying_states, right_states=node.right.satisfying_states
+    node.satisfying_regions = (
+        node.left.satisfying_regions & node.right.satisfying_regions
     )
 
 
-def handle_implies(tcgs: "TimedCGS", node) -> None:
-    all_states = set(tcgs.states)
-    node.satisfying_states = compute_boolean_result(
-        "IMPLIES",
-        node.left.satisfying_states,
-        right_states=node.right.satisfying_states,
-        all_states=all_states,
-    )
+def handle_implies(zone_graph: "ZoneGraph", node) -> None:
+    universe = all_regions(zone_graph)
+    node.satisfying_regions = (
+        universe - node.left.satisfying_regions
+    ) | node.right.satisfying_regions
 
 
 def handle_clock_expr(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
-    guard_states = states_with_time_constraints(tcgs, zone_graph, node.constraints)
-    node.satisfying_states = node.subject.satisfying_states & guard_states
+    guard_regions = regions_with_clock_guard(tcgs, zone_graph, node.constraints)
+    node.satisfying_regions = node.subject.satisfying_regions & guard_regions
 
 
 def handle_freeze(tcgs: "TimedCGS", zone_graph: "ZoneGraph", node) -> None:
-    """Locations where a zone satisfies the operand once the freeze clock is reset."""
-    from model_checker.parsers.game_structures.timed_cgs.regions import (
-        region_matches_label,
-        region_with_clock_reset,
-        regions_at_location,
-    )
-
-    operand_locations = set(node.operand.satisfying_states)
-    if node.clock not in tcgs.clocks_dict:
-        node.satisfying_states = set(operand_locations)
+    """Label regions that satisfy the operand after resetting the freeze clock."""
+    operand_clocks = set(collect_formula_clocks(node.operand, set(tcgs.clocks)))
+    if node.clock not in operand_clocks:
+        node.satisfying_regions = set(node.operand.satisfying_regions)
         return
 
-    operand_regions = set()
-    for location in operand_locations:
-        operand_regions |= regions_at_location(zone_graph, location)
+    operand_regions = node.operand.satisfying_regions
+    node.satisfying_regions = {
+        region
+        for region in all_regions(zone_graph)
+        if region_matches_label(
+            region_with_clock_reset(tcgs, region, node.clock),
+            operand_regions,
+        )
+    }
 
-    result: set[str] = set()
-    for region in zone_graph.states:
-        reset_region = region_with_clock_reset(tcgs, region, node.clock)
-        if region_matches_label(reset_region, operand_regions):
-            result.add(region.location)
-    node.satisfying_states = result
+
+def initial_region_satisfied(zone_graph: "ZoneGraph", regions: RegionSet) -> bool:
+    """Whether the initial region (all clocks 0) is in ``regions``; False when the
+    initial invariant leaves no region."""
+    return zone_graph.initial_time_state in regions

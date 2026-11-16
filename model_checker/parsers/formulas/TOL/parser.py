@@ -4,6 +4,7 @@ import re
 
 from model_checker.parsers.formulas.parser_utils import (
     demonic_leading_zero_error,
+    dense_time_next_error,
     normalize_formula_text,
     run_common_prechecks,
     until_operands,
@@ -22,7 +23,7 @@ from model_checker.parsers.syntax_patterns import (
 # --- AST nodes ---
 class Expr:
     def __init__(self):
-        self.satisfying_states = set()
+        self.satisfying_regions: set = set()
         self.constraints = None
 
 
@@ -209,7 +210,6 @@ class TOLParser(BaseLogicParser):
 
     def p_expression_unary(self, p):
         """expression : DEMONIC GLOBALLY expression
-        | DEMONIC NEXT expression
         | DEMONIC EVENTUALLY expression"""
         demonic_cost = re.findall(r"\d+", p[1])[0]
         try:
@@ -261,6 +261,9 @@ class TOLParser(BaseLogicParser):
         return super().parse(formula, **kwargs)
 
     def _pre_validation(self, formula) -> tuple[bool, str | None]:
+        next_error = dense_time_next_error(formula, "TOL")
+        if next_error:
+            return False, next_error
         leading_zero = demonic_leading_zero_error(formula, TOL_DEMONIC_LEADING_ZERO_RE)
         if leading_zero:
             return False, leading_zero

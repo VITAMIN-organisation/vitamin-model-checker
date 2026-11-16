@@ -1,0 +1,28 @@
+# MODEL: One location with p, a self-loop and invariant x<=10, so time runs from 0 to 10.
+
+# PURPOSE: A clock guard in the formula must hold for every clock value of a region.
+
+# LOGIC: TCTL, TOL
+
+Transition
+* 0
+0 *
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+1
+0
+Number_of_agents
+1
+Clocks
+x
+Clock_constraints
+0 0
+0 0
+Invariants
+x<=10
+x<=10

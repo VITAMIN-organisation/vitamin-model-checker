@@ -2,7 +2,6 @@
 
 from typing import TYPE_CHECKING
 
-from model_checker.algorithms.explicit.shared.trace_utils import reverse_adjacency
 from model_checker.parsers.game_structures.timed_cgs.DBM import DBMAdapter
 from model_checker.parsers.game_structures.timed_cgs.semantics import (
     states_where_prop_holds,
@@ -18,10 +17,6 @@ RegionSet = set[TimeState]
 
 def all_regions(zone_graph: "ZoneGraph") -> RegionSet:
     return set(zone_graph.states)
-
-
-def regions_at_location(zone_graph: "ZoneGraph", location: str) -> RegionSet:
-    return {state for state in zone_graph.states if state.location == location}
 
 
 def project_regions_to_locations(regions: RegionSet) -> set[str]:
@@ -76,37 +71,9 @@ def region_with_clock_reset(
     return TimeState(region.location, zone)
 
 
-def timed_predecessors(
-    zone_graph: "ZoneGraph",
-    tcgs: "TimedCGS",
-    targets: RegionSet,
-    guard: str | tuple | None = None,
-) -> RegionSet:
-    """Symbolic states that reach ``targets`` in one delay or discrete step, kept only
-    if their zone satisfies ``guard`` when one is given."""
-    if not targets:
-        return set()
-
-    reverse_graph = getattr(zone_graph, "reverse_graph", None)
-    if reverse_graph is None:
-        reverse_graph = reverse_adjacency(zone_graph.graph, zone_graph.states)
-        zone_graph.reverse_graph = reverse_graph
-
-    guards = resets = None
-    if guard:
-        guard_text = "".join(guard) if isinstance(guard, tuple) else str(guard)
-        guards, resets = DBMAdapter.parse_constraints([guard_text], tcgs.clocks_dict)
-
+def timed_predecessors(zone_graph: "ZoneGraph", targets: RegionSet) -> RegionSet:
+    """Symbolic states that reach ``targets`` in one delay or discrete step."""
     predecessors: RegionSet = set()
     for target in targets:
-        for predecessor in reverse_graph.get(target, []):
-            if guard and not DBMAdapter.zone_satisfies_guards(
-                tcgs,
-                predecessor.location,
-                predecessor.zone,
-                guards,
-                resets,
-            ):
-                continue
-            predecessors.add(predecessor)
+        predecessors.update(zone_graph.reverse_graph.get(target, []))
     return predecessors

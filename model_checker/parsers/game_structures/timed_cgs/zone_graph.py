@@ -1,3 +1,6 @@
+from collections import deque
+from itertools import chain
+
 from model_checker.algorithms.explicit.shared.trace_utils import (
     any_backward_path,
     collect_backward_paths,
@@ -23,72 +26,99 @@ class TimeState:
         return self.location == other.location and self.zone == other.zone
 
 
-def _register_state(
-    zone_graph: dict,
-    all_states: set,
-    waitlist: list,
-    predecessor: TimeState,
-    successor: TimeState,
-) -> None:
-    zone_graph[predecessor].append(successor)
-    if successor not in zone_graph:
-        zone_graph[successor] = []
-        waitlist.append(successor)
-    all_states.add(successor)
+ClockBound = tuple[int, str, int]
 
 
-def _outgoing_location_targets(tcgs: TimedCGS, location: str) -> list[str]:
-    return sorted(
-        (target for source, target in tcgs.get_edges() if source == location),
-        key=str,
-    )
+class _Exploration:
+    """Breadth-first exploration of the reachable regions; each successor is stored
+    once, as a delay step or as a discrete step to a named location."""
+
+    def __init__(self, tcgs: TimedCGS, formula_bounds: list[ClockBound]):
+        self.tcgs = tcgs
+        self.formula_bounds = formula_bounds
+        self.max_constants = _max_constants(tcgs, formula_bounds)
+        self.location_targets = _location_targets(tcgs)
+        self.delay_successors: dict[TimeState, set[TimeState]] = {}
+        self.discrete_successors: dict[TimeState, dict[str, set[TimeState]]] = {}
+        self.waitlist: deque[TimeState] = deque()
+
+    def regions(self, location: str, zone: DBM) -> list[TimeState]:
+        """The regions of ``zone`` after normalization, split on the formula bounds."""
+        zone.k_normalize(self.max_constants)
+        return [
+            TimeState(location, part)
+            for part in DBMAdapter.split_zone(zone, self.formula_bounds)
+        ]
+
+    def add_state(self, state: TimeState) -> None:
+        if state in self.delay_successors:
+            return
+        self.delay_successors[state] = set()
+        self.discrete_successors[state] = {}
+        self.waitlist.append(state)
 
 
-def _expand_delay_successors(
-    tcgs: TimedCGS,
-    current_state: TimeState,
-    zone_graph: dict,
-    all_states: set,
-    waitlist: list,
-    max_constants: list[int],
-) -> None:
+def _location_targets(tcgs: TimedCGS) -> dict[str, tuple[str, ...]]:
+    """Each location's edge targets, sorted."""
+    targets: dict[str, set[str]] = {}
+    for source, target in tcgs.get_edges():
+        targets.setdefault(source, set()).add(target)
+    return {
+        str(location): tuple(sorted(targets.get(location, ()), key=str))
+        for location in tcgs.states
+    }
 
-    delay_zone = DBMAdapter.delay_zone(tcgs, current_state.zone, current_state.location)
-    if delay_zone is None:
+
+def _successor_lists(
+    delay_successors: dict[TimeState, set[TimeState]],
+    discrete_successors: dict[TimeState, dict[str, set[TimeState]]],
+) -> dict[TimeState, list[TimeState]]:
+    """Every successor of each state, delay steps first."""
+    return {
+        state: [*delays, *chain.from_iterable(discrete_successors[state].values())]
+        for state, delays in delay_successors.items()
+    }
+
+
+def _max_constants(tcgs: TimedCGS, formula_bounds: list[ClockBound]) -> list[int]:
+    """Each clock's largest constant in the model and the formula bounds."""
+    max_constants = DBMAdapter.get_max_clock_constraints(tcgs)
+    for clock_index, _op, constant in formula_bounds:
+        idx = clock_index - 1
+        max_constants[idx] = max(max_constants[idx], constant)
+    return max_constants
+
+
+def _expand_delay_successors(exploration: _Exploration, state: TimeState) -> None:
+    zone = DBMAdapter.delay_zone(exploration.tcgs, state.zone, state.location)
+    if zone is None:
         return
+    for successor in exploration.regions(state.location, zone):
+        # A region closed under delay+invariant gets no self-loop: it would
+        # suggest infinite time progress inside a bounded invariant.
+        if successor != state:
+            exploration.delay_successors[state].add(successor)
+            exploration.add_state(successor)
 
-    delay_zone.k_normalize(max_constants)
-    delay_state = TimeState(current_state.location, delay_zone)
-    # When the zone is already closed under delay+invariant, a self-loop would
-    # incorrectly suggest infinite time progress inside a bounded invariant.
-    if delay_state != current_state:
-        _register_state(zone_graph, all_states, waitlist, current_state, delay_state)
 
-
-def _expand_discrete_successors(
-    tcgs: TimedCGS,
-    current_state: TimeState,
-    zone_graph: dict,
-    all_states: set,
-    waitlist: list,
-    max_constants: list[int],
-) -> None:
-    source_idx = tcgs.get_index_by_state_name(current_state.location)
-    for target in _outgoing_location_targets(tcgs, current_state.location):
+def _expand_discrete_successors(exploration: _Exploration, state: TimeState) -> None:
+    tcgs = exploration.tcgs
+    source_idx = tcgs.get_index_by_state_name(state.location)
+    for target in exploration.location_targets[state.location]:
         target_idx = tcgs.get_index_by_state_name(target)
-        successor_zone = DBMAdapter.forward_transition_zone(
-            tcgs, current_state.zone, source_idx, target_idx
+        zone = DBMAdapter.forward_transition_zone(
+            tcgs, state.zone, source_idx, target_idx
         )
-        if successor_zone is None:
+        if zone is None:
             continue
-        successor_zone.k_normalize(max_constants)
-        successor_state = TimeState(target, successor_zone)
-        _register_state(
-            zone_graph, all_states, waitlist, current_state, successor_state
-        )
+        for successor in exploration.regions(target, zone):
+            exploration.discrete_successors[state].setdefault(target, set()).add(
+                successor
+            )
+            exploration.add_state(successor)
 
 
-def _initial_zone(tcgs: TimedCGS, max_constants: list[int]) -> DBM | None:
+def _initial_zone(tcgs: TimedCGS) -> DBM | None:
     """Build the start zone: all clocks at zero, closed under the location invariant."""
     zone = DBM(len(tcgs.clocks))
     for clock_idx in range(1, zone.size):
@@ -99,57 +129,39 @@ def _initial_zone(tcgs: TimedCGS, max_constants: list[int]) -> DBM | None:
         DBMAdapter.apply_location_invariants(zone, tcgs, loc_idx)
         if zone.is_empty():
             return None
-    zone.k_normalize(max_constants)
     return zone
 
 
-def _build_zone_graph(
-    tcgs: TimedCGS,
-    extra_max_constants: list[int] | None = None,
-) -> tuple[dict[TimeState, list[TimeState]], set[TimeState], TimeState | None]:
-    """Explore reachable symbolic states from the zero-clock initial zone."""
-    zone_graph: dict[TimeState, list[TimeState]] = {}
-    all_states: set[TimeState] = set()
-
-    max_constants = DBMAdapter.get_max_clock_constraints(tcgs)
-    if extra_max_constants:
-        for idx, value in enumerate(extra_max_constants):
-            if idx < len(max_constants):
-                max_constants[idx] = max(max_constants[idx], int(value))
-
-    initial_zone = _initial_zone(tcgs, max_constants)
+def _explore(
+    tcgs: TimedCGS, formula_bounds: list[ClockBound]
+) -> tuple[_Exploration, TimeState | None]:
+    """Explore reachable regions from the zero-clock initial zone."""
+    exploration = _Exploration(tcgs, formula_bounds)
+    initial_zone = _initial_zone(tcgs)
     if initial_zone is None:
-        return zone_graph, all_states, None
+        return exploration, None
 
-    initial_state = TimeState(location=tcgs.initial_state, zone=initial_zone)
-    all_states.add(initial_state)
-    zone_graph[initial_state] = []
-    waitlist = [initial_state]
-
-    while waitlist:
-        current_state = waitlist.pop(0)
-        _expand_delay_successors(
-            tcgs, current_state, zone_graph, all_states, waitlist, max_constants
-        )
-        _expand_discrete_successors(
-            tcgs, current_state, zone_graph, all_states, waitlist, max_constants
-        )
-
-    return zone_graph, all_states, initial_state
+    # Every clock is 0, so the initial zone lies on one side of each bound.
+    [initial_state] = exploration.regions(tcgs.initial_state, initial_zone)
+    exploration.add_state(initial_state)
+    while exploration.waitlist:
+        state = exploration.waitlist.popleft()
+        _expand_delay_successors(exploration, state)
+        _expand_discrete_successors(exploration, state)
+    return exploration, initial_state
 
 
 class ZoneGraph:
-    def __init__(
-        self,
-        tcgs: TimedCGS,
-        extra_max_constants: list[int] | None = None,
-    ):
-        """The (location, zone) graph for timed model checking; ``extra_max_constants``
-        adds the formula's clock constants to the extrapolation bounds."""
+    def __init__(self, tcgs: TimedCGS, formula_bounds: list[ClockBound] | None = None):
+        """The (location, zone) graph for timed model checking, each zone split so it
+        lies wholly inside or wholly outside every bound in ``formula_bounds``."""
         self.tcgs = tcgs
-        self.graph, self.states, self.initial_time_state = _build_zone_graph(
-            tcgs, extra_max_constants
-        )
+        exploration, self.initial_time_state = _explore(tcgs, formula_bounds or [])
+        self.location_targets = exploration.location_targets
+        self.delay_successors = exploration.delay_successors
+        self.discrete_successors = exploration.discrete_successors
+        self.graph = _successor_lists(self.delay_successors, self.discrete_successors)
+        self.states = set(self.graph)
         self.reverse_graph = reverse_adjacency(self.graph, self.states)
 
     def _backward_path_starts(self, target_location: str) -> list[TimeState]:

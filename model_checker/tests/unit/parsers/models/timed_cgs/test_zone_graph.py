@@ -8,8 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from model_checker.parsers.game_structures.timed_cgs.semantics import (
-    states_with_time_constraints,
+from model_checker.parsers.game_structures.timed_cgs.regions import (
+    project_regions_to_locations,
+    regions_with_clock_guard,
 )
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
@@ -29,6 +30,13 @@ def minimal_tcgs() -> TimedCGS:
     tcgs = TimedCGS()
     tcgs.read_file(_FIXTURE)
     return tcgs
+
+
+def _locations_meeting(tcgs: TimedCGS, constraint: str) -> set[str]:
+    graph = ZoneGraph(tcgs)
+    return project_regions_to_locations(
+        regions_with_clock_guard(tcgs, graph, constraint)
+    )
 
 
 def _load(tmp_path, content: str) -> TimedCGS:
@@ -84,8 +92,7 @@ def test_path_exists_only_inside_the_invariant(minimal_tcgs, bounds, reachable):
 )
 def test_states_where_a_clock_constraint_can_hold(minimal_tcgs, constraint, states):
     """A state counts when some reachable zone there meets the constraint."""
-    graph = ZoneGraph(minimal_tcgs)
-    assert states_with_time_constraints(minimal_tcgs, graph, constraint) == states
+    assert _locations_meeting(minimal_tcgs, constraint) == states
 
 
 @pytest.mark.unit
@@ -159,7 +166,7 @@ def test_strict_invariant_of_a_target_blocks_the_edge_at_its_bound(
         _TWO_STATES
         + f"Clocks\nx\nClock_constraints\n0 0\n0 0\nInvariants\n0\n{invariant}\n",
     )
-    assert states_with_time_constraints(tcgs, ZoneGraph(tcgs), "x==3") == states
+    assert _locations_meeting(tcgs, "x==3") == states
 
 
 @pytest.mark.unit
