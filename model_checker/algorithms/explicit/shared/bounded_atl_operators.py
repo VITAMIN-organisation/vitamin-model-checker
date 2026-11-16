@@ -22,7 +22,7 @@ from model_checker.utils.literals import parse_state_set_literal, state_set_lite
 # free_pre(X) is the cost-0 pre-image of X and paid the states won by one paid move.
 BudgetSolver = Callable[[Callable[[set[str]], set[str]], set[str]], set[str]]
 
-# Measured: 90601 budgets, bound (300,300), take 18 s on the 8-state sensor model.
+# Measured: 90601 budgets, bound (300,300), take 5.9 s on the 8-state sensor model.
 MAX_BUDGETS = 100_000
 
 

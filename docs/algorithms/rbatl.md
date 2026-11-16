@@ -73,7 +73,7 @@ steps cost 2. `<1><2> F p` gives `{s0, s1, s2}`. `<1><1> G !p` gives
 The number of budgets is the product of `b_i + 1` over the bound's entries, and
 the time grows with it. Measured with `<1,2><b,b> F p` on
 `model_checker/tests/fixtures/costCGS/RBATL/rbatl_2agents_8states_sensor.txt`:
-`(20,20)` takes 0.08 s, `(100,100)` 2.0 s and `(300,300)` 18 s (best of 3 runs of
+`(20,20)` takes 0.02 s, `(100,100)` 0.5 s and `(300,300)` 5.9 s (best of 3 runs of
 `model_checking`). A bound that needs
 more than 100000 budgets is a validation error that names it.
 
