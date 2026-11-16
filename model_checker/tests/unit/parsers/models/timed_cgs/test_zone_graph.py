@@ -168,6 +168,20 @@ def test_strict_invariant_of_a_target_blocks_the_edge_at_its_bound(
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
+    ("constraint", "states"), [("x==1", {"locA", "locB"}), ("x==3", {"locA"})]
+)
+def test_locations_are_found_by_their_names(tmp_path, constraint, states):
+    """Names other than sN: the invariant x<=1 belongs to locB, not to locA."""
+    tcgs = _load(
+        tmp_path,
+        _TWO_STATES.replace("s0 s1", "locA locB").replace("\ns0\n", "\nlocA\n")
+        + "Clocks\nx\nClock_constraints\n0 0\n0 0\nInvariants\n0\nx<=1\n",
+    )
+    assert _locations_meeting(tcgs, constraint) == states
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
     ("invariants", "reachable"),
     [
         # Both clocks start at 0 and run together, so y<3 stops x before 3 even

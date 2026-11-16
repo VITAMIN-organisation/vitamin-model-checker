@@ -215,6 +215,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   name a coalition agent. OL and the file formats page say how a `*` cell of
   `Transition` gets its cost.
 
+### Removed
+
+- `ZoneGraph.has_path_from`, `ZoneGraph.find_path_from`,
+  `DBMAdapter.compute_predecessors` and the backward path helpers
+  `any_backward_path` and `collect_backward_paths` of `trace_utils`. No checker
+  called them: TCTL and TOL build the region graph forward.
+
 ### Fixed
 
 - CTL, TCTL, TOL and ATL* read a `*` cell of `Transition` as a transition to the
