@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, Any
 from model_checker.algorithms.explicit.shared.result_formatters import (
     format_model_checking_result,
 )
+from model_checker.engine.execution import create_model_checking_entry
+from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.timed_cgs.formula_clocks import (
     ast_children,
     collect_formula_clocks,
@@ -22,6 +24,7 @@ from model_checker.parsers.game_structures.timed_cgs.regions import (
     regions_with_clock_guard,
 )
 from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
+from model_checker.utils.error_handler import create_error_response
 
 if TYPE_CHECKING:
     from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
@@ -121,3 +124,20 @@ def timed_checking_result(
     return format_model_checking_result(
         locations, str(tcgs.initial_state), is_satisfied
     )
+
+
+def timed_model_checking(logic: str, solve_tree: Callable) -> Callable:
+    """The model_checking entry of TCTL or TOL: parse, build the region graph, run
+    the logic's solver over the formula tree."""
+
+    def core(tcgs, formula: str) -> dict[str, Any]:
+        parser = FormulaParserFactory.get_parser_instance(logic)
+        ast = parser.parse(formula.strip())
+        if ast is None:
+            err = parser.errors[0] if parser.errors else "Syntax error in formula"
+            return create_error_response("syntax", err)
+        zone_graph = region_graph_for_formula(tcgs, ast)
+        solve_tree(tcgs, zone_graph, ast)
+        return timed_checking_result(tcgs, zone_graph, ast.satisfying_regions)
+
+    return create_model_checking_entry(logic, core)

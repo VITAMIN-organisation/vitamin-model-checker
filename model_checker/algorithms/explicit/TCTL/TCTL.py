@@ -1,27 +1,8 @@
 """TCTL model checking."""
 
-from typing import Any
-
 from model_checker.algorithms.explicit.shared.timed_ast_operators import (
-    region_graph_for_formula,
-    timed_checking_result,
+    timed_model_checking,
 )
 from model_checker.algorithms.explicit.TCTL.solver import solve_tree
-from model_checker.engine.execution import create_model_checking_entry
-from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.utils.error_handler import create_error_response
 
-
-def _core_tctl_checking(tcgs, formula: str) -> dict[str, Any]:
-    parser = FormulaParserFactory.get_parser_instance("TCTL")
-    ast = parser.parse(formula.strip())
-    if ast is None:
-        err = parser.errors[0] if parser.errors else "Syntax error in formula"
-        return create_error_response("syntax", err)
-
-    zone_graph = region_graph_for_formula(tcgs, ast)
-    solve_tree(tcgs, zone_graph, ast)
-    return timed_checking_result(tcgs, zone_graph, ast.satisfying_regions)
-
-
-model_checking = create_model_checking_entry("TCTL", _core_tctl_checking)
+model_checking = timed_model_checking("TCTL", solve_tree)
