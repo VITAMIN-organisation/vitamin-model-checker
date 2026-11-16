@@ -285,24 +285,3 @@ def collect_model_structure_errors(cgs) -> list[str]:
             errors.append(str(e))
 
     return errors
-
-
-def validate_recall_structure(graph: list[list], n_agents: int) -> None:
-    """Check Recall semantics: idle rules, s0 has at least one transition, and connectivity from s0 (no forest)."""
-    validate_nat_idle_requirements(graph, n_agents)
-
-    if not any(elem not in _EMPTY_TRANSITION_CELLS for elem in graph[0]):
-        raise ValueError(
-            "Transition error: The initial state 's0' must have at least one non-zero transition"
-        )
-
-    s0_transitions_to_others = any(
-        graph[0][j] not in _EMPTY_TRANSITION_CELLS for j in range(1, len(graph[0]))
-    )
-    if not s0_transitions_to_others:
-        for i in range(1, len(graph)):
-            if any(elem not in _EMPTY_TRANSITION_CELLS for elem in graph[i]):
-                raise ValueError(
-                    f"Configuration error: State 's0' has no transitions to other "
-                    f"states but state 's{i}' has transitions."
-                )

@@ -556,14 +556,6 @@
                     "endColumn": 68,
                     "lineCount": 1
                 }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 45,
-                    "endColumn": 63,
-                    "lineCount": 1
-                }
             }
         ],
         "./model_checker/algorithms/explicit/SolutionConcepts/Solution_Concepts.py": [

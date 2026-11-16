@@ -141,3 +141,18 @@ class TestNatATLRecallCritical:
         path = temp_file(content)
         assert model_checking("<{1},3>F g", path)["Satisfiability"] is False
         assert model_checking("<{1},4>F g", path)["Satisfiability"] is True
+
+    def test_first_state_with_only_a_self_loop_is_accepted(self, temp_file):
+        """s0 only loops while s1 moves on to s2: histories start in any state, so
+        the model need not hang together as one tree from s0."""
+        content = build_cgs_model_content(
+            transitions=[["I", "0", "0"], ["0", "I", "A"], ["0", "0", "I"]],
+            state_names=["s0", "s1", "s2"],
+            initial_state="s0",
+            labelling=[["0"], ["0"], ["1"]],
+            num_agents=1,
+            prop_names=["p"],
+        )
+        result = model_checking("<{1},1>G !p", temp_file(content))
+        assert "error" not in result, result
+        assert result["Satisfiability"] is True

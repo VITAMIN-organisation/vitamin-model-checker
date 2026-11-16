@@ -41,7 +41,6 @@ def initialize(
 
     n = model_parser.get_number_of_agents()
     cgs_validation.validate_nat_idle_requirements(model_parser.graph, n)
-    cgs_validation.validate_recall_structure(model_parser.graph, n)
 
     CTLformula, agents, k = prepare_natatl_formula(formula, n)
     ensure_formula_atoms_exist(model_parser, CTLformula)

@@ -189,6 +189,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   where idling keeps away from `r`). It reads a member's action at its agent
   number, not at its position in the coalition, and tries strategies in a fixed
   order. See [Recall](docs/algorithms/natatl.md#recall).
+- NatATL_Recall accepts a model whose first state has only a self-loop while
+  another state has transitions. It rejected such a model with "Configuration
+  error: State 's0' has no transitions to other states", a limit of the tree it
+  used to build from `s0`; histories start in any state.
 - LTL conditions can negate any atom (`p and !q`); before, `!` could only stand on
   the first atom. The condition generator also uses every connective it is given
   instead of the first one; LTL still passes `and` only. See
