@@ -1,11 +1,13 @@
+import math
+
 from ..constraint_syntax import BOUND_RE, MAX_CONSTRAINT_RE, RESET_RE
 from ..timed_cgs import TimedCGS
+from .bound import Bound
 from .DBM import DBM
 
 # Bridges timedCGS models and DBM zone operations.
 
 FormulaInput = str | tuple[str, ...]
-_NEGATED_BOUND_OPS = {"<=": ">", "<": ">=", ">=": "<", ">": "<="}
 _AND_OPS = frozenset({"&", "and"})
 _OR_OPS = frozenset({"|", "or"})
 _COMBINATORS = _AND_OPS | _OR_OPS
@@ -51,28 +53,71 @@ def zone_satisfies_guards(
     return not candidate.is_empty()
 
 
-def split_zone(zone: DBM, bounds) -> list[DBM]:
-    """The non-empty parts of ``zone`` that each lie wholly inside or wholly
-    outside every bound ``(clock index, op, constant)``."""
+_STRICTNESS_FLIP = {"<": "<=", "<=": "<"}
+
+
+def split_into_regions(zone: DBM, max_constants: list[int]) -> list[DBM]:
+    """The clock regions that make up ``zone``, normalized against each clock's
+    largest constant in ``max_constants``."""
+    ceilings = [0, *max_constants]
+    clocks = range(1, len(ceilings))
     parts = [zone]
-    for clock_index, op, constant in bounds:
-        sides = (
-            (clock_index, op, constant),
-            (clock_index, _NEGATED_BOUND_OPS[op], constant),
-        )
-        parts = [
-            piece
-            for part in parts
-            for side in sides
-            if not (piece := _with_bound(part, side)).is_empty()
-        ]
+    for i in clocks:
+        parts = [piece for part in parts for piece in _cut(part, i, 0, 0, ceilings[i])]
+    for i in clocks:
+        for j in range(i + 1, len(ceilings)):
+            parts = [
+                piece
+                for part in parts
+                for piece in _cut_difference(part, i, j, ceilings)
+            ]
     return parts
 
 
-def _with_bound(zone: DBM, bound) -> DBM:
-    piece = zone.copy()
-    apply_bounds(piece, [bound])
-    return piece
+def _cut_difference(zone: DBM, i: int, j: int, ceilings: list[int]) -> list[DBM]:
+    """``zone`` cut on ``x_i - x_j``, which matters only while both clocks are at
+    most their largest constant (a normalized zone has no finite bound above it)."""
+    if (
+        zone.elements[i][0].constant > ceilings[i]
+        or zone.elements[j][0].constant > ceilings[j]
+    ):
+        return [zone]
+    return _cut(zone, i, j, -ceilings[j], ceilings[i])
+
+
+def _cut(zone: DBM, i: int, j: int, low: int, high: int) -> list[DBM]:
+    """``zone`` cut on ``x_i - x_j`` against every integer from ``low`` to ``high``
+    that falls inside its range, each side strict and non-strict."""
+    lower = -zone.elements[j][i].constant
+    upper = zone.elements[i][j].constant
+    first = low if math.isinf(lower) else max(low, math.floor(lower))
+    last = high if math.isinf(upper) else min(high, math.ceil(upper))
+    done: list[DBM] = []
+    rest = zone
+    for constant in range(first, last + 1):
+        for op in ("<", "<="):
+            # Constants rise, so only the part above this cut can meet the next.
+            *below, rest = _sides(rest, i, j, constant, op)
+            done += below
+    return [*done, rest]
+
+
+def _sides(zone: DBM, i: int, j: int, constant: int, op: str) -> list[DBM]:
+    """The non-empty parts of ``zone`` where ``x_i - x_j op constant`` holds, then
+    fails; ``zone`` itself when it lies on one side."""
+    inside = Bound(constant, op)
+    outside = Bound(-constant, _STRICTNESS_FLIP[op])
+    if not inside.less_than(zone.elements[i][j]) or not outside.less_than(
+        zone.elements[j][i]
+    ):
+        return [zone]
+    pieces = []
+    for first, second, side in ((i, j, inside), (j, i, outside)):
+        piece = zone.copy()
+        piece.add_constraint(first, second, side.constant, side.operator)
+        if not piece.is_empty():
+            pieces.append(piece)
+    return pieces
 
 
 def delay_zone(tcgs: TimedCGS, zone: DBM, location: str) -> DBM | None:

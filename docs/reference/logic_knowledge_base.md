@@ -736,7 +736,7 @@ EF (p : x<=1)
 j.A(j<=7 U goal)
 ```
 
-The model type is `timedCGS`. The zone graph and the fixpoints over regions:
+The model type is `timedCGS`. The region graph and the fixpoints over regions:
 [TCTL algorithm](../algorithms/tctl.md).
 
 <a id="tol---timed-obstruction-logic"></a>
@@ -1031,8 +1031,8 @@ holds at a state:
 | Wallet_ATL | Branching | Coalition pre-image over payable moves, filtered by the wallet guards, and fixpoints | Wallet guards in the coalition |
 | ICTL | Branching | Upward closure and pre-image fixpoints | Intuitionistic `->` and `not` |
 | IATL | Branching | Upward closure and coalition pre-image fixpoints | Intuitionistic `->` and `!`; `[A]` is the universal coalition |
-| TCTL | Branching | Zone graph and fixpoints over regions | Clock constraints and freeze |
-| TOL | Branching | Zone graph and obstruction fixpoints | Per-step obstruction, clock constraints and freeze |
+| TCTL | Branching | Region graph and fixpoints over regions | Clock constraints and freeze |
+| TOL | Branching | Region graph and obstruction fixpoints | Per-step obstruction, clock constraints and freeze |
 
 <a id="model-syntax"></a>
 ## Model syntax

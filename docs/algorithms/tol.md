@@ -11,10 +11,9 @@ the model file in [timedCGS sections](../reference/file_formats.md#timedcgs-sect
 ## Overview
 
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers)
-on the regions of the [zone graph](tctl.md#zone-graph) of TCTL, split on the
-formula's clock bounds. Everything except `{Jn}` is computed as in
-[TCTL](tctl.md#overview), including its limit on freezes; `res` likewise lists only
-locations the zone graph reaches. TOL has no `X` operator
+on the regions of the [region graph](tctl.md#region-graph) of TCTL. Everything
+except `{Jn}` is computed as in [TCTL](tctl.md#overview), including its limit on
+freezes; `res` likewise lists only locations the region graph reaches. TOL has no `X` operator
 ([knowledge base](../reference/logic_knowledge_base.md#tol---timed-obstruction-logic)).
 
 ## Obstruction step
@@ -22,8 +21,9 @@ locations the zone graph reaches. TOL has no `X` operator
 `Down(Z)`, the TOL [pre-image](index.md#overview) of a set of regions `Z`, keeps a
 region `r` when all of these hold:
 
-1. Time steps: every time step from `r` stays in `Z`, because the Demon disables
-   edges and cannot stop time. A region with no time step meets this.
+1. Time step: the time step from `r`, to the next clock region, stays in `Z`,
+   because the Demon disables edges and cannot stop time. A region with no time
+   step meets this.
 2. Cost: an edge of `r`'s location leaves `Z` when it can be taken from `r` and
    leads to a region outside `Z`; the leaving edges cost at most the budget `n` in
    total, so the Demon can disable all of them.

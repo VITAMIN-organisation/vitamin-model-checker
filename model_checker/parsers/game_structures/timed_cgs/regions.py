@@ -1,4 +1,4 @@
-"""Helpers that lift discrete location facts onto zone-graph regions for TCTL."""
+"""Helpers that lift discrete location facts onto region-graph regions for TCTL."""
 
 from typing import TYPE_CHECKING
 

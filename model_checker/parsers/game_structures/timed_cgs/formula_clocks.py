@@ -1,8 +1,5 @@
-"""Formula clocks introduced by timed formulas (freeze / real-time guards).
-
-These clocks are not part of the automaton declaration; they are added to the
-timedCGS before the zone graph is built so freeze quantification can be evaluated.
-"""
+"""Clocks that only a timed formula names (freeze, guards); they join the model's
+clocks before the region graph is built."""
 
 from model_checker.parsers.game_structures.timed_cgs.constraint_syntax import (
     CLOCK_BOUND_PREFIX_RE,
@@ -32,30 +29,30 @@ def collect_formula_clocks(node, model_clocks: set[str]) -> tuple[str, ...]:
     return tuple(sorted(found))
 
 
-def formula_clock_bounds(
-    node, clocks_dict: dict[str, int]
-) -> list[tuple[int, str, int]]:
-    """The distinct clock bounds ``(DBM clock index, op, constant)`` of the formula's
-    guards, in the order they appear."""
-    bounds: list[tuple[int, str, int]] = []
+def formula_clock_constants(node, clocks_dict: dict[str, int]) -> dict[str, int]:
+    """The largest constant each clock is compared with in the formula's guards."""
+    constants: dict[str, int] = {}
     if node is not None:
-        _walk_formula_bounds(node, clocks_dict, bounds)
-    return bounds
+        names = {index + 1: clock for clock, index in clocks_dict.items()}
+        _walk_formula_constants(node, clocks_dict, names, constants)
+    return constants
 
 
-def _walk_formula_bounds(
-    node, clocks_dict: dict[str, int], bounds: list[tuple[int, str, int]]
+def _walk_formula_constants(
+    node, clocks_dict: dict[str, int], names: dict[int, str], constants: dict[str, int]
 ) -> None:
     constraints = getattr(node, "constraints", None)
     if constraints is not None:
         text = "".join(constraints) if isinstance(constraints, tuple) else constraints
         found, _ = DBMAdapter.parse_constraints([str(text)], clocks_dict)
-        bounds.extend(bound for bound in found if bound not in bounds)
+        for clock_index, _op, constant in found:
+            clock = names[clock_index]
+            constants[clock] = max(constants.get(clock, 0), constant)
 
     for attr in ("operand", "left", "right", "formula", "subject"):
         child = getattr(node, attr, None)
         if child is not None:
-            _walk_formula_bounds(child, clocks_dict, bounds)
+            _walk_formula_constants(child, clocks_dict, names, constants)
 
 
 def _walk_formula_clocks(node, model_clocks: set[str], found: set[str]) -> None:

@@ -146,3 +146,25 @@ def test_strict_target_invariant_limits_the_predecessor_zone(
     else:
         with pytest.raises(ValueError, match="not consistent"):
             DBMAdapter.compute_predecessors(tcgs, "s0", "s1", "x>=3")
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("x_lower", "x_upper", "regions"),
+    [
+        # 0<y<1 and 1<x<2: the order of the fractional parts of x and y matters,
+        # so x-y<1, x-y=1 and x-y>1 are three regions.
+        (1, 2, 3),
+        # x>3 is above its largest constant 3, so x-y is never compared.
+        (3, float("inf"), 1),
+    ],
+)
+def test_clock_difference_is_cut_only_below_the_largest_constants(
+    x_lower, x_upper, regions
+):
+    zone = DBM(2)
+    zone.add_constraint(0, 1, -x_lower, "<")  # x > x_lower
+    zone.add_constraint(1, 0, x_upper, "<")  # x < x_upper
+    zone.add_constraint(0, 2, 0, "<")  # y > 0
+    zone.add_constraint(2, 0, 1, "<")  # y < 1
+    assert len(DBMAdapter.split_into_regions(zone, [3, 2])) == regions

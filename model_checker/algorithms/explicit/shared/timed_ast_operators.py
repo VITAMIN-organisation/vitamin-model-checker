@@ -1,4 +1,4 @@
-"""Boolean and leaf operators for TCTL/TOL AST nodes (sets of zone-graph regions)."""
+"""Boolean and leaf operators for TCTL/TOL AST nodes (sets of region-graph regions)."""
 
 from collections.abc import Callable
 from typing import TYPE_CHECKING

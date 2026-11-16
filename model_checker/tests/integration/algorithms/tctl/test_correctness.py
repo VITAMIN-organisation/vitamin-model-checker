@@ -104,6 +104,9 @@ def test_tctl_clock_guards_and_freeze(formula, expected_locations, initial_ok):
         ("AG (p && x<=3)", False),
         ("AG (x<=3)", False),
         ("j.AG (p : j<=3)", False),
+        # Time passes through 3<x<5, where neither side holds.
+        ("E (x<=3 U x>=5)", False),
+        ("E (x<=3 U x>3)", True),
     ],
 )
 def test_tctl_clock_guard_holds_for_every_clock_value(formula, initial_ok):

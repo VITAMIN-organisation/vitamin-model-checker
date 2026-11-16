@@ -70,20 +70,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   size exactly `i` for `i = 1, ..., k`. Goals more than four steps away are found
   (the search was cut at depth 4), and a pattern applies on every history it
   matches (before, on one). See [Recall](docs/algorithms/natatl.md#recall).
-- Breaking: TCTL and TOL split each zone of the
-  [zone graph](docs/algorithms/tctl.md#zone-graph) (pairs of a location and a set
-  of clock values, called regions) on the formula's clock bounds, so a clock
+- Breaking: TCTL and TOL work on the
+  [region graph](docs/algorithms/tctl.md#region-graph) of IC 1993 (p. 20): each
+  node is a location and a clock region, and regions never overlap. A clock
   constraint such as `x<=3` holds in a region only when it holds for every clock
-  value there. Before, one value was enough, and `AG (p : x<=3)` held on a
-  location whose invariant lets time run to `x=10`.
+  value there. Before, the nodes were zones (sets of clock values given by
+  bounds), a constraint held in a zone if one clock value met it, and
+  `AG (p : x<=3)` held on a location whose invariant lets time run to `x=10`.
+  - A time step leads only to the next clock region. Before, it could skip the
+    regions between, and `E (x<=3 U x>=5)` held where time runs through `3<x<5`.
+  - The graph grows with the clock constants (the largest number each clock is
+    compared with) and the number of clocks: the test models have 4 to 42
+    regions, where they had 2 to 6 zones.
   - The pre-image of TCTL and TOL no longer keeps only regions that meet the
     operand's guard, so `EF (p : x>5)` and `AG !(p : x>5)` no longer both hold.
-  - TOL works on regions of the zone graph instead of locations. The Demon (the
+  - TOL works on regions of the region graph instead of locations. The Demon (the
     player that disables edges at a cost) cannot disable a time step, an edge
     counts only if it can be taken from the region, and the Demon may not disable
     every edge of a location. See
     [obstruction step](docs/algorithms/tol.md#obstruction-step).
-  - TOL `res` lists only locations the zone graph reaches, as TCTL does.
+  - TOL `res` lists only locations the region graph reaches, as TCTL does.
   - A freeze `j.phi` is evaluated as `phi` in TOL as in TCTL; it is wrong under a
     temporal operator. See [TCTL overview](docs/algorithms/tctl.md#overview).
 - Breaking: TOL rejects `X` and `next` (AAMAS 2025, p. 4, has no next operator).

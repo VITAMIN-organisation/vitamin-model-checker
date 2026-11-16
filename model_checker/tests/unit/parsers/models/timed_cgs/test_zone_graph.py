@@ -59,15 +59,22 @@ def test_initial_state_has_every_clock_at_zero(minimal_tcgs):
 
 
 @pytest.mark.unit
-def test_reachable_zones_stop_at_the_invariant(minimal_tcgs):
-    """At s0, x reaches up to 1 (the guard) and 2 (the invariant), never more; s1 is unreachable."""
+def test_reachable_regions_stop_at_the_invariant(minimal_tcgs):
+    """At s0, x runs through the regions 0, (0,1), 1, (1,2), 2 and stops at the
+    invariant x<=2, each time step to the next; s1 is unreachable."""
     graph = ZoneGraph(minimal_tcgs)
     assert {state.location for state in graph.states} == {"s0"}
-    assert sorted(state.zone.elements[1][0].constant for state in graph.states) == [
+    assert sorted(len(steps) for steps in graph.delay_successors.values()) == [
         0,
         1,
-        2,
+        1,
+        1,
+        1,
     ]
+    assert sorted(
+        (-state.zone.elements[0][1].constant, state.zone.elements[1][0].constant)
+        for state in graph.states
+    ) == [(0, 0), (0, 1), (1, 1), (1, 2), (2, 2)]
 
 
 @pytest.mark.unit

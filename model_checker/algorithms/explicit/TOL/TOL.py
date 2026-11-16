@@ -14,7 +14,7 @@ from model_checker.parsers.formula_parser_factory import FormulaParserFactory
 from model_checker.parsers.game_structures.timed_cgs.formula_clocks import (
     collect_formula_clocks,
     extend_timed_cgs_clocks,
-    formula_clock_bounds,
+    formula_clock_constants,
 )
 from model_checker.parsers.game_structures.timed_cgs.regions import (
     project_regions_to_locations,
@@ -33,7 +33,7 @@ def _core_tol_checking(tcgs, formula: str) -> dict[str, Any]:
     formula_clocks = collect_formula_clocks(ast, set(tcgs.clocks))
     extend_timed_cgs_clocks(tcgs, formula_clocks)
 
-    zone_graph = ZoneGraph(tcgs, formula_clock_bounds(ast, tcgs.clocks_dict))
+    zone_graph = ZoneGraph(tcgs, formula_clock_constants(ast, tcgs.clocks_dict))
     solve_tree(tcgs, zone_graph, ast)
 
     init_state = str(tcgs.initial_state)

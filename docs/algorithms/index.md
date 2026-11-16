@@ -50,7 +50,7 @@ Table 1 lists the method of each checker:
 | :--- | :--- |
 | Fixpoints of a pre-image over sets of states | [CTL](ctl.md), [ATL](atl.md), [IATL](iatl.md), [ICTL](ictl.md), [Wallet_ATL](wallet_atl.md), [RBATL](rbatl.md), [RABATL](rabatl.md), [OATL](oatl.md), [OL](ol.md), [COTL](cotl.md), [TOL](tol.md) |
 | The same, over values between 0 and 1 | [ATLF](atlf.md) |
-| The same, over regions (location, clock zone) | [TCTL](tctl.md) |
+| The same, over regions (location, clock region) | [TCTL](tctl.md) |
 | Fixpoints over game nodes: a state and the [plays the coalition cannot tell apart](capatl.md#how-a-check-runs) | [CapATL](capatl.md) |
 | Search of simple strategies, then a CTL check on the pruned model | [LTL](ltl.md), [NatATL](natatl.md), [NatATLF](natatlf.md), [NatSL](natsl.md) |
 | Automaton and two-player game | [ATL*](atl_star.md) |

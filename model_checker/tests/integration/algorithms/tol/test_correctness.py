@@ -70,10 +70,11 @@ class TestGradeZero:
         assert tol_states == tctl_states
 
 
-def test_demon_cannot_stop_time():
-    """Time at s0 runs past x=3 and the Demon can only disable edges, so G fails."""
+@pytest.mark.parametrize("formula", ["{J1}G (p : x<=3)", "{J1}(x<=3 U x>=5)"])
+def test_demon_cannot_stop_time(formula):
+    """Time at s0 runs past x=3, through 3<x<5, and the Demon can only disable edges."""
     fixture = str(_FIXTURE.with_name("tctl_tol_invariant10.txt"))
-    result = model_checking("{J1}G (p : x<=3)", fixture)
+    result = model_checking(formula, fixture)
     assert result["initial_state"] == "Initial state s0: False"
 
 

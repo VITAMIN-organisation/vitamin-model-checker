@@ -1,4 +1,4 @@
-"""TOL cost-bounded pre-image on zone-graph regions."""
+"""TOL cost-bounded pre-image on region-graph regions."""
 
 from model_checker.parsers.game_structures.timed_cgs.regions import (
     RegionSet,
