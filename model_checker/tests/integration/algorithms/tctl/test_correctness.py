@@ -135,6 +135,13 @@ def test_tctl_freeze_resets_its_clock_where_it_stands(formula, initial_ok):
     assert _initial_satisfied(result) is initial_ok
 
 
+def test_tctl_freeze_on_a_model_clock_is_a_semantic_error():
+    """A freeze binds a formula clock; the model's x may not be reset by the formula."""
+    result = model_checking("x.EF (x>=2)", str(_INVARIANT10))
+    assert result["error"]["type"] == "semantic"
+    assert "'x'" in result["error"]["message"]
+
+
 def test_tctl_res_lists_only_locations_reached_from_the_start():
     """A formula clock starts at 0 with x, so x>8 && j<=0 holds in no reached region."""
     result = model_checking("x>8 && j<=0 && j.p", str(_INVARIANT10))

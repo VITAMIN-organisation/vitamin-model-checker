@@ -94,6 +94,14 @@ def test_freeze_resets_its_clock_where_it_stands(formula, initial_true):
     assert result["initial_state"] == f"Initial state s0: {initial_true}"
 
 
+def test_freeze_on_a_model_clock_is_a_semantic_error():
+    """A freeze binds a formula clock; the model's x may not be reset by the formula."""
+    fixture = str(_FIXTURE.with_name("tctl_tol_invariant10.txt"))
+    result = model_checking("{J1}F x.(p : x<5)", fixture)
+    assert result["error"]["type"] == "semantic"
+    assert "'x'" in result["error"]["message"]
+
+
 def test_demon_cannot_disable_the_only_edge():
     """The edge s0 -> s1 must stay enabled, so leaving s0 at x=1 never meets p."""
     fixture = str(_FIXTURE.with_name("tol_only_edge.txt"))

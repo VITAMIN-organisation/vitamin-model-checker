@@ -28,10 +28,20 @@ if TYPE_CHECKING:
 
 
 def region_graph_for_formula(tcgs: "TimedCGS", ast) -> ZoneGraph:
-    """The region graph of ``tcgs`` with the clocks, constants and freezes of ``ast``."""
-    extend_timed_cgs_clocks(tcgs, collect_formula_clocks(ast, set(tcgs.clocks_dict)))
+    """The region graph of ``tcgs`` with the clocks, constants and freezes of ``ast``;
+    a freeze on a clock of the model is a semantic error."""
+    model_clocks = set(tcgs.clocks_dict)
+    freeze_clocks = formula_freeze_clocks(ast)
+    frozen_model_clocks = sorted(model_clocks.intersection(freeze_clocks))
+    if frozen_model_clocks:
+        raise ValueError(
+            f"[SEMANTIC] Freeze on the model clock '{frozen_model_clocks[0]}': a "
+            f"freeze names a formula clock, not a clock of the model "
+            f"({', '.join(sorted(model_clocks))})."
+        )
+    extend_timed_cgs_clocks(tcgs, collect_formula_clocks(ast, model_clocks))
     return ZoneGraph(
-        tcgs, formula_clock_constants(ast, tcgs.clocks_dict), formula_freeze_clocks(ast)
+        tcgs, formula_clock_constants(ast, tcgs.clocks_dict), freeze_clocks
     )
 
 

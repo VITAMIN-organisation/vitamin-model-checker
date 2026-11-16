@@ -724,7 +724,10 @@ The quantifiers are `A` and `E`, with `F`, `G`, `U` (no `X` or release).
 Clocks and clock guards:
 
 - Automaton clocks `X` from the model `Clocks` section.
-- Formula clocks `J` via freeze `j.phi` (reset `j` to `0`).
+- Formula clocks `J` via freeze `j.phi` (reset `j` to `0`). A freeze on a clock
+  of the model, such as `x.EF (x>=2)` when the model declares `x`, is a
+  `semantic` error that names the clock (AAMAS 2025 Def. 10, p. 4, keeps `X`
+  and `J` disjoint).
 - Guards: standalone `x <= 5` or attachment `phi : x <= c` on subformulas.
 
 For example:
@@ -857,7 +860,7 @@ may start with a capital.
 - Formulas: `validate_proposition_identifier()` in
   `model_checker/parsers/formulas/parser_utils.py` checks, in every logic, the
   propositions of a formula, the capacity names of a CapATL formula and the clock
-  names of a TCTL or TOL formula (in a freeze `x.phi` and a comparison `x<=2`).
+  names of a TCTL or TOL formula (in a freeze `j.phi` and a comparison `x<=2`).
 - Models: `validate_model_name()` in
   `model_checker/parsers/game_structures/cgs/cgs_utils.py` applies the same check
   to the propositions of a CGS model, the `Clocks` section of a timedCGS model and
@@ -979,7 +982,7 @@ only on a 1-agent model (see [NatSL](#natsl---natural-strategy-logic)).
 | LTL | none | `X`, `F`, `G`, `U` | CGS | `G (p -> F q)` |
 | CTL | `A`, `E` | `AX`, `AF`, `AG`, `EX`, `EF`, `EG`, `A[p U q]`, `E[p U q]` | CGS | `AG (p -> EF q)` |
 | ICTL | `A`, `E` | as CTL, plus `R` in `A[p R q]`, `E[p R q]` | BirelationalMatrix | `E[p R q]` |
-| TCTL | `A`, `E`; clock constraint `phi : x<5`; freeze `x.phi` | `AF`, `AG`, `EF`, `EG`, `A(p U q)`, `E(p U q)` (no brackets) | timedCGS | `AF p : x<5` |
+| TCTL | `A`, `E`; clock constraint `phi : x<5`; freeze `j.phi` | `AF`, `AG`, `EF`, `EG`, `A(p U q)`, `E(p U q)` (no brackets) | timedCGS | `AF p : x<5` |
 | ATL | `<1,2>` | `X`, `F`, `G`, `U` | CGS | `<1,2>F p` |
 | ATLF | `<1,2>` | `X`, `F`, `G`, `U` | fuzzyCGS | `<1>(p U q)` |
 | IATL | `<1,2>` exists, `[1,2]` for all | `X`, `F`, `G`, `U`, `R` | BCGS | `[1,2]F goal` |
@@ -994,7 +997,7 @@ only on a 1-agent model (see [NatSL](#natsl---natural-strategy-logic)).
 | NatATLF | `<{1,2}, 5>` | `X`, `F`, `G`, `U` | CGS | `<{1,2}, 5>F p` |
 | CapATL | `<{1,2}>`; knowledge `K1(...)` | `X`, `F`, `G`, `U`, `R` | capCGS | `<{1}>F (g && K1(1 is c))` |
 | OL | `<J5>` | `X`, `F`, `G`, `U`, `R`, `W` | costCGS | `<J5> (p R q)` |
-| TOL | `{J5}`; clock constraint `phi : x<5`; freeze `x.phi` | `F`, `G`, `U`, `R`, `W` | timedCGS | `{J5}F x.(p : x<5)` |
+| TOL | `{J5}`; clock constraint `phi : x<5`; freeze `j.phi` | `F`, `G`, `U`, `R`, `W` | timedCGS | `{J5}F j.(p : j<5)` |
 | NatSL | `E{1}x A{1}y: (x, 1)(y, 2)` | one goal: `F`, `G` or `X` | CGS | `E{1}x: (x, 1) F goal` |
 
 <a id="summary-logic-comparison-matrix"></a>

@@ -100,6 +100,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     hold although it does at `x=6`. `res` lists only locations of regions that
     time and edge steps reach from the start, not ones only a freeze reset leads
     to. See [TCTL overview](docs/algorithms/tctl.md#overview).
+- Breaking: TCTL and TOL reject a freeze on a clock the model declares, such as
+  `x.EF (x>=2)` with the model clock `x`, with a `semantic` error that names the
+  clock (AAMAS 2025 Def. 10, p. 4, keeps the model's clocks and the formula's
+  apart). Before, the freeze reset the model clock.
 - Breaking: TOL rejects `X` and `next` (AAMAS 2025, p. 4, has no next operator).
 - Breaking: NatATL (memoryless) and NatATLF use the natural strategies of AIJ 2019
   (section 4.1). See [NatATL strategies](docs/algorithms/natatl.md#strategies).
