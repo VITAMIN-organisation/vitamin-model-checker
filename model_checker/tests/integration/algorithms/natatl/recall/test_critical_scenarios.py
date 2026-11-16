@@ -156,3 +156,19 @@ class TestNatATLRecallCritical:
         result = model_checking("<{1},1>G !p", temp_file(content))
         assert "error" not in result, result
         assert result["Satisfiability"] is True
+
+    @pytest.mark.parametrize(("k", "holds"), [(1, False), (3, False), (4, True)])
+    def test_bound_below_the_coalition_size_is_false(self, temp_file, k, holds):
+        """Two members need two idle rules, so k = 1 admits no profile; reaching p
+        takes (true, A) and (true, B) on top of them, size 4."""
+        content = build_cgs_model_content(
+            transitions=[["II,AI,IB", "AB"], ["0", "II,AI,IB,AB"]],
+            state_names=["s0", "s1"],
+            initial_state="s0",
+            labelling=[["0"], ["1"]],
+            num_agents=2,
+            prop_names=["p"],
+        )
+        result = model_checking(f"<{{1,2}},{k}>F p", temp_file(content))
+        assert "error" not in result, result
+        assert result["Satisfiability"] is holds

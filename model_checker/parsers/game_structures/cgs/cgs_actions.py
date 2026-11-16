@@ -3,6 +3,8 @@
 Extract actions from the transition matrix, format coalition/opponent moves.
 """
 
+from collections.abc import Iterable
+
 
 def validate_agent_numbers(agents: list[int], num_agents: int):
     """Check that the coalition is non-empty, names each agent once and only numbers
@@ -25,7 +27,7 @@ def validate_agent_numbers(agents: list[int], num_agents: int):
             )
 
 
-def format_agents(agents: list[int]) -> set[int]:
+def format_agents(agents: Iterable[int | str]) -> set[int]:
     """Drop 0 from the list and convert 1-based agent numbers to 0-based indices."""
     return {int(x) - 1 for x in agents if x != 0}
 

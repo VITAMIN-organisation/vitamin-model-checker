@@ -1,7 +1,7 @@
 """Pre-image for RBATL and RABATL: a coalition move whose every joint action lands
 in the target set and costs at most the bound."""
 
-from typing import Literal
+from typing import Any, Literal
 
 from model_checker.algorithms.explicit.shared.state_utils import (
     state_indices_to_names,
@@ -10,19 +10,19 @@ from model_checker.algorithms.explicit.shared.state_utils import (
 from model_checker.parsers.game_structures.cgs import CostCGSProtocol, cgs_actions
 
 CostFilter = Literal["rbatl", "rabatl"]
-# Per state: coalition move -> [(destination index, joint action)].
-TransitionCache = dict[int, dict[str, list[tuple[int, str]]]]
+# Per state: coalition move -> [(destination index, the joint action's cost or None)].
+TransitionCache = dict[int, dict[str, list[tuple[int, Any]]]]
 
 
 def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCache:
-    """Each state's joint actions grouped by the coalition's part of them."""
-    agents = cgs_actions.format_agents(
-        [int(a) for a in cgs_actions.get_agents_from_coalition(coalition)]
-    )
+    """Each state's joint actions grouped by the coalition's part of them, with the
+    model's cost of each joint action (None when the model gives none)."""
+    agents = cgs_actions.format_agents(cgs_actions.get_agents_from_coalition(coalition))
     num_agents = cgs.get_number_of_agents()
     cache: TransitionCache = {}
     for state_idx, row in enumerate(cgs.graph):
-        by_move: dict[str, list[tuple[int, str]]] = {}
+        state = cgs.get_state_name_by_index(state_idx)
+        by_move: dict[str, list[tuple[int, Any]]] = {}
         for dest_idx, mask in enumerate(row):
             if mask == 0 or mask == "0":
                 continue
@@ -30,7 +30,9 @@ def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCa
                 (move,) = cgs_actions.get_coalition_actions(
                     {profile}, agents, num_agents
                 )
-                by_move.setdefault(move, []).append((dest_idx, profile))
+                by_move.setdefault(move, []).append(
+                    (dest_idx, _profile_cost(cgs, profile, state))
+                )
         cache[state_idx] = by_move
     return cache
 
@@ -48,12 +50,10 @@ def compute_pre_states(
     target = state_names_to_indices(cgs, state_set)
     pre_states: set[int] = set()
     for state_idx, by_move in transition_cache.items():
-        state = cgs.get_state_name_by_index(state_idx)
         for transitions in by_move.values():
             if all(
-                dest in target
-                and _within_bound(cgs, profile, state, agents, bound, cost_filter)
-                for dest, profile in transitions
+                dest in target and _within_bound(costs, agents, bound, cost_filter)
+                for dest, costs in transitions
             ):
                 pre_states.add(state_idx)
                 break
@@ -61,16 +61,10 @@ def compute_pre_states(
 
 
 def _within_bound(
-    cgs: CostCGSProtocol,
-    profile: str,
-    state: str,
-    agents: set[str],
-    bound: list[int],
-    cost_filter: CostFilter,
+    costs: Any, agents: set[str], bound: list[int], cost_filter: CostFilter
 ) -> bool:
-    """Whether the joint action costs at most bound in each resource the bound covers;
-    a joint action with no cost at state never does."""
-    costs = _profile_cost(cgs, profile, state)
+    """Whether a joint action's cost is at most bound in each resource the bound
+    covers; a joint action with no cost (None) never is."""
     if costs is None:
         return False
     if cost_filter == "rabatl":
@@ -83,7 +77,7 @@ def _within_bound(
     return all(cost <= limit for cost, limit in zip(costs, bound, strict=False))
 
 
-def _profile_cost(cgs: CostCGSProtocol, profile: str, state: str):
+def _profile_cost(cgs: CostCGSProtocol, profile: str, state: str) -> Any:
     """The model's cost of the joint action at state, falling back to the `*` cost
     for a wildcard action; None when the model has neither."""
     for key in (profile, "*") if "*" in profile else (profile,):
