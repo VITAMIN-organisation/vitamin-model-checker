@@ -1,0 +1,47 @@
+# MODEL: Agent 2 must keep one capacity for its whole strategy
+
+# PURPOSE: Separates two readings of a coalition strategy. Agent 1 sends the
+# play to sL or sR. In sL agent 2 reaches goal only with A (capacity cap), in
+# sR only with B (capacity cop); D belongs to both capacities.
+
+# LOGIC: CAPATL
+
+# DESCRIPTION: <{2}>F goal and <{2}>(!lost U goal) are False at s0: with cap
+# agent 2 ends in bad (labelled lost) from sR, with cop from sL. A strategy that could pick its capacity per branch
+# (play D at s0, then A in sL and B in sR) would win.
+
+Transition
+0 L* R* 0 0
+0 0 0 *A *B,*D
+0 0 0 *B *A,*D
+0 0 0 * 0
+0 0 0 0 *
+Unknown_Transition_by
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+0 0 0 0 0
+Name_State
+s0 sL sR goal bad
+Initial_State
+s0
+Atomic_propositions
+goal lost
+Labelling
+0 0
+0 0
+0 0
+1 0
+0 1
+Capacities
+o cap cop
+Capacities_assignment
+1 0 0
+0 1 1
+Actions_for_capacities
+o L R
+cap A D
+cop B D
+Number_of_agents
+2
