@@ -19,6 +19,7 @@ from model_checker.algorithms.explicit.shared.graph_relations import labeled_pai
 from model_checker.parsers.game_structures.birelational_matrix.birelational_matrix import (
     BirelationalMatrix,
 )
+from model_checker.tests.helpers.model_helpers import extract_states_from_result
 from model_checker.utils.literals import parse_state_set_literal
 
 
@@ -228,6 +229,27 @@ class TestFixtureSemantics:
             == expected_states
         )
         assert result["initial_state"] == f"Initial state s0: {initial_satisfied}"
+
+
+_STAR_TO_S1 = """Transition
+P,R *
+0 P,R
+Name_State
+s0 s1
+Initial_State
+s0
+Atomic_propositions
+p
+Labelling
+0
+1
+"""
+
+
+def test_star_cell_is_a_transition_to_its_column(temp_file):
+    """The star in row s0, column s1 is an R edge s0 -> s1, as in the other logics."""
+    result = model_checking("EX p", temp_file(_STAR_TO_S1))
+    assert extract_states_from_result(result) == {"s0", "s1"}
 
 
 class TestVmiEntry:

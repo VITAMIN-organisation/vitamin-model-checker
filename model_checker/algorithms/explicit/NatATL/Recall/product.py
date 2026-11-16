@@ -60,7 +60,7 @@ def _moves(cgs, parsed_rows, agents, profile, config: Configuration):
     row = parsed_rows[cgs.state_to_index[state]]
     for target, cell in zip(cgs.states, row, strict=True):
         kept = keep_joint_actions(cell, wanted)
-        # CTL reads a bare `*` cell as a self-loop; a joint profile is an edge here.
+        # A profile with `*` for every agent is the same edge to target as a bare `*`.
         if kept == ANY_ACTION:
             yield str(target), wildcard_joint_profile(cgs.get_number_of_agents())
         elif kept != 0 and kept != "0":

@@ -7,7 +7,8 @@ import numpy as np
 from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 
 _PREORDER_CELLS = frozenset({"P", "P,R"})
-_TRANSITION_CELLS = frozenset({"R", "P,R"})
+# The checker reads a star, like R, as a transition to the cell's column.
+_TRANSITION_CELLS = frozenset({"R", "P,R", "*"})
 
 
 def _check_c1(graph: np.ndarray) -> bool:

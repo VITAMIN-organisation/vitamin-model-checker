@@ -330,9 +330,9 @@ actions; Table 3 lists them:
 
 Every diagonal cell must be `P` or `P,R`, because the order `P` is reflexive;
 otherwise ICTL reports "The graph is not reflective." (the message's word for
-reflexive). A `*` on the diagonal gives that error; elsewhere a `*` loads with no
-error and is read as no relation, so write `0`. ICTL also checks
-the confluence conditions C1 and C2 between `P` and `R`; they and the other model
+reflexive). A `*` on the diagonal gives that error; elsewhere a `*` is read as
+`R` (a transition to the cell's column, as in the other logics) and never as `P`.
+ICTL also checks the confluence conditions C1 and C2 between `P` and `R`; they and the other model
 checks are in the [ICTL algorithm](../algorithms/ictl.md).
 
 ## BCGS sections (IATL)
