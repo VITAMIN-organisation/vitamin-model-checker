@@ -13,8 +13,10 @@ strategies. A strategy of one agent is an ordered list of rules
 `(condition, action)` with no `true` rule and no two rules with the same action;
 a condition is one atom or atoms joined by `and`, each atom possibly negated
 (`p and !q`), and its size is its number of words, plus 1 if it contains `!`.
-Conditions with `or` are not generated: on a 3-state model with 3 propositions
-they make a `k = 5` check that fails take 11 s instead of 0.1 s.
+Conditions with `or` are not generated, although the original VITAMIN code
+generated them: with `or`, `G goal` with `k = 5` on
+`ltl_1agent_3states_minimal.txt` (3 states, 3 propositions, false) takes 13 s
+instead of 0.1 s (best of 3 runs).
 
 1. Each agent of the coalition gets a strategy, and sizes `i = 1, ..., k` are
    tried, each agent's strategy having size exactly `i`. Agents outside the

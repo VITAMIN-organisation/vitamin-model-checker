@@ -6,8 +6,8 @@ from collections.abc import Generator
 
 logger = logging.getLogger(__name__)
 
-# `or` as well makes a k = 5 check that fails take 11 s instead of 0.1 s on a
-# 3-state model with 3 propositions, so LTL keeps `and` only for now.
+# Only `and`. The original code also joined with `or`, but then `G goal` with
+# k = 5 on ltl_1agent_3states_minimal (false) takes 13 s instead of 0.1 s.
 CONDITION_CONNECTIVES = ["and"]
 
 
