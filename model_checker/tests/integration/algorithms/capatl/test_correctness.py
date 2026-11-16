@@ -89,11 +89,8 @@ class TestCapATLSemantics:
 
     @pytest.mark.parametrize("name", ["pa", "p1", "g2"])
     def test_capatl_proposition_name_with_a_digit(self, name, test_data_dir, temp_file):
-        """A name such as p1 is a proposition like pa, not a capacity reference.
-
-        Same model as the fixture with g renamed, so <{1}>F name gives the same
-        states as <{1}>F g: q0, q1 and q2 (see test_capatl_eventually_winning_states).
-        """
+        """A name such as p1 is a proposition like pa, not a capacity reference; with g
+        renamed, <{1}>F name gives the states of <{1}>F g."""
         fixture = test_data_dir / "capCGS/CAPATL/capatl_3agents_3states_example.txt"
         content = re.sub(r"^g a$", f"{name} a", fixture.read_text(), flags=re.M)
         result = model_checking(f"<{{1}}>F {name}", temp_file(content))
