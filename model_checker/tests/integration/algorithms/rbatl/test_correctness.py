@@ -152,6 +152,17 @@ class TestRBATLCumulativeBound:
         assert error["type"] == "validation"
         assert "[3, 1, 5]" in error["message"]
 
+    def test_moves_without_cost_do_not_hide_the_resources(self, temp_file):
+        """The only move of s0 has no cost, but the model has one resource, and p
+        already holds at s0."""
+        model = (
+            "Transition\nA\nName_State\ns0\nInitial_State\ns0\n"
+            "Costs_for_actions\nZ s0$1\nAtomic_propositions\np\nLabelling\n1\n"
+            "Number_of_agents\n1\n"
+        )
+        result = model_checking("<1><0>F p", temp_file(model))
+        assert extract_states_from_result(result) == {"s0"}
+
     def test_globally_is_larger_than_the_seeded_least_fixpoint(self, loop_model):
         """s holds: every path stays at s for free or pays 1 once on t -> u. The seed
         of the paper's least fixpoint is {t, u}, and no free move from s stays in it."""

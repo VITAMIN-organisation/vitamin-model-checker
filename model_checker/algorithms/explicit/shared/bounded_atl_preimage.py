@@ -55,19 +55,6 @@ def compute_pre_states(
     return state_indices_to_names(cgs, pre_states)
 
 
-def require_bound_fits(bound: list[int], transition_cache: TransitionCache) -> None:
-    """Reject a bound with more components than the model has resources."""
-    resources = max(
-        (len(cost) for moves in transition_cache.values() for _, cost in moves if cost),
-        default=0,
-    )
-    if len(bound) > resources:
-        raise ValueError(
-            f"[VALIDATION] Bound {bound} has {len(bound)} components, but the "
-            f"model's costs have {resources} resource(s)."
-        )
-
-
 def _within_bound(cost: list[int] | None, bound: list[int]) -> bool:
     """Whether a cost is at most bound in each resource the bound covers."""
     return cost is not None and all(
