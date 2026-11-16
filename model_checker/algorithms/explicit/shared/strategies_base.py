@@ -6,6 +6,10 @@ from collections.abc import Generator
 
 logger = logging.getLogger(__name__)
 
+# `or` as well makes a k = 5 check that fails take 11 s instead of 0.1 s on a
+# 3-state model with 3 propositions, so LTL keeps `and` only for now.
+CONDITION_CONNECTIVES = ["and"]
+
 
 def _search_strategy_profiles(
     strategies: list[list[dict]],
@@ -154,14 +158,13 @@ def generate_guarded_action_pairs(
 
     Returns an empty dict on error.
     """
-    # `or` as well makes a k = 5 check that fails take 11 s instead of 0.1 s on a
-    # 3-state model with 3 propositions, so LTL keeps `and` only for now.
-    connectives = ["and"]
     try:
         cartesian_products: dict[str, list[tuple[str, str]]] = {}
         for _agent_key in agent_actions.keys():
             conditions = list(
-                generate_conditions(atomic_propositions, connectives, complexity_bound)
+                generate_conditions(
+                    atomic_propositions, CONDITION_CONNECTIVES, complexity_bound
+                )
             )
             for condition in conditions:
                 negated_conditions = list(
