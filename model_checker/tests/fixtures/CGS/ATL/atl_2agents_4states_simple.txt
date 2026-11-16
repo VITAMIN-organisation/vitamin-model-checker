@@ -12,7 +12,7 @@
 Transition
 0 AC,AD BC,BD 0
 0 0 AD,BD AC,BC
-0 0 0 AD,BC
+0 0 0 AC,AD,BC,BD
 0 0 0 *
 Unknown_Transition_by
 0 0 0 0

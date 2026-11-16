@@ -38,14 +38,15 @@ class TestRABATLVsRBATLDivergence:
         rba_states = extract_states_from_result(
             _core_rbatl_checking(rbatl_fixture, formula)
         )
-        assert rab_states == {"s0", "s1", "s2", "s3"}
-        assert rba_states == {"s0", "s2"}
+        assert rab_states == {"s1", "s3"}
+        assert rba_states == set()
         assert rab_states != rba_states
 
     def test_multi_agent_coalition_bound_vector_divergence(
         self, rabatl_fixture, rbatl_fixture
     ):
-        formula = "<1,2><1,1,1>F r"
+        """At s2, AAQ costs agents 1 and 2 nothing in RABATL but 2:2 in RBATL."""
+        formula = "<1,2><0,0>F r"
         rab_states = extract_states_from_result(
             _core_rabatl_checking(rabatl_fixture, formula)
         )
@@ -53,5 +54,5 @@ class TestRABATLVsRBATLDivergence:
             _core_rbatl_checking(rbatl_fixture, formula)
         )
         assert rab_states == {"s1", "s2", "s3", "s4"}
-        assert rba_states == {"s0", "s1", "s2", "s3", "s4"}
+        assert rba_states == {"s1", "s3", "s4"}
         assert rab_states != rba_states

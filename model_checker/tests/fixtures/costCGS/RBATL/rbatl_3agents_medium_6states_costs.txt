@@ -5,12 +5,13 @@
 # LOGIC: RBATL
 
 # DESCRIPTION: Three agents; coalitions reason about paths and others'
-# strategies under cost bounds.
+# strategies under cost bounds. ^ is idle. In s0 and s2 the joint actions
+# that lead nowhere else keep the state, at cost 0.
 
 Transition
-0 AA^,A^Q,AR^ ^^R AAR 0 0
+AAQ,A^^,A^R,ARQ,ARR,^A^,^AQ,^AR,^^^,^^Q,^R^,^RQ,^RR AA^,A^Q,AR^ ^^R AAR 0 0
 0 * 0 0 0 0
-0 0 0 AA^ AAQ ^^Q
+0 0 A^^,A^Q,^A^,^AQ,^^^ AA^ AAQ ^^Q
 0 0 0 * 0 0
 0 0 0 0 * 0
 0 0 0 0 0 *
@@ -21,11 +22,22 @@ s0
 Costs_for_actions
 AA^ s0$1:1;s2$1:1
 AAR s0$2:2
-A^Q s0$2:2
+A^Q s0$2:2;s2$0:0
 AR^ s0$3:3
-AAQ s2$2:2
+AAQ s0$0:0;s2$2:2
 ^^R s0$3:3
-^^Q s2$2:2
+^^Q s0$0:0;s2$2:2
+A^^ s0$0:0;s2$0:0
+A^R s0$0:0
+ARQ s0$0:0
+ARR s0$0:0
+^A^ s0$0:0;s2$0:0
+^AQ s0$0:0;s2$0:0
+^AR s0$0:0
+^^^ s0$0:0;s2$0:0
+^R^ s0$0:0
+^RQ s0$0:0
+^RR s0$0:0
 *** s1$2:2
 *** s3$2:2
 *** s4$2:2

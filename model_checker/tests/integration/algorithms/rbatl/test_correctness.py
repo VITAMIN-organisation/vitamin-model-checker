@@ -45,14 +45,14 @@ class TestRBATLSemantics:
     """Exact state-set semantics on fixture model."""
 
     def test_rbatl_exact_state_set(self, rbatl_model):
-        """Model checker returns the expected state set for <1><2>F r."""
+        """<1><2>F r: in s0 and s2 the others can keep the state, where r is false."""
         result = _core_rbatl_checking(rbatl_model, "<1><2>F r")
         assert "error" not in result
         assert "res" in result
         states = extract_states_from_result(result)
-        assert states == {"s0", "s1", "s2", "s3", "s4"}
+        assert states == {"s1", "s3", "s4"}
         init_str = result.get("initial_state", "")
-        assert ": True" in init_str
+        assert ": False" in init_str
 
     def test_rbatl_true_false_constants(self, rbatl_model):
         """Boolean constants must resolve via the formula parser, not as atoms."""

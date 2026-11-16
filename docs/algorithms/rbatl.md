@@ -74,7 +74,8 @@ steps cost 2. `<1><2> F p` gives `{s0, s1, s2}`. `<1><1> G !p` gives
 The number of budgets is the product of `b_i + 1` over the bound's entries, and
 the time grows with it. Measured with `<1,2><b,b> F p` on
 `model_checker/tests/fixtures/costCGS/RBATL/rbatl_2agents_8states_sensor.txt`:
-`(20,20)` takes 0.07 s, `(100,100)` 1.6 s and `(300,300)` 14 s. A bound that needs
+`(20,20)` takes 0.08 s, `(100,100)` 2.0 s and `(300,300)` 18 s (best of 3 runs of
+`model_checking`). A bound that needs
 more than 100000 budgets is a validation error that names it.
 
 [RABATL](rabatl.md) runs the same algorithm; only the cost of a joint action is
@@ -96,11 +97,11 @@ puts no condition on `phi` at the position where `psi` holds:
 The cost of an Until counts the moves until `psi` holds, as in Algorithm 2.
 
 PRIMA 2024 gives every agent the idle action at cost 0 in every state (p. 4) and
-leaves the idle self-loops out of Fig. 1 (p. 5). The checker adds no move that a
-`Transition` row does not list ([Transition](../reference/file_formats.md#transition)).
-The sensor fixture `rbatl_2agents_8states_sensor.txt`, which writes idle as `I`,
-lists `II` only in `s6`: `<1,2><0,0>G !p` is false at `s0` there and true once
-`II` is added to the `s0` row.
+leaves the self-loops of the joint action (idle, idle) out of Fig. 1 (p. 5). The
+checker adds no move that a `Transition` row does not list, so the sensor fixture
+`rbatl_2agents_8states_sensor.txt` writes them: `II` (idle is `I`) at cost 0 in
+every state. It also has `CC` from `s7` to `s6`, the figure's (send1b, send2b), at
+cost `4:0`. With the loops, `<1,2><0,0>G !p` holds at `s0`: both agents stay idle.
 
 WOA 2024 (Table 1) reports its rover mission formula true with bound `(5,1)` and
 false with `(2,2)`. The test `test_rover_mission_formula_runs` writes the formula as

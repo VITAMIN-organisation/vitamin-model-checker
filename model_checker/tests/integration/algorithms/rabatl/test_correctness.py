@@ -46,14 +46,14 @@ class TestRABATLSemantics:
     """Exact state-set semantics on fixture model."""
 
     def test_rabatl_exact_state_set(self, rabatl_model):
-        """Model checker returns the expected state set for <1><2>F r."""
+        """<1><2>F r: in s0 and s2 the others can keep the state, where r is false."""
         result = _core_rabatl_checking(rabatl_model, "<1><2>F r")
         assert "error" not in result
         assert "res" in result
         states = extract_states_from_result(result)
-        assert states == {"s0", "s1", "s2", "s3", "s4"}
+        assert states == {"s1", "s3", "s4"}
         init_str = result.get("initial_state", "")
-        assert ": True" in init_str
+        assert ": False" in init_str
 
 
 @pytest.mark.integration

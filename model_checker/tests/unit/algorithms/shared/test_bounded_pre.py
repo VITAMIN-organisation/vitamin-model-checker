@@ -87,7 +87,8 @@ def test_wildcard_cell_to_two_states_does_not_force_either(temp_file):
 def test_move_that_also_reaches_a_state_outside_the_target_does_not_force(
     test_data_dir, cost_filter
 ):
-    """In the medium fixtures A|A|^ from s0 reaches s1 and s3, so only {s1, s3} is forced."""
+    """In the medium fixtures agent 1's move A from s0 reaches s0, s1 and s3, so it
+    forces {s0, s1, s3} but not {s0, s1}."""
     from model_checker.tests.helpers.model_helpers import load_test_model
 
     logic = cost_filter.upper()
@@ -96,9 +97,9 @@ def test_move_that_also_reaches_a_state_outside_the_target_does_not_force(
     )
     cache = build_transition_cache(cgs, "1")
     bound = [100, 100, 100]
-    assert compute_pre_states(cgs, "1", {"s1"}, bound, cache, cost_filter) == {"s1"}
-    assert compute_pre_states(cgs, "1", {"s1", "s3"}, bound, cache, cost_filter) == {
-        "s0",
-        "s1",
-        "s3",
+    assert compute_pre_states(cgs, "1", {"s0", "s1"}, bound, cache, cost_filter) == {
+        "s1"
     }
+    assert compute_pre_states(
+        cgs, "1", {"s0", "s1", "s3"}, bound, cache, cost_filter
+    ) == {"s0", "s1", "s3"}
