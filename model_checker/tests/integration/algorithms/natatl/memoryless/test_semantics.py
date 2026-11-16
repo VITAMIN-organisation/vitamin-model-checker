@@ -115,11 +115,11 @@ class TestNaturalStrategies:
         """a is missing at s2 and s3, so (p, a); (q, a); (true, idle) of size 3 is needed."""
         assert _satisfied(temp_file, _TWO_STEPS_THEN_IDLE, f"<{{1}},{k}>F r") is holds
 
-    def test_bound_below_the_coalition_size_is_an_error(self, temp_file):
-        """Each member needs its true rule, so k = 1 cannot cover two agents."""
-        error = model_checking("<{1,2},1>F g", temp_file(_UNEVEN_COALITION))["error"]
-        assert error["type"] == "validation"
-        assert "k = 1 is smaller than the coalition [1, 2]" in error["message"]
+    def test_bound_below_the_coalition_size_is_false(self, temp_file):
+        """Each member needs its true rule, so no profile of size 1 covers two agents."""
+        result = model_checking("<{1,2},1>F g", temp_file(_UNEVEN_COALITION))
+        assert "error" not in result
+        assert result["Satisfiability"] is False
 
     @pytest.mark.parametrize(("k", "holds"), [(2, False), (3, True)])
     def test_bound_is_the_total_over_the_coalition(self, temp_file, k, holds):

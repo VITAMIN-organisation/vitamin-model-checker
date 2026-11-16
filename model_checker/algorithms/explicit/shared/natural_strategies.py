@@ -1,9 +1,5 @@
-"""Natural memoryless strategies: rule lists whose first matching condition picks the
-action, ending in a rule guarded by true.
-
-A strategy's size is the number of symbols in its conditions, with true counting
-1; a coalition's size is the sum over its members. See docs/algorithms/natatl.md.
-"""
+"""Natural memoryless strategies: ordered rule lists ending in a true rule, sized
+by their condition symbols; see docs/algorithms/natatl.md."""
 
 import itertools
 from collections.abc import Callable, Iterator
@@ -54,12 +50,8 @@ def condition_text(condition: Condition) -> str:
 
 
 def enumerate_conditions(cgs, max_size: int) -> list[Condition]:
-    """The smallest condition for each set of states that some Boolean formula over
-    the propositions of size at most max_size defines, empty and full sets excluded.
-
-    Two conditions with the same states give the same strategies, so the smaller
-    one is enough.
-    """
+    """The smallest condition (size at most max_size) for each set of states, empty
+    and full sets excluded: conditions with the same states give the same strategies."""
     all_states = frozenset(cgs.states)
     smallest: dict[frozenset[str], Condition] = {}
     by_size: dict[int, list[Condition]] = {}
@@ -140,12 +132,8 @@ def agent_strategies(
     available: dict[str, frozenset[str]],
     max_size: int,
 ) -> dict[int, list[NaturalStrategy]]:
-    """Every natural strategy of one agent up to max_size, keyed by size, keeping the
-    smallest strategy for each state-to-action choice.
-
-    A rule is kept only when the states where it matches first are not empty, are
-    not all the states left (true would be smaller), and allow its action.
-    """
+    """Every strategy of one agent up to max_size, keyed by size, keeping the smallest
+    one per state-to-action choice; a rule must match first on some states left."""
     found: dict[tuple[tuple[str, str], ...], NaturalStrategy] = {}
     all_states = frozenset(available)
     # Rule lists in another order can reach the same partial choice (the states left
@@ -201,15 +189,6 @@ def _coalition_profiles(
                 yield total, profile
 
 
-def require_bound_covers_coalition(k: int, agents: list[int], last_rule: str) -> None:
-    """Raise a validation error when k is below one symbol per coalition member."""
-    if k < len(agents):
-        raise ValueError(
-            f"[VALIDATION] k = {k} is smaller than the coalition {agents}: each "
-            f"member's strategy has size at least 1, its {last_rule} rule."
-        )
-
-
 def smallest_winning_profile(
     per_agent: list[dict[int, list[Strategy]]],
     k: int,
@@ -263,9 +242,8 @@ def _parse_cell(cell, num_agents: int):
 
 
 def restrict_to_profile(states, parsed_rows, agents: list[int], profile) -> list[list]:
-    """The transition matrix keeping, in each state, only the joint actions where
-    every coalition agent plays its strategy's action; parsed_rows comes from
-    parse_rows."""
+    """The transition matrix (from parse_rows) keeping only the joint actions where
+    every coalition agent plays its strategy's action."""
     choices = [dict(strategy.choice) for strategy in profile]
     graph = []
     for state, row in zip(states, parsed_rows, strict=True):
@@ -278,9 +256,8 @@ def restrict_to_profile(states, parsed_rows, agents: list[int], profile) -> list
 
 
 def goal_holds_on(model, ctl_formula: str, model_path: str) -> bool:
-    """True when the CTL goal holds at the initial state of `model`, a model
-    restricted to a strategy profile. A model with a state that has no move is
-    rejected: the CTL check would read that dead end as a win for AF."""
+    """True when the CTL goal holds at the initial state of the restricted `model`;
+    a state with no move is a loss, as CTL would read the dead end as a win for AF."""
     if cgs_validation.validate_total_transitions(model.graph, model.states):
         return False
     result = model_checking(ctl_formula, model_path, preloaded_model=model)
@@ -288,9 +265,8 @@ def goal_holds_on(model, ctl_formula: str, model_path: str) -> bool:
 
 
 def keep_joint_actions(cell, wanted: list[tuple[int, str]]):
-    """A parsed cell as matrix text, keeping the joint actions where each agent
-    index in `wanted` plays its action; 0 when none is left. A cell that is not a
-    list of joint actions (0 or `*`) is returned as it is."""
+    """A parsed cell as matrix text keeping the joint actions where each agent index
+    in `wanted` plays its action: 0 when none is left, 0 and `*` cells unchanged."""
     if not isinstance(cell, list):
         return cell
     kept = [

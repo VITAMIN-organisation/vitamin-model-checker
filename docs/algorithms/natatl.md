@@ -29,7 +29,7 @@ A condition is a Boolean formula over the model's propositions with `!`, `&&` an
 strategy is the sum of the sizes of its conditions, and the size of a coalition's
 profile (one strategy per member of `A`) is the sum over the members (p. 13). The
 bound `k` limits that sum, so a coalition of two needs `k >= 2` for its two `true`
-rules; a smaller `k` is a validation error.
+rules; with a smaller `k` no profile exists and the formula is false (p. 14).
 
 Example: in `s0` (labelled `p`) action `a` leads to `s1` (labelled `g`) and `I`
 stays; `s1` offers only `I`. `<{1}, 1> F g` is false: `(true, a)` is not a strategy,

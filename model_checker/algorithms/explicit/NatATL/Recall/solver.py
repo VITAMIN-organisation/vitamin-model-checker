@@ -23,7 +23,6 @@ from model_checker.algorithms.explicit.shared.natural_strategies import (
     enumerate_conditions,
     goal_holds_on,
     parse_rows,
-    require_bound_covers_coalition,
     smallest_winning_profile,
 )
 from model_checker.parsers.game_structures.cgs import CGSProtocol
@@ -40,9 +39,8 @@ def solve_natatl_recall(
 ) -> dict[str, Any]:
     """Whether the coalition has a recall strategy profile of total size at most k
     that enforces the goal, with the smallest such profile."""
-    require_bound_covers_coalition(k, agents, "idle")
-    # Every other member needs at least its idle rule, so one member's rules other
-    # than the idle rule have at most k - len(agents) symbols.
+    # Every other member needs at least its idle rule, so one member's other rules
+    # have at most k - len(agents) symbols; a negative budget gives no profile.
     budget = k - len(agents)
     letters = enumerate_conditions(cgs, budget) + [true_letter(cgs.states)]
     parsed_rows = parse_rows(cgs)

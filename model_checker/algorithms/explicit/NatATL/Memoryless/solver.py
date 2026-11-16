@@ -11,7 +11,6 @@ from model_checker.algorithms.explicit.shared.natural_strategies import (
     enumerate_conditions,
     goal_holds_on,
     parse_rows,
-    require_bound_covers_coalition,
     restrict_to_profile,
     smallest_winning_profile,
 )
@@ -38,9 +37,8 @@ def solve_natatl_memoryless(
 ) -> dict[str, Any]:
     """Whether the coalition has a natural strategy profile of total size at most k
     that enforces the goal, with the smallest such profile."""
-    require_bound_covers_coalition(k, agents, "true")
     # Every other member needs at least its true rule, so one condition is at most
-    # k - len(agents) symbols.
+    # k - len(agents) symbols; with k below the coalition size no profile exists.
     conditions = enumerate_conditions(cgs, k - len(agents))
     parsed_rows = parse_rows(cgs)
     per_agent = [
