@@ -2,24 +2,13 @@
 
 from typing import Any
 
-from model_checker.algorithms.explicit.shared.result_formatters import (
-    format_model_checking_result,
-)
 from model_checker.algorithms.explicit.shared.timed_ast_operators import (
-    initial_region_satisfied,
+    region_graph_for_formula,
+    timed_checking_result,
 )
 from model_checker.algorithms.explicit.TOL.solver import solve_tree
 from model_checker.engine.execution import create_model_checking_entry
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.parsers.game_structures.timed_cgs.formula_clocks import (
-    collect_formula_clocks,
-    extend_timed_cgs_clocks,
-    formula_clock_constants,
-)
-from model_checker.parsers.game_structures.timed_cgs.regions import (
-    project_regions_to_locations,
-)
-from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
 from model_checker.utils.error_handler import create_error_response
 
 
@@ -30,16 +19,9 @@ def _core_tol_checking(tcgs, formula: str) -> dict[str, Any]:
         err = parser.errors[0] if parser.errors else "Syntax Error"
         return create_error_response("syntax", err)
 
-    formula_clocks = collect_formula_clocks(ast, set(tcgs.clocks))
-    extend_timed_cgs_clocks(tcgs, formula_clocks)
-
-    zone_graph = ZoneGraph(tcgs, formula_clock_constants(ast, tcgs.clocks_dict))
+    zone_graph = region_graph_for_formula(tcgs, ast)
     solve_tree(tcgs, zone_graph, ast)
-
-    init_state = str(tcgs.initial_state)
-    is_satisfied = initial_region_satisfied(zone_graph, ast.satisfying_regions)
-    result_locations = project_regions_to_locations(ast.satisfying_regions)
-    return format_model_checking_result(result_locations, init_state, is_satisfied)
+    return timed_checking_result(tcgs, zone_graph, ast.satisfying_regions)
 
 
 model_checking = create_model_checking_entry("TOL", _core_tol_checking)

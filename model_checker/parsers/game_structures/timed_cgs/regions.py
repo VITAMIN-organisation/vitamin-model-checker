@@ -50,27 +50,6 @@ def regions_with_clock_guard(
     }
 
 
-def region_matches_label(region: TimeState, label: RegionSet) -> bool:
-    """Whether a labelled zone at the same location contains ``region``, so a zone
-    changed by a clock reset still counts as satisfying the formula."""
-    for other in label:
-        if other.location != region.location:
-            continue
-        if other.zone == region.zone or region.zone.includes(other.zone):
-            return True
-    return False
-
-
-def region_with_clock_reset(
-    tcgs: "TimedCGS", region: TimeState, clock_name: str
-) -> TimeState:
-    """Copy of ``region`` with the named clock reset to zero."""
-    clock_index = tcgs.clocks_dict[clock_name] + 1
-    zone = region.zone.copy()
-    zone.reset(clock_index, 0)
-    return TimeState(region.location, zone)
-
-
 def timed_predecessors(zone_graph: "ZoneGraph", targets: RegionSet) -> RegionSet:
     """Symbolic states that reach ``targets`` in one delay or discrete step."""
     predecessors: RegionSet = set()

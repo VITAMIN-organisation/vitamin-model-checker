@@ -8,6 +8,9 @@ from pathlib import Path
 
 import pytest
 
+from model_checker.parsers.game_structures.timed_cgs.formula_clocks import (
+    extend_timed_cgs_clocks,
+)
 from model_checker.parsers.game_structures.timed_cgs.regions import (
     project_regions_to_locations,
     regions_with_clock_guard,
@@ -195,3 +198,14 @@ def test_two_invariants_in_one_cell_both_apply(tmp_path, invariants, reachable):
         f"Invariants\n{invariants}\n",
     )
     assert ZoneGraph(tcgs).has_path_from("s0", [(1, "==", 3)]) is reachable
+
+
+@pytest.mark.unit
+def test_freeze_reset_links_every_region_to_one_with_the_clock_at_zero(minimal_tcgs):
+    """Resetting j at 0<x<1 gives 0<x<1, j=0, which no time or edge step reaches."""
+    extend_timed_cgs_clocks(minimal_tcgs, ("j",))
+    graph = ZoneGraph(minimal_tcgs, freeze_clocks=("j",))
+    resets = graph.freeze_resets["j"]
+    assert set(resets) == graph.states
+    assert {reset.zone.elements[2][0].constant for reset in resets.values()} == {0}
+    assert graph.reachable_states < graph.states

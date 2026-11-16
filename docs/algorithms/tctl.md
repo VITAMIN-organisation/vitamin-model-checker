@@ -20,14 +20,15 @@ the largest constants (IC 1993, Lemma "Equivalence of Clock Assignments",
 pp. 16-17), so the checker labels a region as a whole. The graph is built as
 follows:
 
-1. Clocks named in the formula, by a freeze `x . phi` or a guard such as
-   `phi : x<=3`, are added to the model's clocks if new.
+1. Clocks named in the formula, by a freeze `j.phi` (which sets the formula
+   clock `j` to 0 and then checks `phi`, see the [overview](#overview)) or a
+   guard such as `phi : x<=3`, are added to the model's clocks if new.
 2. Each clock's largest constant is computed; the formula `AG (p : x<=3)`
    contributes 3 for `x`.
 3. The initial region is the initial location with every clock at 0, restricted to
    the location's invariant. If that leaves no clock values, the graph is empty.
-4. From each region, the graph is built breadth first with two kinds of successor,
-   computed as in step 5:
+4. From each region, the graph is built breadth first with two kinds of successor
+   and one link, computed as in step 5:
    - letting time pass leads only to the next clock region, the first one time
      reaches after leaving the current one, if the invariant allows it. A region
      that time cannot leave within the invariant, such as `x=10` under `x<=10` or
@@ -35,6 +36,10 @@ follows:
      back to itself would add nothing.
    - taking an edge: the guard applies, then the resets, then the target's
      invariant; each clock region of the result is a successor.
+   - for each clock `j` that a freeze `j.phi` in the formula names, setting `j`
+     to 0 gives one clock region, which joins the graph, is expanded like any
+     other region, and is recorded as the current region's freeze reset. The
+     link is not a step: time and edges never follow it.
 5. The checker computes successors as zones (sets of clock values described by
    bounds on clocks and clock differences), normalizes each zone against the
    largest constants so the graph is finite, and cuts it into clock regions. Each
@@ -70,15 +75,19 @@ constraint such as `x<=3` is the set of regions where every clock value meets it
 `phi : x<=3` is `phi && x<=3`: both must hold in the same region, because a clock
 constraint is a formula of its own in the grammar of AAMAS 2025 (Def. 10, p. 4).
 
-A freeze `j . phi` is evaluated as `phi`, as in AAMAS 2025 Algorithm 1 (line 19,
-p. 5). Here `j` is a formula clock: a clock that only the formula names, added to
-the model in step 1, which starts at 0 and is never reset by an edge. The result
-is right where `j` is still 0, such as a freeze at the start of the formula. Under
-a temporal operator it can be wrong. Example: the test model
-`tctl_tol_invariant10.txt` in `model_checker/tests/fixtures/timedCGS/` has one
-location `s0` with a self-loop and invariant `x<=10`. `EF (x>8 && j . EF (j>=2))`
-should be false, because after `x>8` time cannot advance by 2, but the checker
-gives true. TOL freezes behave the same way.
+A freeze `j.phi` holds in a region when `phi` holds in the region's freeze
+reset, the region reached by setting `j` to 0 there (step 4). This is the
+semantics of AAMAS 2025 (Def. 11, p. 4: `j.phi` holds at `(l, v)` when `phi`
+holds at `(l, v[j <- 0])`) and the region labelling of IC 1993 (p. 22), which
+checks an until along the paths that start at the region with the formula clock
+reset "instead of v itself". Here `j` is a formula clock: a clock that only the
+formula names, added to the model in step 1; it starts at 0 with the model's
+clocks, no edge resets it, and only a freeze does. AAMAS 2025 Algorithm 1
+(line 19, p. 5) instead computes `j.phi` as `phi`, which contradicts Def. 11 of
+the same paper. Example: on `tctl_tol_invariant10.txt`, with the invariant
+`x<=10`, `EF (x>8 && j.EF (j>=2))` is false, because after `x>8` time cannot
+advance by 2, and `EF (x>=5 && j.AG (j<=4))` is true, because at `x=6`, `j` runs
+to 4 and time stops. TOL freezes work the same way.
 
 `Pre(Z)`, the [pre-image](index.md#overview), is the set of regions with a time
 step or an edge of the region graph into `Z`. There is no `X` operator: the next
@@ -108,6 +117,8 @@ its result holds only where `psi` holds. Example: one clock `x`; `s0` goes to
 ## Result
 
 The formula holds when the initial region is in the final set. `res` lists the
-locations of the regions in the set, so a location the region graph never reaches is
-never listed, and `initial_state` gives the verdict, as in the
+locations of the regions in the set that time and edge steps reach from the
+initial region, so a location that no time or edge step reaches, or a region
+that only a freeze reset leads to, is never listed; `initial_state` gives the
+verdict, as in the
 [shared steps](index.md#steps-shared-by-the-set-based-checkers).

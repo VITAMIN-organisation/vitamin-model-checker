@@ -90,8 +90,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     every edge of a location. See
     [obstruction step](docs/algorithms/tol.md#obstruction-step).
   - TOL `res` lists only locations the region graph reaches, as TCTL does.
-  - A freeze `j.phi` is evaluated as `phi` in TOL as in TCTL; it is wrong under a
-    temporal operator. See [TCTL overview](docs/algorithms/tctl.md#overview).
+  - A freeze `j.phi` holds in a region when `phi` holds in the region reached by
+    resetting `j` to 0 there (AAMAS 2025 Def. 11, p. 4; IC 1993 p. 22). TCTL and
+    TOL used to evaluate `j.phi` as `phi` in effect, following AAMAS 2025
+    Algorithm 1 (line 19, p. 5), which contradicts that paper's Def. 11, so a
+    freeze under a temporal operator was wrong: on `tctl_tol_invariant10.txt`,
+    `EF (x>8 && j.EF (j>=2))` held although
+    time cannot advance by 2 after `x>8`, and `EF (x>=5 && j.AG (j<=4))` did not
+    hold although it does at `x=6`. `res` lists only locations of regions that
+    time and edge steps reach from the start, not ones only a freeze reset leads
+    to. See [TCTL overview](docs/algorithms/tctl.md#overview).
 - Breaking: TOL rejects `X` and `next` (AAMAS 2025, p. 4, has no next operator).
 - Breaking: NatATL (memoryless) and NatATLF use the natural strategies of AIJ 2019
   (section 4.1). See [NatATL strategies](docs/algorithms/natatl.md#strategies).

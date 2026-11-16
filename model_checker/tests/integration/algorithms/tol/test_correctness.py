@@ -78,6 +78,22 @@ def test_demon_cannot_stop_time(formula):
     assert result["initial_state"] == "Initial state s0: False"
 
 
+@pytest.mark.parametrize(
+    ("formula", "initial_true"),
+    [
+        ("{J1}G j.(j<=0)", True),
+        ("{J1}G (x>8 -> j.{J1}G (j<=2))", True),
+        # From x=8.5, j runs to 1.5 before time stops at x=10.
+        ("{J1}G (x>8 -> j.{J1}G (j<=1))", False),
+    ],
+)
+def test_freeze_resets_its_clock_where_it_stands(formula, initial_true):
+    """After x>8, time at s0 advances by less than 2, and a freeze counts from there."""
+    fixture = str(_FIXTURE.with_name("tctl_tol_invariant10.txt"))
+    result = model_checking(formula, fixture)
+    assert result["initial_state"] == f"Initial state s0: {initial_true}"
+
+
 def test_demon_cannot_disable_the_only_edge():
     """The edge s0 -> s1 must stay enabled, so leaving s0 at x=1 never meets p."""
     fixture = str(_FIXTURE.with_name("tol_only_edge.txt"))

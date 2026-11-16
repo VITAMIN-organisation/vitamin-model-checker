@@ -660,34 +660,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/shared/bounded_atl_preimage.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 49,
-                    "endColumn": 55,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 49,
-                    "endColumn": 55,
-                    "lineCount": 1
-                }
-            }
-        ],
-        "./model_checker/algorithms/explicit/shared/timed_ast_operators.py": [
-            {
-                "code": "reportAttributeAccessIssue",
-                "range": {
-                    "startColumn": 71,
-                    "endColumn": 77,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/automata/automaton.py": [
             {
                 "code": "reportOptionalMemberAccess",

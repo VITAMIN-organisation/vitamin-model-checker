@@ -12,8 +12,9 @@ the model file in [timedCGS sections](../reference/file_formats.md#timedcgs-sect
 
 The checker follows the [shared steps](index.md#steps-shared-by-the-set-based-checkers)
 on the regions of the [region graph](tctl.md#region-graph) of TCTL. Everything
-except `{Jn}` is computed as in [TCTL](tctl.md#overview), including its limit on
-freezes; `res` likewise lists only locations the region graph reaches. TOL has no `X` operator
+except `{Jn}` is computed as in [TCTL](tctl.md#overview), including freezes;
+`res` likewise lists only the locations of regions that time and edge steps
+reach from the initial region ([TCTL result](tctl.md#result)). TOL has no `X` operator
 ([knowledge base](../reference/logic_knowledge_base.md#tol---timed-obstruction-logic)).
 
 ## Obstruction step

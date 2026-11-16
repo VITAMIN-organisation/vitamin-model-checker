@@ -116,6 +116,33 @@ def test_tctl_clock_guard_holds_for_every_clock_value(formula, initial_ok):
 
 
 @pytest.mark.parametrize(
+    ("formula", "initial_ok"),
+    [
+        ("j.EF (j>=2)", True),
+        ("EF (x>8 && j.EF (j>=2))", False),
+        ("AG j.EF (j>=2)", False),
+        ("EF (x>=5 && j.AG (j<=5))", True),
+        # At x=6, j runs to 4 and stops.
+        ("EF (x>=5 && j.AG (j<=4))", True),
+        ("EF (x>8 && j.(j<=0))", True),
+        ("AG j.(j<=0)", True),
+        ("j.AG (j<=9)", False),
+    ],
+)
+def test_tctl_freeze_resets_its_clock_where_it_stands(formula, initial_ok):
+    """After x>8, time at s0 cannot advance by 2, so j.EF (j>=2) fails there."""
+    result = model_checking(formula, str(_INVARIANT10))
+    assert _initial_satisfied(result) is initial_ok
+
+
+def test_tctl_res_lists_only_locations_reached_from_the_start():
+    """A formula clock starts at 0 with x, so x>8 && j<=0 holds in no reached region."""
+    result = model_checking("x>8 && j<=0 && j.p", str(_INVARIANT10))
+    assert _states(result) == set()
+    assert _initial_satisfied(result) is False
+
+
+@pytest.mark.parametrize(
     ("formula", "expected_locations", "initial_ok"),
     [
         # AF p: s0 is forced to s1 where p holds, so all paths eventually reach p.

@@ -91,4 +91,4 @@ def solve_tree(
     elif isinstance(node, ClockExpr):
         handle_clock_expr(tcgs, zone_graph, node)
     elif isinstance(node, FreezeExpr):
-        handle_freeze(tcgs, zone_graph, node)
+        handle_freeze(zone_graph, node)

@@ -772,9 +772,9 @@ transitions whose costs add up to at most `k`, and the budget does not carry ove
 along the path. OL (`<Jk>`) reads its budget the
 same way.
 
-The freeze `j.phi` resets formula clock `j` to `0` at the current state. The
-checker gets this right only where `j` is still 0, such as a freeze at the start
-of the formula; see [TCTL freezes](../algorithms/tctl.md#overview).
+The freeze `j.phi` resets formula clock `j` to `0` at the current state and
+evaluates `phi` from there (AAMAS 2025 Def. 11, p. 4); see
+[TCTL freezes](../algorithms/tctl.md#overview).
 
 The model type is `timedCGS`, the same as TCTL. How the checker computes each
 operator: [TOL algorithm](../algorithms/tol.md).

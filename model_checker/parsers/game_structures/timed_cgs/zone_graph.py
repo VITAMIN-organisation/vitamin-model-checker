@@ -30,12 +30,21 @@ class _Exploration:
     """Breadth-first exploration of the reachable regions; each successor is stored
     once, as a delay step or as a discrete step to a named location."""
 
-    def __init__(self, tcgs: TimedCGS, formula_constants: dict[str, int]):
+    def __init__(
+        self,
+        tcgs: TimedCGS,
+        formula_constants: dict[str, int],
+        freeze_clocks: tuple[str, ...],
+    ):
         self.tcgs = tcgs
         self.max_constants = _max_constants(tcgs, formula_constants)
         self.location_targets = _location_targets(tcgs)
         self.delay_successors: dict[TimeState, set[TimeState]] = {}
         self.discrete_successors: dict[TimeState, dict[str, set[TimeState]]] = {}
+        self.freeze_resets: dict[str, dict[TimeState, TimeState]] = {
+            clock: {} for clock in freeze_clocks
+        }
+        self.reachable_states: set[TimeState] = set()
         self.waitlist: deque[TimeState] = deque()
 
     def regions(self, location: str, zone: DBM) -> list[TimeState]:
@@ -136,6 +145,16 @@ def _expand_discrete_successors(exploration: _Exploration, state: TimeState) -> 
             exploration.add_state(successor)
 
 
+def _link_freeze_resets(exploration: _Exploration, state: TimeState) -> None:
+    """Record, for each freeze clock, the region reached by resetting it; the
+    link is not an edge, so time and edge steps never follow it."""
+    for clock, resets in exploration.freeze_resets.items():
+        zone = state.zone.get_reset(exploration.tcgs.clocks_dict[clock] + 1, 0)
+        # A reset keeps the other clocks' region, so the result is one region.
+        [resets[state]] = exploration.regions(state.location, zone)
+        exploration.add_state(resets[state])
+
+
 def _initial_zone(tcgs: TimedCGS) -> DBM | None:
     """Build the start zone: all clocks at zero, closed under the location invariant."""
     zone = DBM(len(tcgs.clocks))
@@ -151,10 +170,13 @@ def _initial_zone(tcgs: TimedCGS) -> DBM | None:
 
 
 def _explore(
-    tcgs: TimedCGS, formula_constants: dict[str, int]
+    tcgs: TimedCGS,
+    formula_constants: dict[str, int],
+    freeze_clocks: tuple[str, ...],
 ) -> tuple[_Exploration, TimeState | None]:
-    """Explore reachable regions from the zero-clock initial zone."""
-    exploration = _Exploration(tcgs, formula_constants)
+    """Explore the regions reached from the zero-clock initial zone by time, edges
+    and freeze resets."""
+    exploration = _Exploration(tcgs, formula_constants, freeze_clocks)
     initial_zone = _initial_zone(tcgs)
     if initial_zone is None:
         return exploration, None
@@ -162,22 +184,42 @@ def _explore(
     # Every clock is 0, so the initial zone is one region.
     [initial_state] = exploration.regions(tcgs.initial_state, initial_zone)
     exploration.add_state(initial_state)
+    _expand_waitlist(exploration, link_freeze_resets=False)
+    # Only time and edge steps reach the states found so far.
+    exploration.reachable_states = set(exploration.delay_successors)
+    for state in exploration.reachable_states:
+        _link_freeze_resets(exploration, state)
+    _expand_waitlist(exploration, link_freeze_resets=True)
+    return exploration, initial_state
+
+
+def _expand_waitlist(exploration: _Exploration, link_freeze_resets: bool) -> None:
     while exploration.waitlist:
         state = exploration.waitlist.popleft()
         _expand_delay_successors(exploration, state)
         _expand_discrete_successors(exploration, state)
-    return exploration, initial_state
+        if link_freeze_resets:
+            _link_freeze_resets(exploration, state)
 
 
 class ZoneGraph:
-    def __init__(self, tcgs: TimedCGS, formula_constants: dict[str, int] | None = None):
-        """The (location, clock region) graph for timed model checking;
-        ``formula_constants`` adds the formula's largest constant per clock name."""
+    def __init__(
+        self,
+        tcgs: TimedCGS,
+        formula_constants: dict[str, int] | None = None,
+        freeze_clocks: tuple[str, ...] = (),
+    ):
+        """The (location, clock region) graph for timed model checking, with the
+        formula's largest constant per clock and the clocks its freezes reset."""
         self.tcgs = tcgs
-        exploration, self.initial_time_state = _explore(tcgs, formula_constants or {})
+        exploration, self.initial_time_state = _explore(
+            tcgs, formula_constants or {}, freeze_clocks
+        )
         self.location_targets = exploration.location_targets
         self.delay_successors = exploration.delay_successors
         self.discrete_successors = exploration.discrete_successors
+        self.freeze_resets = exploration.freeze_resets
+        self.reachable_states = exploration.reachable_states
         self.graph = _successor_lists(self.delay_successors, self.discrete_successors)
         self.states = set(self.graph)
         self.reverse_graph = reverse_adjacency(self.graph, self.states)
@@ -189,6 +231,10 @@ class ZoneGraph:
         )
 
     def _allows_node(self, node: TimeState, constraints: list | None) -> bool:
+        """Whether a path may pass ``node``: a region that time and edge steps
+        reach, meeting ``constraints`` if given."""
+        if node not in self.reachable_states:
+            return False
         if not constraints:
             return True
         return DBMAdapter.zone_satisfies_guards(
@@ -204,10 +250,9 @@ class ZoneGraph:
             return False
 
         initial_loc = self.tcgs.initial_state
-        reverse_graph = reverse_adjacency(self.graph, self.states)
         return any_backward_path(
             starts,
-            reverse_graph,
+            self.reverse_graph,
             is_goal=lambda node: node.location == initial_loc,
             allows_node=lambda node: self._allows_node(node, constraints),
             sort_neighbors=lambda neighbors: sorted(
@@ -225,10 +270,9 @@ class ZoneGraph:
             return []
 
         initial_loc = self.tcgs.initial_state
-        reverse_graph = reverse_adjacency(self.graph, self.states)
         return collect_backward_paths(
             starts,
-            reverse_graph,
+            self.reverse_graph,
             is_goal=lambda node: node.location == initial_loc,
             allows_node=lambda node: self._allows_node(node, constraints),
             sort_neighbors=lambda neighbors: sorted(
