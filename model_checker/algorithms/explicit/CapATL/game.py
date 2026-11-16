@@ -6,31 +6,33 @@ assignments are bitmasks over `CapModel.assignments`.
 The coalition picks one capacity per member before play and keeps it. It sees
 the states and its own moves, not the opponents' moves, so it cannot tell
 apart plays that differ only there. A game node is (state, plays): `plays`
-holds one entry per such play still undecided, namely the assignments that
-play allows (an opponent must keep one capacity along a play, so a play needs
-at least one). The coalition picks one move per node, which is a strategy
-that depends only on what it has seen.
+holds one entry per such play still undecided. An entry keeps the assignments
+the play allows (an opponent must keep one capacity along a play, so a play
+needs at least one) and, per agent, the assignments that agent still
+considers possible: those that allow some play with the same states and the
+same moves of that agent. The coalition picks one move per node, which is a
+strategy that depends only on what it has seen.
 """
 
 from __future__ import annotations
 
 import itertools
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 from typing import Any
 
-from model_checker.algorithms.explicit.shared.fixpoint_iter import (
-    greatest_fixpoint,
-    least_fixpoint,
-)
 from model_checker.parsers.game_structures.cgs.cgs_actions import (
     normalize_action_token,
     parse_joint_action_cell,
 )
 
 Move = tuple[str, ...]  # one action per agent, agent 1 first
-Play = int  # bitmask of the assignments the play so far allows
+Knowledge = tuple[
+    int, ...
+]  # per agent, agent 1 first, the assignments it considers possible
+Play = tuple[int, Knowledge]  # the assignments the play allows, and the knowledge
 Node = tuple[str, frozenset[Play]]
-StateTest = Callable[[str], bool]
+StateTest = Callable[[str, Knowledge], bool]
 # Per node, one list per coalition move of the nodes it leads to; None is a lost play.
 Graph = dict[Node, list[list[Node | None]]]
 
@@ -54,8 +56,14 @@ class CapModel:
         self.assignments = list(
             itertools.product(*(self.capacities[a] for a in self.agents))
         )
+        self.all_assignments = (1 << len(self.assignments)) - 1
+        # Before any move, every agent considers every assignment possible.
+        self.initial_knowledge: Knowledge = tuple(
+            self.all_assignments for _ in self.agents
+        )
         self.moves = self._expand_transitions(cgs)
         self._allowed: dict[Move, int] = {}
+        self._learned: dict[tuple[str, str, int, str], int] = {}
 
     def _expand_transitions(self, cgs: Any) -> dict[str, list[tuple[Move, str]]]:
         agent_actions = [
@@ -95,29 +103,49 @@ class CapModel:
             self._allowed[move] = mask
         return self._allowed[move]
 
+    def learned(self, state: str, target: str, agent: int, action: str) -> int:
+        """Assignments that allow some step from `state` to `target` in which
+        `agent` plays `action`: what the agent may still believe after it."""
+        key = (state, target, agent, action)
+        if key not in self._learned:
+            mask = 0
+            for move, t in self.moves[state]:
+                if t == target and move[agent - 1] == action:
+                    mask |= self.allowed(move)
+            self._learned[key] = mask
+        return self._learned[key]
+
 
 class CoalitionGame:
     """The game of one coalition with fixed member capacities."""
 
     def __init__(
-        self, model: CapModel, coalition: list[int], capacities: tuple[str, ...]
+        self,
+        model: CapModel,
+        coalition: list[int],
+        capacities: tuple[str, ...],
+        observed: frozenset[int],
     ):
+        """`observed`: the agents whose knowledge the formula asks about; the
+        others keep every assignment, so fewer nodes are built."""
         self.model = model
         self.coalition = coalition
+        self.observed = observed
         self.member_actions = {
             a: model.actions_of_capacity[c]
             for a, c in zip(coalition, capacities, strict=True)
         }
-        self._choices: dict[str, list[list[tuple[int, str]]]] = {}
+        self._choices: dict[str, list[list[tuple[Move, int, str]]]] = {}
 
     def start(self, state: str) -> Node:
-        return (state, frozenset({(1 << len(self.model.assignments)) - 1}))
+        model = self.model
+        return (state, frozenset({(model.all_assignments, model.initial_knowledge)}))
 
-    def _choices_at(self, state: str) -> list[list[tuple[int, str]]]:
-        """Per coalition move allowed by the member capacities, the (allowed
-        assignments, target) of each joint move that extends it."""
+    def _choices_at(self, state: str) -> list[list[tuple[Move, int, str]]]:
+        """Per coalition move allowed by the member capacities, the (joint move,
+        allowed assignments, target) of each joint move that extends it."""
         if state not in self._choices:
-            grouped: dict[Move, list[tuple[int, str]]] = {}
+            grouped: dict[Move, list[tuple[Move, int, str]]] = {}
             for move, target in self.model.moves[state]:
                 choice = tuple(move[a - 1] for a in self.coalition)
                 if all(
@@ -125,10 +153,22 @@ class CoalitionGame:
                     for a, b in zip(self.coalition, choice, strict=True)
                 ):
                     grouped.setdefault(choice, []).append(
-                        (self.model.allowed(move), target)
+                        (move, self.model.allowed(move), target)
                     )
             self._choices[state] = list(grouped.values())
         return self._choices[state]
+
+    def _step(
+        self, state: str, move: Move, target: str, knowledge: Knowledge
+    ) -> Knowledge:
+        return tuple(
+            (
+                known & self.model.learned(state, target, a, move[a - 1])
+                if a in self.observed
+                else known
+            )
+            for a, known in zip(self.model.agents, knowledge, strict=True)
+        )
 
     def successors(self, node: Node) -> list[list[Node]]:
         """For each coalition move, the nodes the opponents can lead to."""
@@ -136,10 +176,15 @@ class CoalitionGame:
         result = []
         for extensions in self._choices_at(state):
             targets: dict[str, set[Play]] = {}
-            for allowed, target in extensions:
-                for play in plays:
-                    if play & allowed:
-                        targets.setdefault(target, set()).add(play & allowed)
+            for move, allowed, target in extensions:
+                for possible, knowledge in plays:
+                    if possible & allowed:
+                        targets.setdefault(target, set()).add(
+                            (
+                                possible & allowed,
+                                self._step(state, move, target, knowledge),
+                            )
+                        )
             if targets:
                 result.append([(t, frozenset(p)) for t, p in targets.items()])
         return result
@@ -166,9 +211,47 @@ def _explore(
     return graph
 
 
-def _forces(options: list[list[Node | None]], nodes: set[Node]) -> bool:
-    """Some coalition move leads only to `nodes`."""
-    return any(all(t in nodes for t in targets) for targets in options)
+def _winning_nodes(graph: Graph, reach: bool) -> set[Node]:
+    """A node with no plays left has won. With `reach`, the nodes from which
+    the coalition can force such a node (least fixpoint); otherwise those from
+    which it can avoid every lost play forever (greatest fixpoint).
+
+    Worklist form: each coalition move counts its targets not yet decided, so
+    every edge is visited once.
+    """
+    usable: dict[Node, int] = {}  # moves with no lost target, per node
+    waiting: dict[tuple[Node, int], int] = {}  # per move, targets still undecided
+    predecessors: dict[Node, list[tuple[Node, int]]] = defaultdict(list)
+    for node, options in graph.items():
+        usable[node] = 0
+        for i, targets in enumerate(options):
+            if None in targets:
+                continue
+            reached = {t for t in targets if t is not None}
+            usable[node] += 1
+            waiting[(node, i)] = len(reached)
+            for target in reached:
+                predecessors[target].append((node, i))
+
+    if reach:
+        decided = {node for node in graph if not node[1]}
+    else:  # decided: lost, some play cannot avoid a lost target
+        decided = {node for node in graph if node[1] and usable[node] == 0}
+    queue = list(decided)
+    while queue:
+        target = queue.pop()
+        for node, i in predecessors[target]:
+            if reach:
+                waiting[(node, i)] -= 1
+                newly = waiting[(node, i)] == 0
+            else:
+                newly = waiting.pop((node, i), None) is not None
+                usable[node] -= newly
+                newly = newly and usable[node] == 0
+            if newly and node not in decided:
+                decided.add(node)
+                queue.append(node)
+    return decided if reach else set(graph) - decided
 
 
 def _winning_starts(
@@ -177,21 +260,10 @@ def _winning_starts(
     settle: Callable[[Node], Node | None],
     reach: bool,
 ) -> set[str]:
-    """States whose start node wins: a node with no plays left has won; with
-    `reach` the others must get there (least fixpoint), else stay safe forever
-    (greatest fixpoint)."""
+    """States whose start node wins (see `_winning_nodes`)."""
     starts = {s: settle(game.start(s)) for s in states}
     graph = _explore(game, (n for n in starts.values() if n is not None), settle)
-    if reach:
-        won = least_fixpoint(
-            {n for n in graph if not n[1]},
-            lambda w: w | {n for n, options in graph.items() if _forces(options, w)},
-        )
-    else:
-        won = greatest_fixpoint(
-            set(graph),
-            lambda w: {n for n in w if not n[1] or _forces(graph[n], w)},
-        )
+    won = _winning_nodes(graph, reach)
     return {s for s, node in starts.items() if node in won}
 
 
@@ -201,9 +273,11 @@ def until_states(
     """States from which the coalition can force `stay` until `goal`."""
 
     def settle(node: Node) -> Node | None:
-        if goal(node[0]):
-            return (node[0], frozenset())
-        return node if stay(node[0]) else None
+        state, plays = node
+        pending = frozenset(p for p in plays if not goal(state, p[1]))
+        if all(stay(state, p[1]) for p in pending):
+            return (state, pending)
+        return None
 
     return _winning_starts(game, states, settle, reach=True)
 
@@ -215,9 +289,10 @@ def release_states(
     `release` state, or forever."""
 
     def settle(node: Node) -> Node | None:
-        if not keep(node[0]):
+        state, plays = node
+        if not all(keep(state, p[1]) for p in plays):
             return None
-        return (node[0], frozenset()) if release(node[0]) else node
+        return (state, frozenset(p for p in plays if not release(state, p[1])))
 
     return _winning_starts(game, states, settle, reach=False)
 
@@ -230,7 +305,11 @@ def next_states(
         s
         for s in states
         if any(
-            all(goal(t[0]) for t in targets)
+            all(
+                goal(target, knowledge)
+                for target, plays in targets
+                for _, knowledge in plays
+            )
             for targets in game.successors(game.start(s))
         )
     }

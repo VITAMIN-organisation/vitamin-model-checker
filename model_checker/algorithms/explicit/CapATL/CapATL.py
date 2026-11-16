@@ -2,17 +2,21 @@
 
 import itertools
 import re
+from collections.abc import Callable
+from functools import partial
 from typing import Any
 
 from model_checker.algorithms.explicit.CapATL.game import (
     CapModel,
     CoalitionGame,
+    Knowledge,
+    StateTest,
     next_states,
     release_states,
     until_states,
 )
 from model_checker.algorithms.explicit.shared.atom_utils import (
-    formula_leaves,
+    boolean_constant,
     resolve_atom_with_constants,
 )
 from model_checker.algorithms.explicit.shared.result_formatters import (
@@ -43,62 +47,123 @@ SOLVERS = {
 }
 
 
-def _knowledge_operator(node) -> str | None:
-    """The first knowledge operator (`K1`) in the parse tree, or None."""
+def _connective(node: Any, value: Callable[[Any], bool]) -> bool:
+    """`!`, `&&`, `||` or `->` (any spelling) of the values of the operands."""
+    op = CONNECTIVES[node[0]]
+    if op == "!":
+        return not value(node[1])
+    if op == "&&":
+        return value(node[1]) and value(node[2])
+    if op == "||":
+        return value(node[1]) or value(node[2])
+    return not value(node[1]) or value(node[2])
+
+
+def _is_knowledge(node: Any) -> bool:
+    return isinstance(node, tuple) and bool(KCAP_OPERATOR_PATTERN.match(node[0]))
+
+
+def _propositions(node: Any) -> set[str]:
+    """Leaves outside knowledge operators: propositions and constants."""
     if isinstance(node, str):
-        return node if KCAP_OPERATOR_PATTERN.match(node) else None
-    if isinstance(node, tuple):
-        for child in node:
-            found = _knowledge_operator(child)
-            if found:
-                return found
-    return None
+        return {node}
+    if _is_knowledge(node):
+        return set()
+    return set().union(*(_propositions(child) for child in node[1:]))
+
+
+def _capacities_named(node: Any) -> set[str]:
+    """Capacity names in the `a is c` atoms of knowledge operators."""
+    if isinstance(node, str):
+        return set()
+    if node[0] == "is":
+        return {node[2]}
+    return set().union(*(_capacities_named(child) for child in node[1:]))
+
+
+def _observed_agents(node: Any) -> frozenset[int]:
+    """Agents of the knowledge operators of a state formula, outside nested
+    strategic operators (those start a fresh play)."""
+    if isinstance(node, str) or STRATEGIC_PATTERN.match(node[0]):
+        return frozenset()
+    if _is_knowledge(node):
+        return frozenset({int(node[0][1:])})
+    return frozenset().union(*(_observed_agents(child) for child in node[1:]))
 
 
 class _Evaluator:
-    """States where each subformula holds; a strategic formula restarts at its state."""
+    """Whether a state formula holds at a state, given what each agent knows.
+
+    A strategic formula starts a fresh play at its state, so its value
+    depends only on the state.
+    """
 
     def __init__(self, cgs: Any, atoms: dict[str, set[str]]):
         self.model = CapModel(cgs)
         self.states = [str(s) for s in cgs.states]
-        self.all_states = set(self.states)
         self.atoms = atoms
-        self._memo: dict[Any, set[str]] = {}
+        self._strategic_states: dict[Any, set[str]] = {}
+        self._capacity_masks: dict[Any, int] = {}
+        self._holds: dict[tuple[Any, str, Knowledge], bool] = {}
 
-    def states_of(self, node: Any) -> set[str]:
-        if node not in self._memo:
-            self._memo[node] = self._compute(node)
-        return self._memo[node]
+    def satisfying_states(self, formula: Any) -> set[str]:
+        """States where the formula holds before any move."""
+        knowledge = self.model.initial_knowledge
+        return {s for s in self.states if self.holds(formula, s, knowledge)}
 
-    def _compute(self, node: Any) -> set[str]:
+    def holds(self, node: Any, state: str, knowledge: Knowledge) -> bool:
+        key = (node, state, knowledge)
+        if key not in self._holds:
+            self._holds[key] = self._compute(node, state, knowledge)
+        return self._holds[key]
+
+    def _compute(self, node: Any, state: str, knowledge: Knowledge) -> bool:
         if isinstance(node, str):
-            return self.atoms[node]
-        op = CONNECTIVES.get(node[0])
-        if op == "!":
-            return self.all_states - self.states_of(node[1])
-        if op is not None:
-            left, right = self.states_of(node[1]), self.states_of(node[2])
-            if op == "&&":
-                return left & right
-            if op == "||":
-                return left | right
-            return (self.all_states - left) | right
+            return state in self.atoms[node]
+        if node[0] in CONNECTIVES:
+            return _connective(node, lambda c: self.holds(c, state, knowledge))
+        if _is_knowledge(node):
+            known = knowledge[int(node[0][1:]) - 1]
+            return known & ~self._capacity_mask(node[1]) == 0
+        if node not in self._strategic_states:
+            self._strategic_states[node] = self._strategic(node)
+        return state in self._strategic_states[node]
+
+    def _capacity_mask(self, node: Any) -> int:
+        """Assignments that satisfy a capacity formula (`a is c`, connectives)."""
+        if node not in self._capacity_masks:
+            mask = 0
+            for i, kappa in enumerate(self.model.assignments):
+                if self._capacity_formula(node, kappa):
+                    mask |= 1 << i
+            self._capacity_masks[node] = mask
+        return self._capacity_masks[node]
+
+    def _capacity_formula(self, node: Any, kappa: tuple[str, ...]) -> bool:
+        if isinstance(node, str):
+            constant = boolean_constant(node)
+            if constant is None:
+                raise ValueError(f"{node!r} is not allowed inside a knowledge operator")
+            return constant
+        if node[0] == "is":
+            return kappa[int(node[1]) - 1] == node[2]
+        return _connective(node, lambda c: self._capacity_formula(c, kappa))
+
+    def _strategic(self, node: Any) -> set[str]:
         match = STRATEGIC_PATTERN.match(node[0])
         if match is None:
             raise ValueError(f"CapATL operator {node[0]!r} is not supported")
         coalition = sorted(int(a) for a in match.group(1).split(","))
-        return self._strategic(coalition, match.group(2), node)
-
-    def _strategic(self, coalition: list[int], temporal: str, node: Any) -> set[str]:
-        solve, constant = SOLVERS[temporal]
-        tests = [self.states_of(child).__contains__ for child in node[1:]]
+        solve, constant = SOLVERS[match.group(2)]
+        tests: list[StateTest] = [partial(self.holds, child) for child in node[1:]]
         if constant is not None:
-            tests.insert(0, lambda _s: constant)
+            tests.insert(0, lambda _s, _k: constant)
+        observed = frozenset().union(*(_observed_agents(c) for c in node[1:]))
         result: set[str] = set()
         for capacities in itertools.product(
             *(self.model.capacities[a] for a in coalition)
         ):
-            game = CoalitionGame(self.model, coalition, capacities)
+            game = CoalitionGame(self.model, coalition, capacities, observed)
             result |= solve(game, [s for s in self.states if s not in result], *tests)
         return result
 
@@ -111,15 +176,15 @@ def _core_capatl_checking(cgs, formula):
         error_msg = parser.errors[0] if parser.errors else "Syntax error in formula"
         return create_error_response("syntax", error_msg)
 
-    knowledge_op = _knowledge_operator(res_parsing)
-    if knowledge_op:
+    unknown = sorted(_capacities_named(res_parsing) - set(cgs.capacities_list))
+    if unknown:
         return create_error_response(
-            "validation",
-            f"The knowledge operator {knowledge_op}(...) is parsed but not "
-            "evaluated by the CapATL solver yet",
+            "semantic",
+            f"Capacity {', '.join(map(repr, unknown))} is not in the model's "
+            f"Capacities {cgs.capacities_list}",
         )
 
-    leaves = formula_leaves(res_parsing)
+    leaves = _propositions(res_parsing)
     atoms: dict[str, set[str]] = {}
     for leaf in leaves:
         states = resolve_atom_with_constants(cgs, leaf, parser)
@@ -131,7 +196,7 @@ def _core_capatl_checking(cgs, formula):
         evaluator = _Evaluator(cgs, atoms)
     except ValueError as error:  # a transition label with the wrong number of actions
         return create_error_response("model", str(error))
-    winning_states = evaluator.states_of(res_parsing)
+    winning_states = evaluator.satisfying_states(res_parsing)
     initial_state = cgs.initial_state
     is_satisfied = verify_initial_state(initial_state, winning_states)
     return format_model_checking_result(winning_states, initial_state, is_satisfied)

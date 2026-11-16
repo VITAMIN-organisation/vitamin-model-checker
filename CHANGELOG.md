@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- CapATL evaluates the knowledge operator `Ka(...)` (AAMAS 2024 Def. 3.2): it holds
+  when every complete capacity assignment agent `a` still considers possible,
+  given the states and its own moves, satisfies the formula inside. Before,
+  checking a formula with `K` returned a `validation` error. On the example model
+  `capatl_3agents_3states_example.txt`, `<{1,2,3}> X K2(3 is cap)` holds in `q1`
+  and `<{1,2}> F (K2(3 is cap) || K2(3 is cop))` in `q0` and `q1`. See
+  [knowledge operator](docs/algorithms/capatl.md#knowledge-operator).
+- CapATL: `a is c` with a capacity the model does not declare is a `semantic`
+  error that names it.
+
 - Model type `fuzzyCGS` (class `FuzzyCGS`) for ATLF: the CGS sections, with
   `Labelling` cells that are numbers between 0 and 1. See
   [fuzzyCGS sections](docs/reference/file_formats.md#fuzzycgs-sections).

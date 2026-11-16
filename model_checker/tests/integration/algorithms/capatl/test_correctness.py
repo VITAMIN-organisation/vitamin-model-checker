@@ -31,6 +31,8 @@ RANDOM_MODEL_FORMULAS = [
     "<{1,3}>G !q",
     "<{1}>F <{2}>G p",
     "!<{1}>(p U <{2}>X q)",
+    "<{1}>X K2(1 is ca)",
+    "<{1}>(p U K2(1 is ca and !(2 is cb)))",
 ]
 
 
@@ -60,11 +62,11 @@ class TestCapATLErrorHandling:
         result = _core_capatl_checking(capatl_model, "<{1,2},5>F p")
         assert "error" in result
 
-    def test_capatl_knowledge_operator_is_not_evaluated_yet(self, capatl_model):
-        """The solver has no K semantics; it says so instead of skipping K."""
-        result = _core_capatl_checking(capatl_model, "<{1}>F K2(3 is c)")
-        assert result["error"]["type"] == "validation"
-        assert "K2(...) is parsed but not evaluated" in result["error"]["message"]
+    def test_capatl_unknown_capacity_in_knowledge(self, capatl_model):
+        """A capacity the model does not declare is named in the error."""
+        result = _core_capatl_checking(capatl_model, "<{1}>F K2(3 is zzz)")
+        assert result["error"]["type"] == "semantic"
+        assert "'zzz'" in result["error"]["message"]
 
     def test_capatl_empty_coalition_rejected(self, capatl_model):
         """Empty coalition modality is invalid."""
@@ -133,12 +135,19 @@ class TestCapATLSemantics:
             ("<{1,3}>a R g", {"q2"}),
             ("<{1,2}>F g", {"q0", "q1", "q2"}),
             ("<{1,2}>G a", {"q0", "q1", "q2"}),
+            ("K1(1 is c)", {"q0", "q1", "q2"}),
+            ("K3(3 is cap)", set()),
+            ("<{1,2,3}>X K2(3 is cap)", {"q1"}),
+            ("<{1,2}>F (K2(3 is cap) || K2(3 is cop))", {"q0", "q1"}),
+            ("<{1}>F (K1(3 is cap) || K1(3 is cop))", set()),
         ],
     )
     def test_capatl_hand_computed_states(self, capatl_model, formula, expected):
         """Opponents may pick any capacity, so 3 answers AB or BA to 1 and 2 in q1.
 
         In q1 only AAA reaches q2 directly; in q0 agent 1 reaches q2 with B.
+        Agent 2 playing A in q1 learns 3's capacity (AAA to q2, AAB to q0);
+        agent 1 never does, since each step it sees fits both capacities of 3.
         """
         result = _core_capatl_checking(capatl_model, formula)
         assert extract_states_from_result(result) == expected

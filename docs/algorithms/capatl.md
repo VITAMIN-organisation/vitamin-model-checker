@@ -72,11 +72,14 @@ solved:
 | `<{A}> G psi` | as `false R psi` | greatest fixpoint over nodes |
 
 A state satisfies `<{A}> phi` when one choice of member capacities wins. `!`,
-`&&`, `||` and `->` are set operations on states.
+`&&`, `||` and `->` combine the values of their operands at the same state and,
+inside a play, with the same [knowledge](#knowledge-operator).
 
-With $n$ complete capacity assignments, a node holds a set of subsets of them, so
-there are at most $|S| \cdot 2^{2^n}$ nodes for $|S|$ states, and each choice of
-member capacities is solved separately. The two example models in
+With $n$ complete capacity assignments and $k$ agents whose knowledge a play keeps
+(the agents a `K` names, see [knowledge operator](#knowledge-operator)), a play is
+$k+1$ subsets of the assignments, so there are at most
+$|S| \cdot 2^{2^{n(k+1)}}$ nodes for $|S|$ states; $k = 0$ without `K`. This bound
+is read from the code, not measured. The two example models in
 `model_checker/tests/fixtures/capCGS/CAPATL/` have 2 assignments each. The cost on
 larger models has not been measured.
 
@@ -106,8 +109,28 @@ answers only where that bound settles the question.
 
 ## Knowledge operator
 
-The parser accepts the [knowledge operator](../reference/logic_knowledge_base.md#capatl)
-`Ka(cap)`, but the checker cannot evaluate it. Checking a formula that contains it
-anywhere returns an error of type `validation`: "The knowledge operator K1(...) is
-parsed but not evaluated by the CapATL solver yet", with the operator's number in
-place of `1` (`kcap2(...)` is reported as `K2(...)`).
+`Ka(phi)`, with `a` an agent number and `phi` a capacity formula
+([syntax](../reference/logic_knowledge_base.md#capatl)), holds when every complete
+capacity assignment agent `a` still considers possible satisfies `phi`
+(Def. 3.2, p. 126). An assignment stays possible for `a` while it allows some play
+with the same states and the same moves of `a`; `a` does not see the other agents'
+moves.
+
+Each play in a game node therefore also keeps, for each agent a `K` names, the
+assignments that agent considers possible, and narrows them at each step by the
+state reached and the agent's own action. Only `K` reads this knowledge, so the
+other agents are left out, which keeps the game smaller. A `K` inside a nested
+strategic operator belongs to that operator's own play. Outside any strategic
+operator, and at the start of each strategic operator, nothing has been played
+yet, so every agent considers every assignment possible. On the example model:
+
+- `K1(1 is c)` holds in every state, because agent 1 has only capacity `c`.
+- `K3(3 is cap)` holds nowhere, because agent 3 may have `cop`.
+- `<{1,2,3}> X K3(3 is cap)` holds in every state: the coalition can have agent 3
+  play `A`, and agent 3 then knows its own capacity is `cap`.
+- `<{1,2,3}> X K2(3 is cap)` holds only in `q1`. There, agent 2 playing `A` and
+  reaching `q2` means the move was `AAA`, and only `cap` allows that for agent 3.
+  From `q0` and `q2` agent 3 may play anything, so agent 2 learns nothing.
+
+The tests for the operands of a strategic operator run per play, with that play's
+knowledge, so plays in one node can meet the goal at different steps.

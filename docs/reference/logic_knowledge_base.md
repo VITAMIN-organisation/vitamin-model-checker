@@ -479,7 +479,8 @@ CapATL is ATL on [`capCGS`](file_formats.md#capcgs-sections) models, in which ea
   `true`, `false` and parentheses, with the precedence of the other connectives.
   `K2(!(3 is c) && 1 is cop)` says that agent 2 knows that agent 3 does not have
   capacity `c` and agent 1 has `cop`. `Ka(...)` may stand alone or inside any
-  formula (`<{1}> F (g && K1(1 is c))`); `a is c` is valid only inside it.
+  formula (`<{1}> F (g && K1(1 is c))`); `a is c` is valid only inside it. How
+  the checker evaluates it: [knowledge operator](../algorithms/capatl.md#knowledge-operator).
 - Knowledge errors: `K1 1 is c` (no parentheses), `K1(K2(1 is c))` (nested `K`),
   `K1(p)` (an atom inside `K`) and an agent out of range are errors whose message
   names the part. `K1x` and `K12x` are each one word, refused as names because they
@@ -493,9 +494,8 @@ CapATL is ATL on [`capCGS`](file_formats.md#capcgs-sections) models, in which ea
 - Formula bound: `<{A}, k>` is rejected (no numeric `k` in CapATL).
 - Weak Until: `W` is not part of CapATL path syntax and is unsupported.
 - Release: `R` is accepted as a binary operator (`<{A}> phi R psi`).
-- Knowledge: `K1(...)` parses, but model checking a formula that contains it
-  returns an error of type `validation` that names the operator: "The knowledge
-  operator K1(...) is parsed but not evaluated by the CapATL solver yet".
+- Knowledge: `a is c` with a capacity that the model's `Capacities` section does
+  not declare is an error of type `semantic` that names it.
 
 #### Formula examples
 
