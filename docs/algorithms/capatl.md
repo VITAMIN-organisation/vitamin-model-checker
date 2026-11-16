@@ -27,7 +27,8 @@ AAMAS 2024 (Def. 2.4, 2.5, 2.9 and 3.2, pp. 125-126):
   own play, and its coalition chooses its capacities again, as the paper allows
   (p. 126). The checker returns the states where the whole formula holds.
 
-On the [example model](../../model_checker/tests/fixtures/capCGS/CAPATL/capatl_3agents_3states_example.txt),
+On the example model
+`model_checker/tests/fixtures/capCGS/CAPATL/capatl_3agents_3states_example.txt`,
 `<{1,2}> X g` is false in `q1`: agent 1 must play `A` there, and agent 3, an
 opponent, answers agent 2 so that the play goes back to `q0` (`AAB` or `ABA`).
 `<{1,2,3}> X g` is true in `q1`: the three agents play `AAA`, with capacity `cap`
@@ -96,7 +97,7 @@ In the reduced model, an agent may play any action that some capacity still
 compatible with the history allows (the move set $d_S$ there). A coalition member
 could then use one capacity on one branch and another capacity on a different
 branch, which Def. 2.5 does not allow. The checker follows Def. 2.5. The model
-[`capatl_one_capacity_per_strategy.txt`](../../model_checker/tests/fixtures/capCGS/CAPATL/capatl_one_capacity_per_strategy.txt)
+`model_checker/tests/fixtures/capCGS/CAPATL/capatl_one_capacity_per_strategy.txt`
 separates the two readings: `<{2}> (!lost U goal)` is false at `s0` under
 Def. 2.5 and would be true under the reduction.
 
