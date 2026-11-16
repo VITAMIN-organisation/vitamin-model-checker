@@ -21,19 +21,18 @@ unspent (see [operators](#operators)).
 
 `Pre(Z, c)`, for a cost vector `c`, is the [pre-image](index.md#overview) of `Z`
 restricted to steps that cost at most `c`. A state `s` is in `Pre(Z, c)` when the coalition
-has a move `m` (one action per member) such that:
+has a move `m` (one action per member) such that every joint action that contains
+`m`, whatever the other agents play:
 
-1. some joint action that contains `m` leads into `Z` and its cost vector at `s` is
-   within `c`: `cost_i <= c_i` for each resource `i` that `c` covers (with `c` of
-   length 1, the second cost value is not limited);
-2. every state that a joint action containing `m` can reach is in `Z`, whatever the
-   other agents play.
+1. leads into `Z`;
+2. has a cost vector at `s` within `c`: `cost_i <= c_i` for each resource `i` that
+   `c` covers (with `c` of length 1, the second cost value is not limited).
 
-Three consequences follow:
+This is `Pre(C, X, b)` of Catta et al. (PRIMA 2024, p. 9), which asks for the cost
+of every completion of the move. Two consequences follow:
 
-- Only one joint action of the move has to be within the bound. The costs of the
-  other agents' other choices are not checked.
-- A joint action with no cost for `s` in the model never counts as within the bound.
+- A joint action with no cost for `s` in the model is never within the bound, so a
+  move that contains one is never in `Pre(Z, c)`.
 - With `c_i = 0` only moves of cost 0 in resource `i` stay, so `<1><0> F p` asks
   whether `p` can be forced with moves of cost 0 alone.
 
@@ -92,7 +91,13 @@ puts no condition on `phi` at the position where `psi` holds:
 - `G` with `b > 0`: lines 20-24 build the set as a least fixpoint seeded with the
   paid moves into the sets of smaller budgets (for `b' = 0`, the cost-0 `G` set of
   lines 13-18). The checker computes the greatest fixpoint of the same update,
-  which gives the same set.
+  which is the set of Def. 5 and can be larger on a concurrent model. Example
+  with coalition `{1}` and `q` everywhere: `s` goes to `s` under `AY` and `BX` and
+  to `t` under `AX` and `BY` at cost 0, `t` goes to `u` under `CX` at cost 1, and
+  `u` loops at cost 0. `<1><1>G q` holds at `s`: playing `A` at `s` and `C` at `t`
+  keeps every path within cost 1. Algorithm 2 seeds its least fixpoint with the
+  paid move into `{u}` and stops at `{t, u}`, because from `s` agent 2 can answer
+  `A` by staying in `s`, which is not yet in the set.
 
 The cost of an Until counts the moves until `psi` holds, as in Algorithm 2.
 

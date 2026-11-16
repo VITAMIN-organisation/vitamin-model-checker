@@ -1,17 +1,8 @@
-"""Shared transition-cache helpers for resource-bounded ATL pre-images."""
+"""Pre-image for RBATL and RABATL: a coalition move whose every joint action lands
+in the target set and costs at most the bound."""
 
-from typing import Literal, TypedDict
+from typing import Literal
 
-from model_checker.algorithms.explicit.RABATL.preimage import (
-    get_good_actions as rabatl_get_good_actions,
-)
-from model_checker.algorithms.explicit.RBATL.preimage import (
-    get_good_actions as rbatl_get_good_actions,
-)
-from model_checker.algorithms.explicit.shared.bit_vector import (
-    BIT_VECTOR_THRESHOLD,
-    BitVectorStateSet,
-)
 from model_checker.algorithms.explicit.shared.state_utils import (
     state_indices_to_names,
     state_names_to_indices,
@@ -19,100 +10,29 @@ from model_checker.algorithms.explicit.shared.state_utils import (
 from model_checker.parsers.game_structures.cgs import CostCGSProtocol, cgs_actions
 
 CostFilter = Literal["rbatl", "rabatl"]
-TransitionCache = dict[int, "StateTransitionData"]
-
-
-class StateTransitionData(TypedDict):
-    profiles_by_dest: dict[int, list[str]]
-    coalition_moves_by_column: list[frozenset]
+# Per state: coalition move -> [(destination index, joint action)].
+TransitionCache = dict[int, dict[str, list[tuple[int, str]]]]
 
 
 def build_transition_cache(cgs: CostCGSProtocol, coalition: str) -> TransitionCache:
-    """Cache per-state profiles and coalition moves for a fixed coalition."""
-    agents = cgs_actions.get_agents_from_coalition(coalition)
-    formatted_agents = cgs_actions.format_agents(agents)
+    """Each state's joint actions grouped by the coalition's part of them."""
+    agents = cgs_actions.format_agents(
+        [int(a) for a in cgs_actions.get_agents_from_coalition(coalition)]
+    )
     num_agents = cgs.get_number_of_agents()
     cache: TransitionCache = {}
-
     for state_idx, row in enumerate(cgs.graph):
-        profiles_by_dest: dict[int, list[str]] = {}
-        coalition_moves_by_column: list[frozenset] = []
-
+        by_move: dict[str, list[tuple[int, str]]] = {}
         for dest_idx, mask in enumerate(row):
             if mask == 0 or mask == "0":
-                coalition_moves_by_column.append(frozenset())
                 continue
-
-            profiles = cgs.build_action_list(mask)
-            profiles_by_dest[dest_idx] = profiles
-            coalition_moves_by_column.append(
-                frozenset(
-                    cgs_actions.get_coalition_actions(
-                        set(profiles),
-                        formatted_agents,
-                        num_agents,
-                    )
+            for profile in cgs.build_action_list(mask):
+                (move,) = cgs_actions.get_coalition_actions(
+                    {profile}, agents, num_agents
                 )
-            )
-
-        cache[state_idx] = {
-            "profiles_by_dest": profiles_by_dest,
-            "coalition_moves_by_column": coalition_moves_by_column,
-        }
-
+                by_move.setdefault(move, []).append((dest_idx, profile))
+        cache[state_idx] = by_move
     return cache
-
-
-def _collect_good_actions(
-    cgs: CostCGSProtocol,
-    source_idx: int,
-    target_indices: set[int],
-    profiles_by_dest: dict[int, list[str]],
-    agents,
-    bound: list[int],
-    cost_filter: CostFilter,
-) -> set[str]:
-    """Gather coalition actions that lead toward target_indices within the cost bound."""
-    available: set[str] = set()
-    for target_idx in target_indices:
-        profiles = profiles_by_dest.get(target_idx)
-        if not profiles:
-            continue
-        if cost_filter == "rabatl":
-            good = rabatl_get_good_actions(cgs, profiles, source_idx, agents, bound)
-        else:
-            good = rbatl_get_good_actions(cgs, profiles, source_idx, bound)
-        if good:
-            available.update(good)
-    return available
-
-
-def _action_forces_all_to_target(
-    action: str,
-    formatted_agents,
-    num_agents: int,
-    coalition_moves_by_column: list[frozenset],
-    target_indices: set[int],
-    target_bits,
-    use_bit_vector: bool,
-) -> bool:
-    """True if every destination compatible with action's coalition move is in target.
-    Only coalition masks are compared: opponent masks never match, so the check would
-    always be true."""
-    move_profile = cgs_actions.get_coalition_actions(
-        {action}, formatted_agents, num_agents
-    )
-    for dest_idx, coalition_moves in enumerate(coalition_moves_by_column):
-        if not coalition_moves:
-            continue
-        if not move_profile.intersection(coalition_moves):
-            continue
-        if use_bit_vector:
-            if dest_idx not in target_bits:
-                return False
-        elif dest_idx not in target_indices:
-            return False
-    return True
 
 
 def compute_pre_states(
@@ -123,45 +43,52 @@ def compute_pre_states(
     transition_cache: TransitionCache,
     cost_filter: CostFilter,
 ) -> set[str]:
-    """Return state names where coalition can force state_set in one step within bound."""
+    """States with a coalition move whose joint actions all reach state_set within bound."""
     agents = cgs_actions.get_agents_from_coalition(coalition)
-    formatted_agents = cgs_actions.format_agents(agents)
-    num_agents = cgs.get_number_of_agents()
-    num_states = len(cgs.graph)
-    target_indices = state_names_to_indices(cgs, state_set)
-
-    use_bit_vector = num_states >= BIT_VECTOR_THRESHOLD
-    target_bits = (
-        BitVectorStateSet(num_states, target_indices) if use_bit_vector else None
-    )
-
+    target = state_names_to_indices(cgs, state_set)
     pre_states: set[int] = set()
-    for source_idx in range(num_states):
-        state_data = transition_cache[source_idx]
-        available_actions = _collect_good_actions(
-            cgs,
-            source_idx,
-            target_indices,
-            state_data["profiles_by_dest"],
-            agents,
-            bound,
-            cost_filter,
-        )
-        if not available_actions:
-            continue
-
-        coalition_moves_by_column = state_data["coalition_moves_by_column"]
-        for action in available_actions:
-            if _action_forces_all_to_target(
-                action,
-                formatted_agents,
-                num_agents,
-                coalition_moves_by_column,
-                target_indices,
-                target_bits,
-                use_bit_vector,
+    for state_idx, by_move in transition_cache.items():
+        state = cgs.get_state_name_by_index(state_idx)
+        for transitions in by_move.values():
+            if all(
+                dest in target
+                and _within_bound(cgs, profile, state, agents, bound, cost_filter)
+                for dest, profile in transitions
             ):
-                pre_states.add(source_idx)
+                pre_states.add(state_idx)
                 break
-
     return state_indices_to_names(cgs, pre_states)
+
+
+def _within_bound(
+    cgs: CostCGSProtocol,
+    profile: str,
+    state: str,
+    agents: set[str],
+    bound: list[int],
+    cost_filter: CostFilter,
+) -> bool:
+    """Whether the joint action costs at most bound in each resource the bound covers;
+    a joint action with no cost at state never does."""
+    costs = _profile_cost(cgs, profile, state)
+    if costs is None:
+        return False
+    if cost_filter == "rabatl":
+        if costs and not isinstance(costs[0], (list, tuple)):
+            costs = [costs]
+        costs = [
+            sum(cost for i, cost in enumerate(per_agent) if str(i + 1) in agents)
+            for per_agent in costs
+        ]
+    return all(cost <= limit for cost, limit in zip(costs, bound, strict=False))
+
+
+def _profile_cost(cgs: CostCGSProtocol, profile: str, state: str):
+    """The model's cost of the joint action at state, falling back to the `*` cost
+    for a wildcard action; None when the model has neither."""
+    for key in (profile, "*") if "*" in profile else (profile,):
+        try:
+            return cgs.get_cost_for_action(key, state)
+        except (KeyError, IndexError, AttributeError):
+            continue
+    return None
