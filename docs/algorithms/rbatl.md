@@ -97,7 +97,8 @@ puts no condition on `phi` at the position where `psi` holds:
   `u` loops at cost 0. `<1><1>G q` holds at `s`: playing `A` at `s` and `C` at `t`
   keeps every path within cost 1. Algorithm 2 seeds its least fixpoint with the
   paid move into `{u}` and stops at `{t, u}`, because from `s` agent 2 can answer
-  `A` by staying in `s`, which is not yet in the set.
+  `A` by staying in `s`, which is not yet in the set. The fixture
+  `rbatl_2agents_3states_loop.txt` is this model.
 
 The cost of an Until counts the moves until `psi` holds, as in Algorithm 2.
 

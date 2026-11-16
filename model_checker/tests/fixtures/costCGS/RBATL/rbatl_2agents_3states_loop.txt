@@ -1,0 +1,23 @@
+Transition
+AY,BX AX,BY 0
+0 0 CX
+0 0 *
+Name_State
+s t u
+Initial_State
+s
+Costs_for_actions
+AY s$0
+BX s$0
+AX s$0
+BY s$0
+CX t$1
+* u$0
+Atomic_propositions
+q
+Labelling
+1
+1
+1
+Number_of_agents
+2

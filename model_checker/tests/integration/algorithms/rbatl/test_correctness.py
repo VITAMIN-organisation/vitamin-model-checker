@@ -145,6 +145,14 @@ class TestRBATLCumulativeBound:
         assert error["type"] == "validation"
         assert "Bound [1000000] needs 1000001 budgets" in error["message"]
 
+    def test_globally_is_larger_than_the_seeded_least_fixpoint(self, loop_model):
+        """s holds: every path stays at s for free or pays 1 once on t -> u. The seed
+        of the paper's least fixpoint is {t, u}, and no free move from s stays in it."""
+        holds = model_checking("<1><1>G q", loop_model.filename)
+        seed = model_checking("<1><1>X <1><0>G q", loop_model.filename)
+        assert extract_states_from_result(holds) == {"s", "t", "u"}
+        assert extract_states_from_result(seed) == {"t", "u"}
+
     @pytest.mark.parametrize(("bound", "holds"), [("3,1", True), ("2,1", False)])
     def test_sensor_example_needs_three_energy(self, sensor_model, bound, holds):
         """The cheapest way to s6 spends (2,0), (0,1) and (1,0): (3,1) in total."""

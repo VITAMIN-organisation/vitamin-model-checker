@@ -41,3 +41,13 @@ def rover_model(test_data_dir):
     return load_test_model(
         test_data_dir, "costCGS/RBATL/rbatl_2agents_11states_rover.txt"
     )
+
+
+@pytest.fixture
+def loop_model(test_data_dir):
+    """Agent 1 cannot choose between staying at s and moving to t; t -> u costs 1."""
+    from model_checker.tests.helpers.model_helpers import load_test_model
+
+    return load_test_model(
+        test_data_dir, "costCGS/RBATL/rbatl_2agents_3states_loop.txt"
+    )
