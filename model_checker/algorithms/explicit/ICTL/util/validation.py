@@ -57,10 +57,13 @@ def _check_graph_shape(graph: np.ndarray) -> None:
         raise AssertionError("The graph is not squared.")
 
 
-def _check_cells(graph: np.ndarray) -> None:
-    for cell in graph.flat:
+def _check_cells(graph: np.ndarray, states) -> None:
+    for (row, column), cell in np.ndenumerate(graph):
         if cell not in _KNOWN_CELLS:
-            raise AssertionError(f"Transition cell {cell!r} is not 0, R, P, P,R or *.")
+            raise AssertionError(
+                f"Transition cell {cell!r} in row {states[row]}, column "
+                f"{states[column]} is not 0, R, P, P,R or *."
+            )
 
 
 def _check_serial(graph: np.ndarray) -> None:
@@ -96,7 +99,7 @@ def _check_inference_constraints(graph: np.ndarray) -> None:
 
 
 def _preorder_successors(graph: np.ndarray, states) -> dict:
-    pairs = labeled_pairs(graph, states, lambda cell: cell in PREORDER_CELLS)
+    pairs = labeled_pairs(graph, states, PREORDER_CELLS.__contains__)
     successors = {}
     for source, dest in pairs:
         if source != dest:
@@ -130,11 +133,11 @@ def check_conditions_hold(model: Any) -> None:
     """Reject a model that is not an ICTL birelational frame: serial transitions, a
     partial knowledge order, confluence C1/C2 and monotone labelling."""
     graph = model.graph
-    preorder = np.vectorize(lambda cell: cell in PREORDER_CELLS, otypes=[bool])(graph)
+    preorder = np.vectorize(PREORDER_CELLS.__contains__, otypes=[bool])(graph)
 
     _check_model_metadata(model)
     _check_graph_shape(graph)
-    _check_cells(graph)
+    _check_cells(graph, model.states)
     _check_serial(graph)
     _check_reflexive(preorder)
     _check_antisymmetric(preorder)
