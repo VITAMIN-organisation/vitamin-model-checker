@@ -252,6 +252,12 @@ def test_star_cell_is_a_transition_to_its_column(temp_file):
     assert extract_states_from_result(result) == {"s0", "s1"}
 
 
+def test_unknown_cell_is_an_error_naming_it(temp_file):
+    """Q is neither 0, R, P, P,R nor a star."""
+    result = model_checking("EX p", temp_file(_STAR_TO_S1.replace("P,R *", "P,R Q")))
+    assert "'Q'" in result["error"]["message"]
+
+
 class TestVmiEntry:
     def test_model_checking_returns_standard_result(self):
         result = model_checking("EF e", str(_EXPERIMENT_MODEL))

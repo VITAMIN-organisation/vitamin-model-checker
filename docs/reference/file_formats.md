@@ -327,13 +327,14 @@ actions; Table 3 lists them:
 | `R` | transition only |
 | `P` | knowledge preorder only |
 | `P,R` | both (typical diagonal) |
+| `*` | transition only, like `R` (as in the other logics) |
 
-Every diagonal cell must be `P` or `P,R`, because the order `P` is reflexive;
-otherwise ICTL reports "The graph is not reflective." (the message's word for
-reflexive). A `*` on the diagonal gives that error; elsewhere a `*` is read as
-`R` (a transition to the cell's column, as in the other logics) and never as `P`.
-ICTL also checks the confluence conditions C1 and C2 between `P` and `R`; they and the other model
-checks are in the [ICTL algorithm](../algorithms/ictl.md).
+Any other cell is a load error that names it. Every diagonal cell must be `P` or
+`P,R`, because the order `P` is reflexive; otherwise ICTL reports "The graph is
+not reflective." (the message's word for reflexive), so a `*` on the diagonal
+gives that error. ICTL also checks the confluence conditions C1 and C2 between
+`P` and `R`; they and the other model checks are in the
+[ICTL algorithm](../algorithms/ictl.md).
 
 ## BCGS sections (IATL)
 

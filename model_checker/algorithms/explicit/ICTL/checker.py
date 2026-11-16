@@ -3,6 +3,10 @@
 from typing import Any
 
 from model_checker.algorithms.explicit.ICTL.util.graph import get_preorder
+from model_checker.algorithms.explicit.ICTL.util.validation import (
+    PREORDER_CELLS,
+    TRANSITION_CELLS,
+)
 from model_checker.algorithms.explicit.shared.atom_utils import boolean_constant
 from model_checker.algorithms.explicit.shared.graph_relations import labeled_pairs
 from model_checker.parsers.game_structures.cgs.cgs_utils import proposition_index
@@ -27,12 +31,8 @@ class ICTLModelChecker:
         self.model = model
         graph = self.model.graph
         states = self.model.states
-        self.edges = labeled_pairs(
-            graph, states, lambda cell: cell not in (0, "0", "P")
-        )
-        self.preorder_edges = labeled_pairs(
-            graph, states, lambda cell: cell in ("P,R", "P")
-        )
+        self.edges = labeled_pairs(graph, states, TRANSITION_CELLS.__contains__)
+        self.preorder_edges = labeled_pairs(graph, states, PREORDER_CELLS.__contains__)
         self.upward_closure = get_preorder(self.preorder_edges, states)
 
     @property

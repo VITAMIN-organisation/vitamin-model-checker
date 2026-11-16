@@ -219,6 +219,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   column, as CTL, TCTL, TOL and ATL* do. Before, it was a self-loop on the row
   state, so in a model whose only move from `s0` to `s1` is a `*`, `EX p` with
   `p` at `s1` missed `s0`.
+- ICTL rejects a `Transition` cell other than `0`, `R`, `P`, `P,R` and `*`, with
+  an error that names it. Before, a cell such as `Q` loaded and counted as a
+  transition for the checker but not for the serial and confluence checks.
 - NatATL_Recall accepts a rule whose action is idle: it compared the model's `I`
   with the rule's `IDLE` and never matched, and it treated the tree's cut-off leaves
   as states with no action, so every rule failed (`<{1},1>G !r` was false on a model
