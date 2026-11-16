@@ -197,8 +197,24 @@ def test_proposition_the_ctl_parser_reads_as_an_operator_is_refused(
         f"Atomic_propositions\n{name} q\nLabelling\n0 0\n1 1\nNumber_of_agents\n1\n"
     )
     error = _CHECKERS[logic].load()(_CHECKED_THROUGH_CTL[logic], model)["error"]
-    assert error["type"] == "semantic"
+    assert error["type"] == "model"
     assert f"Atomic proposition '{name}' is invalid" in error["message"]
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("logic", sorted(_CASES))
+def test_broken_model_file_is_a_model_error(temp_file, logic):
+    """A transition row one cell longer than the others is the file's fault."""
+    model, formula = _CASES[logic][:2]
+    lines = Path(model).read_text().splitlines()
+    first_row = (
+        next(i for i, line in enumerate(lines) if line.startswith("Transition")) + 1
+    )
+    lines[first_row] += " 0"
+    broken = temp_file("\n".join(lines) + "\n")
+    error = _CHECKERS[logic].load()(formula, broken)["error"]
+    assert error["type"] == "model"
+    assert not error["message"].startswith("[")
 
 
 @pytest.mark.integration

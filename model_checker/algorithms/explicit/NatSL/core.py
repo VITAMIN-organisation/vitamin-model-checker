@@ -28,7 +28,10 @@ from model_checker.parsers.formulas.NatSL.parser import (
 )
 from model_checker.parsers.game_structures.cgs.cgs import CGS
 from model_checker.parsers.syntax_patterns import BOOLEAN_CONSTANTS
-from model_checker.utils.error_handler import create_error_response
+from model_checker.utils.error_handler import (
+    create_error_response,
+    tagged_error_response,
+)
 from model_checker.utils.literals import parse_state_set_literal
 
 Strategy = dict[str, list[tuple[str, str]]]
@@ -543,6 +546,7 @@ def model_checking(formula: str, model: str | Path, mode: str = "space") -> dict
     except FileNotFoundError as exc:
         return create_error_response("system", str(exc))
     except (ValueError, TypeError) as exc:
-        return create_error_response("validation", str(exc))
+        tagged = tagged_error_response(str(exc))
+        return tagged or create_error_response("validation", str(exc))
     except Exception as exc:
         return create_error_response("syntax", str(exc))

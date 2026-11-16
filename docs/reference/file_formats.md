@@ -27,7 +27,8 @@ integrates them into this repository). It does not define operator denotations; 
 
 Model files are plain `.txt` files. The loader detects a type from the section
 headers and, for ICTL, from the `Transition` cells; the rules are in
-[Table 1](#supported-model-types).
+[Table 1](#supported-model-types). A file that breaks a rule on this page is
+refused on load with an error of type `model` whose message names the problem.
 
 Use a simple file name such as:
 

@@ -66,6 +66,6 @@ def test_valid_model_loads(temp_file):
 def test_invalid_model_is_refused_with_the_broken_condition(
     temp_file, transitions, preorder, labelling, names, message
 ):
-    """Each condition has its own message."""
-    with pytest.raises(AssertionError, match=message):
+    """Each condition has its own message, reported as a model error."""
+    with pytest.raises(ValueError, match=r"^\[MODEL\] .*" + message):
         _load(temp_file, transitions, preorder, labelling, names)

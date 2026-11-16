@@ -13,6 +13,7 @@ from model_checker.parsers.game_structures.cgs import (
     cgs_validation,
 )
 from model_checker.parsers.syntax_patterns import FORMULA_RESERVED_WORDS
+from model_checker.utils.error_handler import as_model_error
 
 
 class CGS:
@@ -61,10 +62,15 @@ class CGS:
 
     def read_file(self, filename):
         """Load and parse a CGS model from a file path. Replaces any existing data."""
-        with open(filename, encoding="utf-8") as f:
-            lines = f.readlines()
-        self._parse_lines(lines)
-        self.validate_model_structure()
+        # A file that is not UTF-8 or breaks a format rule is a model error, not a
+        # system one; a missing file stays FileNotFoundError.
+        try:
+            with open(filename, encoding="utf-8") as f:
+                lines = f.readlines()
+            self._parse_lines(lines)
+            self.validate_model_structure()
+        except (ValueError, AssertionError) as exc:
+            raise ValueError(as_model_error(exc)) from exc
 
     def _parse_lines(self, lines: list[str]) -> None:
         """Parse lines from a model file. Override in subclasses for extra sections."""

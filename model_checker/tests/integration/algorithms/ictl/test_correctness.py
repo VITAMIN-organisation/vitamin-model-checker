@@ -255,6 +255,7 @@ def test_star_cell_is_a_transition_to_its_column(temp_file):
 def test_unknown_cell_is_an_error_naming_it(temp_file):
     """Q is neither 0, R, P, P,R nor a star."""
     result = model_checking("EX p", temp_file(_STAR_TO_S1.replace("P,R *", "P,R Q")))
+    assert result["error"]["type"] == "model"
     assert "'Q' in row s0, column s1" in result["error"]["message"]
 
 

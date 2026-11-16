@@ -78,6 +78,7 @@ class TestCapATLErrorHandling:
         fixture = test_data_dir / "capCGS/CAPATL/capatl_3agents_3states_example.txt"
         content = fixture.read_text().replace("0 1 1\n", "0 2 1\n")
         result = model_checking("<{1}>X g", temp_file(content))
+        assert result["error"]["type"] == "model"
         assert "'2' (agent 3, capacity cap)" in result["error"]["message"]
 
 

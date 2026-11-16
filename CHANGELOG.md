@@ -32,6 +32,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: an error found while reading a model file (not UTF-8, or a format
+  rule broken) has type `model` in every logic. Before, most came back as
+  `system` (for example an ICTL or IATL preorder that is not reflexive, or rows
+  of different lengths), a few as `semantic` (a proposition name such as `A` in
+  `Atomic_propositions`) and, in NatSL, all as `validation`.
 - Breaking: CapATL rejects a `Capacities_assignment` cell other than `0` or `1`,
   with an error that names it. Before, a value such as `2` loaded and was read
   as `0`.
