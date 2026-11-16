@@ -52,6 +52,8 @@ def condition_text(condition: Condition) -> str:
 def enumerate_conditions(cgs, max_size: int) -> list[Condition]:
     """The smallest condition (size at most max_size) for each set of states, empty
     and full sets excluded: conditions with the same states give the same strategies."""
+    if max_size < 1:
+        return []
     all_states = frozenset(cgs.states)
     smallest: dict[frozenset[str], Condition] = {}
     by_size: dict[int, list[Condition]] = {}
