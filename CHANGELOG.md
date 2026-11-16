@@ -32,6 +32,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: RBATL and RABATL keep a coalition move in the bounded pre-image only
+  when every joint action that contains it lands in the target and costs at most
+  the bound, as `Pre(C, X, b)` of Catta et al. (PRIMA 2024, p. 9) asks. Before,
+  one joint action within the bound was enough and the other agents' choices
+  were not checked. On `rbatl_3agents_medium_6states_costs.txt` for RABATL,
+  `<1,2><0,0>F r` shrinks from `{s1, s2, s3, s4}` to `{s1, s3, s4}`: at `s2` the
+  move `AA` has the completion `AA^` of cost 2. See
+  [Bounded pre-image](docs/algorithms/rbatl.md#bounded-pre-image).
+- NatATL (memoryless and recall): a bound `k` below the number of coalition
+  members gives `Result: False`, since no profile of that size exists. Before,
+  it was a validation error. See [Strategies](docs/algorithms/natatl.md#strategies).
 - Breaking: the loader rejects a model where a state has no transition for some
   combination of the agents' available actions (the actions each agent plays in
   the state's row). The message names the state and up to three missing
@@ -204,6 +215,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   do. Before, they read a `*` off the diagonal as a self-loop on the row's state.
   On the Workbench model `ctl_train_controller_1agent_8states.txt`, whose `s7` row
   has `*` towards `sI`, `AG hazard` held at `s7` and holds at no state.
+- ICTL reads a `*` cell off the diagonal as an `R` transition to the cell's
+  column, as CTL, TCTL, TOL and ATL* do. Before, it was a self-loop on the row
+  state, so in a model whose only move from `s0` to `s1` is a `*`, `EX p` with
+  `p` at `s1` missed `s0`.
 - NatATL_Recall accepts a rule whose action is idle: it compared the model's `I`
   with the rule's `IDLE` and never matched, and it treated the tree's cut-off leaves
   as states with no action, so every rule failed (`<{1},1>G !r` was false on a model

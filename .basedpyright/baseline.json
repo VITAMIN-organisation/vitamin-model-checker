@@ -12,14 +12,6 @@
         ],
         "./model_checker/algorithms/explicit/ATL/preimage.py": [
             {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 38,
-                    "endColumn": 44,
-                    "lineCount": 1
-                }
-            },
-            {
                 "code": "reportReturnType",
                 "range": {
                     "startColumn": 15,
@@ -34,25 +26,9 @@
                     "endColumn": 51,
                     "lineCount": 1
                 }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 49,
-                    "endColumn": 65,
-                    "lineCount": 1
-                }
             }
         ],
         "./model_checker/algorithms/explicit/ATLF/preimage.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 49,
-                    "endColumn": 55,
-                    "lineCount": 1
-                }
-            },
             {
                 "code": "reportCallIssue",
                 "range": {
@@ -252,22 +228,6 @@
             {
                 "code": "reportArgumentType",
                 "range": {
-                    "startColumn": 8,
-                    "endColumn": 56,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 8,
-                    "endColumn": 56,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportArgumentType",
-                "range": {
                     "startColumn": 40,
                     "endColumn": 44,
                     "lineCount": 1
@@ -278,16 +238,6 @@
                 "range": {
                     "startColumn": 40,
                     "endColumn": 44,
-                    "lineCount": 1
-                }
-            }
-        ],
-        "./model_checker/algorithms/explicit/IATL/util/validation.py": [
-            {
-                "code": "reportArgumentType",
-                "range": {
-                    "startColumn": 8,
-                    "endColumn": 62,
                     "lineCount": 1
                 }
             }
