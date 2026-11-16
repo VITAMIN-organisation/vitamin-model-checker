@@ -6,6 +6,9 @@ can vary size without checking in large fixture files.
 
 from __future__ import annotations
 
+import itertools
+import random
+
 
 def compact_joint(token: str, num_agents: int) -> str:
     """Build a compact joint profile with the same token in every agent position."""
@@ -282,6 +285,40 @@ def generate_capcgs_linear_chain_model(num_states, num_agents=2, prop_names=None
     )
 
 
+def generate_random_capcgs_model(seed, num_states, num_agents):
+    """Random capCGS where every capacity has a move in every state and every
+    combination of the agents' moves has a transition."""
+    rng = random.Random(seed)
+    states = [f"s{i}" for i in range(num_states)]
+    capacities = {"ca": ["A", "B"], "cb": ["B", "C"], "cc": ["A", "C"]}
+    names = list(capacities)
+    agent_caps = [rng.sample(names, rng.choice([1, 2])) for _ in range(num_agents)]
+    cells = [[[] for _ in states] for _ in states]
+    for i in range(num_states):
+        protocol = []
+        for caps in agent_caps:
+            actions = {rng.choice(capacities[c]) for c in caps}
+            actions |= {a for c in caps for a in capacities[c] if rng.random() < 0.3}
+            protocol.append(sorted(actions))
+        for move in itertools.product(*protocol):
+            label = "|".join(move) if rng.random() < 0.3 else "".join(move)
+            cells[i][rng.randrange(num_states)].append(label)
+    return build_cgs_model_content(
+        transitions=[[",".join(cell) or "0" for cell in row] for row in cells],
+        state_names=states,
+        initial_state="s0",
+        prop_names=["p", "q"],
+        labelling=[[rng.choice("01") for _ in range(2)] for _ in states],
+        num_agents=num_agents,
+        unknown_transitions=[["0"] * num_states for _ in states],
+        capacities=names,
+        capacities_assignment=[
+            ["1" if c in caps else "0" for c in names] for caps in agent_caps
+        ],
+        actions_for_capacities=capacities,
+    )
+
+
 def generate_cost_cgs_linear_chain_content(num_states, num_agents=2, prop_names=None):
     """Linear costCGS chain with per-action costs."""
     if prop_names is None:
@@ -334,5 +371,6 @@ __all__ = [
     "generate_fully_connected_model",
     "generate_sparse_graph_model",
     "generate_capcgs_linear_chain_model",
+    "generate_random_capcgs_model",
     "generate_cost_cgs_linear_chain_content",
 ]

@@ -457,7 +457,7 @@ How the checkers compute each operator and the cost of a joint action:
 
 ### Theoretical background
 
-CapATL is ATL on [`capCGS`](file_formats.md#capcgs-sections) models, in which each agent acts within one capacity (a named set of actions), chosen from those the model assigns it; it adds a knowledge operator over the capacity assignment. How the checker picks the capacities: [CapATL algorithm](../algorithms/capatl.md).
+CapATL is ATL on [`capCGS`](file_formats.md#capcgs-sections) models, in which each agent acts within one capacity (a named set of actions), chosen from those the model assigns it: the coalition of `<{A}>` picks its members' capacities, and the opponents may hold any of theirs. It adds a knowledge operator over the capacity assignment. How the checker picks the capacities: [CapATL algorithm](../algorithms/capatl.md).
 
 #### Standard syntax
 

@@ -233,7 +233,7 @@ cop B
   Row `i` is agent `i`; column `j` is capacity `j` (same order as `Capacities`).
 - `Actions_for_capacities`: one line per capacity, `capacity_name action1 action2 ...`,
   listing the actions that capacity enables
-  (`model_checker/algorithms/explicit/CapATL/combinatorics.py`).
+  (`model_checker/algorithms/explicit/CapATL/game.py`).
 
 ## fuzzyCGS sections
 

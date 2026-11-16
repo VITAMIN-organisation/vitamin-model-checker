@@ -1,4 +1,5 @@
-"""Brute-force CapATL checker for tests, sharing no code with the solver.
+"""Brute-force CapATL checker for tests; it uses the model and formula parsers
+but no solver code.
 
 Paths are explicit, the capacity assignments a path allows and the paths an
 agent cannot tell apart are enumerated, and strategies are searched on the
@@ -15,12 +16,25 @@ and `<Y>R` can be proved False, and `<Y>X` is always settled.
 from __future__ import annotations
 
 import itertools
+import re
 from collections.abc import Iterable
 from typing import Any
 
 from model_checker.algorithms.explicit.shared.atom_utils import (
+    boolean_constant,
     states_where_prop_holds,
 )
+from model_checker.parsers.game_structures.cgs.cgs_actions import (
+    normalize_action_token,
+    parse_joint_action_cell,
+)
+from model_checker.parsers.syntax_patterns import (
+    CAPATL_COALITION_TOKEN,
+    spelling_to_symbol,
+)
+
+CONNECTIVES = spelling_to_symbol("NOT", "AND", "OR", "IMPLIES")
+STRATEGIC_PATTERN = re.compile(rf"^{CAPATL_COALITION_TOKEN}([XFGUR])$")
 
 Path = tuple[tuple[str, ...], tuple[tuple[str, ...], ...]]  # states, joint actions
 Assignment = tuple[str, ...]  # capacity of agent 1..n
@@ -63,12 +77,15 @@ class CapATLReference:
         self.capacities = {
             int(row[0]): list(row[1:]) for row in cgs.get_capacities_assignment()
         }
-        self.gamma = {row[0]: set(row[1:]) for row in cgs.action_capacities}
+        self.gamma = {
+            row[0]: {normalize_action_token(a) for a in row[1:]}
+            for row in cgs.action_capacities
+        }
         self.assignments: list[Assignment] = list(
             itertools.product(*(self.capacities[a] for a in self.agents))
         )
         self.transitions = self._transitions()
-        self._strategic_memo: dict[tuple[int, str], bool | None] = {}
+        self._strategic_memo: dict[tuple[Any, str], bool | None] = {}
 
     def _actions_of(self, agent: int) -> set[str]:
         return set().union(*(self.gamma[c] for c in self.capacities[agent]))
@@ -83,7 +100,7 @@ class CapATLReference:
                 if cell == 0:
                     continue
                 target = str(self.cgs.get_state_name_by_index(j))
-                labels = ["*" * self.n] if cell == "*" else str(cell).split(",")
+                labels = parse_joint_action_cell(str(cell), self.n) or [["*"] * self.n]
                 for label in labels:
                     choices = [
                         (
@@ -124,11 +141,12 @@ class CapATLReference:
         return [(states, tuple(choice)) for choice in itertools.product(*steps)]
 
     def _capacity_formula(self, node: Any, kappa: Assignment) -> bool:
-        if node == "true":
-            return True
-        if node == "false":
-            return False
-        op = node[0]
+        if isinstance(node, str):
+            constant = boolean_constant(node)
+            if constant is None:
+                raise ValueError(f"unknown capacity formula leaf {node!r}")
+            return constant
+        op = CONNECTIVES.get(node[0], node[0])
         if op == "is":
             return kappa[int(node[1]) - 1] == node[2]
         if op == "!":
@@ -147,15 +165,14 @@ class CapATLReference:
         """Whether node holds at the last position of path (a history from the start)."""
         last = path[0][-1]
         if isinstance(node, str):
-            if node == "true":
-                return True
-            if node == "false":
-                return False
+            constant = boolean_constant(node)
+            if constant is not None:
+                return constant
             holds = states_where_prop_holds(self.cgs, node)
             if holds is None:
                 raise ValueError(f"unknown atom {node!r}")
             return last in holds
-        op = node[0]
+        op = CONNECTIVES.get(node[0], node[0])
         if op == "!":
             return _not3(self.state_formula(node[1], path))
         if op in ("&&", "||", "->"):
@@ -174,7 +191,7 @@ class CapATLReference:
                 for kappa in self.compatible_assignments(other)
             )
         if op.startswith("<{"):
-            key = (id(node), last)
+            key = (node, last)
             if key not in self._strategic_memo:
                 self._strategic_memo[key] = self.strategic(node, last)
             return self._strategic_memo[key]
@@ -182,12 +199,14 @@ class CapATLReference:
 
     def _status(self, node: Any, path: Path) -> str | None:
         """Whether an outcome prefix already satisfies or violates the temporal part."""
-        op = node[0][node[0].index("}>") + 2 :]
-        position = len(path[0])
+        match = STRATEGIC_PATTERN.match(node[0])
+        assert match is not None, node[0]
+        op = match.group(2)
         if op == "X":
-            return (
-                OPEN if position == 1 else _decided(self.state_formula(node[1], path))
-            )
+            if len(path[0]) == 1:
+                return OPEN
+            value = self.state_formula(node[1], path)
+            return None if value is None else (WIN if value else LOSE)
         if op in ("F", "U"):
             left = "true" if op == "F" else node[1]
             goal = self.state_formula(node[-1], path)
@@ -210,7 +229,9 @@ class CapATLReference:
 
     def strategic(self, node: Any, state: str) -> bool | None:
         """<Y>psi at state: some capacity per member, fixed for the whole strategy, wins."""
-        coalition = sorted(int(a) for a in node[0][2 : node[0].index("}")].split(","))
+        match = STRATEGIC_PATTERN.match(node[0])
+        assert match is not None, node[0]
+        coalition = sorted(int(a) for a in match.group(1).split(","))
         start: Path = ((state,), ())
         return _or3(
             self._search(
@@ -258,8 +279,8 @@ class CapATLReference:
             sorted({al[a - 1] for al, _ in moves} & self.gamma[caps[a]])
             for a in coalition
         ]
-        results = []
-        for beta in itertools.product(*allowed):
+
+        def outcomes(beta: tuple[str, ...]) -> dict[str, list[Path]]:
             successors: dict[str, list[Path]] = {}
             for states, actions in open_histories:
                 for alpha, target in moves:
@@ -270,15 +291,16 @@ class CapATLReference:
                     path = (states + (target,), actions + (alpha,))
                     if self.compatible_assignments(path):
                         successors.setdefault(target, []).append(path)
-            if not successors:
-                continue
-            results.append(
-                _and3(
-                    self._search(node, coalition, caps, group, depth - 1)
-                    for group in successors.values()
-                )
+            return successors
+
+        return _or3(
+            _and3(
+                self._search(node, coalition, caps, group, depth - 1)
+                for group in successors.values()
             )
-        return _or3(results)
+            for successors in map(outcomes, itertools.product(*allowed))
+            if successors
+        )
 
     def satisfying_states(self, formula: Any) -> dict[str, bool | None]:
         """Value of the formula at each state, read as the path of length one."""
@@ -286,9 +308,3 @@ class CapATLReference:
             str(s): self.state_formula(formula, ((str(s),), ()))
             for s in self.cgs.states
         }
-
-
-def _decided(value: bool | None) -> str | None:
-    if value is None:
-        return None
-    return WIN if value else LOSE

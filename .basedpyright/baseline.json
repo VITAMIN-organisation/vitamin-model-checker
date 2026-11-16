@@ -78,34 +78,6 @@
                 }
             }
         ],
-        "./model_checker/algorithms/explicit/CapATL/solver.py": [
-            {
-                "code": "reportAttributeAccessIssue",
-                "range": {
-                    "startColumn": 17,
-                    "endColumn": 21,
-                    "lineCount": 1
-                }
-            },
-            {
-                "code": "reportAttributeAccessIssue",
-                "range": {
-                    "startColumn": 17,
-                    "endColumn": 22,
-                    "lineCount": 1
-                }
-            }
-        ],
-        "./model_checker/algorithms/explicit/CapATL/utils.py": [
-            {
-                "code": "reportGeneralTypeIssues",
-                "range": {
-                    "startColumn": 76,
-                    "endColumn": 84,
-                    "lineCount": 1
-                }
-            }
-        ],
         "./model_checker/algorithms/explicit/IATL/operators.py": [
             {
                 "code": "reportOptionalMemberAccess",

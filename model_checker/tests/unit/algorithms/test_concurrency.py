@@ -1,7 +1,7 @@
 """Checks run in parallel threads give the same results as run one after another.
 
-The checkers cache parsed formulas and models (for example the lru_caches in
-CapATL/utils.py), so a cache shared badly between threads would mix results.
+The checkers cache parsed formulas and models, so a cache shared badly between
+threads would mix results.
 """
 
 import concurrent.futures

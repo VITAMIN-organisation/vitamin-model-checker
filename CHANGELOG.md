@@ -22,6 +22,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: CapATL follows AAMAS 2024 (Def. 2.5, 2.9, 3.2). The coalition keeps
+  one capacity per member for the whole strategy and does not see the opponents'
+  moves; each opponent may play any of its capacities, one per play. Before, the
+  checker picked one capacity for every agent, opponents included, and returned a
+  state if one such choice won, and a `*` in a transition label matched no action
+  of a coalition member. On the example model `capatl_3agents_3states_example.txt`,
+  `<{1,2}>X g` gives `q0, q2` (before `q1`), `<{1,2,3}>X g` gives `q0, q1, q2`
+  (before `q1`), `<{3}>X g` gives `q2` (before none), `<{1,2}>F g` gives
+  `q0, q1, q2` (before `q1, q2`) and `<{1,2}>G a` gives `q0, q1, q2` (before none).
+  The capCGS loader rejects a model whose `Capacities_assignment` does not have one
+  row per agent and one column per capacity, where an agent has no capacity, or
+  where an assigned capacity has no line in `Actions_for_capacities`. See
+  [CapATL algorithm](docs/algorithms/capatl.md).
 - Breaking: NatATL_Recall follows natural strategies with recall of AIJ 2019
   (section 6.1, p. 21). A rule's condition is a pattern over the history (the
   states visited so far). A plain condition `p` matches only the one-state history

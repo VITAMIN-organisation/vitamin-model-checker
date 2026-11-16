@@ -48,9 +48,10 @@ Table 1 lists the method of each checker:
 
 | Method | Checkers |
 | :--- | :--- |
-| Fixpoints of a pre-image over sets of states | [CTL](ctl.md), [ATL](atl.md), [IATL](iatl.md), [ICTL](ictl.md), [Wallet_ATL](wallet_atl.md), [RBATL](rbatl.md), [RABATL](rabatl.md), [OATL](oatl.md), [OL](ol.md), [COTL](cotl.md), [CapATL](capatl.md), [TOL](tol.md) |
+| Fixpoints of a pre-image over sets of states | [CTL](ctl.md), [ATL](atl.md), [IATL](iatl.md), [ICTL](ictl.md), [Wallet_ATL](wallet_atl.md), [RBATL](rbatl.md), [RABATL](rabatl.md), [OATL](oatl.md), [OL](ol.md), [COTL](cotl.md), [TOL](tol.md) |
 | The same, over values between 0 and 1 | [ATLF](atlf.md) |
 | The same, over regions (location, clock zone) | [TCTL](tctl.md) |
+| Fixpoints over game nodes: a state and the [plays the coalition cannot tell apart](capatl.md#how-a-check-runs) | [CapATL](capatl.md) |
 | Search of simple strategies, then a CTL check on the pruned model | [LTL](ltl.md), [NatATL](natatl.md), [NatATLF](natatlf.md), [NatSL](natsl.md) |
 | Automaton and two-player game | [ATL*](atl_star.md) |
 
@@ -76,8 +77,7 @@ declare gives an error instead.
 
 ## Speed-ups
 
-The techniques in Table 2 make the repeated pre-image cheaper; none changes a
-result.
+The techniques in Table 2 make repeated work cheaper; none changes a result.
 
 **Table 2: Speed-ups and the checkers that use them.**
 
@@ -86,8 +86,8 @@ result.
 | Move cache | ATL, ATLF, IATL, Wallet_ATL, RBATL, RABATL, OATL, OL, COTL | The moves of each state are read from the model once, not on every round |
 | Bit-vector sets | ATL, Wallet_ATL, RBATL, RABATL | From 300 states up, the target set is a bit array, so "is this state in the set?" is an index test |
 | Early stop | ATL, Wallet_ATL | In `F` and `U`, a state already in the set is not tested again |
-| Subformula memo | RBATL, RABATL, OATL, OL | A subformula that appears twice is computed once |
-| Per-check caches | CapATL | Capacity lookups are cached within one check and cleared before the next |
+| Subformula memo | RBATL, RABATL, OATL, OL, CapATL | A subformula that appears twice is computed once |
+| Per-check caches | CapATL | The capacity assignments each joint move allows are computed once per check, and the coalition moves of each state once per game |
 | Upset table | ICTL, IATL | The [upset](ictl.md#overview) of each state (the states above it in the preorder `P`) is computed once per check, not on every round |
 | Condition sets | NatATL, LTL | NatATL computes the states where each condition holds once per check, from the labels; LTL runs a CTL check per condition and rebuilds the model for each candidate, so its cache lasts one candidate |
 | Curse grouping | COTL | Legion actions that no listed [curse](cotl.md#model) extends are merged into the cheapest one, so the work grows with the listed curses, not with all joint demon actions |
