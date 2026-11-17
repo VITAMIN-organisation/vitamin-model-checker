@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-11-17
+
+A major release: formulas and model files follow stricter rules (names start with
+a lowercase letter, reserved words, one action per agent in a joint action, a
+`Wallets` row and a `Clock_constraints` row for every state), and OL, LTL and
+Wallet_ATL follow their papers. Read the "Breaking" entries before upgrading.
+
 ### Added
 
 - CapATL evaluates the knowledge operator `Ka(...)` (AAMAS 2024 Def. 3.2): it holds
@@ -29,6 +36,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - LTL and NatATL reject an empty coalition, a coalition that names an agent twice
   and an agent number that is not an integer (such as `True` or `1.5`), with a
   validation error that shows the coalition or the number.
+
+- ICTL accepts `A(p U q)`, `A[p U q]` and the Release forms, as the ICTL papers
+  write them. Before, they were syntax errors.
+- OL, TOL, RBATL, RABATL, CapATL and Wallet_ATL accept a parenthesized Until (and
+  Release or Weak Until where the logic has them) after the prefix, such as
+  `<J2> (p U q)` and `<1><5> (p U q)`. It builds the same tree as `prefix p U q`.
+- Tests for operator spacing, Until forms and connective spelling in every logic,
+  and one that keeps NatSL's "Unsupported goal" error for a connective in a goal.
+- Docs: "Names and keywords" and "Syntax cards" in `logic_knowledge_base.md` are
+  the one source for names, reserved words and each logic's syntax.
+  `test_names_doc.py` checks them against the parsers.
+- Docs: removed wrong examples and lists: `F`, `G` and `exists` as reserved words,
+  `EF [p]` (CTL), `Ex : (x, 1) F goal` (NatSL), and `>`, `&`, `|` as ICTL
+  connectives.
 
 ### Changed
 
@@ -240,70 +261,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   name a coalition agent. OL and the file formats page say how a `*` cell of
   `Transition` gets its cost.
 
-### Removed
-
-- `ZoneGraph.has_path_from`, `ZoneGraph.find_path_from`,
-  `DBMAdapter.compute_predecessors` and the backward path helpers
-  `any_backward_path` and `collect_backward_paths` of `trace_utils`. No checker
-  called them: TCTL and TOL build the region graph forward.
-
-### Fixed
-
-- CTL, TCTL, TOL and ATL* read a `*` cell of `Transition` as a transition to the
-  cell's column, as ATL and the [file format](docs/reference/file_formats.md#transition)
-  do. Before, they read a `*` off the diagonal as a self-loop on the row's state.
-  On the Workbench model `ctl_train_controller_1agent_8states.txt`, whose `s7` row
-  has `*` towards `sI`, `AG hazard` held at `s7` and holds at no state.
-- ICTL reads a `*` cell off the diagonal as an `R` transition to the cell's
-  column, as CTL, TCTL, TOL and ATL* do. Before, it was a self-loop on the row
-  state, so in a model whose only move from `s0` to `s1` is a `*`, `EX p` with
-  `p` at `s1` missed `s0`.
-- ICTL rejects a `Transition` cell other than `0`, `R`, `P`, `P,R` and `*`, with
-  an error that names it. Before, a cell such as `Q` loaded and counted as a
-  transition for the checker but not for the serial and confluence checks.
-- NatATL_Recall accepts a rule whose action is idle: it compared the model's `I`
-  with the rule's `IDLE` and never matched, and it treated the tree's cut-off leaves
-  as states with no action, so every rule failed (`<{1},1>G !r` was false on a model
-  where idling keeps away from `r`). It reads a member's action at its agent
-  number, not at its position in the coalition, and tries strategies in a fixed
-  order. See [Recall](docs/algorithms/natatl.md#recall).
-- NatATL_Recall accepts a model whose first state has only a self-loop while
-  another state has transitions. It rejected such a model with "Configuration
-  error: State 's0' has no transitions to other states", a limit of the tree it
-  used to build from `s0`; histories start in any state.
-- LTL conditions can negate any atom (`p and !q`); before, `!` could only stand on
-  the first atom. The condition generator also uses every connective it is given
-  instead of the first one; LTL still passes `and` only. See
-  [LTL algorithm](docs/algorithms/ltl.md#how-a-check-runs).
-- ATLF rounds `1 - x` to 12 decimals: `!p` with `p = 0.7` is `0.3`, not
-  `0.30000000000000004`. Every value in its result is a float, so a state at 0
-  prints `0.0`, not `0`.
-
-## [2.0.0] - 2026-11-12
-
-A major release: formulas and model files follow stricter rules (names start with
-a lowercase letter, reserved words, one action per agent in a joint action, a
-`Wallets` row and a `Clock_constraints` row for every state), and OL, LTL and
-Wallet_ATL follow their papers. Read the "Breaking" entries before upgrading.
-
-### Added
-
-- ICTL accepts `A(p U q)`, `A[p U q]` and the Release forms, as the ICTL papers
-  write them. Before, they were syntax errors.
-- OL, TOL, RBATL, RABATL, CapATL and Wallet_ATL accept a parenthesized Until (and
-  Release or Weak Until where the logic has them) after the prefix, such as
-  `<J2> (p U q)` and `<1><5> (p U q)`. It builds the same tree as `prefix p U q`.
-- Tests for operator spacing, Until forms and connective spelling in every logic,
-  and one that keeps NatSL's "Unsupported goal" error for a connective in a goal.
-- Docs: "Names and keywords" and "Syntax cards" in `logic_knowledge_base.md` are
-  the one source for names, reserved words and each logic's syntax.
-  `test_names_doc.py` checks them against the parsers.
-- Docs: removed wrong examples and lists: `F`, `G` and `exists` as reserved words,
-  `EF [p]` (CTL), `Ex : (x, 1) F goal` (NatSL), and `>`, `&`, `|` as ICTL
-  connectives.
-
-### Changed
-
 - Docs: pages are grouped under `docs/algorithms/` (one page per logic plus
   `index.md`), `docs/reference/`, `docs/guides/` and `docs/examples/`. The old
   `docs/<LOGIC>/algorithm.md` paths are gone.
@@ -447,6 +404,36 @@ Wallet_ATL follow their papers. Read the "Breaking" entries before upgrading.
   lacks. CTL trace tests check the trace type and that the path follows real edges.
 
 ### Fixed
+
+- CTL, TCTL, TOL and ATL* read a `*` cell of `Transition` as a transition to the
+  cell's column, as ATL and the [file format](docs/reference/file_formats.md#transition)
+  do. Before, they read a `*` off the diagonal as a self-loop on the row's state.
+  On the Workbench model `ctl_train_controller_1agent_8states.txt`, whose `s7` row
+  has `*` towards `sI`, `AG hazard` held at `s7` and holds at no state.
+- ICTL reads a `*` cell off the diagonal as an `R` transition to the cell's
+  column, as CTL, TCTL, TOL and ATL* do. Before, it was a self-loop on the row
+  state, so in a model whose only move from `s0` to `s1` is a `*`, `EX p` with
+  `p` at `s1` missed `s0`.
+- ICTL rejects a `Transition` cell other than `0`, `R`, `P`, `P,R` and `*`, with
+  an error that names it. Before, a cell such as `Q` loaded and counted as a
+  transition for the checker but not for the serial and confluence checks.
+- NatATL_Recall accepts a rule whose action is idle: it compared the model's `I`
+  with the rule's `IDLE` and never matched, and it treated the tree's cut-off leaves
+  as states with no action, so every rule failed (`<{1},1>G !r` was false on a model
+  where idling keeps away from `r`). It reads a member's action at its agent
+  number, not at its position in the coalition, and tries strategies in a fixed
+  order. See [Recall](docs/algorithms/natatl.md#recall).
+- NatATL_Recall accepts a model whose first state has only a self-loop while
+  another state has transitions. It rejected such a model with "Configuration
+  error: State 's0' has no transitions to other states", a limit of the tree it
+  used to build from `s0`; histories start in any state.
+- LTL conditions can negate any atom (`p and !q`); before, `!` could only stand on
+  the first atom. The condition generator also uses every connective it is given
+  instead of the first one; LTL still passes `and` only. See
+  [LTL algorithm](docs/algorithms/ltl.md#how-a-check-runs).
+- ATLF rounds `1 - x` to 12 decimals: `!p` with `p = 0.7` is `0.3`, not
+  `0.30000000000000004`. Every value in its result is a float, so a state at 0
+  prints `0.0`, not `0`.
 
 - Every logic that answers with a state set prints `res` as a tuple in natural
   order, numbers inside a name compared as numbers: `Result: ('s1', 's2', 's10')`.
@@ -652,6 +639,11 @@ Wallet_ATL follow their papers. Read the "Breaking" entries before upgrading.
   TimedCGS model follows the same rule.
 
 ### Removed
+
+- `ZoneGraph.has_path_from`, `ZoneGraph.find_path_from`,
+  `DBMAdapter.compute_predecessors` and the backward path helpers
+  `any_backward_path` and `collect_backward_paths` of `trace_utils`. No checker
+  called them: TCTL and TOL build the region graph forward.
 
 - Breaking: `read_from_model_object` of CGS, CapCGS and CostCGS (and the
   ObstructionModel stub). Nothing called it, and it skipped the checks of
