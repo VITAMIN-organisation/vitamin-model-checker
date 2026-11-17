@@ -45,8 +45,8 @@ class TestRABATLVsRBATLDivergence:
     def test_multi_agent_coalition_bound_vector_divergence(
         self, rabatl_fixture, rbatl_fixture
     ):
-        """The loops at s1 and s3 cost agents 1 and 2 together 1 per resource in RABATL
-        but 2 in RBATL; s4 costs 3, and elsewhere a joint action leaves r or costs 2."""
+        """The loops at s1 and s3 cost 1 per resource in RABATL but 2 in RBATL; only
+        RBATL has s2, where AA reaches r and its cheapest joint action AA^ costs 1."""
         formula = "<1,2><1,1>X r"
         rab_states = extract_states_from_result(
             _core_rabatl_checking(rabatl_fixture, formula)
@@ -55,4 +55,4 @@ class TestRABATLVsRBATLDivergence:
             _core_rbatl_checking(rbatl_fixture, formula)
         )
         assert rab_states == {"s1", "s3"}
-        assert rba_states == set()
+        assert rba_states == {"s2"}

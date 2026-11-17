@@ -25,15 +25,25 @@ has a move `m` (one action per member) such that every joint action that contain
 `m`, whatever the other agents play:
 
 1. leads into `Z`;
-2. has a cost vector at `s` within `c`: `cost_i <= c_i` for each resource `i` that
-   `c` covers (with `c` of length 1, the second cost value is not limited).
+2. costs at most `c` at `s`: `cost_i <= c_i` for each resource `i` that `c` covers
+   (with `c` of length 1, the second cost value is not limited). RBATL takes the
+   cost of the move to be that of its cheapest joint action that has a cost in the
+   model, and RABATL that of its most expensive one (see below).
    A bound longer than the model's cost vectors is a validation error.
 
-This is `Pre(C, X, b)` of Catta et al. (PRIMA 2024, p. 9), which asks for the cost
-of every completion of the move. Two consequences follow:
+In RB-ATL the cost of a move is the sum of the costs of the members' own actions
+only (Catta et al., PRIMA 2024, p. 5), and the RB-ATL Pre leaves out the loop over
+the other agents' actions that RAB-ATL needs (p. 9). A `costCGS` model gives the
+cost of whole joint actions, so the checker cannot read the members' share off it;
+its cheapest joint action is that share when the other agents' actions are free, as
+the idle action is in the paper's example. RABATL, whose costs are split per agent
+(`Costs_for_actions_split`), sums the members' shares and takes the most expensive
+joint action, as `Pre(C, X, b)` on p. 9 does. The original code (`RBATL.py:80-86`)
+asked for one joint action within the bound; the paper does not follow it either.
+Two consequences follow:
 
-- A joint action with no cost for `s` in the model is never within the bound, so a
-  move that contains one is never in `Pre(Z, c)`.
+- A joint action with no cost for `s` in the model is not counted in RBATL, and in
+  RABATL a move that contains one is never in `Pre(Z, c)`.
 - With `c_i = 0` only moves of cost 0 in resource `i` stay, so `<1><0> F p` asks
   whether `p` can be forced with moves of cost 0 alone.
 

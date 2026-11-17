@@ -75,6 +75,23 @@ def test_rabatl_coalition_whose_move_the_opponent_can_divert(temp_file):
 
 
 @pytest.mark.unit
+def test_rbatl_does_not_charge_the_coalition_for_the_others_action(temp_file):
+    """Agent 1's move A reaches s1 whatever agent 2 plays; AD costs 9 only because
+    agent 2 plays D, so A costs the 1 of its cheapest joint action AC."""
+    model = CostCGS()
+    model.read_file(
+        temp_file(
+            "Transition\n0 AC,AD 0\n0 ** 0\n0 0 **\nName_State\ns0 s1 s2\nInitial_State\ns0\n"
+            "Costs_for_actions\nAC s0$1\nAD s0$9\n** s1$0;s2$0\n"
+            "Atomic_propositions\np\nLabelling\n0\n1\n0\nNumber_of_agents\n2\n"
+        )
+    )
+    cache = build_transition_cache(model, "1", "rbatl")
+    assert compute_pre_states(model, {"s1"}, [1], cache) == {"s0", "s1"}
+    assert compute_pre_states(model, {"s1"}, [0], cache) == {"s1"}
+
+
+@pytest.mark.unit
 def test_wildcard_cell_to_two_states_does_not_force_either(temp_file):
     """`**` from s0 to both s1 and s2 lets the others pick s2, so s0 is not in pre({s1})."""
     model = CostCGS()

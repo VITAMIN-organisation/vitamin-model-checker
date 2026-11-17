@@ -1,5 +1,7 @@
 """Pre-image for RBATL and RABATL: a coalition move whose every joint action lands
-in the target set and costs at most the bound."""
+in the target set and whose cost is at most the bound. RABATL charges the move its
+most expensive joint action; RBATL charges the cheapest one, which is the members'
+own cost when the other agents' actions are free."""
 
 from itertools import zip_longest
 from typing import Literal
@@ -11,9 +13,9 @@ from model_checker.algorithms.explicit.shared.state_utils import (
 from model_checker.parsers.game_structures.cgs import CostCGSProtocol, cgs_actions
 
 CostFilter = Literal["rbatl", "rabatl"]
-# A coalition move: the destinations of its joint actions and the largest cost among
-# them per resource, None when a joint action has no cost in the model.
-Move = tuple[frozenset[int], list[int] | None]
+# A coalition move: the destinations of its joint actions and the cost vectors that
+# can be charged for it; it is affordable when one of them is within the bound.
+Move = tuple[frozenset[int], list[list[int]]]
 TransitionCache = dict[int, list[Move]]
 
 
@@ -35,7 +37,9 @@ def build_transition_cache(
                     cost = _coalition_sum(cost, agents, profile, state)
                 move = cgs_actions.process_action_string(profile, agents)
                 by_move.setdefault(move, []).append((dest_idx, cost))
-        cache[state_idx] = [_reduce_move(joint) for joint in by_move.values()]
+        cache[state_idx] = [
+            _reduce_move(joint, cost_filter) for joint in by_move.values()
+        ]
     return cache
 
 
@@ -55,19 +59,25 @@ def compute_pre_states(
     return state_indices_to_names(cgs, pre_states)
 
 
-def _within_bound(cost: list[int] | None, bound: list[int]) -> bool:
-    """Whether a cost is at most bound in each resource the bound covers."""
-    return cost is not None and all(
-        c <= limit for c, limit in zip(cost, bound, strict=False)
+def _within_bound(costs: list[list[int]], bound: list[int]) -> bool:
+    """Whether some cost vector is at most bound in each resource the bound covers."""
+    return any(
+        all(c <= limit for c, limit in zip(cost, bound, strict=False)) for cost in costs
     )
 
 
-def _reduce_move(joint: list[tuple[int, list[int] | None]]) -> Move:
+def _reduce_move(
+    joint: list[tuple[int, list[int] | None]], cost_filter: CostFilter
+) -> Move:
+    """RABATL: one vector, the largest per resource, none when a joint action has no
+    cost. RBATL: the distinct costs of the joint actions that have one."""
     dests = frozenset(dest for dest, _ in joint)
     costs = [cost for _, cost in joint if cost is not None]
+    if cost_filter == "rbatl":
+        return dests, [list(c) for c in {tuple(c) for c in costs}]
     if len(costs) < len(joint):
-        return dests, None
-    return dests, [max(column) for column in zip_longest(*costs, fillvalue=0)]
+        return dests, []
+    return dests, [[max(column) for column in zip_longest(*costs, fillvalue=0)]]
 
 
 def _coalition_sum(cost, agents: set[int], profile: str, state: str) -> list[int]:
