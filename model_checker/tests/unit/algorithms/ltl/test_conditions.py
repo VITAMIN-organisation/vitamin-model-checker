@@ -6,6 +6,7 @@ from model_checker.algorithms.explicit.shared.strategies_base import (
     condition_size,
     generate_conditions,
     generate_negated_conditions,
+    generate_strategies,
 )
 
 
@@ -39,3 +40,11 @@ def test_negation_can_fall_on_any_atom():
         "p and !q",
     }
     assert "!p and !q" in set(generate_negated_conditions(["p and q"], 5))
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(("bound", "count"), [(4, 0), (5, 1)])
+def test_a_rule_with_two_negations_fits_only_from_size_5(bound, count):
+    """The rule `!p and !q -> A` has size 5, so strategy generation finds it at k = 5."""
+    pairs = {"agent1": [("!p and !q", "A")]}
+    assert len(list(generate_strategies(pairs, bound, [1], False))) == count
