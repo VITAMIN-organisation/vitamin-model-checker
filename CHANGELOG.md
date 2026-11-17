@@ -49,7 +49,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   reached the goal. On `tol_cost_2states.txt`, `{J2} F p` and `{J2} q U p` drop
   from `{s0, s1}` to `{s1}`: time may stand still at `s0`. Known limitation:
   since a path may stay in its region forever, `{Jn} F phi` gives exactly the
-  regions of `phi` and `{Jn} (phi U psi)` those of `psi`, on every model. See
+  regions of `phi` and `{Jn} (phi U psi)` those of `psi`, on every model. The
+  paper's Algorithm 2 and Proposition 1 (p. 5) give the same result, its Theorem 2
+  (p. 6) does not, and TOL keeps it. See
   [Obstruction step](docs/algorithms/tol.md#obstruction-step).
 - Breaking: an error found while reading a model file (not UTF-8, or a format
   rule broken) has type `model` in every logic. Before, most came back as

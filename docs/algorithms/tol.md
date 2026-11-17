@@ -34,14 +34,30 @@ region `r` when all of these hold:
 The step of delay 0 follows AAMAS 2025 read literally: a path is "an infinite
 sequence of consecutive delays and discrete transitions" (p. 3), with delays that
 may be 0, and "every zone has a transitive $\epsilon$ delay transition to itself"
-(p. 4). It keeps every region a step to itself, so no region is a dead end. It
-also makes `Down(Z)` a subset of `Z`: a path may stay in its region forever, so
-`{Jn} F phi` gives exactly `[[phi]]` and `{Jn} (phi U psi)` exactly `[[psi]]`, on
-every model and for every budget `n`. On `tol_cost_2states.txt`, `{J2} F p` holds
-only at `s1`. This is a known limitation. TCTL instead keeps only the paths along
-which time grows without bound ([Time-divergent paths](tctl.md#time-divergent-paths)),
-and Theorem 2 (p. 6, see [Grade 0](#grade-0)) relates TOL to that TCTL; TOL does
-not yet do the same.
+(p. 4), where an $\epsilon$ delay transition is the paper's time step between
+zones. The same paragraph also says such a transition "is not reflexive between
+zones", then "Since an $\epsilon$ transition is reflexive, the time successor
+relation is also reflexive"; the checker takes the reflexive reading. It keeps
+every region a step to itself, so no region is a dead end. It also makes
+`Down(Z)` a subset of `Z`: a path may stay in its region forever, so `{Jn} F phi`
+gives exactly `[[phi]]` (the regions where `phi` holds) and `{Jn} (phi U psi)`
+exactly `[[psi]]`, on every model and for every budget `n`. `G`, `R` and `W` still
+depend on `n`, because the cost and strict-subset conditions above can remove a
+region of `Z` from `Down(Z)`. On `tol_cost_2states.txt`, `{J2} F p` holds only at
+`s1`.
+
+The paper is not consistent on this point. Its own algorithm gives the same `F`
+and `U`: Algorithm 2 (p. 5) computes `{Jn} (phi U psi)` as a
+[least fixpoint](index.md#overview) that starts from `[[psi]]` with no condition
+on time, and Proposition 1 (p. 5) says the pre-image $\blacktriangledown(n, Z)$
+(the checker's `Down(Z)`) holds a state iff the state is in `Z`. Theorem 2 (p. 6)
+says instead that grade-0 TOL, translated as on p. 6, is TCTL, whose `A` ranges
+only over paths along which time grows without bound
+([Time-divergent paths](tctl.md#time-divergent-paths)). The two disagree on
+`tol_cost_2states.txt` (see [Grade 0](#grade-0)). The paper does not mention such
+paths and gives no pre-image restricted to them, so the checker follows its
+Algorithm 2 and keeps the paths where time stands still. The original VITAMIN
+repository has no TOL checker to compare.
 
 An edge's cost comes from its cell in the `Transition_With_Costs` matrix:
 
