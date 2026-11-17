@@ -6,29 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-- RBATL: a coalition move is affordable when one of its joint actions is within the
-  bound, not only when all of them are. Since 2.0.0 a proper subset of the agents was charged
-  for the actions of the others, against RB-ATL (PRIMA 2024 pp. 5 and 9), where
-  only the members' actions count. `<1><5,2> G !p` on the sensor model
-  `rbatl_2agents_8states_sensor.txt` now holds in `s0`. RABATL is unchanged. See [RBATL algorithm](docs/algorithms/rbatl.md).
+### Fixed
 
-- Loader: the rule that a state needs a transition for every combination of
-  actions no longer applies to CTL, TCTL, OL and TOL, as OATL already had it. CTL
-  and TCTL have no agents, and OL and TOL are OATL with every agent in the
-  coalition. Since 2.0.0 a CTL or OL model with a row such as `0 AC BD` was
-  refused. See [file formats](docs/reference/file_formats.md).
-
-- LTL: `model_checking_wins_some_nash` and `model_checking_lose_some_nash` check
-  `target_agent` again (a `validation` error naming it). Since the coalition input
-  was added, agent 0 read as the last agent and a number above the agent count
-  raised a bare `IndexError`.
-- LTL: the size of a condition counts every `!`: `!p and !q` is 5, not 4, as
-  `p && !q` is 4 in NatATL. Before, a condition with any `!` got one extra, so
-  rule lists with two or more negations fitted in a bound `k` one or more too
-  small. See [LTL algorithm](docs/algorithms/ltl.md#how-a-check-runs).
-- RABATL: a `Costs_for_actions_split` row with fewer costs than a coalition member's
-  number is a `model` error that names the action, the state and the agent. Since
-  2.0.0 it raised a bare `IndexError`; before, a missing cost counted 0.
+- LTL: `model_checking_wins_some_nash` and `model_checking_lose_some_nash` validate
+  `target_agent` again (agent 0 read as the last agent; a number above the agent
+  count raised `IndexError`).
+- LTL: each `!` counts one in a condition's size, so `!p and !q` is 5, not 4
+  ([LTL](docs/algorithms/ltl.md#how-a-check-runs)).
+- RABATL: a `Costs_for_actions_split` row with too few costs is a `model` error
+  naming the action, state and agent (it raised `IndexError` since 2.0.0).
+- RBATL: a coalition move is affordable when one joint action is within the bound,
+  not all, so other agents' costs are not charged to the coalition (PRIMA 2024
+  pp. 5, 9); `<1><5,2> G !p` on `rbatl_2agents_8states_sensor.txt` holds in `s0`
+  again. RABATL is unchanged ([RBATL](docs/algorithms/rbatl.md)).
+- Loader: CTL, TCTL, OL and TOL no longer need a transition for every action
+  combination, as OATL already did; a CTL or OL row such as `0 AC BD` was refused
+  since 2.0.0 ([file formats](docs/reference/file_formats.md)).
 
 ## [2.0.0] - 2026-11-17
 
