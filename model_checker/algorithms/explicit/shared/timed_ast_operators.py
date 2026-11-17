@@ -30,7 +30,9 @@ if TYPE_CHECKING:
     from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
 
 
-def _region_graph_for_formula(tcgs: "TimedCGS", ast) -> ZoneGraph:
+def _region_graph_for_formula(
+    tcgs: "TimedCGS", ast, track_divergence: bool
+) -> ZoneGraph:
     """The region graph of ``tcgs`` with the clocks, constants and freezes of ``ast``;
     a freeze on a clock of the model is a semantic error."""
     model_clocks = set(tcgs.clocks_dict)
@@ -44,7 +46,10 @@ def _region_graph_for_formula(tcgs: "TimedCGS", ast) -> ZoneGraph:
         )
     extend_timed_cgs_clocks(tcgs, collect_formula_clocks(ast, model_clocks))
     return ZoneGraph(
-        tcgs, formula_clock_constants(ast, tcgs.clocks_dict), freeze_clocks
+        tcgs,
+        formula_clock_constants(ast, tcgs.clocks_dict),
+        freeze_clocks,
+        track_divergence,
     )
 
 
@@ -126,7 +131,9 @@ def _timed_checking_result(
     )
 
 
-def timed_model_checking(logic: str, solve_tree_fn: Callable) -> Callable:
+def timed_model_checking(
+    logic: str, solve_tree_fn: Callable, track_divergence: bool
+) -> Callable:
     """The model_checking entry of TCTL or TOL: parse, build the region graph, run
     the logic's solver over the formula tree."""
 
@@ -136,7 +143,7 @@ def timed_model_checking(logic: str, solve_tree_fn: Callable) -> Callable:
         if ast is None:
             err = parser.errors[0] if parser.errors else "Syntax error in formula"
             return create_error_response("syntax", err)
-        zone_graph = _region_graph_for_formula(tcgs, ast)
+        zone_graph = _region_graph_for_formula(tcgs, ast, track_divergence)
         solve_tree_fn(tcgs, zone_graph, ast)
         return _timed_checking_result(tcgs, zone_graph, ast.satisfying_regions)
 

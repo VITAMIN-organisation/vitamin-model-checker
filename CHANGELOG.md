@@ -32,6 +32,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: TCTL `A` and `E` range over time-divergent paths only (Baier and
+  Katoen, Def. 9.30, p. 701). A zero-time loop is no longer a path, and where
+  time stops for good (a timelock) every `A` formula holds and every `E` formula
+  fails. On `tctl_tol_minimal.txt`, `AF false`
+  holds at `s0` and `EF p` fails there; on `tctl_zeno_cycle.txt`, `EG p` is
+  false. TCTL graphs have more regions: 7 to 62 on the test models, against 4
+  to 42. See [Time-divergent paths](docs/algorithms/tctl.md#time-divergent-paths).
+- Breaking: TCTL `A(phi U psi)` is computed as `!(E(!psi U (!phi && !psi)) || EG !psi)`.
+  Before, it held only where `psi` held: on `tol_cost_2states.txt`,
+  `A (true U p)` gave `{s1}` while `AF p` gave `{s0, s1}`.
 - Breaking: TOL lets a path stay where it is: every region has a time step of
   delay 0 to itself (AAMAS 2025, p. 4), so the Demon must keep that region inside
   the target too. Before, the last region before an invariant bound had no time
@@ -124,10 +134,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     resetting `j` to 0 there (AAMAS 2025 Def. 11, p. 4; IC 1993 p. 22). TCTL and
     TOL used to evaluate `j.phi` as `phi` in effect, following AAMAS 2025
     Algorithm 1 (line 19, p. 5), which contradicts that paper's Def. 11, so a
-    freeze under a temporal operator was wrong: on `tctl_tol_invariant10.txt`,
-    `EF (x>8 && j.EF (j>=2))` held although
-    time cannot advance by 2 after `x>8`, and `EF (x>=5 && j.AG (j<=4))` did not
-    hold although it does at `x=6`. `res` lists only locations of regions that
+    freeze under a temporal operator was wrong: on `tctl_invariant10_exit.txt`,
+    `EF (x>8 && j.EF (p && j>=2))` held although time cannot advance by 2 at `s0`
+    after `x>8`. `res` lists only locations of regions that
     time and edge steps reach from the start, not ones only a freeze reset leads
     to. See [TCTL overview](docs/algorithms/tctl.md#overview).
 - Breaking: TCTL and TOL reject a freeze on a clock the model declares, such as

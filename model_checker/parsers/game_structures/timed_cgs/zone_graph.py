@@ -5,7 +5,11 @@ from model_checker.algorithms.explicit.shared.trace_utils import reverse_adjacen
 
 from .DBM import DBMAdapter
 from .DBM.DBM import DBM
+from .formula_clocks import extend_timed_cgs_clocks
 from .timed_cgs import TimedCGS
+
+# Not a valid clock name in a formula or a model file, so it never clashes.
+TICK_CLOCK = "#tick"
 
 
 class TimeState:
@@ -31,12 +35,15 @@ class _Exploration:
         tcgs: TimedCGS,
         formula_constants: dict[str, int],
         freeze_clocks: tuple[str, ...],
+        tick_clock: int | None,
     ):
         self.tcgs = tcgs
         self.max_constants = _max_constants(tcgs, formula_constants)
         self.location_targets = _location_targets(tcgs)
+        self.tick_clock = tick_clock
         self.delay_successors: dict[TimeState, set[TimeState]] = {}
         self.discrete_successors: dict[TimeState, dict[str, set[TimeState]]] = {}
+        self.tick_resets: dict[TimeState, TimeState] = {}
         self.freeze_resets: dict[str, dict[TimeState, TimeState]] = {
             clock: {} for clock in freeze_clocks
         }
@@ -58,6 +65,25 @@ class _Exploration:
         self.discrete_successors[state] = {}
         self.waitlist.append(state)
 
+    def is_tick(self, state: TimeState) -> bool:
+        """True when the tick clock has reached 1 in ``state``."""
+        if self.tick_clock is None:
+            return False
+        return _lower_bound(state.zone, self.tick_clock) >= 1
+
+    def reset_region(self, state: TimeState, clock_idx: int) -> TimeState:
+        """The region reached from ``state`` by setting clock ``clock_idx`` to 0."""
+        zone = state.zone.get_reset(clock_idx, 0)
+        # A reset keeps the other clocks' region, so the result is one region.
+        [region] = self.regions(state.location, zone)
+        self.add_state(region)
+        return region
+
+
+def _lower_bound(zone: DBM, clock_idx: int) -> float:
+    """The lower bound of clock ``clock_idx`` (DBM index) in ``zone``."""
+    return -zone.elements[0][clock_idx].constant
+
 
 def _location_targets(tcgs: TimedCGS) -> dict[str, tuple[str, ...]]:
     """Each location's edge targets, sorted."""
@@ -70,14 +96,15 @@ def _location_targets(tcgs: TimedCGS) -> dict[str, tuple[str, ...]]:
     }
 
 
-def _successor_lists(
-    delay_successors: dict[TimeState, set[TimeState]],
-    discrete_successors: dict[TimeState, dict[str, set[TimeState]]],
-) -> dict[TimeState, list[TimeState]]:
+def _successor_lists(exploration: _Exploration) -> dict[TimeState, list[TimeState]]:
     """Every successor of each state, delay steps first."""
     return {
-        state: [*delays, *chain.from_iterable(discrete_successors[state].values())]
-        for state, delays in delay_successors.items()
+        state: [
+            *delays,
+            *chain.from_iterable(exploration.discrete_successors[state].values()),
+            *filter(None, [exploration.tick_resets.get(state)]),
+        ]
+        for state, delays in exploration.delay_successors.items()
     }
 
 
@@ -93,8 +120,11 @@ def _max_constants(tcgs: TimedCGS, formula_constants: dict[str, int]) -> list[in
 def _time_rank(region: TimeState) -> int:
     """Grows at every step along a delay path: each step raises some clock's lower
     bound, or makes it strict."""
-    bounds = region.zone.elements[0][1:]
-    return sum(2 * -bound.constant + (bound.operator == "<") for bound in bounds)
+    zone = region.zone
+    return sum(
+        2 * _lower_bound(zone, idx) + (zone.elements[0][idx].operator == "<")
+        for idx in range(1, zone.size)
+    )
 
 
 def _time_order(regions: list[TimeState]) -> list[TimeState]:
@@ -117,11 +147,13 @@ def _expand_delay_successors(exploration: _Exploration, state: TimeState) -> Non
     path = _time_order(exploration.regions(state.location, zone))
     if path[0] != state:
         raise ValueError(f"Delay path at location {state.location} starts elsewhere")
-    # A longer step would skip the regions between; a self-loop on the last would
-    # suggest infinite time progress inside a bounded invariant.
+    # A longer step would skip the regions between; a tick region's only step is
+    # its tick reset.
     for earlier, later in pairwise(path):
         exploration.add_state(later)
         exploration.delay_successors[earlier].add(later)
+        if exploration.is_tick(later):
+            break
 
 
 def _expand_discrete_successors(exploration: _Exploration, state: TimeState) -> None:
@@ -145,10 +177,8 @@ def _link_freeze_resets(exploration: _Exploration, state: TimeState) -> None:
     """Record, for each freeze clock, the region reached by resetting it; the
     link is not an edge, so time and edge steps never follow it."""
     for clock, resets in exploration.freeze_resets.items():
-        zone = state.zone.get_reset(exploration.tcgs.clocks_dict[clock] + 1, 0)
-        # A reset keeps the other clocks' region, so the result is one region.
-        [resets[state]] = exploration.regions(state.location, zone)
-        exploration.add_state(resets[state])
+        clock_idx = exploration.tcgs.clocks_dict[clock] + 1
+        resets[state] = exploration.reset_region(state, clock_idx)
 
 
 def _initial_zone(tcgs: TimedCGS) -> DBM | None:
@@ -169,10 +199,16 @@ def _explore(
     tcgs: TimedCGS,
     formula_constants: dict[str, int],
     freeze_clocks: tuple[str, ...],
+    track_divergence: bool,
 ) -> tuple[_Exploration, TimeState | None]:
     """Explore the regions reached from the zero-clock initial zone by time, edges
     and freeze resets."""
-    exploration = _Exploration(tcgs, formula_constants, freeze_clocks)
+    tick_clock = None
+    if track_divergence:
+        extend_timed_cgs_clocks(tcgs, (TICK_CLOCK,))
+        formula_constants = {**formula_constants, TICK_CLOCK: 1}
+        tick_clock = tcgs.clocks_dict[TICK_CLOCK] + 1
+    exploration = _Exploration(tcgs, formula_constants, freeze_clocks, tick_clock)
     initial_zone = _initial_zone(tcgs)
     if initial_zone is None:
         return exploration, None
@@ -192,8 +228,13 @@ def _explore(
 def _expand_waitlist(exploration: _Exploration, link_freeze_resets: bool) -> None:
     while exploration.waitlist:
         state = exploration.waitlist.popleft()
-        _expand_delay_successors(exploration, state)
-        _expand_discrete_successors(exploration, state)
+        if exploration.tick_clock is not None and exploration.is_tick(state):
+            exploration.tick_resets[state] = exploration.reset_region(
+                state, exploration.tick_clock
+            )
+        else:
+            _expand_delay_successors(exploration, state)
+            _expand_discrete_successors(exploration, state)
         if link_freeze_resets:
             _link_freeze_resets(exploration, state)
 
@@ -204,18 +245,20 @@ class ZoneGraph:
         tcgs: TimedCGS,
         formula_constants: dict[str, int] | None = None,
         freeze_clocks: tuple[str, ...] = (),
+        track_divergence: bool = False,
     ):
-        """The (location, clock region) graph for timed model checking, with the
-        formula's largest constant per clock and the clocks its freezes reset."""
+        """The (location, clock region) graph; with ``track_divergence`` a path is
+        time-divergent iff it visits ``tick_states`` infinitely often."""
         self.tcgs = tcgs
         exploration, self.initial_time_state = _explore(
-            tcgs, formula_constants or {}, freeze_clocks
+            tcgs, formula_constants or {}, freeze_clocks, track_divergence
         )
         self.location_targets = exploration.location_targets
         self.delay_successors = exploration.delay_successors
         self.discrete_successors = exploration.discrete_successors
         self.freeze_resets = exploration.freeze_resets
+        self.tick_states = set(exploration.tick_resets)
         self.reachable_states = exploration.reachable_states
-        self.graph = _successor_lists(self.delay_successors, self.discrete_successors)
+        self.graph = _successor_lists(exploration)
         self.states = set(self.graph)
         self.reverse_graph = reverse_adjacency(self.graph, self.states)

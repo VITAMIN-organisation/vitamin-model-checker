@@ -1,0 +1,35 @@
+# MODEL: Three-location timedCGS where time can diverge, for TCTL path quantifiers
+
+# PURPOSE: s0 has invariant x<=1, a zero-time self-loop and edges to s1 (p) and s2 (q);
+#          s1 and s2 have no invariant and only an unguarded self-loop, so time diverges there.
+#          Looping at s0 forever is time-convergent and is not a path of TCTL;
+#          every divergent path leaves s0, so AF (p || q) holds at s0 and EG (!p && !q) fails.
+
+# LOGIC: TCTL
+
+Transition
+a b c
+0 * 0
+0 0 *
+Name_State
+s0 s1 s2
+Initial_State
+s0
+Atomic_propositions
+p q
+Labelling
+0 0
+1 0
+0 1
+Number_of_agents
+1
+Clocks
+x
+Clock_constraints
+x<=1 x<=1 x<=1
+0 0 0
+0 0 0
+Invariants
+x<=1
+0
+0

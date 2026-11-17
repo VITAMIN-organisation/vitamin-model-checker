@@ -7,42 +7,15 @@ import pytest
 from model_checker.algorithms.explicit.TCTL.TCTL import model_checking
 from model_checker.utils.literals import parse_state_set_literal
 
-_MINIMAL = (
-    Path(__file__).resolve().parents[3]
-    / "fixtures"
-    / "timedCGS"
-    / "tctl_tol_minimal.txt"
-)
-_AF_REGRESSION = (
-    Path(__file__).resolve().parents[3]
-    / "fixtures"
-    / "timedCGS"
-    / "tctl_af_regression.txt"
-)
-_AU_REGRESSION = (
-    Path(__file__).resolve().parents[3]
-    / "fixtures"
-    / "timedCGS"
-    / "tctl_au_regression.txt"
-)
-_ZENO_CYCLE = (
-    Path(__file__).resolve().parents[3]
-    / "fixtures"
-    / "timedCGS"
-    / "tctl_zeno_cycle.txt"
-)
-_RESET_CYCLE = (
-    Path(__file__).resolve().parents[3]
-    / "fixtures"
-    / "timedCGS"
-    / "tctl_reset_cycle.txt"
-)
-_INVARIANT10 = (
-    Path(__file__).resolve().parents[3]
-    / "fixtures"
-    / "timedCGS"
-    / "tctl_tol_invariant10.txt"
-)
+_FIXTURES = Path(__file__).resolve().parents[3] / "fixtures" / "timedCGS"
+_MINIMAL = _FIXTURES / "tctl_tol_minimal.txt"
+_AF_REGRESSION = _FIXTURES / "tctl_af_regression.txt"
+_INVARIANT10_EXIT = _FIXTURES / "tctl_invariant10_exit.txt"
+_ZENO_CYCLE = _FIXTURES / "tctl_zeno_cycle.txt"
+_RESET_CYCLE = _FIXTURES / "tctl_reset_cycle.txt"
+_INVARIANT10 = _FIXTURES / "tctl_tol_invariant10.txt"
+_DIVERGENT = _FIXTURES / "tctl_divergent_paths.txt"
+_COST_2STATES = _FIXTURES / "tol_cost_2states.txt"
 
 
 def _states(result):
@@ -72,7 +45,7 @@ def _initial_satisfied(result):
     ],
 )
 def test_tctl_semantics(formula, expected_locations, initial_ok):
-    result = model_checking(formula, str(_MINIMAL))
+    result = model_checking(formula, str(_RESET_CYCLE))
     assert _states(result) == expected_locations
     assert _initial_satisfied(result) is initial_ok
 
@@ -88,7 +61,7 @@ def test_tctl_semantics(formula, expected_locations, initial_ok):
     ],
 )
 def test_tctl_clock_guards_and_freeze(formula, expected_locations, initial_ok):
-    result = model_checking(formula, str(_MINIMAL))
+    result = model_checking(formula, str(_RESET_CYCLE))
     assert _states(result) == expected_locations
     assert _initial_satisfied(result) is initial_ok
 
@@ -111,7 +84,7 @@ def test_tctl_clock_guards_and_freeze(formula, expected_locations, initial_ok):
 )
 def test_tctl_clock_guard_holds_for_every_clock_value(formula, initial_ok):
     """Time at s0 runs to x=10, so a guard such as x<=3 fails later on every path."""
-    result = model_checking(formula, str(_INVARIANT10))
+    result = model_checking(formula, str(_INVARIANT10_EXIT))
     assert _initial_satisfied(result) is initial_ok
 
 
@@ -119,19 +92,20 @@ def test_tctl_clock_guard_holds_for_every_clock_value(formula, initial_ok):
     ("formula", "initial_ok"),
     [
         ("j.EF (j>=2)", True),
-        ("EF (x>8 && j.EF (j>=2))", False),
-        ("AG j.EF (j>=2)", False),
-        ("EF (x>=5 && j.AG (j<=5))", True),
-        # At x=6, j runs to 4 and stops.
-        ("EF (x>=5 && j.AG (j<=4))", True),
+        ("EF (x>8 && j.EF (p && j>=2))", False),
+        ("AG j.EF (p && j>=2)", False),
+        ("EF (x>=5 && j.AG (p -> j<=5))", True),
+        # From x=6, j runs to 4 before s0 is left.
+        ("EF (x>=5 && j.AG (p -> j<=4))", True),
         ("EF (x>8 && j.(j<=0))", True),
         ("AG j.(j<=0)", True),
-        ("j.AG (j<=9)", False),
+        ("j.AG (p -> j<=9)", False),
     ],
 )
 def test_tctl_freeze_resets_its_clock_where_it_stands(formula, initial_ok):
-    """After x>8, time at s0 cannot advance by 2, so j.EF (j>=2) fails there."""
-    result = model_checking(formula, str(_INVARIANT10))
+    """After x>8, time at s0 (where p holds) advances by less than 2 before s0 is
+    left, so j.EF (p && j>=2) fails there."""
+    result = model_checking(formula, str(_INVARIANT10_EXIT))
     assert _initial_satisfied(result) is initial_ok
 
 
@@ -169,16 +143,42 @@ def test_tctl_af_differs_from_ag(formula, expected_locations, initial_ok):
 @pytest.mark.parametrize(
     ("formula", "expected_locations", "initial_ok"),
     [
-        # A[!p U p]: s0 can self-loop forever, so all-paths guarantee fails at s0.
-        # E[!p U p]: s0 has the path s0->s1 where !p then p, so both states satisfy.
+        ("AF false", set(), False),
+        ("EG (!p && !q)", set(), False),
+        ("AF (p || q)", {"s0", "s1", "s2"}, True),
+        ("A true U (p || q)", {"s0", "s1", "s2"}, True),
+        # A fails at s0 through the path to s2; E holds through the path to s1.
         ("A (!p) U p", {"s1"}, False),
         ("E (!p) U p", {"s0", "s1"}, True),
         ("A ((!p) U p)", {"s1"}, False),
         ("E ((!p) U p)", {"s0", "s1"}, True),
+        ("EG !p", {"s0", "s2"}, True),
     ],
 )
-def test_tctl_au_differs_from_eu(formula, expected_locations, initial_ok):
-    result = model_checking(formula, str(_AU_REGRESSION))
+def test_tctl_quantifies_over_time_divergent_paths(
+    formula, expected_locations, initial_ok
+):
+    """Looping at s0 never lets time pass x=1, so it is not a path, and every
+    path leaves s0 for s1 or s2."""
+    result = model_checking(formula, str(_DIVERGENT))
+    assert _states(result) == expected_locations
+    assert _initial_satisfied(result) is initial_ok
+
+
+@pytest.mark.parametrize(
+    ("fixture", "formula", "expected_locations", "initial_ok"),
+    [
+        (_MINIMAL, "AF false", {"s0"}, True),
+        (_MINIMAL, "EF p", set(), False),
+        (_COST_2STATES, "A true U p", {"s0", "s1"}, True),
+    ],
+)
+def test_tctl_timelocked_state_satisfies_every_forall(
+    fixture, formula, expected_locations, initial_ok
+):
+    """Invariant x<=c and no reset leave no time-divergent path, so a universal
+    formula holds there and an existential one fails."""
+    result = model_checking(formula, str(fixture))
     assert _states(result) == expected_locations
     assert _initial_satisfied(result) is initial_ok
 
@@ -202,18 +202,17 @@ def test_syntax_error():
 def test_tctl_booleans_clock_gt_and_word_quantifiers(
     formula, expected_locations, initial_ok
 ):
-    result = model_checking(formula, str(_MINIMAL))
+    result = model_checking(formula, str(_RESET_CYCLE))
     assert _states(result) == expected_locations
     assert _initial_satisfied(result) is initial_ok
 
 
 def test_tctl_zeno_cycle():
-    # Model has x<=5 invariant on self-loop but no reset.
-    # TCTL semantics (without strong non-Zeno requirements) allows infinite 0-time transitions.
-    # Therefore EG p is true.
+    # Invariant x<=5 and a self-loop without reset: the infinite zero-time loop
+    # is time-convergent, so no path exists and EG p fails.
     result = model_checking("EG p", str(_ZENO_CYCLE))
-    assert _states(result) == {"s0"}
-    assert _initial_satisfied(result) is True
+    assert _states(result) == set()
+    assert _initial_satisfied(result) is False
 
 
 def test_tctl_reset_enables_cycle():

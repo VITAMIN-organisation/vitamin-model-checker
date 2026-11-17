@@ -16,7 +16,10 @@ from model_checker.parsers.game_structures.timed_cgs.regions import (
     regions_with_clock_guard,
 )
 from model_checker.parsers.game_structures.timed_cgs.timed_cgs import TimedCGS
-from model_checker.parsers.game_structures.timed_cgs.zone_graph import ZoneGraph
+from model_checker.parsers.game_structures.timed_cgs.zone_graph import (
+    TICK_CLOCK,
+    ZoneGraph,
+)
 
 _FIXTURE = (
     Path(__file__).resolve().parents[4] / "fixtures/timedCGS/tctl_tol_minimal.txt"
@@ -48,6 +51,23 @@ def _load(tmp_path, content: str) -> TimedCGS:
     tcgs = TimedCGS()
     tcgs.read_file(path)
     return tcgs
+
+
+@pytest.mark.unit
+def test_tick_regions_only_reset_the_tick_clock(minimal_tcgs):
+    """Each region where the tick clock has reached 1 is in tick_states, and its
+    only successor is the same location and x with the tick clock at 0."""
+    graph = ZoneGraph(minimal_tcgs, track_divergence=True)
+    tick = minimal_tcgs.clocks_dict[TICK_CLOCK] + 1
+    reached_one = {
+        state for state in graph.states if -state.zone.elements[0][tick].constant >= 1
+    }
+    assert graph.tick_states == reached_one != set()
+    for state in graph.tick_states:
+        [reset] = graph.graph[state]
+        assert reset.location == state.location
+        assert reset.zone.elements[tick][0].constant == 0
+        assert reset.zone.elements[0][1] == state.zone.elements[0][1]
 
 
 @pytest.mark.unit

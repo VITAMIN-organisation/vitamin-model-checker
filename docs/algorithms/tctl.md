@@ -28,11 +28,17 @@ follows:
    that names the clock: AAMAS 2025 (Def. 10, p. 4) requires the model's clocks
    and the formula's clocks to be disjoint sets.
 2. Each clock's largest constant is computed; the formula `AG (p : x<=3)`
-   contributes 3 for `x`.
+   contributes 3 for `x`. TCTL also adds the tick clock, with largest constant 1,
+   which marks each time unit that passes so that the checker can keep the
+   time-divergent paths, those along which time grows without bound (see
+   [Time-divergent paths](#time-divergent-paths)). No formula or model can name
+   it, and TOL does not add it.
 3. The initial region is the initial location with every clock at 0, restricted to
    the location's invariant. If that leaves no clock values, the graph is empty.
 4. From each region, the graph is built breadth first with two kinds of successor
-   and one link, computed as in step 5:
+   and one link, computed as in step 5 (a tick region, one where the tick clock
+   has reached 1, instead has a single successor: the same region with the tick
+   clock set to 0, a step that takes no time):
    - letting time pass leads only to the next clock region, the first one time
      reaches after leaving the current one, if the invariant allows it. A region
      that time cannot leave within the invariant, such as `x=10` under `x<=10` or
@@ -51,11 +57,12 @@ follows:
    Where both `x` and `y` are at most their largest constants, `x - y` is compared
    with every integer from `-c_y` to `c_x`.
 
-Example: the test model `tctl_tol_invariant10.txt` in
-`model_checker/tests/fixtures/timedCGS/` has one clock `x` and one location `s0`
-with a self-loop that does not reset `x`, and the invariant `x<=10`. Time there
-runs through 21 clock regions: `x=0`, `0<x<1`, `x=1`, and so on up to `9<x<10`
-and `x=10`. `E (x<=3 U x>=5)` is false, because time passes through `3<x<5`, where
+Example: the test model `tctl_invariant10_exit.txt` in
+`model_checker/tests/fixtures/timedCGS/` has one clock `x`. Location `s0`, where `p`
+holds, has a self-loop that does not reset `x`, the invariant `x<=10` and an edge
+with guard `x>=10` to `s1`, which has no invariant. At `s0`, `x` runs through 21
+clock regions of its own (the tick clock splits some of them further): `x=0`, `0<x<1`, `x=1`, and so on up to `9<x<10` and `x=10`.
+`E (x<=3 U x>=5)` is false, because time passes through `3<x<5`, where
 neither side holds. A time step straight from `x<=3` to `x>=5` would skip those
 regions, and the checker gave true before it built regions.
 
@@ -67,9 +74,10 @@ hold for some of its values only.
 
 The graph grows with the largest constants and, faster, with the number of
 clocks. The test models in `model_checker/tests/fixtures/timedCGS/` have one clock
-with constants up to 10 and 4 to 42 regions. One location with clocks `x` and `y`,
-invariants `x<=12` and `y<=12` and a self-loop with guard `x>=1` that resets `y`
-gives 422 regions.
+with constants up to 10 and 4 to 42 regions without the tick clock (the graph TOL
+uses), 7 to 62 with it. One location with clocks `x` and `y`, invariants `x<=12`
+and `y<=12` and a self-loop with guard `x>=1` that resets `y` gives 422 regions
+without the tick clock.
 
 ## Overview
 
@@ -88,35 +96,81 @@ reset "instead of v itself". Here `j` is a formula clock: a clock that only the
 formula names, added to the model in step 1; it starts at 0 with the model's
 clocks, no edge resets it, and only a freeze does. AAMAS 2025 Algorithm 1
 (line 19, p. 5) instead computes `j.phi` as `phi`, which contradicts Def. 11 of
-the same paper. Example: on `tctl_tol_invariant10.txt`, with the invariant
-`x<=10`, `EF (x>8 && j.EF (j>=2))` is false, because after `x>8` time cannot
-advance by 2, and `EF (x>=5 && j.AG (j<=4))` is true, because at `x=6`, `j` runs
-to 4 and time stops. TOL freezes work the same way.
+the same paper. Example: on `tctl_invariant10_exit.txt`, where `p` holds only at
+`s0` and `s0` is left at `x=10`, `EF (x>8 && j.EF (p && j>=2))` is false, because
+after `x>8` time advances by less than 2 before `s0` is left, and
+`EF (x>=5 && j.AG (p -> j<=4))` is true, because from `x=6`, `j` reaches 4 when
+`s0` is left. TOL freezes work the same way.
 
 `Pre(Z)`, the [pre-image](index.md#overview), is the set of regions with a time
-step or an edge of the region graph into `Z`. There is no `X` operator: the next
-region in dense time is not unique.
+step, an edge or a tick reset of the region graph into `Z`. There is no `X`
+operator: the next region in dense time is not unique.
+
+## Time-divergent paths
+
+`A` and `E` range over the time-divergent paths only. Baier and Katoen
+(Principles of Model Checking, Def. 9.30, p. 701) define `E phi` to hold at `s`
+when some path in `Paths_div(s)` satisfies `phi`, and `A phi` when every path in
+it does, where `Paths_div(s)` is the set of time-divergent paths from `s`; on
+p. 700 they add that "time-convergent paths are not of any importance for the
+satisfaction of TCTL state formulae". Two kinds of path drop out:
+
+- infinitely many edges in bounded time: on `tctl_zeno_cycle.txt`, `s0` has the
+  invariant `x<=5` and a self-loop with guard `x>=1` that never resets `x`.
+  Looping there forever keeps `x<=5`, so total time stays below 5, and `EG p` is
+  false.
+- paths where time stops: on `tctl_tol_minimal.txt`, time at `s0` stops at `x=2`
+  and no edge resets `x`. A region with no time-divergent path is a timelock;
+  there every `A` formula holds and every `E` formula fails, so `AF false` holds
+  at `s0` and `EF p` does not. Baier and Katoen (p. 705) call `AG EG true` "a
+  tautology in TCTL" for this reason.
+
+A region records no elapsed time, so the checker counts time units with the tick
+clock of [step 2](#region-graph). It starts at 0 and is set back to 0 each time
+it reaches 1. Reaching 1 again takes a full time unit, so a path that passes tick
+regions infinitely often is time-divergent; and along a time-divergent path the
+tick clock reaches 1 again and again. A path is therefore time-divergent exactly
+when it passes tick regions infinitely often. The tick reset itself takes no time
+and changes no label, so it changes no formula's value (TCTL has no `X`).
+
+Alur's thesis (Techniques for Automatic Verification of Real-Time Systems,
+Stanford, 1991, Def. 5.26) tests a region path instead: each clock is infinitely
+often 0 or above its largest constant. In this checker two edges may fire at the
+same instant, so a self-loop that resets `x` at `x=0` would pass that test while
+time stands still. The original VITAMIN repository has no TCTL checker to compare.
+
+`E0(phi U psi)`, the regions with a path through `phi` into `psi`, is the least
+fixpoint of `Z = [[psi]] | ([[phi]] & Pre(Z))`, starting from `[[psi]]`.
+`EG_d phi`, the regions with a time-divergent path that stays in `phi`, is the
+greatest fixpoint of `Z = [[phi]] & Pre(E0(phi U (Z & Tick)))`, with `Tick` the
+set of tick regions: from a region of `Z`, a path stays in `phi` up to the next
+tick region, which is again in `Z`. `EG_d true` is the set of regions with no
+timelock.
 
 ## Operators
 
 `All` is the set of all regions and `[[phi]]` the set of regions where `phi`
-holds. Fixpoints are defined in the [overview](index.md#overview).
+holds. Fixpoints are defined in the [overview](index.md#overview). Table 1
+builds every operator from `E0` and `EG_d`:
 
 **Table 1: TCTL operators.**
 
-| Formula | Set computed | Iteration starts from |
-| :--- | :--- | :--- |
-| `EF phi` | least fixpoint of `Z = Z \| Pre(Z)` | `[[phi]]` |
-| `EG phi` | greatest fixpoint of `Z = [[phi]] & Pre(Z)` | `All` |
-| `AF phi` | `All` minus the greatest fixpoint of `Z = (All - [[phi]]) & Pre(Z)` | `All` |
-| `AG phi` | `All` minus the least fixpoint of `Z = Z \| Pre(Z)` | `All - [[phi]]` |
-| `E(phi U psi)` | least fixpoint of `Z = [[psi]] \| ([[phi]] & Pre(Z))` | `[[psi]]` |
-| `A(phi U psi)` | `All` minus the least fixpoint of `Z = N \| ((All - [[phi]]) & N & (All - Pre(All - Z)))`, with `N = All - [[psi]]` | `N` |
+| Formula | Set computed |
+| :--- | :--- |
+| `E(phi U psi)` | `E0(phi U ([[psi]] & EG_d true))` |
+| `EF phi` | `E(true U phi)` |
+| `EG phi` | `EG_d phi` |
+| `AF phi` | `All - EG_d (All - [[phi]])` |
+| `AG phi` | `All - EF (All - [[phi]])` |
+| `A(phi U psi)` | `All - (E((All - [[psi]]) U (All - [[phi]] - [[psi]])) \| EG_d (All - [[psi]]))` |
 
-Because the `A(phi U psi)` iteration starts from every region where `psi` fails,
-its result holds only where `psi` holds. Example: one clock `x`; `s0` goes to
-`s1`, which loops; only `s1` is labelled `p`; both locations have the invariant
-`x<=2`. `AF p` holds at `s0`, but `A(true U p)` does not.
+`A(phi U psi)` fails in two cases, the two parts of its row: some time-divergent
+path reaches a region with neither `phi` nor `psi` before `psi`, or one never
+reaches `psi`. Example:
+`tctl_divergent_paths.txt` has `s0` with the invariant `x<=1`, a self-loop that
+does not reset `x` and edges to `s1` (`p`) and `s2` (`q`), which have no invariant.
+Every time-divergent path leaves `s0`, so `A(true U (p || q))` holds at `s0`, and
+`A((!p) U p)` fails there through the path to `s2`.
 
 ## Result
 
