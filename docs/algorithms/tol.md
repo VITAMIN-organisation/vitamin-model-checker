@@ -23,18 +23,25 @@ reach from the initial region ([TCTL result](tctl.md#result)). TOL has no `X` op
 region `r` when all of these hold:
 
 1. Time step: `r` itself and the time step from `r` to the next clock region stay
-   in `Z`, because the Demon disables edges and cannot stop time. A delay of 0 is a
-   step too, so every region has a time step to itself: a path is "an infinite
-   sequence of consecutive delays and discrete transitions" with delays in
-   R>=0 (AAMAS 2025, p. 3), and "every zone has a transitive $\epsilon$ delay
-   transition to itself" (p. 4). Time may therefore stand still on a path, as it does at
-   the last region before an invariant bound.
+   in `Z`, because the Demon cannot disable a time step, and a delay of 0 is one.
 2. Cost: an edge of `r`'s location leaves `Z` when it can be taken from `r` and
    leads to a region outside `Z`; the leaving edges cost at most the budget `n` in
    total, so the Demon can disable all of them.
 3. Strict subset: the leaving edges are not all the edges of `r`'s location,
    counting edges that cannot be taken from `r` too, because the Demon removes a
    strict subset of a state's edges (Def. 6, p. 3).
+
+The step of delay 0 follows AAMAS 2025 read literally: a path is "an infinite
+sequence of consecutive delays and discrete transitions" (p. 3), with delays that
+may be 0, and "every zone has a transitive $\epsilon$ delay transition to itself"
+(p. 4). It keeps every region a step to itself, so no region is a dead end. It
+also makes `Down(Z)` a subset of `Z`: a path may stay in its region forever, so
+`{Jn} F phi` gives exactly `[[phi]]` and `{Jn} (phi U psi)` exactly `[[psi]]`, on
+every model and for every budget `n`. On `tol_cost_2states.txt`, `{J2} F p` holds
+only at `s1`. This is a known limitation. TCTL instead keeps only the paths along
+which time grows without bound ([Time-divergent paths](tctl.md#time-divergent-paths)),
+and Theorem 2 (p. 6, see [Grade 0](#grade-0)) relates TOL to that TCTL; TOL does
+not yet do the same.
 
 An edge's cost comes from its cell in the `Transition_With_Costs` matrix:
 
@@ -72,7 +79,10 @@ to `s1`, where `p` holds, and a self-loop of cost 5 stays in `s0`. `{J0} G !p` h
 at `s0`, because the Demon disables the edge to `s1` for free. TCTL `AG !p`, "on all
 paths always `!p`", holds nowhere. When no edge costs 0, a grade-0 Demon can remove
 nothing; on such a model the tests check that `{J0} F p` and `{J0} G !p` give the
-same states as TCTL `AF p` and `AG !p`.
+same states as TCTL `AF p` and `AG !p` (`tol_positive_cost_branch.txt`). That does
+not hold on every model without edges of cost 0, because of the step of delay 0
+(see [Obstruction step](#obstruction-step)): on `tol_cost_2states.txt`, `{J0} F p`
+gives `{s1}` and TCTL `AF p` gives `{s0, s1}`.
 
 ## Operators
 
