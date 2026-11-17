@@ -12,7 +12,8 @@ LTL uses its own rule lists, which differ from the [NatATL](natatl.md#strategies
 strategies. A strategy of one agent is an ordered list of rules
 `(condition, action)` with no `true` rule and no two rules with the same action;
 a condition is one atom or atoms joined by `and`, each atom possibly negated
-(`p and !q`), and its size is its number of words, plus 1 if it contains `!`.
+(`p and !q`), and its size is its number of words, plus 1 for each `!` (`p` is 1, `!p` is 2,
+`p and !q` is 4, `!p and !q` is 5).
 Conditions with `or` are not generated, although the original VITAMIN code
 generated them: with `or`, `G goal` with `k = 5` on
 `ltl_1agent_3states_minimal.txt` (3 states, 3 propositions, false) takes 13 s

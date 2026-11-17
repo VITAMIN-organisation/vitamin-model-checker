@@ -3,6 +3,7 @@
 import pytest
 
 from model_checker.algorithms.explicit.shared.strategies_base import (
+    condition_size,
     generate_conditions,
     generate_negated_conditions,
 )
@@ -20,11 +21,21 @@ def test_conditions_use_both_connectives():
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize(
+    ("condition", "size"),
+    [("p", 1), ("!p", 2), ("p and !q", 4), ("!p and !q", 5), ("!p or !q or !r", 8)],
+)
+def test_each_negation_counts_one(condition, size):
+    """The size is the words plus one per `!`, as in NatATL."""
+    assert condition_size(condition) == size
+
+
+@pytest.mark.unit
 def test_negation_can_fall_on_any_atom():
-    """`p and !q` is a condition of size 4, as is `!p and q`."""
+    """`p and !q` is a condition of size 4, as is `!p and q`; `!p and !q` needs 5."""
     assert set(generate_negated_conditions(["p and q"], 4)) == {
         "p and q",
         "!p and q",
         "p and !q",
-        "!p and !q",
     }
+    assert "!p and !q" in set(generate_negated_conditions(["p and q"], 5))

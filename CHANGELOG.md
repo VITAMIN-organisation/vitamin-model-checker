@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `target_agent` again (a `validation` error naming it). Since the coalition input
   was added, agent 0 read as the last agent and a number above the agent count
   raised a bare `IndexError`.
+- LTL: the size of a condition counts every `!`: `!p and !q` is 5, not 4, as
+  `p && !q` is 4 in NatATL. Before, a condition with any `!` got one extra, so
+  rule lists with two or more negations fitted in a bound `k` one or more too
+  small. See [LTL algorithm](docs/algorithms/ltl.md#how-a-check-runs).
 
 ## [2.0.0] - 2026-11-17
 

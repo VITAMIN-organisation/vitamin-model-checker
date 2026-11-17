@@ -64,6 +64,12 @@ def generate_conditions(
         yield from generate_condition(k, [])
 
 
+def condition_size(condition: str) -> int:
+    """Number of symbols of a condition: each word and each `!` counts one, so `p`
+    is 1, `!p` is 2 and `!p and !q` is 5."""
+    return len(condition.split()) + condition.count("!")
+
+
 def generate_negated_conditions(
     conditions: list[str], max_complexity: int
 ) -> Generator[str, None, None]:
@@ -77,10 +83,7 @@ def generate_negated_conditions(
             new_str = negated[0] + "".join(
                 f" {op} {atom}" for op, atom in zip(joins, negated[1:], strict=True)
             )
-            complexity = len(new_str.split())
-            if "!" in new_str:
-                complexity += 1
-            if complexity <= max_complexity:
+            if condition_size(new_str) <= max_complexity:
                 yield new_str
 
 
@@ -106,12 +109,9 @@ def generate_strategies(
                     if len(distinct_actions) != len(combination):
                         continue
 
-                    total_complexity = 0
-                    for condition, _ in combination:
-                        condition_complexity = len(condition.split())
-                        if "!" in condition:
-                            condition_complexity += 1
-                        total_complexity += condition_complexity
+                    total_complexity = sum(
+                        condition_size(condition) for condition, _ in combination
+                    )
                     if total_complexity != complexity_bound:
                         continue
 

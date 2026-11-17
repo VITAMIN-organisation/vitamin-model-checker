@@ -70,7 +70,7 @@ def generate_strategies(
                         break
 
                     total_complexity = sum(
-                        len(condition.split()) + (1 if "!" in condition else 0)
+                        strategies_base.condition_size(condition)
                         for condition, _ in combination
                     )
                     if total_complexity == k:
@@ -174,8 +174,7 @@ def generate_deviations_for_agent(
         for cond in all_conditions:
             for action in agent_actions_for_agent:
                 candidate = (cond, action)
-                complexity = len(cond.split()) + (1 if "!" in cond else 0)
-                if complexity <= k:
+                if strategies_base.condition_size(cond) <= k:
                     all_candidates.append(candidate)
 
     deviations = []
@@ -185,8 +184,8 @@ def generate_deviations_for_agent(
         candidate_strategy = {"condition_action_pairs": list(candidate_tuple)}
         if candidate_strategy != single_strategy:
             total_complexity = sum(
-                len(pair[0].split()) + (1 if "!" in pair[0] else 0)
-                for pair in candidate_tuple
+                strategies_base.condition_size(condition)
+                for condition, _ in candidate_tuple
             )
             if total_complexity <= k:
                 deviations.append(candidate_strategy)
