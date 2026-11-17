@@ -5,7 +5,10 @@ import pytest
 from model_checker.algorithms.explicit.LTL.LTL import (
     model_checking,
     model_checking_exists_nash,
+    model_checking_lose_some_nash,
+    model_checking_wins_some_nash,
 )
+from model_checker.parsers.game_structures.cgs import CGS
 from model_checker.tests.helpers.model_helpers import generate_linear_chain
 
 
@@ -148,6 +151,24 @@ def test_invalid_k_or_coalition_is_named(temp_file, options, message):
     result = model_checking("F goal", temp_file(_ONLY_AGENT_1_CHOOSES), **options)
     assert result["error"]["type"] == "validation"
     assert message in result["error"]["message"]
+
+
+@pytest.mark.integration
+@pytest.mark.model_checking
+@pytest.mark.parametrize(
+    "check", [model_checking_wins_some_nash, model_checking_lose_some_nash]
+)
+@pytest.mark.parametrize(
+    ("target", "message"),
+    [(0, "Invalid agent number: 0"), (3, "Invalid agent number: 3")],
+)
+def test_nash_target_agent_is_validated(temp_file, check, target, message):
+    """Agent 0 is not the last agent and 3 is no agent of a 2-agent model."""
+    path = temp_file(_ONLY_AGENT_1_CHOOSES)
+    cgs = CGS()
+    cgs.read_file(path)
+    with pytest.raises(ValueError, match=message):
+        check(cgs, path, [1, 2], "AF goal", [], 2, {}, ["goal"], target)
 
 
 @pytest.mark.integration

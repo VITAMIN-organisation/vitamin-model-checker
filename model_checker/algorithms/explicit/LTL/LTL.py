@@ -21,7 +21,7 @@ from model_checker.algorithms.explicit.SolutionConcepts.Solution_Concepts import
 )
 from model_checker.models.model_factory import create_model_parser_for_logic
 from model_checker.parsers.formula_parser_factory import FormulaParserFactory
-from model_checker.parsers.game_structures.cgs import CGSProtocol
+from model_checker.parsers.game_structures.cgs import CGSProtocol, cgs_actions
 from model_checker.utils.error_handler import (
     create_error_response,
     value_error_to_response,
@@ -250,6 +250,7 @@ def model_checking_wins_some_nash(
     """Test one strategy profile for one agent: Satisfiability is False if the agent
     meets the CTL goal and the profile is a Nash equilibrium, else True."""
     result = {}
+    cgs_actions.validate_agent_numbers([target_agent], cgs.get_number_of_agents())
 
     if pruning(
         cgs, model, [target_agent], CTLformula, current_strategy
@@ -284,6 +285,7 @@ def model_checking_lose_some_nash(
     """Test one strategy profile for one agent: Satisfiability is True if the agent
     misses the CTL goal and the profile is a Nash equilibrium, else False."""
     result = {}
+    cgs_actions.validate_agent_numbers([target_agent], cgs.get_number_of_agents())
 
     if not pruning(
         cgs, model, [target_agent], CTLformula, current_strategy

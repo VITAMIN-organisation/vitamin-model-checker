@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+- LTL: `model_checking_wins_some_nash` and `model_checking_lose_some_nash` check
+  `target_agent` again (a `validation` error naming it). Since the coalition input
+  was added, agent 0 read as the last agent and a number above the agent count
+  raised a bare `IndexError`.
+
 ## [2.0.0] - 2026-11-17
 
 A major release: formulas and model files follow stricter rules (names start with
