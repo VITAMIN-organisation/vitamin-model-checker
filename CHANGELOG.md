@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+- Loader: the rule that a state needs a transition for every combination of
+  actions no longer applies to CTL, TCTL, OL and TOL, as OATL already had it. CTL
+  and TCTL have no agents, and OL and TOL are OATL with every agent in the
+  coalition. Since 2.0.0 a CTL or OL model with a row such as `0 AC BD` was
+  refused. See [file formats](docs/reference/file_formats.md).
+
 - LTL: `model_checking_wins_some_nash` and `model_checking_lose_some_nash` check
   `target_agent` again (a `validation` error naming it). Since the coalition input
   was added, agent 0 read as the last agent and a number above the agent count

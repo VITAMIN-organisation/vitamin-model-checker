@@ -11,7 +11,8 @@ from .parser import (
     Unary,
 )
 
-METADATA = {"model_type": "timedCGS"}
+# TOL is OL with clocks, so its transition function is partial like OATL's.
+METADATA = {"model_type": "timedCGS", "partial_transitions": True}
 
 __all__ = [
     "METADATA",

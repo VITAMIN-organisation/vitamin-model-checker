@@ -7,6 +7,7 @@ import pytest
 from model_checker.parsers.game_structures.cap_cgs.cap_cgs import CapCGS
 from model_checker.parsers.game_structures.cgs import cgs_parser
 from model_checker.parsers.game_structures.cgs.cgs import CGS
+from model_checker.registries import partial_transitions_allowed
 from model_checker.tests.helpers.model_helpers import (
     build_cgs_model_content,
     load_cgs_from_content,
@@ -190,12 +191,26 @@ def test_broken_file_is_refused_on_load(test_data_dir, file_name, message):
 
 
 @pytest.mark.unit
-def test_oatl_accepts_a_state_without_every_combination(test_data_dir):
-    """OATL allows a partial transition function, so the same file loads for it."""
+@pytest.mark.parametrize("logic", ["OATL", "CTL"])
+def test_partial_logic_accepts_a_state_without_every_combination(test_data_dir, logic):
+    """OATL has a partial transition function and CTL reads a graph, so the same file loads."""
     model = load_test_model(
-        test_data_dir, "tests/invalid/missing_joint_action.txt", "OATL"
+        test_data_dir, "tests/invalid/missing_joint_action.txt", logic
     )
     assert list(model.states) == ["s0", "s1", "s2"]
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("logic", ["OATL", "OL", "CTL", "TCTL", "TOL"])
+def test_logics_without_joint_actions_have_partial_transitions(logic):
+    """A logic whose paper has no joint actions, or a partial function, sets the flag."""
+    assert partial_transitions_allowed(logic)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("logic", ["ATL", "LTL", "NatATL", "RBATL", "RABATL", "CapATL"])
+def test_logics_with_joint_actions_check_every_combination(logic):
+    assert not partial_transitions_allowed(logic)
 
 
 @pytest.mark.unit

@@ -171,11 +171,13 @@ where it does not, `<1>X g` and `<2>X !g` would both hold.
 
 OATL and IATL accept such rows, because their papers make the transition function
 partial: AAMAS 2024 for OATL (Def. 2, p. 272) and KR 2025 for IATL (p. 187). There,
-a combination that no cell lists is not available in that state. A BCGS model,
-which only IATL uses, is never checked. A costCGS model is exempt only when it is
-loaded for OATL (`partial_transitions` in the logic's metadata, read by
-`create_model_parser_for_logic`); loaded for RBATL, RABATL or with no logic, it is
-checked.
+a combination that no cell lists is not available in that state. OL and TOL are
+OATL with every agent in the coalition, so they accept them too. CTL and TCTL accept
+them because their models are graphs with no agents. A BCGS model, which only IATL
+uses, is never checked. The other models are exempt only when loaded for one of
+these logics (`partial_transitions` in the logic's metadata, read by
+`create_model_parser_for_logic`); loaded for ATL, LTL, NatATL, RBATL, RABATL,
+CapATL or with no logic, they are checked.
 
 ### State and label sections
 
