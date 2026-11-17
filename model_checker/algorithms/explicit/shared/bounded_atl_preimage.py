@@ -1,7 +1,6 @@
-"""Pre-image for RBATL and RABATL: a coalition move whose every joint action lands
-in the target set and whose cost is at most the bound. RABATL charges the move its
-most expensive joint action; RBATL charges the cheapest one, which is the members'
-own cost when the other agents' actions are free."""
+"""Pre-image for RBATL and RABATL: a coalition move that lands in the target set and
+fits the bound (RABATL: every joint action; RBATL: one), see docs/algorithms/rbatl.md.
+"""
 
 from itertools import zip_longest
 from typing import Literal

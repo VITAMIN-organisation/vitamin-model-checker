@@ -26,19 +26,20 @@ has a move `m` (one action per member) such that every joint action that contain
 
 1. leads into `Z`;
 2. costs at most `c` at `s`: `cost_i <= c_i` for each resource `i` that `c` covers
-   (with `c` of length 1, the second cost value is not limited). RBATL takes the
-   cost of the move to be that of its cheapest joint action that has a cost in the
-   model, and RABATL that of its most expensive one (see below).
+   (with `c` of length 1, the second cost value is not limited). RBATL asks this of
+   one joint action of the move that has a cost in the model, and RABATL of every
+   joint action of the move (see below).
    A bound longer than the model's cost vectors is a validation error.
 
 In RB-ATL the cost of a move is the sum of the costs of the members' own actions
 only (Catta et al., PRIMA 2024, p. 5), and the RB-ATL Pre leaves out the loop over
 the other agents' actions that RAB-ATL needs (p. 9). A `costCGS` model gives the
-cost of whole joint actions, so the checker cannot read the members' share off it;
-its cheapest joint action is that share when the other agents' actions are free, as
-the idle action is in the paper's example. RABATL, whose costs are split per agent
-(`Costs_for_actions_split`), sums the members' shares and takes the most expensive
-joint action, as `Pre(C, X, b)` on p. 9 does. The original code (`RBATL.py:80-86`)
+cost of whole joint actions, so the checker cannot read the members' share off it.
+A joint action within the bound is that share when the other agents' actions are
+free, as the idle action is in the paper's example; when an opponent's action has a
+cost, RBATL ignores the opponent that picks it. RABATL, whose costs are split per
+agent (`Costs_for_actions_split`), sums the members' shares and needs every joint
+action within the bound, as `Pre(C, X, b)` on p. 9 does. The original code (`RBATL.py:80-86`)
 asked for one joint action within the bound; the paper does not follow it either.
 Two consequences follow:
 

@@ -6,8 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-- RBATL: a coalition move costs what its cheapest joint action costs, not what its
-  most expensive one costs. Since 2.0.0 a proper subset of the agents was charged
+- RBATL: a coalition move is affordable when one of its joint actions is within the
+  bound, not only when all of them are. Since 2.0.0 a proper subset of the agents was charged
   for the actions of the others, against RB-ATL (PRIMA 2024 pp. 5 and 9), where
   only the members' actions count. `<1><5,2> G !p` on the sensor model
   `rbatl_2agents_8states_sensor.txt` now holds in `s0`. RABATL is unchanged. See [RBATL algorithm](docs/algorithms/rbatl.md).
