@@ -32,7 +32,7 @@ def build_transition_cache(
             for profile in cgs.build_action_list(mask):
                 cost = _profile_cost(cgs, profile, state)
                 if cost is not None and cost_filter == "rabatl":
-                    cost = _coalition_sum(cost, agents)
+                    cost = _coalition_sum(cost, agents, profile, state)
                 move = cgs_actions.process_action_string(profile, agents)
                 by_move.setdefault(move, []).append((dest_idx, cost))
         cache[state_idx] = [_reduce_move(joint) for joint in by_move.values()]
@@ -70,9 +70,16 @@ def _reduce_move(joint: list[tuple[int, list[int] | None]]) -> Move:
     return dests, [max(column) for column in zip_longest(*costs, fillvalue=0)]
 
 
-def _coalition_sum(cost, agents: set[int]) -> list[int]:
+def _coalition_sum(cost, agents: set[int], profile: str, state: str) -> list[int]:
     """The members' costs summed per resource; a flat vector is one resource."""
     rows = cost if cost and isinstance(cost[0], (list, tuple)) else [cost]
+    for row in rows:
+        short = [i + 1 for i in sorted(agents) if i >= len(row)]
+        if short:
+            raise ValueError(
+                f"[MODEL] Costs_for_actions_split gives {len(row)} cost(s) for "
+                f"action {profile} at {state}, but agent {short[0]} is in the coalition"
+            )
     return [sum(row[i] for i in agents) for row in rows]
 
 

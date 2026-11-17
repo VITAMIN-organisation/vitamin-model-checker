@@ -207,7 +207,8 @@ any of these three sections:
 - `Costs_for_actions_split`: the same line, with each `:`-separated group split
   again by `,` into one cost per agent: in `AA s0$1,2:3,4`, agent 1 pays 1 of
   resource 1 and 3 of resource 2, and agent 2 pays 2 and 4. RABATL adds the costs of the coalition's
-  agents for each resource.
+  agents for each resource; a row with fewer costs than the number of a coalition
+  member is a `model` error.
 - `Transition_With_Costs`: replaces `Transition`; a square matrix whose cells are
   edge costs, `0` for no edge. It gives no actions, so OATL accepts it only for a
   coalition of all agents and otherwise reports "a Transition_With_Costs model gives

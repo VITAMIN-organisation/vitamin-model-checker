@@ -54,6 +54,18 @@ def test_rabatl_counts_only_the_coalition_cost(temp_file, coalition, bound, pre)
 
 
 @pytest.mark.unit
+def test_rabatl_row_without_a_member_cost_is_a_model_error(temp_file):
+    """`AC s0$1` has no cost for agent 2: a named error, not an IndexError."""
+    costs = "AC s0$1\nBC s0$1,1\n** s1$0,0;s2$0,0"
+    with pytest.raises(ValueError, match=r"\[MODEL\].*action A\|C at s0.*agent 2"):
+        _pre(temp_file, "Costs_for_actions_split", costs, "1,2", [10], "rabatl")
+    assert _pre(temp_file, "Costs_for_actions_split", costs, "1", [10], "rabatl") == {
+        "s0",
+        "s1",
+    }
+
+
+@pytest.mark.unit
 def test_rabatl_coalition_whose_move_the_opponent_can_divert(temp_file):
     """Agent 2 plays C in both AC and BC, so agent 1 can escape to s2 whatever the budget."""
     costs = "AC s0$1,9\nBC s0$1,1\n** s1$0,0;s2$0,0"

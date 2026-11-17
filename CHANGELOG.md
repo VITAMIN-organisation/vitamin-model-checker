@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `p && !q` is 4 in NatATL. Before, a condition with any `!` got one extra, so
   rule lists with two or more negations fitted in a bound `k` one or more too
   small. See [LTL algorithm](docs/algorithms/ltl.md#how-a-check-runs).
+- RABATL: a `Costs_for_actions_split` row with fewer costs than a coalition member's
+  number is a `model` error that names the action, the state and the agent. Since
+  2.0.0 it raised a bare `IndexError`; before, a missing cost counted 0.
 
 ## [2.0.0] - 2026-11-17
 
