@@ -32,6 +32,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Breaking: TOL lets a path stay where it is: every region has a time step of
+  delay 0 to itself (AAMAS 2025, p. 4), so the Demon must keep that region inside
+  the target too. Before, the last region before an invariant bound had no time
+  step at all and counted for `{Jn} F` and `{Jn} U` as if every path from it
+  reached the goal. On `tol_cost_2states.txt`, `{J2} F p` and `{J2} q U p` drop
+  from `{s0, s1}` to `{s1}`: time may stand still at `s0`. See
+  [Obstruction step](docs/algorithms/tol.md#obstruction-step).
 - Breaking: an error found while reading a model file (not UTF-8, or a format
   rule broken) has type `model` in every logic. Before, most came back as
   `system` (for example an ICTL or IATL preorder that is not reflexive, or rows

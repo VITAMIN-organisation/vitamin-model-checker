@@ -22,17 +22,19 @@ reach from the initial region ([TCTL result](tctl.md#result)). TOL has no `X` op
 `Down(Z)`, the TOL [pre-image](index.md#overview) of a set of regions `Z`, keeps a
 region `r` when all of these hold:
 
-1. Time step: the time step from `r`, to the next clock region, stays in `Z`,
-   because the Demon disables edges and cannot stop time. A region with no time
-   step meets this.
+1. Time step: `r` itself and the time step from `r` to the next clock region stay
+   in `Z`, because the Demon disables edges and cannot stop time. A delay of 0 is a
+   step too, so every region has a time step to itself: a path is "an infinite
+   sequence of consecutive delays and discrete transitions" with delays in
+   R>=0 (AAMAS 2025, p. 3), and "every zone has a transitive $\epsilon$ delay
+   transition to itself" (p. 4). Time may therefore stand still on a path, as it does at
+   the last region before an invariant bound.
 2. Cost: an edge of `r`'s location leaves `Z` when it can be taken from `r` and
    leads to a region outside `Z`; the leaving edges cost at most the budget `n` in
    total, so the Demon can disable all of them.
 3. Strict subset: the leaving edges are not all the edges of `r`'s location,
    counting edges that cannot be taken from `r` too, because the Demon removes a
    strict subset of a state's edges (Def. 6, p. 3).
-4. A step remains: `r` has a time step, or an edge it can take that does not
-   leave `Z`. Without this, a region from which nothing leads anywhere would count.
 
 An edge's cost comes from its cell in the `Transition_With_Costs` matrix:
 

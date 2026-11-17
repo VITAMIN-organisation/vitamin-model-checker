@@ -28,8 +28,8 @@ def _demon_keeps_inside(
     inside: RegionSet,
 ) -> bool:
     """True when the Demon, within ``bound``, can disable every edge from ``region``
-    that may leave ``inside`` and a step into ``inside`` remains."""
-    delay_targets = zone_graph.delay_successors[region]
+    that may leave ``inside``; a delay of 0 keeps every region a step to itself."""
+    delay_targets = zone_graph.delay_successors[region] | {region}
     if not delay_targets <= inside:
         return False  # time passing cannot be disabled
     edges = zone_graph.discrete_successors[region]
@@ -38,8 +38,6 @@ def _demon_keeps_inside(
     }
     if leaving.issuperset(zone_graph.location_targets[region.location]):
         return False  # the Demon may not disable every edge of the location
-    if not delay_targets and set(edges) <= leaving:
-        return False
     source_idx = tcgs.get_index_by_state_name(region.location)
     exit_cost = sum(
         _transition_cost(tcgs, source_idx, tcgs.get_index_by_state_name(target))
@@ -55,6 +53,6 @@ def triangle_down(
     ``regions``."""
     return {
         region
-        for region in timed_predecessors(zone_graph, regions)
+        for region in timed_predecessors(zone_graph, regions) | regions
         if _demon_keeps_inside(tcgs, zone_graph, region, bound, regions)
     }

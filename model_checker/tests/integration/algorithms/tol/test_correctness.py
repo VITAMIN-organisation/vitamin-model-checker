@@ -31,12 +31,13 @@ class TestCostBoundedSemantics:
         [
             ("p", {"s1"}, False),
             ("q", {"s0"}, True),
-            ("{J2}F p", {"s0", "s1"}, True),
-            ("{J3}F p", {"s0", "s1"}, True),
-            ("{J5}F p", {"s0", "s1"}, True),
+            # Time may stand still at s0, so no budget forces the step to s1.
+            ("{J2}F p", {"s1"}, False),
+            ("{J3}F p", {"s1"}, False),
+            ("{J5}F p", {"s1"}, False),
             ("{J5}G p", set(), False),
-            ("{J2} q U p", {"s0", "s1"}, True),
-            ("{J3} q U p", {"s0", "s1"}, True),
+            ("{J2} q U p", {"s1"}, False),
+            ("{J3} q U p", {"s1"}, False),
             ("{J3} q R p", set(), False),
             ("{J5} q R p", set(), False),
             ("{J2} q W p", {"s0", "s1"}, True),
@@ -100,6 +101,15 @@ def test_freeze_on_a_model_clock_is_a_semantic_error():
     result = model_checking("{J1}F x.(p : x<5)", fixture)
     assert result["error"]["type"] == "semantic"
     assert "'x'" in result["error"]["message"]
+
+
+def test_every_region_has_a_delay_step_to_itself():
+    """A delay of 0 is a step, so a path whose time stops at the invariant bound
+    x=2 still goes on."""
+    fixture = str(_FIXTURE.with_name("tctl_tol_minimal.txt"))
+    result = model_checking("{J0}G true", fixture)
+    assert _states_from_result(result) == {"s0"}
+    assert result["initial_state"] == "Initial state s0: True"
 
 
 def test_demon_cannot_disable_the_only_edge():
