@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-18
+
+Fixes for 2.0.0: model loading for CTL, TCTL, OL and TOL, RBATL coalition costs,
+and two `IndexError` crashes. One change can alter results: in LTL, `!p U q` now
+reads as `(!p) U q`; write `!(p U q)` for the negated Until.
+
 ### Fixed
 
 - LTL: `!` binds tighter than `U`, as in Spot's precedence table (Spot-tl p. 15)
