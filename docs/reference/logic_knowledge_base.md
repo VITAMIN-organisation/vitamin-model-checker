@@ -128,8 +128,8 @@ formulas; its rules and messages are in [ATL*](#atl-star).
 LTL has no prefix: its `F`, `G`, `X` and `U` follow the precedence table of the
 [Spot LTL library](https://spot.lre.epita.fr/tl.pdf), so
 `F p && q` is `(F p) && q`, `p U q && r` is `(p U q) && r` and `F p U q` is
-`(F p) U q`. One rule differs: Spot ranks `!` above `U` (Spot-tl, Sec. 3.1, p. 15), while
-VITAMIN reads `!p U q` as `!(p U q)`. Write `(!p) U q` for Spot's reading.
+`(F p) U q`. `!` binds tighter than `U` (Spot-tl, Sec. 3.1, p. 15), so `!p U q` is
+`(!p) U q`, as in the logics with a prefix; write `!(p U q)` to negate the Until.
 NatSL has no connectives after its prefix, so it rejects `E{1}x: (x, 1) F p && q`
 without offering two readings; see [NatSL](#natsl---natural-strategy-logic).
 

@@ -116,13 +116,14 @@ class BaseLogicParser:
         self._log_error(err_msg)
         t.lexer.skip(1)
 
+    # Spot's order: `!` binds tightest, so `!p U q` is `(!p) U q` as in every prefix logic.
     precedence = (
         ("right", "IMPLIES"),
         ("left", "OR"),
         ("left", "AND"),
-        ("right", "NOT"),
         ("right", "UNTIL"),
         ("right", "GLOBALLY", "NEXT", "EVENTUALLY"),
+        ("right", "NOT"),
     )
 
     def p_expression_binary(self, p):

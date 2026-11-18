@@ -24,10 +24,11 @@ _CASES = [
     ("not p or q", "(!p) || q"),
     ("F p && q", "(AF p) && q"),
     ("(F p) U q", "A((AF p) U q)"),
-    # The LTL parser reads U as right-associative, and `!p U q` as `!(p U q)`.
+    # The LTL parser reads U as right-associative, and `!p U q` as `(!p) U q` (Spot).
     ("p U q U r", "A(p U A(q U r))"),
     ("(p U q) U r", "A(A(p U q) U r)"),
-    ("!p U q", "!A(p U q)"),
+    ("!p U q", "A((!p) U q)"),
+    ("!(p U q)", "!A(p U q)"),
 ]
 
 

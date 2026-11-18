@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- LTL: `!` binds tighter than `U`, as in Spot's precedence table (Spot-tl p. 15)
+  and every other logic of the checker: `!p U q` is `(!p) U q`, no longer
+  `!(p U q)`, and `X !p U q` is `(X !p) U q`. Breaking: a formula that meant
+  the negated Until must now be written `!(p U q)`
+  ([logic knowledge base](docs/reference/logic_knowledge_base.md)).
 - LTL: `model_checking_wins_some_nash` and `model_checking_lose_some_nash` validate
   `target_agent` again (agent 0 read as the last agent; a number above the agent
   count raised `IndexError`).
