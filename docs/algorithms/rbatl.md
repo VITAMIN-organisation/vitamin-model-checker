@@ -29,7 +29,8 @@ has a move `m` (one action per member) such that every joint action that contain
    (with `c` of length 1, the second cost value is not limited). RBATL asks this of
    one joint action of the move that has a cost in the model, and RABATL of every
    joint action of the move (see below).
-   A bound longer than the model's cost vectors is a validation error.
+   A bound longer than the model's cost vectors is a validation error; a shorter
+   one is accepted (see [Differences from the papers](#differences-from-the-papers)).
 
 In RB-ATL the cost of a move is the sum of the costs of the members' own actions
 only (Catta et al., PRIMA 2024, p. 5), and the RB-ATL Pre leaves out the loop over
@@ -113,6 +114,12 @@ puts no condition on `phi` at the position where `psi` holds:
   `rbatl_2agents_3states_loop.txt` is this model.
 
 The cost of an Until counts the moves until `psi` holds, as in Algorithm 2.
+
+A bound may have fewer values than the model has resources. The checker then
+limits only the resources that the bound covers and leaves the others unlimited.
+This is a VITAMIN convention. PRIMA 2024 takes a bound from `N^r`, the vectors of
+`r` natural numbers where `r` is the number of resources (p. 8: "a bound b will be
+any element of N^r"). RABATL follows the same convention.
 
 PRIMA 2024 gives every agent the idle action at cost 0 in every state (p. 4) and
 leaves the self-loops of the joint action (idle, idle) out of Fig. 1 (p. 5). The

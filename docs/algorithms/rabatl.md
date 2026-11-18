@@ -18,7 +18,9 @@ differs.
 For each resource `i`, the cost of a joint action at state `s` is the sum of the
 costs that the coalition's members pay for it at `s`. The other agents' costs are
 not counted. The joint action is within the bound when that sum is at most `b_i`
-for every resource `i` that `b` covers.
+for every resource `i` that `b` covers. A bound with fewer values than the model
+has resources leaves the resources after its last value unlimited, a VITAMIN
+convention described in [RBATL](rbatl.md#differences-from-the-papers).
 
 So the same joint action can be within the bound for one coalition and not for
 another, and RBATL and RABATL can give different sets on models that describe the
